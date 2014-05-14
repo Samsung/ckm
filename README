@@ -1,0 +1,35 @@
+README for key-manager project
+
+key-manager project contains of two parts:
+1) the server part, that is implemented as a daemon that has vast rights for
+vulnerable, security-related data, and that may be trusted by its clients.
+
+2) the client part, libkey-manager-client: a library that allows programs to
+communicate with the server part.
+
+The libkey-manager-client library's API is available in the header file
+src/include/key-manager.h.
+
+The libkey-manager-client API may be used to:
+#TODO
+
+key-manager:
+
+The server part of manager is implemented in a /src/manager directory.
+The implementation is divided into:
+    communication manager part: that is responsible for threads and communication management
+    with no awareness of what information is being transferred. This part is
+    implemented by SocketManager class that works with GenericSocketService as
+    a generalization for services that key-manager provides.
+and
+    services part: implemented as classes derived from GenericSocketService
+    grouped in src/manager/service directory that defines actions done by
+    key-manager after receiving certain requests from client side.
+
+Adding services to key-manager should be done by creating a new class
+derived from GenericSocketService, implementing proper functions for it,
+registering it to SocketManager in main loop and making unix socket for service.
+
+The paths of unix sockets used in communication between server and libclient are
+defined in src/manager/common directory. Sockets themselves are configured in
+files in systemd directory.

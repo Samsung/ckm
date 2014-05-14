@@ -1,0 +1,9 @@
+[Unit]
+Description=Start the Central Key Manager
+
+[Service]
+Type=notify
+ExecStart=/usr/bin/key-manager
+
+[Install]
+WantedBy=multi-user.target

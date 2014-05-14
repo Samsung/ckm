@@ -1,0 +1,8 @@
+<manifest>
+	<request>
+		<domain name="System" />
+	</request>
+	<assign>
+		<filesystem path="/usr/bin/key-manager" label="key-manager" exec_label="key-manager"/>
+	</assign>
+</manifest>
