@@ -16,18 +16,42 @@
  *  limitations under the License
  */
 /*
- * @file        protocols.cpp
+ * @file        echo.h
  * @author      Bartlomiej Grzelewski (b.grzelewski@samsung.com)
- * @author      Zofia Abramowska (z.abramowska@samsung.com)
  * @version     1.0
- * @brief       List of all protocols supported by Central Key Manager.
+ * @brief       Sample service implementation.
  */
 
-#include <protocols.h>
+#ifndef _SECURITY_SERVER_ECHO_
+#define _SECURITY_SERVER_ECHO_
+
+#include <service-thread.h>
+#include <generic-socket-manager.h>
+
+#include <dpl/serialization.h>
+
+#include <message-buffer.h>
 
 namespace CentralKeyManager {
 
-    char const * const SERVICE_SOCKET_ECHO =
-        "/tmp/.key-manager-api-echo.sock";
+class EchoService
+  : public CentralKeyManager::GenericSocketService
+  , public CentralKeyManager::ServiceThread<EchoService>
+{
+public:
+    ServiceDescriptionVector GetServiceDescription();
+
+    DECLARE_THREAD_EVENT(AcceptEvent, accept)
+    DECLARE_THREAD_EVENT(WriteEvent, write)
+    DECLARE_THREAD_EVENT(ReadEvent, process)
+    DECLARE_THREAD_EVENT(CloseEvent, close)
+
+    void accept(const AcceptEvent &event);
+    void write(const WriteEvent &event);
+    void process(const ReadEvent &event);
+    void close(const CloseEvent &event);
+};
+
 } // namespace CentralKeyManager
 
+#endif // _SECURITY_SERVER_ECHO_

@@ -4,6 +4,7 @@ Description=Start the Central Key Manager
 [Service]
 Type=notify
 ExecStart=/usr/bin/key-manager
+Sockets=key-manager-echo.socket
 
 [Install]
 WantedBy=multi-user.target

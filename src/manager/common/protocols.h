@@ -29,6 +29,7 @@
 
 namespace CentralKeyManager {
 
+    extern char const * const SERVICE_SOCKET_ECHO;
 
 } // namespace CentralKeyManager
 

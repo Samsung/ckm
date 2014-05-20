@@ -72,6 +72,7 @@ mkdir -p %{buildroot}/etc/security/
 mkdir -p %{buildroot}/usr/lib/systemd/system/multi-user.target.wants
 mkdir -p %{buildroot}/usr/lib/systemd/system/sockets.target.wants
 ln -s ../key-manager.service %{buildroot}/usr/lib/systemd/system/multi-user.target.wants/key-manager.service
+ln -s ../key-manager-echo.socket %{buildroot}/usr/lib/systemd/system/sockets.target.wants/key-manager-echo.socket
 
 %clean
 rm -rf %{buildroot}
@@ -112,6 +113,8 @@ fi
 %attr(-,root,root) /usr/lib/systemd/system/multi-user.target.wants/key-manager.service
 %attr(-,root,root) /usr/lib/systemd/system/key-manager.service
 %attr(-,root,root) /usr/lib/systemd/system/key-manager.target
+%attr(-,root,root) /usr/lib/systemd/system/sockets.target.wants/key-manager-echo.socket 
+%attr(-,root,root) /usr/lib/systemd/system/key-manager-echo.socket 
 %{_datadir}/license/%{name}
 
 %files -n libkey-manager-client

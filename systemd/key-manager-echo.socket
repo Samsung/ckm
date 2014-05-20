@@ -1,0 +1,14 @@
+[Socket]
+ListenStream=/tmp/.key-manager-api-echo.sock
+SockMode=0777
+SmackLabelIpIn=*
+SmackLabelIpOut=@
+
+Service=key-manager.service
+
+[Unit]
+Wants=key-manager.service
+Before=key-manager.service
+
+[Install]
+WantedBy=sockets.target

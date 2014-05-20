@@ -105,7 +105,19 @@
 extern "C" {
 #endif
 
+/*
+ * This function was created mainly for testing key-manager client/service
+ * proper behaviour. It sends a message and returns message from service,
+ * which should be a pure echo.
+ *
+ * \param[in] Message for service
+ * \param[out] Response from service
+ *
+ * \return KEY_MANAGER_API_ERROR_INPUT_PARAM when trying to pass NULL message
+ * \return KEY_MANAGER_API_SUCCESS on success
+ */
 
+int key_manager_echo(const char* echo, char** oche);
 
 
 #ifdef __cplusplus

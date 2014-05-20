@@ -30,6 +30,8 @@
 
 #include <socket-manager.h>
 
+#include <echo.h>
+
 IMPLEMENT_SAFE_SINGLETON(CentralKeyManager::Log::LogSystem);
 
 #define REGISTER_SOCKET_SERVICE(manager, service) \
@@ -75,6 +77,10 @@ int main(void) {
 
         LogInfo("Start!");
         CentralKeyManager::SocketManager manager;
+
+        auto echoService = new CentralKeyManager::EchoService;
+        echoService->Create();
+        manager.RegisterSocketService(echoService);
 
         manager.MainLoop();
     }
