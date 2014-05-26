@@ -22,7 +22,7 @@
 #ifndef CENT_KEY_SINGLETON_H
 #define CENT_KEY_SINGLETON_H
 
-namespace CentralKeyManager {
+namespace CKM {
 template<typename Class>
 class Singleton :
     private Class
@@ -46,6 +46,6 @@ class Singleton :
 
     static Class &Instance();
 };
-} // namespace CentralKeyManager
+} // namespace CKM
 
 #endif // CENT_KEY_SINGLETON_H

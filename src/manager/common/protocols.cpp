@@ -25,9 +25,9 @@
 
 #include <protocols.h>
 
-namespace CentralKeyManager {
+namespace CKM {
 
     char const * const SERVICE_SOCKET_ECHO =
         "/tmp/.key-manager-api-echo.sock";
-} // namespace CentralKeyManager
+} // namespace CKM
 

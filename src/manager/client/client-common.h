@@ -37,7 +37,7 @@ extern "C" {
     struct msghdr;
 }
 
-namespace CentralKeyManager {
+namespace CKM {
 
 typedef std::vector<unsigned char> RawBuffer;
 
@@ -49,6 +49,6 @@ int sendToServer(char const * const interface, const RawBuffer &send, MessageBuf
  */
 int try_catch(const std::function<int()>& func);
 
-} // namespace CentralKeyManager
+} // namespace CKM
 
 #endif // _KEY_MANAGER_CLIENT_

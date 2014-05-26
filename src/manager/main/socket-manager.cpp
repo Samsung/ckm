@@ -52,7 +52,7 @@ const time_t SOCKET_TIMEOUT = 20;
 
 } // namespace anonymous
 
-namespace CentralKeyManager {
+namespace CKM {
 
 struct DummyService : public GenericSocketService {
     ServiceDescriptionVector GetServiceDescription() {
@@ -637,4 +637,4 @@ void SocketManager::CloseSocket(int sock) {
     FD_CLR(sock, &m_writeSet);
 }
 
-} // namespace CentralKeyManager
+} // namespace CKM

@@ -33,7 +33,7 @@
 
 KEY_MANAGER_API
 int key_manager_echo(const char *echo, char** oche) {
-    using namespace CentralKeyManager;
+    using namespace CKM;
 
     if(echo == NULL){
         LogDebug("Echo message is null");

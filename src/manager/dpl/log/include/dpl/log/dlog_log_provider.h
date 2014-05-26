@@ -26,7 +26,7 @@
 #include <memory>
 #include <string>
 
-namespace CentralKeyManager {
+namespace CKM {
 namespace Log {
 class DLOGLogProvider :
     public AbstractLogProvider
@@ -84,6 +84,6 @@ class DLOGLogProvider :
 };
 
 } // namespace Log
-} // namespace CentralKeyManager
+} // namespace CKM
 
 #endif // CENT_KEY_DLOG_LOG_PROVIDER_H

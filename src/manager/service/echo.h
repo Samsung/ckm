@@ -32,11 +32,11 @@
 
 #include <message-buffer.h>
 
-namespace CentralKeyManager {
+namespace CKM {
 
 class EchoService
-  : public CentralKeyManager::GenericSocketService
-  , public CentralKeyManager::ServiceThread<EchoService>
+  : public CKM::GenericSocketService
+  , public CKM::ServiceThread<EchoService>
 {
 public:
     ServiceDescriptionVector GetServiceDescription();
@@ -52,6 +52,6 @@ public:
     void close(const CloseEvent &event);
 };
 
-} // namespace CentralKeyManager
+} // namespace CKM
 
 #endif // _SECURITY_SERVER_ECHO_

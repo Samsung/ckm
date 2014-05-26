@@ -27,9 +27,9 @@
 #include <dpl/log/dlog_log_provider.h>
 #include <dpl/log/old_style_log_provider.h>
 
-IMPLEMENT_SINGLETON(CentralKeyManager::Log::LogSystem)
+IMPLEMENT_SINGLETON(CKM::Log::LogSystem)
 
-namespace CentralKeyManager {
+namespace CKM {
 namespace Log {
 namespace // anonymous
 {
@@ -277,4 +277,4 @@ void LogSystem::SecureWarning(const char *message,
 }
 
 }
-} // namespace CentralKeyManager
+} // namespace CKM

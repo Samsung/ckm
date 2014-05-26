@@ -36,13 +36,13 @@
 
 #include <generic-socket-manager.h>
 
-namespace CentralKeyManager {
+namespace CKM {
 
 class SocketManager : public GenericSocketManager {
 public:
     class Exception {
     public:
-        DECLARE_EXCEPTION_TYPE(CentralKeyManager::Exception, Base)
+        DECLARE_EXCEPTION_TYPE(CKM::Exception, Base)
         DECLARE_EXCEPTION_TYPE(Base, InitFailed)
     };
     SocketManager();
@@ -121,6 +121,6 @@ protected:
     std::priority_queue<Timeout> m_timeoutQueue;
 };
 
-} // namespace CentralKeyManager
+} // namespace CKM
 
 #endif // _CENT_KEY_MNG_SOCKET_MANAGER_

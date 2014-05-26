@@ -40,14 +40,14 @@
 //#include <key-manager.h>
 #include <ckm/errors.h>
 
-IMPLEMENT_SAFE_SINGLETON(CentralKeyManager::Log::LogSystem);
+IMPLEMENT_SAFE_SINGLETON(CKM::Log::LogSystem);
 
 namespace {
 
 const int POLL_TIMEOUT = 2000;
 
 void centKeyClientEnableLogSystem(void) {
-    CentralKeyManager::Singleton<CentralKeyManager::Log::LogSystem>::Instance().SetTag("CENT_KEY_CLIENT");
+    CKM::Singleton<CKM::Log::LogSystem>::Instance().SetTag("CENT_KEY_CLIENT");
 }
 
 int waitForSocket(int sock, int event, int timeout) {
@@ -166,7 +166,7 @@ private:
 
 } // namespace anonymous
 
-namespace CentralKeyManager {
+namespace CKM {
 
 
 int sendToServer(char const * const interface, const RawBuffer &send, MessageBuffer &recv) {
@@ -222,7 +222,7 @@ int try_catch(const std::function<int()>& func)
     try {
         return func();
     } catch (MessageBuffer::Exception::Base &e) {
-        LogError("CentralKeyManager::MessageBuffer::Exception " << e.DumpToString());
+        LogError("CKM::MessageBuffer::Exception " << e.DumpToString());
     } catch (std::exception &e) {
         LogError("STD exception " << e.what());
     } catch (...) {
@@ -231,7 +231,7 @@ int try_catch(const std::function<int()>& func)
     return KEY_MANAGER_API_ERROR_UNKNOWN;
 }
 
-} // namespace CentralKeyManager
+} // namespace CKM
 
 static void init_lib(void) __attribute__ ((constructor));
 static void init_lib(void)

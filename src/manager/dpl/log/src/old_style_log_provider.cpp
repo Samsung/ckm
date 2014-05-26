@@ -29,11 +29,11 @@
 #include <unistd.h>
 #include <dlog.h>
 
-namespace CentralKeyManager {
+namespace CKM {
 namespace Log {
 namespace // anonymous
 {
-using namespace CentralKeyManager::Colors::Text;
+using namespace CKM::Colors::Text;
 const char *DEBUG_BEGIN = GREEN_BEGIN;
 const char *DEBUG_END = GREEN_END;
 const char *INFO_BEGIN = CYAN_BEGIN;
@@ -299,4 +299,4 @@ void OldStyleLogProvider::SecureError(const char *message,
 }
 
 }
-} // namespace CentralKeyManager
+} // namespace CKM

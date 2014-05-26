@@ -27,7 +27,7 @@
 #include <protocols.h>
 #include <echo.h>
 
-namespace CentralKeyManager {
+namespace CKM {
 
 GenericSocketService::ServiceDescriptionVector EchoService::GetServiceDescription() {
     return ServiceDescriptionVector {{SERVICE_SOCKET_ECHO, "*"}};
@@ -56,5 +56,5 @@ void EchoService::close(const CloseEvent &event) {
     LogDebug("CloseEvent. ConnectionID: " << event.connectionID.sock);
 }
 
-} // namespace CentralKeyManager
+} // namespace CKM
 

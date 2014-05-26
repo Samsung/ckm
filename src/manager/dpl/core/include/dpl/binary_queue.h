@@ -28,7 +28,7 @@
 #include <memory>
 #include <list>
 
-namespace CentralKeyManager {
+namespace CKM {
 /**
  * Binary queue auto pointer
  */
@@ -47,7 +47,7 @@ class BinaryQueue
     class Exception
     {
       public:
-        DECLARE_EXCEPTION_TYPE(CentralKeyManager::Exception, Base)
+        DECLARE_EXCEPTION_TYPE(CKM::Exception, Base)
         DECLARE_EXCEPTION_TYPE(Base, OutOfData)
     };
 
@@ -293,6 +293,6 @@ class BinaryQueue
     virtual size_t Write(const BinaryQueue &buffer, size_t bufferSize);
 };
 
-} // namespace CentralKeyManager
+} // namespace CKM
 
 #endif // CENT_KEY_BINARY_QUEUE_H

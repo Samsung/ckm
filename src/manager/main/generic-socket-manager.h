@@ -37,7 +37,7 @@ extern "C" {
 struct msghdr;
 } // extern "C"
 
-namespace CentralKeyManager {
+namespace CKM {
 
 typedef int InterfaceID;
 
@@ -119,6 +119,6 @@ struct GenericSocketManager {
     virtual ~GenericSocketManager(){}
 };
 
-} // namespace CentralKeyManager
+} // namespace CKM
 
 #endif // _CENT_KEY_MNG_GENERIC_SERVICE_MANAGER_

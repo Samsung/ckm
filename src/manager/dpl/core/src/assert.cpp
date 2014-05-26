@@ -26,7 +26,7 @@
 #include <dpl/exception.h>
 #include <cstdlib>
 
-namespace CentralKeyManager {
+namespace CKM {
 void AssertProc(const char *condition,
                 const char *file,
                 int line,
@@ -37,7 +37,7 @@ void AssertProc(const char *condition,
     {                                                                  \
         std::ostringstream platformLog;                                \
         platformLog << message;                                        \
-        CentralKeyManager::Log::LogSystemSingleton::Instance().Pedantic(             \
+        CKM::Log::LogSystemSingleton::Instance().Pedantic(             \
             platformLog.str().c_str(),                                 \
             __FILE__, __LINE__, __FUNCTION__);                         \
     } \
@@ -49,7 +49,7 @@ void AssertProc(const char *condition,
         INTERNAL_LOG(
             "################################################################################");
         INTERNAL_LOG(
-            "###                          CentralKeyManager assertion failed!                           ###");
+            "###                          CKM assertion failed!                           ###");
         INTERNAL_LOG(
             "################################################################################");
         INTERNAL_LOG("### Condition: " << condition);
@@ -65,4 +65,4 @@ void AssertProc(const char *condition,
     // Fail with c-library abort
     abort();
 }
-} // namespace CentralKeyManager
+} // namespace CKM

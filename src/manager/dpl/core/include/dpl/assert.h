@@ -24,7 +24,7 @@
 
 #include <dpl/noreturn.h>
 
-namespace CentralKeyManager {
+namespace CKM {
 // Assertion handler procedure
 // Do not call directly
 // Always use Assert macro
@@ -32,9 +32,9 @@ CENT_KEY_NORETURN void AssertProc(const char *condition,
                              const char *file,
                              int line,
                              const char *function);
-} // namespace CentralKeyManager
+} // namespace CKM
 
-#define Assert(Condition) do { if (!(Condition)) { CentralKeyManager::AssertProc(#Condition, \
+#define Assert(Condition) do { if (!(Condition)) { CKM::AssertProc(#Condition, \
                                                                    __FILE__, \
                                                                    __LINE__, \
                                                                    __FUNCTION__); \

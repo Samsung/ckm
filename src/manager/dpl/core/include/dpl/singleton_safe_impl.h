@@ -23,7 +23,7 @@
 #define CENT_KEY_SINGLETON_SAFE_IMPL_H
 
 #define IMPLEMENT_SAFE_SINGLETON(Class)                                        \
-    namespace CentralKeyManager {                                                                \
+    namespace CKM {                                                                \
     template<>                                                                     \
     Singleton<Class>&Singleton<Class>::InternalInstance()                         \
     {                                                                              \
@@ -40,6 +40,6 @@
                                                                                \
     template Singleton<Class>&Singleton<Class>::InternalInstance();               \
     template Class & Singleton<Class>::Instance();                                  \
-    } // namespace CentralKeyManager
+    } // namespace CKM
 
 #endif // CENT_KEY_SINGLETON_SAFE_IMPL_H

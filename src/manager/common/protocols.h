@@ -27,11 +27,11 @@
 #ifndef _CENT_KEY_MNG_PROTOCOLS_
 #define _CENT_KEY_MNG_PROTOCOLS_
 
-namespace CentralKeyManager {
+namespace CKM {
 
     extern char const * const SERVICE_SOCKET_ECHO;
 
-} // namespace CentralKeyManager
+} // namespace CKM
 
 #endif // _CENT_KEY_MNG_PROTOCOLS_
 

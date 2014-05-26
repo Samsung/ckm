@@ -22,7 +22,7 @@
 #ifndef CENT_KEY_ABSTRACT_LOG_PROVIDER_H
 #define CENT_KEY_ABSTRACT_LOG_PROVIDER_H
 
-namespace CentralKeyManager {
+namespace CKM {
 namespace Log {
 class AbstractLogProvider
 {
@@ -71,6 +71,6 @@ class AbstractLogProvider
     static const char *LocateSourceFileName(const char *filename);
 };
 }
-} // namespace CentralKeyManager
+} // namespace CKM
 
 #endif // CENT_KEY_ABSTRACT_LOG_PROVIDER_H

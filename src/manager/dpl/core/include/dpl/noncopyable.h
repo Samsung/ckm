@@ -22,7 +22,7 @@
 #ifndef CENT_KEY_NONCOPYABLE_H
 #define CENT_KEY_NONCOPYABLE_H
 
-namespace CentralKeyManager {
+namespace CKM {
 class Noncopyable
 {
   private:
@@ -33,6 +33,6 @@ class Noncopyable
     Noncopyable();
     virtual ~Noncopyable();
 };
-} // namespace CentralKeyManager
+} // namespace CKM
 
 #endif // CENT_KEY_NONCOPYABLE_H

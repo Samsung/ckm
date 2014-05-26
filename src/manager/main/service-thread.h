@@ -41,7 +41,7 @@
 
 #define DEFINE_THREAD_EVENT(eventType)                                \
     void Event(const eventType &event) {                              \
-        CentralKeyManager::ServiceThread<ParentClassName>::              \
+        CKM::ServiceThread<ParentClassName>::              \
             Event(event,                                              \
                   this,                                               \
                   &ParentClassName::EventInternal##eventType);        \
@@ -50,13 +50,13 @@
 
 #define DECLARE_THREAD_EVENT(eventType, methodName)                   \
     void Event(const eventType &event) {                              \
-        CentralKeyManager::ServiceThread<ParentClassName>::              \
+        CKM::ServiceThread<ParentClassName>::              \
             Event(event,                                              \
                   this,                                               \
                   &ParentClassName::methodName);                      \
     }
 
-namespace CentralKeyManager {
+namespace CKM {
 
 template <class Service>
 class ServiceThread {
@@ -173,6 +173,6 @@ protected:
     bool m_quit;
 };
 
-} // namespace CentralKeyManager
+} // namespace CKM
 
 #endif // _CENT_KEY_SERVICE_THREAD_

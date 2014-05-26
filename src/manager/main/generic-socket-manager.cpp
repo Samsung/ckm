@@ -28,8 +28,8 @@
 
 #include <generic-socket-manager.h>
 
-namespace CentralKeyManager {
+namespace CKM {
 
 
-} // namespace CentralKeyManager
+} // namespace CKM
 

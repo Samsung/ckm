@@ -29,7 +29,7 @@
 #include <cstdlib>
 #include <sstream>
 
-namespace CentralKeyManager {
+namespace CKM {
 void LogUnhandledException(const std::string &str);
 void LogUnhandledException(const std::string &str,
                            const char *filename,
@@ -37,7 +37,7 @@ void LogUnhandledException(const std::string &str,
                            const char *function);
 }
 
-namespace CentralKeyManager {
+namespace CKM {
 class Exception
 {
   private:
@@ -94,7 +94,7 @@ class Exception
     {
         std::ostringstream message;
         message <<
-        "\033[1;5;31m\n=== Unhandled CentralKeyManager exception occurred ===\033[m\n\n";
+        "\033[1;5;31m\n=== Unhandled CKM exception occurred ===\033[m\n\n";
         message << "\033[1;33mException trace:\033[m\n\n";
         message << e.DumpToString();
         message << "\033[1;31m\n=== Will now abort ===\033[m\n";
@@ -106,7 +106,7 @@ class Exception
     {
         std::ostringstream message;
         message <<
-        "\033[1;5;31m\n=== Unhandled non-CentralKeyManager exception occurred ===\033[m\n\n";
+        "\033[1;5;31m\n=== Unhandled non-CKM exception occurred ===\033[m\n\n";
         message << "\033[1;31m\n=== Will now abort ===\033[m\n";
 
         return message.str();
@@ -287,7 +287,7 @@ class Exception
         return m_className;
     }
 };
-} // namespace CentralKeyManager
+} // namespace CKM
 
 #define Try try
 
@@ -332,7 +332,7 @@ class Exception
         Class(const char *path, \
               const char *function, \
               int line, \
-              const CentralKeyManager::Exception & reason, \
+              const CKM::Exception & reason, \
               const std::string & message = std::string()) :                                                                                                                             \
             BaseClass(path, function, line, reason, message)                                                                            \
         {                                                                                                                                 \
@@ -343,11 +343,11 @@ class Exception
 #define UNHANDLED_EXCEPTION_HANDLER_BEGIN try
 
 #define UNHANDLED_EXCEPTION_HANDLER_END                                                                   \
-    catch (const CentralKeyManager::Exception &exception)                                                               \
+    catch (const CKM::Exception &exception)                                                               \
     {                                                                                                     \
         std::ostringstream msg;                                                                           \
-        msg << CentralKeyManager::Exception::KnownExceptionToString(exception);                                         \
-        CentralKeyManager::LogUnhandledException(msg.str(), __FILE__, __LINE__, __FUNCTION__);                          \
+        msg << CKM::Exception::KnownExceptionToString(exception);                                         \
+        CKM::LogUnhandledException(msg.str(), __FILE__, __LINE__, __FUNCTION__);                          \
         abort();                                                                                          \
     }                                                                                                     \
     catch (std::exception& e)                                                                             \
@@ -355,19 +355,19 @@ class Exception
         std::ostringstream msg;                                                                           \
         msg << e.what();                                                                                  \
         msg << "\n";                                                                                      \
-        msg << CentralKeyManager::Exception::UnknownExceptionToString();                                                \
-        CentralKeyManager::LogUnhandledException(msg.str(), __FILE__, __LINE__, __FUNCTION__);                          \
+        msg << CKM::Exception::UnknownExceptionToString();                                                \
+        CKM::LogUnhandledException(msg.str(), __FILE__, __LINE__, __FUNCTION__);                          \
         abort();                                                                                          \
     }                                                                                                     \
     catch (...)                                                                                           \
     {                                                                                                     \
         std::ostringstream msg;                                                                           \
-        msg << CentralKeyManager::Exception::UnknownExceptionToString();                                                \
-        CentralKeyManager::LogUnhandledException(msg.str(), __FILE__, __LINE__, __FUNCTION__);                          \
+        msg << CKM::Exception::UnknownExceptionToString();                                                \
+        CKM::LogUnhandledException(msg.str(), __FILE__, __LINE__, __FUNCTION__);                          \
         abort();                                                                                          \
     }
 
-namespace CentralKeyManager {
+namespace CKM {
 namespace CommonException {
 /**
  * Internal exception definitions

@@ -30,7 +30,7 @@
 #include <generic-socket-manager.h>
 #include <message-buffer.h>
 
-namespace CentralKeyManager
+namespace CKM
 {
     struct ConnectionInfo {
         InterfaceID interfaceID;
@@ -38,6 +38,6 @@ namespace CentralKeyManager
     };
 
     typedef std::map<int, ConnectionInfo> ConnectionInfoMap;
-} //namespace CentralKeyManager
+} //namespace CKM
 
 #endif //_CONNECTION_INFO_H_

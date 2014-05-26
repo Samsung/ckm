@@ -24,7 +24,7 @@
 #ifndef CENT_KEY_COLORS_H
 #define CENT_KEY_COLORS_H
 
-namespace CentralKeyManager {
+namespace CKM {
 namespace Colors {
 namespace Text {
 extern const char* BOLD_GREEN_BEGIN;
@@ -68,6 +68,6 @@ extern const char* BOLD_WHITE_BEGIN;
 extern const char* BOLD_WHITE_END;
 } //namespace Html
 } //namespace Colors
-} //namespace CentralKeyManager
+} //namespace CKM
 
 #endif /* CENT_KEY_COLORS_H */

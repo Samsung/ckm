@@ -27,7 +27,7 @@
 
 #define UNUSED __attribute__((unused))
 
-namespace CentralKeyManager {
+namespace CKM {
 namespace Log {
 std::string DLOGLogProvider::FormatMessage(const char *message,
                                            const char *filename,
@@ -99,7 +99,7 @@ void DLOGLogProvider::Pedantic(const char *message,
                                int line,
                                const char *function)
 {
-    SLOG(LOG_DEBUG, "CentralKeyManager", "%s", FormatMessage(message,
+    SLOG(LOG_DEBUG, "CKM", "%s", FormatMessage(message,
                                               filename,
                                               line,
                                               function).c_str());
@@ -142,4 +142,4 @@ void DLOGLogProvider::SecureError(const char *message UNUSED,
 }
 
 } // nemespace Log
-} // namespace CentralKeyManager
+} // namespace CKM

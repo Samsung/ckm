@@ -25,7 +25,7 @@
 
 #define UNUSED __attribute__((unused))
 
-namespace CentralKeyManager {
+namespace CKM {
 namespace Log {
 
 void AbstractLogProvider::SetTag(const char *tag UNUSED) {}

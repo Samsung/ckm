@@ -24,11 +24,11 @@
 
 #include <sys/types.h>
 
-namespace CentralKeyManager {
+namespace CKM {
 
 int util_smack_label_is_valid(const char *smack_label);
 char *read_exe_path_from_proc(pid_t pid);
 
-} // namespace CentralKeyManager
+} // namespace CKM
 
 #endif /*CENT_KEY_MNG_UTIL_H*/

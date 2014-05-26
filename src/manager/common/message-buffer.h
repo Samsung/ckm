@@ -32,16 +32,16 @@
 #include <dpl/exception.h>
 #include <dpl/serialization.h>
 
-namespace CentralKeyManager {
+namespace CKM {
 
 typedef std::vector<unsigned char> RawBuffer;
 
-class MessageBuffer : public CentralKeyManager::IStream {
+class MessageBuffer : public CKM::IStream {
 public:
     class Exception
     {
     public:
-        DECLARE_EXCEPTION_TYPE(CentralKeyManager::Exception, Base)
+        DECLARE_EXCEPTION_TYPE(CKM::Exception, Base)
         DECLARE_EXCEPTION_TYPE(Base, OutOfData)
     };
 
@@ -72,9 +72,9 @@ protected:
     }
 
     size_t m_bytesLeft;
-    CentralKeyManager::BinaryQueue m_buffer;
+    CKM::BinaryQueue m_buffer;
 };
 
-} // namespace CentralKeyManager
+} // namespace CKM
 
 #endif // _CENT_KEY_MNG_SOCKET_BUFFER_

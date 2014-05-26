@@ -5,7 +5,7 @@
 
 #include <dpl/log/log.h>
 
-namespace CentralKeyManager {
+namespace CKM {
 
 int smack_runtime_check(void)
 {
@@ -31,4 +31,4 @@ int smack_check(void)
 #endif
 }
 
-} // namespace CentralKeyManager
+} // namespace CKM

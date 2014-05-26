@@ -28,10 +28,10 @@
 #include <sstream>
 #include <list>
 
-namespace CentralKeyManager {
+namespace CKM {
 namespace Log {
 /**
- * CentralKeyManager log system
+ * CKM log system
  *
  * To switch logs into old style, export
  * DPL_USE_OLD_STYLE_LOGS before application start
@@ -160,7 +160,7 @@ class NullStream
  */
 typedef Singleton<LogSystem> LogSystemSingleton;
 }
-} // namespace CentralKeyManager
+} // namespace CKM
 
 //
 // Log support
@@ -170,18 +170,18 @@ typedef Singleton<LogSystem> LogSystemSingleton;
 /* avoid warnings about unused variables */
 #define DPL_MACRO_DUMMY_LOGGING(message, function)                         \
     do {                                                                   \
-        CentralKeyManager::Log::NullStream ns;                                \
+        CKM::Log::NullStream ns;                                \
         ns << message;                                                     \
     } while (0)
 
 #define DPL_MACRO_FOR_LOGGING(message, function)                           \
 do                                                                         \
 {                                                                          \
-    if (CentralKeyManager::Log::LogSystemSingleton::Instance().IsLoggingEnabled())   \
+    if (CKM::Log::LogSystemSingleton::Instance().IsLoggingEnabled())   \
     {                                                                      \
         std::ostringstream platformLog;                                    \
         platformLog << message;                                            \
-        CentralKeyManager::Log::LogSystemSingleton::Instance().function(      \
+        CKM::Log::LogSystemSingleton::Instance().function(      \
             platformLog.str().c_str(),                                     \
             __FILE__, __LINE__, __FUNCTION__);                             \
     }                                                                      \

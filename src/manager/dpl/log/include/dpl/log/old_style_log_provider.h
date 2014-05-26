@@ -25,7 +25,7 @@
 #include <dpl/log/abstract_log_provider.h>
 #include <string>
 
-namespace CentralKeyManager {
+namespace CKM {
 namespace Log {
 class OldStyleLogProvider :
     public AbstractLogProvider
@@ -95,6 +95,6 @@ class OldStyleLogProvider :
                        const char *function);
 };
 }
-} // namespace CentralKeyManager
+} // namespace CKM
 
 #endif // CENT_KEY_OLD_STYLE_LOG_PROVIDER_H

@@ -27,7 +27,7 @@
 
 #include <dpl/log/log.h>
 
-namespace CentralKeyManager {
+namespace CKM {
 
 void MessageBuffer::Push(const RawBuffer &data) {
     m_buffer.AppendCopy(&data[0], data.size());
@@ -66,5 +66,5 @@ void MessageBuffer::Write(size_t num, const void *bytes) {
     m_buffer.AppendCopy(bytes, num);
 }
 
-} // namespace CentralKeyManager
+} // namespace CKM
 

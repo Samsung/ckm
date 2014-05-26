@@ -28,7 +28,7 @@
 #include <map>
 #include <memory>
 
-namespace CentralKeyManager {
+namespace CKM {
 // Abstract data stream buffer
 class IStream
 {
@@ -393,6 +393,6 @@ struct Deserialization {
         Deserialize(stream, *map);
     }
 }; // struct Deserialization
-} // namespace CentralKeyManager
+} // namespace CKM
 
 #endif // CENT_KEY_SERIALIZATION_H

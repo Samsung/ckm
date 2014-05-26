@@ -22,10 +22,10 @@
 #include <stddef.h>
 #include <dpl/noncopyable.h>
 
-namespace CentralKeyManager {
+namespace CKM {
 Noncopyable::Noncopyable()
 {}
 
 Noncopyable::~Noncopyable()
 {}
-} // namespace CentralKeyManager
+} // namespace CKM

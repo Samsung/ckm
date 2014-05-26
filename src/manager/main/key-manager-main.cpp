@@ -32,13 +32,13 @@
 
 #include <echo.h>
 
-IMPLEMENT_SAFE_SINGLETON(CentralKeyManager::Log::LogSystem);
+IMPLEMENT_SAFE_SINGLETON(CKM::Log::LogSystem);
 
 #define REGISTER_SOCKET_SERVICE(manager, service) \
     registerSocketService<service>(manager, #service)
 
 template<typename T>
-void registerSocketService(CentralKeyManager::SocketManager &manager, const std::string& serviceName)
+void registerSocketService(CKM::SocketManager &manager, const std::string& serviceName)
 {
     T *service = NULL;
     try {
@@ -46,7 +46,7 @@ void registerSocketService(CentralKeyManager::SocketManager &manager, const std:
         service->Create();
         manager.RegisterSocketService(service);
         service = NULL;
-    } catch (const CentralKeyManager::Exception &exception) {
+    } catch (const CKM::Exception &exception) {
         LogError("Error in creating service " << serviceName <<
                  ", details:\n" << exception.DumpToString());
     } catch (const std::exception& e) {
@@ -64,7 +64,7 @@ int main(void) {
 
     UNHANDLED_EXCEPTION_HANDLER_BEGIN
     {
-        CentralKeyManager::Singleton<CentralKeyManager::Log::LogSystem>::Instance().SetTag("CENT_KEY_MNG");
+        CKM::Singleton<CKM::Log::LogSystem>::Instance().SetTag("CENT_KEY_MNG");
 
         sigset_t mask;
         sigemptyset(&mask);
@@ -76,9 +76,9 @@ int main(void) {
         }
 
         LogInfo("Start!");
-        CentralKeyManager::SocketManager manager;
+        CKM::SocketManager manager;
 
-        auto echoService = new CentralKeyManager::EchoService;
+        auto echoService = new CKM::EchoService;
         echoService->Create();
         manager.RegisterSocketService(echoService);
 

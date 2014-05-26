@@ -24,7 +24,7 @@
 #include <dpl/log/log.h>
 #include <cstdio>
 
-namespace CentralKeyManager {
+namespace CKM {
 Exception* Exception::m_lastException = NULL;
 unsigned int Exception::m_exceptionCount = 0;
 void (*Exception::m_terminateHandler)() = NULL;
@@ -51,7 +51,7 @@ void LogUnhandledException(const std::string &str,
     printf("%s\n", msg.str().c_str());
 
     // Logging to dlog
-    CentralKeyManager::Log::LogSystemSingleton::Instance().Error(
+    CKM::Log::LogSystemSingleton::Instance().Error(
         str.c_str(), filename, line, function);
 }
-} // namespace CentralKeyManager
+} // namespace CKM

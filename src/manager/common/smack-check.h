@@ -21,7 +21,7 @@
 #ifndef _SMACK_CHECK_H_
 #define _SMACK_CHECK_H_
 
-namespace CentralKeyManager {
+namespace CKM {
 
 /*
  * A very simple runtime check for SMACK on the platform
@@ -37,6 +37,6 @@ int smack_runtime_check(void);
  */
 int smack_check(void);
 
-} // namespace CentralKeyManager
+} // namespace CKM
 
 #endif // _SMACK_CHECK_H_

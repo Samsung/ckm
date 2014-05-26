@@ -33,7 +33,7 @@ namespace {
 const size_t SIZE_T_MAX = std::numeric_limits<size_t>::max();
 } // namespace anonymous
 
-namespace CentralKeyManager {
+namespace CKM {
 
 int util_smack_label_is_valid(const char *smack_label)
 {
@@ -112,5 +112,5 @@ char *read_exe_path_from_proc(pid_t pid)
     return exe;
 }
 
-} // namespace CentralKeyManager
+} // namespace CKM
 

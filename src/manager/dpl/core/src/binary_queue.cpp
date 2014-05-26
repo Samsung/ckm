@@ -27,7 +27,7 @@
 #include <cstring>
 #include <new>
 
-namespace CentralKeyManager {
+namespace CKM {
 BinaryQueue::BinaryQueue() :
     m_size(0)
 {}
@@ -314,4 +314,4 @@ size_t BinaryQueue::Write(const BinaryQueue &buffer, size_t bufferSize)
     AppendCopyFrom(buffer);
     return bufferSize;
 }
-} // namespace CentralKeyManager
+} // namespace CKM

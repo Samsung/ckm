@@ -26,12 +26,12 @@
 #ifndef _CENT_KEY_MNG_GENERIC_EVENT_
 #define _CENT_KEY_MNG_GENERIC_EVENT_
 
-namespace CentralKeyManager {
+namespace CKM {
 
 struct GenericEvent {
     virtual ~GenericEvent(){}
 };
 
-} // namespace CentralKeyManager
+} // namespace CKM
 
 #endif // _CENT_KEY_MNG_GENERIC_EVENT_
