@@ -29,7 +29,7 @@
 #include <client-common.h>
 #include <protocols.h>
 
-#include <key-manager.h>
+#include <ckm/error.h>
 
 KEY_MANAGER_API
 int key_manager_echo(const char *echo, char** oche) {

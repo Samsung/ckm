@@ -113,8 +113,8 @@ fi
 %attr(-,root,root) /usr/lib/systemd/system/multi-user.target.wants/key-manager.service
 %attr(-,root,root) /usr/lib/systemd/system/key-manager.service
 %attr(-,root,root) /usr/lib/systemd/system/key-manager.target
-%attr(-,root,root) /usr/lib/systemd/system/sockets.target.wants/key-manager-echo.socket 
-%attr(-,root,root) /usr/lib/systemd/system/key-manager-echo.socket 
+%attr(-,root,root) /usr/lib/systemd/system/sockets.target.wants/key-manager-echo.socket
+%attr(-,root,root) /usr/lib/systemd/system/key-manager-echo.socket
 %{_datadir}/license/%{name}
 
 %files -n libkey-manager-client
@@ -127,5 +127,6 @@ fi
 %defattr(-,root,root,-)
 %{_libdir}/libkey-manager-client.so
 %{_libdir}/libkey-manager-commons.so
-/usr/include/key-manager/key-manager.h
+/usr/include/ckm/ckm/key-manager.h
+/usr/include/ckm/ckm/errors.h
 %{_libdir}/pkgconfig/*.pc

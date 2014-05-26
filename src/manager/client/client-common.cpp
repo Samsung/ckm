@@ -37,7 +37,8 @@
 
 #include <message-buffer.h>
 
-#include <key-manager.h>
+//#include <key-manager.h>
+#include <ckm/error.h>
 
 IMPLEMENT_SAFE_SINGLETON(CentralKeyManager::Log::LogSystem);
 

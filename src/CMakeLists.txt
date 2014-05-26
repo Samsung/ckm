@@ -83,8 +83,9 @@ INSTALL(TARGETS ${TARGET_KEY_MANAGER_CLIENT} DESTINATION ${LIB_INSTALL_DIR})
 INSTALL(TARGETS ${TARGET_KEY_MANAGER} DESTINATION bin)
 
 INSTALL(FILES
-    ${KEY_MANAGER_SRC_PATH}/include/key-manager.h
-    DESTINATION /usr/include/key-manager
+    ${KEY_MANAGER_SRC_PATH}/include/ckm/key-manager.h
+    ${KEY_MANAGER_SRC_PATH}/include/ckm/errors.h
+    DESTINATION /usr/include/ckm/ckm
     )
 
 ################################################################################

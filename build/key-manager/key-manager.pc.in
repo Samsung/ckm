@@ -8,4 +8,4 @@ Description: Central Key Manager Package
 Version: 1.0.1
 Requires: openssl libsmack
 Libs: -L${libdir} -lkey-manager-client -lsmack
-Cflags: -I${includedir}/key-manager
+Cflags: -I${includedir}/ckm

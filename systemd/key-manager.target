@@ -1,4 +1,4 @@
 [Unit]
-Description=Cert Key Manager sockets
+Description=Central Key Manager sockets
 DefaultDependencies=true
 
