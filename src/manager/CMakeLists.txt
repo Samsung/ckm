@@ -1,5 +1,6 @@
 PKG_CHECK_MODULES(COMMON_DEP
     dlog
+    libsmack
     REQUIRED
     )
 
