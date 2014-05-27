@@ -1,8 +1,10 @@
 PKG_CHECK_MODULES(COMMON_DEP
+    REQUIRED
     dlog
     openssl
+    db-util
     libsmack
-    REQUIRED
+    libcrypto
     )
 PKG_CHECK_MODULES(KEY_PROVIDER_DEP
 	dlog
@@ -28,6 +30,11 @@ SET(COMMON_SOURCES
     ${COMMON_PATH}/dpl/core/src/noncopyable.cpp
     ${COMMON_PATH}/dpl/core/src/serialization.cpp
     ${COMMON_PATH}/dpl/core/src/singleton.cpp
+    ${COMMON_PATH}/dpl/core/src/string.cpp
+    ${COMMON_PATH}/dpl/core/src/errno_string.cpp
+    ${COMMON_PATH}/dpl/db/src/sql_connection.cpp
+    ${COMMON_PATH}/dpl/db/src/naive_synchronization_object.cpp
+    ${COMMON_PATH}/sqlcipher/sqlcipher.c
     )
 
 INCLUDE_DIRECTORIES(SYSTEM
@@ -38,6 +45,8 @@ INCLUDE_DIRECTORIES(
     ${COMMON_PATH}/common
     ${COMMON_PATH}/dpl/core/include
     ${COMMON_PATH}/dpl/log/include
+    ${COMMON_PATH}/dpl/db/include
+    ${COMMON_PATH}/sqlcipher
 	${COMMON_PATH}/service
     )
 
