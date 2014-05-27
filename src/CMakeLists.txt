@@ -15,6 +15,8 @@ SET(KEY_MANAGER_SOURCES
     ${KEY_MANAGER_PATH}/main/socket-manager.cpp
     ${KEY_MANAGER_PATH}/main/key-manager-main.cpp
     ${KEY_MANAGER_PATH}/service/echo.cpp
+    ${KEY_MANAGER_PATH}/service/ckm-service.cpp
+    ${KEY_MANAGER_PATH}/service/ckm-logic.cpp
     )
 
 SET_SOURCE_FILES_PROPERTIES(
@@ -59,6 +61,7 @@ INCLUDE_DIRECTORIES(
 SET(KEY_MANAGER_CLIENT_SOURCES
     ${KEY_MANAGER_CLIENT_SRC_PATH}/client-common.cpp
     ${KEY_MANAGER_CLIENT_SRC_PATH}/client-echo.cpp
+    ${KEY_MANAGER_CLIENT_SRC_PATH}/client-control.cpp
     )
 
 ADD_LIBRARY(${TARGET_KEY_MANAGER_CLIENT} SHARED ${KEY_MANAGER_CLIENT_SOURCES})

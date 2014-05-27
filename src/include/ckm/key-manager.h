@@ -15,9 +15,10 @@ typedef std::string Alias;
 typedef std::vector<Alias> AliasVector;
 
 struct Policy {
-	Policy(const RawData &pass = RawData(), bool extract = true, bool restrict = false)
-	  : extractable(extract)
-	  , restricted(restrict)
+	Policy(const RawData &pass = RawData(), bool extract = true, bool rest = false)
+      : password(pass)
+      , extractable(extract)
+      , restricted(rest)
 	{}
     RawData password;  // byte array used to encrypt data inside CKM
     bool extractable;  // if true key may be extracted from storage
@@ -26,32 +27,35 @@ struct Policy {
 
 // used by login manager to unlock user data with global password
 // [CR] too generic name for class. maybe UserDataControl?
-// It's in name space KeyStore so I don't see any problem but 
+// It's in name space KeyStore so I don't see any problem but
 class Control
 {
 public:
+    Control();
     // decrypt user key with password
     int unlockUserKey(const std::string &user, const RawData &password) const;
 
     // remove user key from memory
-    void lockUserKey(const std::string &user);
+    int lockUserKey(const std::string &user) const;
 
     // remove user data from Store and erase key used for encryption
-    void removeUserData(const std::string &user);
+    int removeUserData(const std::string &user) const;
 
     // change password for user
     int changeUserPassword(const std::string &user, const RawData &oldPassword, const RawData &newPassword) const;
-	
+
 	// This is work around for security-server api - resetPassword that may be called without passing oldPassword.
 	// This api should not be supported on tizen 3.0
 	// User must be already logged in and his DKEK is already loaded into memory in plain text form.
 	// The service will use DKEK in plain text and encrypt it in encrypted form (using new password).
 	int resetUserPassword(const std::string &user, const RawData &newPassword) const;
+
+    virtual ~Control();
 private:
     class ControlImpl;
     std::shared_ptr<ControlImpl> m_impl;
 };
-
+/*
 class Key {
 public:
     // [CR] (just asking): is there any AES private/public?
@@ -69,7 +73,7 @@ public:
 		prime192v1
 		// TODO
 	}
-	
+
     enum class Format : unsigned int {
         PEM, DER
     };
@@ -92,7 +96,7 @@ public:
 
     // key size in bits RSA specific
     int getSize() const;
-	
+
 	// Eliptic curve type
 	ECType getCurve() const;
 
@@ -121,7 +125,7 @@ public:
 	Certificate(Certificate &&certificate);
 	Certificate& operator=(const Certificate &certificate);
 	Certificate& operator=(Certificate &&certificate);
-    
+
 	bool empty() const;
 
     Key getKey() const;
@@ -154,14 +158,14 @@ public:
 	Pkcs12(Pkcs12 &&pkcs);
 	Pkcs12& operator=(const Pkcs12 &pkcs);
 	Pkcs12& operator=(Pkcs12 &&pkcs);
-	
+
 	Key getKey(const RawData &password = RawData());
 	Certificate getCertificate(); // this is connected with Key
-	
+
 	// check the API in openssl and translate it 1 to 1.
-	
+
 	CertificateVector getCertificateVector();
-	
+
 	bool empty();
 	virtual ~Pkcs12();
 private:
@@ -213,7 +217,7 @@ public:
 			const Alias &publicKeyAlias,
 			const Policy &policyPrivateKey = Policy(),
 			const Policy &policyPublicKey = Policy());
-    
+
 	int createSignature(
 			const Alias &privateKeyAlias,
 			const RawData &password,           // password for private_key
@@ -221,7 +225,7 @@ public:
 			const HashAlgorith hash,
 			TODO Padding,
 			RawData &signature);
-    
+
 	int verifySignature(
 			const Alias &publicKeyOrCertAlias,
 			const RawData &password,           // password for public_key (optional)
@@ -229,24 +233,24 @@ public:
 			const RawData &signature,
 			const HashAlgorithm,
 			TODO Padding);
-    
+
 	// this fuction will return chains of certificates and check it with openssl
 	// status : OK, INCOMPLETE_CHAIN, VERIFICATION_FAILED
 	int getCertiticateChain(
 			const Certificate &certificate,
 			const CertificateVector &untrustedCertificates,
 			CertificateVector &certificateChainVector);
-			
+
 	int getCertificateChain(
 			const Certificate &certificate,
 			const AliasVector &untrustedCertificates,
 			CertificateVector &certificateChainVector);
-	
+
 	int strictCACheck(const CertificateVector &certificateVector);
 
 	// This function will check all certificates in chain except Root CA.
 	int ocspCheck(const CertificateVector &certificateChainVector);
-	
+
 private:
     class ManagerImpl;
     std::shared_ptr<ManagerSyncImpl> m_impl;
@@ -295,11 +299,11 @@ public:
         // TODO: describe status
         // Do we need some chain of the certificate?
         virtual void ReceivedVerifyCertificate() {}
-		
+
 		virtual void ReceivedGetCertiticateChain(CertificateVector &&certificateVector) {}
 		virtual void ReceivedStrictCACheck();
 		virtual void ReceivedOCSPCheck();
-        
+
 		virtual ~Observer() {}
     };
 
@@ -359,16 +363,16 @@ public:
 	void getCertiticateChain(
 			const Certificate &certificate,
 			const CertificateVector &untrustedCertificates);
-			
+
 	void getCertificateChain(
 			const Certificate &certificate,
 			const AliasVector &untrustedCertificates);
-	
+
 	void strictCACheck(const CertificateVector &certificateVector);
 
 	// This function will check all certificates in chain except Root CA.
 	void ocspCheck(const CertificateVector &certificateChainVector);
-	
+
 private:
     ConnectionAsyncImpl *m_impl;
 };
@@ -383,6 +387,7 @@ public:
     ManagerAsyncThread& operator=(ConnectionAsyncThread &&);
     virtual ~ConnectionAsyncThread() {}
 };
+*/
 // Out of scope
 /*
 class ManagerAsyncNoThread : public ManagerAsync {

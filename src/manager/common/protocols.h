@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2000 - 2013 Samsung Electronics Co., Ltd All Rights Reserved
+ *  Copyright (c) 2000 - 2014 Samsung Electronics Co., Ltd All Rights Reserved
  *
  *  Contact: Bumjin Im <bj.im@samsung.com>
  *
@@ -14,8 +14,7 @@
  *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *  See the License for the specific language governing permissions and
  *  limitations under the License
- */
-/*
+ *
  * @file        protocols.h
  * @author      Bartlomiej Grzelewski (b.grzelewski@samsung.com)
  * @author      Zofia Abramowska (z.abramowska@samsung.com)
@@ -23,15 +22,21 @@
  * @brief       This file contains list of all protocols suported by Central
  *              Key Manager.
  */
-
-#ifndef _CENT_KEY_MNG_PROTOCOLS_
-#define _CENT_KEY_MNG_PROTOCOLS_
+#pragma once
 
 namespace CKM {
 
-    extern char const * const SERVICE_SOCKET_ECHO;
+extern char const * const SERVICE_SOCKET_ECHO;
+extern char const * const SERVICE_SOCKET_CKM_CONTROL;
+extern char const * const SERVICE_SOCKET_CKM_STORAGE;
+
+enum class ControlCommand : int {
+    UNLOCK_USER_KEY,
+    LOCK_USER_KEY,
+    REMOVE_USER_DATA,
+    CHANGE_USER_PASSWORD,
+    RESET_USER_PASSWORD
+};
 
 } // namespace CKM
-
-#endif // _CENT_KEY_MNG_PROTOCOLS_
 

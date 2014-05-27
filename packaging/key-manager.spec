@@ -71,8 +71,10 @@ mkdir -p %{buildroot}/etc/security/
 
 mkdir -p %{buildroot}/usr/lib/systemd/system/multi-user.target.wants
 mkdir -p %{buildroot}/usr/lib/systemd/system/sockets.target.wants
-ln -s ../key-manager.service %{buildroot}/usr/lib/systemd/system/multi-user.target.wants/key-manager.service
-ln -s ../key-manager-echo.socket %{buildroot}/usr/lib/systemd/system/sockets.target.wants/key-manager-echo.socket
+ln -s ../central-key-manager.service %{buildroot}/usr/lib/systemd/system/multi-user.target.wants/central-key-manager.service
+ln -s ../central-key-manager-echo.socket %{buildroot}/usr/lib/systemd/system/sockets.target.wants/central-key-manager-echo.socket
+ln -s ../central-key-manager-api-control.socket %{buildroot}/usr/lib/systemd/system/sockets.target.wants/central-key-manager-api-control.socket
+ln -s ../central-key-manager-api-storage.socket %{buildroot}/usr/lib/systemd/system/sockets.target.wants/central-key-manager-api-storage.socket
 
 %clean
 rm -rf %{buildroot}
@@ -110,11 +112,15 @@ fi
 %manifest %{_datadir}/key-manager.manifest
 %attr(755,root,root) /usr/bin/key-manager
 %{_libdir}/libkey-manager-commons.so.*
-%attr(-,root,root) /usr/lib/systemd/system/multi-user.target.wants/key-manager.service
-%attr(-,root,root) /usr/lib/systemd/system/key-manager.service
-%attr(-,root,root) /usr/lib/systemd/system/key-manager.target
-%attr(-,root,root) /usr/lib/systemd/system/sockets.target.wants/key-manager-echo.socket
-%attr(-,root,root) /usr/lib/systemd/system/key-manager-echo.socket
+%attr(-,root,root) /usr/lib/systemd/system/multi-user.target.wants/central-key-manager.service
+%attr(-,root,root) /usr/lib/systemd/system/central-key-manager.service
+%attr(-,root,root) /usr/lib/systemd/system/central-key-manager.target
+%attr(-,root,root) /usr/lib/systemd/system/sockets.target.wants/central-key-manager-echo.socket
+%attr(-,root,root) /usr/lib/systemd/system/central-key-manager-echo.socket
+%attr(-,root,root) /usr/lib/systemd/system/sockets.target.wants/central-key-manager-api-control.socket
+%attr(-,root,root) /usr/lib/systemd/system/central-key-manager-api-control.socket
+%attr(-,root,root) /usr/lib/systemd/system/sockets.target.wants/central-key-manager-api-storage.socket
+%attr(-,root,root) /usr/lib/systemd/system/central-key-manager-api-storage.socket
 %{_datadir}/license/%{name}
 
 %files -n libkey-manager-client

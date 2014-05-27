@@ -1,7 +1,5 @@
 /*
- *  Copyright (c) 2000 - 2013 Samsung Electronics Co., Ltd All Rights Reserved
- *
- *  Contact: Bumjin Im <bj.im@samsung.com>
+ *  Copyright (c) 2000 - 2014 Samsung Electronics Co., Ltd All Rights Reserved
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -16,10 +14,10 @@
  *  limitations under the License
  */
 /*
- * @file        sever2-main.cpp
+ * @file        key-manager-main.cpp
  * @author      Bartlomiej Grzelewski (b.grzelewski@samsung.com)
  * @version     1.0
- * @brief       Implementation of security-server2
+ * @brief       Implementation of central key manager
  */
 #include <stdlib.h>
 #include <signal.h>
@@ -31,6 +29,7 @@
 #include <socket-manager.h>
 
 #include <echo.h>
+#include <ckm-service.h>
 
 IMPLEMENT_SAFE_SINGLETON(CKM::Log::LogSystem);
 
@@ -78,9 +77,8 @@ int main(void) {
         LogInfo("Start!");
         CKM::SocketManager manager;
 
-        auto echoService = new CKM::EchoService;
-        echoService->Create();
-        manager.RegisterSocketService(echoService);
+        REGISTER_SOCKET_SERVICE(manager, CKM::EchoService);
+        REGISTER_SOCKET_SERVICE(manager, CKM::CKMService);
 
         manager.MainLoop();
     }

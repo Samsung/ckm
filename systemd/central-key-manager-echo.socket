@@ -1,0 +1,14 @@
+[Socket]
+ListenStream=/tmp/.central-key-manager-echo.sock
+SockMode=0777
+SmackLabelIpIn=*
+SmackLabelIpOut=@
+
+Service=central-key-manager.service
+
+[Unit]
+Wants=central-key-manager.target
+Before=central-key-manager.target
+
+[Install]
+WantedBy=sockets.target

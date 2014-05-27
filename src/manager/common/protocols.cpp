@@ -14,8 +14,7 @@
  *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *  See the License for the specific language governing permissions and
  *  limitations under the License
- */
-/*
+ *
  * @file        protocols.cpp
  * @author      Bartlomiej Grzelewski (b.grzelewski@samsung.com)
  * @author      Zofia Abramowska (z.abramowska@samsung.com)
@@ -27,7 +26,9 @@
 
 namespace CKM {
 
-    char const * const SERVICE_SOCKET_ECHO =
-        "/tmp/.key-manager-api-echo.sock";
+char const * const SERVICE_SOCKET_ECHO = "/tmp/.central-key-manager-echo.sock";
+char const * const SERVICE_SOCKET_CKM_CONTROL = "/tmp/.central-key-manager-api-control.sock";
+char const * const SERVICE_SOCKET_CKM_STORAGE = "/tmp/.central-key-manager-api-storage.sock";
+
 } // namespace CKM
 
