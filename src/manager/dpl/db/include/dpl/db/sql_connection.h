@@ -33,6 +33,7 @@
 #include <string>
 #include <dpl/assert.h>
 #include <stdint.h>
+#include <vector>
 
 namespace CKM {
 namespace DB {
@@ -53,6 +54,7 @@ class SqlConnection
         DECLARE_EXCEPTION_TYPE(Base, ConnectionBroken)
         DECLARE_EXCEPTION_TYPE(Base, InternalError)
         DECLARE_EXCEPTION_TYPE(Base, InvalidColumn)
+        DECLARE_EXCEPTION_TYPE(Base, InvalidArguments)
     };
 
     typedef int ColumnIndex;
@@ -372,12 +374,7 @@ class SqlConnection
         enum Option
         {
             RO = SQLCIPHER_OPEN_NOMUTEX | SQLCIPHER_OPEN_READONLY,
-            /**
-             * *TODO: please remove CREATE option from RW flag when all places
-             *      that need that switched do CRW
-             */
-            RW = SQLCIPHER_OPEN_NOMUTEX | SQLCIPHER_OPEN_READWRITE |
-                SQLCIPHER_OPEN_CREATE,
+            RW = SQLCIPHER_OPEN_NOMUTEX | SQLCIPHER_OPEN_READWRITE, 
             CRW = RW | SQLCIPHER_OPEN_CREATE
         };
     };
@@ -416,6 +413,8 @@ class SqlConnection
     // Synchronization object
     std::unique_ptr<SynchronizationObject> m_synchronizationObject;
 
+    bool m_isKeySet;
+
     virtual void Connect(const std::string &address,
                          Flag::Option = Flag::RO);
     virtual void Disconnect();
@@ -446,6 +445,35 @@ class SqlConnection
      * Destructor
      */
     virtual ~SqlConnection();
+
+    /**
+     * Added extension for encryption functionality:
+     *
+     * SetKey gives sqlcipher key, which will be used to encrypt the database
+     * This function will only fail because of invalid arguments. To check if
+     * database can be opened with provided key, it is necessary to perform
+     * some operation on the database (i.e. read from it) and confirm if it
+     * succeeds.
+     * Password must have length >= 1.
+     *
+     * @param rawPass password given in raw binary format
+     */
+    void SetKey(const std::vector<unsigned char> &rawPass);
+
+    /**
+     * ResetKey is used for changing key used for database encryption.
+     * If key was already set by using SetKey, this function will only change it.
+     * If no key was yet set, this function first will set key with rawPassOld and
+     * then change it to rawPassNew.
+     * Same rules for failing apply as for SetKey.
+     * Both password must have length >=1.
+     *
+     * @param rawPassOld current password for encryption in raw binary format
+     * @param rawPassNew new password for encryption in raw binary format
+     *
+     */
+    void ResetKey(const std::vector<unsigned char> &rawPassOld,
+                  const std::vector<unsigned char> &rawPassNew);
 
     /**
      * Execute SQL command without result

@@ -368,7 +368,7 @@ void SqlConnection::DataCommand::Reset()
 {
     /*
      * According to:
-     * http://www.sqlite.org/c3ref/stmt.html
+     * http://www.sqllite.org/c3ref/stmt.html
      *
      * if last sqlcipher3_step command on this stmt returned an error,
      * then sqlcipher3_reset will return that error, althought it is not an error.
@@ -625,6 +625,62 @@ void SqlConnection::Connect(const std::string &address,
     TurnOnForeignKeys();
 }
 
+static std::string rawToHexString(const std::vector<unsigned char> &raw) {
+    std::string str(raw.size() * 2, '0');
+    for (std::size_t i = 0; i < raw.size(); i++)
+        sprintf(&str[i*2], "%02X", raw[i]);
+    return str;
+}
+
+void SqlConnection::SetKey(const std::vector<unsigned char> &rawPass){
+    if (m_connection == NULL) {
+        LogPedantic("Cannot set key. No connection to DB!");
+        return;
+    }
+    std::string pass = "x'" + rawToHexString(rawPass) + "'";
+    int result = sqlcipher3_key(m_connection, pass.c_str(), pass.length());
+    if (result == SQLCIPHER_OK) {
+        LogPedantic("Set key on DB");
+    } else {
+        //sqlcipher3_key fails only when m_connection == NULL || key == NULL ||
+        //                            key length == 0
+        LogPedantic("Failed to set key on DB");
+        ThrowMsg(Exception::InvalidArguments, result);
+    }
+
+    m_isKeySet = true;
+};
+
+void SqlConnection::ResetKey(const std::vector<unsigned char> &rawPassOld,
+                             const std::vector<unsigned char> &rawPassNew) {
+    if (m_connection == NULL) {
+        LogPedantic("Cannot reset key. No connection to DB!");
+        return;
+    }
+    // sqlcipher3_rekey requires for key to be already set
+    if (!m_isKeySet)
+        SetKey(rawPassOld);
+
+    std::string pass = "x'" + rawToHexString(rawPassNew) + "'";
+    int result = sqlcipher3_rekey(m_connection, pass.c_str(), pass.length());
+    if (result == SQLCIPHER_OK) {
+        LogPedantic("Reset key on DB");
+    } else {
+        //sqlcipher3_rekey fails only when m_connection == NULL || key == NULL ||
+        //                              key length == 0
+        LogPedantic("Failed to reset key on DB");
+        ThrowMsg(Exception::InvalidArguments, result);
+    }
+    //Wiping out the key (required)
+    pass.assign(pass.length(), '0');
+    for(std::size_t i = 0; i < pass.length(); i++) {
+        if(pass[i] != '0') {
+            LogPedantic("Wiping key failed.");
+            ThrowMsg(Exception::InternalError, "Wiping key failed");
+        }
+    }
+}
+
 void SqlConnection::Disconnect()
 {
     if (m_connection == NULL) {
@@ -663,7 +719,7 @@ bool SqlConnection::CheckTableExist(const char *tableName)
     }
 
     DataCommandAutoPtr command =
-        PrepareDataCommand("select tbl_name from sqlite_master where name=?;");
+        PrepareDataCommand("select tbl_name from sqlcipher_master where name=?;");
 
     command->BindString(1, tableName);
 
@@ -680,7 +736,8 @@ SqlConnection::SqlConnection(const std::string &address,
                              SynchronizationObject *synchronizationObject) :
     m_connection(NULL),
     m_dataCommandsCount(0),
-    m_synchronizationObject(synchronizationObject)
+    m_synchronizationObject(synchronizationObject),
+    m_isKeySet(false)
 {
     LogPedantic("Opening database connection to: " << address);
 
