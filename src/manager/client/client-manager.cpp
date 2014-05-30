@@ -31,15 +31,15 @@ Manager::Manager()
 Manager::~Manager(){}
 
 int Manager::saveKey(const Alias &alias, const Key &key, const Policy &policy) {
-    m_impl->saveKey(alias, key, policy);
+    return m_impl->saveKey(alias, key, policy);
 }
 
 int Manager::removeKey(const Alias &alias) {
-    m_impl->removeKey(alias);
+    return m_impl->removeKey(alias);
 }
 
-int Manager::getKey(const Alias &alias, Key &key, const RawData &password) {
-    m_impl->getKey(alias, password, key);
+int Manager::getKey(const Alias &alias, const RawData &password, Key &key) {
+    return m_impl->getKey(alias, password, key);
 }
 
 } // namespace CKM

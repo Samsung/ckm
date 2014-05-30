@@ -22,6 +22,10 @@
  */
 #pragma once
 
+#include <ckm/ckm-type.h>
+
+#include <dpl/serialization.h>
+
 namespace CKM {
 
 extern char const * const SERVICE_SOCKET_ECHO;
@@ -36,8 +40,13 @@ enum class ControlCommand : int {
     RESET_USER_PASSWORD
 };
 
+enum class StorageCommand : int {
+    GET,
+    SAVE,
+    REMOVE,
+};
+
 enum class DBDataType : int {
-    UNKNOWN,
     KEY_RSA_PUBLIC,
     KEY_RSA_PRIVATE,
     KEY_ECDSA_PUBLIC,
@@ -45,6 +54,16 @@ enum class DBDataType : int {
     KEY_AES,
     CERTIFICATE,
     BINARY_DATA
+};
+
+DBDataType toDBDataType(KeyType key);
+
+class IStream;
+
+struct PolicySerializable : public Policy, ISerializable {
+    explicit PolicySerializable(const Policy &);
+    explicit PolicySerializable(IStream &);
+    void Serialize(IStream &) const;
 };
 
 } // namespace CKM

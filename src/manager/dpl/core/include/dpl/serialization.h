@@ -57,6 +57,7 @@ struct Serialization {
     {
         object.Serialize(stream);
     }
+
     static void Serialize(IStream& stream, const ISerializable* const object)
     {
         object->Serialize(stream);

@@ -41,7 +41,7 @@ bool Key::empty() const {
     return m_impl->empty();
 }
 
-Key::KeyType Key::getType() const {
+KeyType Key::getType() const {
     return m_impl->getType();
 }
 

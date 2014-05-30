@@ -27,15 +27,15 @@
 
 namespace CKM {
 
-class Key::KeyImpl {
+class Key::KeyImpl : public ISerializable {
 public:
     KeyImpl();
     KeyImpl(IStream &stream);
     KeyImpl(const RawData &data, KeyType type, const RawData &password);
-    KeyImpl(const KeyImpl &) = delete;
-    KeyImpl(KeyImpl &&) = delete;
-    KeyImpl& operator=(const KeyImpl &) = delete;
-    KeyImpl& operator=(KeyImpl &&) = delete;
+    KeyImpl(const KeyImpl &);
+    KeyImpl(KeyImpl &&);
+    KeyImpl& operator=(const KeyImpl &);
+    KeyImpl& operator=(KeyImpl &&);
 
     KeyType getType() const {
         return m_type;
@@ -49,7 +49,7 @@ public:
         return m_key.empty();
     }
 
-    void Serialize(IStream &stream);
+    void Serialize(IStream &stream) const;
 
     virtual ~KeyImpl();
 private:

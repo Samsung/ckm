@@ -161,13 +161,13 @@ private:
 
 class Manager {
 public:
-    Manager(){}
+    Manager();
 //	Manager(int uid);   // connect to database related with uid
     Manager(const Manager &connection) = delete;
     Manager(Manager &&connection) = delete;
     Manager operator=(const Manager &connection) = delete;
     Manager operator=(Manager && connection) = delete;
-    virtual ~Manager(){}
+    virtual ~Manager();
 
     int saveKey(const Alias &alias, const Key &key, const Policy &policy);
 	// Certificate could not be nonexportable because we must be able to read

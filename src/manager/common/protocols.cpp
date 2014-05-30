@@ -24,11 +24,40 @@
 
 #include <protocols.h>
 
+#include <dpl/serialization.h>
+
 namespace CKM {
 
 char const * const SERVICE_SOCKET_ECHO = "/tmp/.central-key-manager-echo.sock";
 char const * const SERVICE_SOCKET_CKM_CONTROL = "/tmp/.central-key-manager-api-control.sock";
 char const * const SERVICE_SOCKET_CKM_STORAGE = "/tmp/.central-key-manager-api-storage.sock";
+
+DBDataType toDBDataType(KeyType key) {
+    switch(key) {
+    case KeyType::KEY_RSA_PUBLIC:  return DBDataType::KEY_RSA_PRIVATE;
+    case KeyType::KEY_RSA_PRIVATE: return DBDataType::KEY_RSA_PUBLIC;
+    default:
+        // TODO
+        throw 1;
+
+    }
+}
+
+PolicySerializable::PolicySerializable(const Policy &policy)
+  : Policy(policy)
+{}
+
+PolicySerializable::PolicySerializable(IStream &stream) {
+    Deserialization::Deserialize(stream, password);
+    Deserialization::Deserialize(stream, extractable);
+    Deserialization::Deserialize(stream, restricted);
+}
+
+void PolicySerializable::Serialize(IStream &stream) const {
+    Serialization::Serialize(stream, password);
+    Serialization::Serialize(stream, extractable);
+    Serialization::Serialize(stream, restricted);
+}
 
 } // namespace CKM
 
