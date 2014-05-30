@@ -31,6 +31,15 @@ typedef std::vector<unsigned char> RawData;
 typedef std::string Alias;
 typedef std::vector<Alias> AliasVector;
 
+enum class KeyType : int {
+    KEY_NONE,
+    KEY_RSA_PUBLIC,
+    KEY_RSA_PRIVATE,
+    //        KEY_ECDSA_PUBLIC,
+    //        KEY_ECDSA_PRIVATE,
+    //        KEY_AES
+};
+
 struct Policy {
     Policy(const RawData &pass = RawData(), bool extract = true, bool rest = false)
       : password(pass)
@@ -43,7 +52,7 @@ struct Policy {
 };
 
 // Added by Dongsun Lee
-enum class HashAlgorithm : unsigned int {
+enum class HashAlgorithm : int {
     SHA1,
     SHA256,
     SHA384,
@@ -51,7 +60,7 @@ enum class HashAlgorithm : unsigned int {
 };
 
 // Added by Dongsun Lee
-enum class RSAPaddingAlgorithm : unsigned int {
+enum class RSAPaddingAlgorithm : int {
     XRSA_PKCS1_PADDING,
     XRSA_SSLV23_PADDING,
     XRSA_NO_PADDING,

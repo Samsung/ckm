@@ -70,15 +70,6 @@ public:
           // TODO
     };
 
-    enum class KeyType : unsigned int {
-        KEY_NONE,
-        KEY_RSA_PUBLIC,
-        KEY_RSA_PRIVATE,
-//        KEY_ECDSA_PUBLIC,
-//        KEY_ECDSA_PRIVATE,
-//        KEY_AES
-    };
-
     Key();
     Key(const RawData &rawData, KeyType type, const RawData &password = RawData()); // Import key
     Key(const Key &key) = delete;
