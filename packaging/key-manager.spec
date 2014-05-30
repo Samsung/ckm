@@ -133,6 +133,7 @@ fi
 %defattr(-,root,root,-)
 %{_libdir}/libkey-manager-client.so
 %{_libdir}/libkey-manager-commons.so
-/usr/include/ckm/ckm/key-manager.h
-/usr/include/ckm/ckm/errors.h
+%{_includedir}/ckm/ckm/key-manager.h
+%{_includedir}/ckm/ckm/ckm-error.h
+%{_includedir}/ckm/ckm/ckm-type.h
 %{_libdir}/pkgconfig/*.pc
