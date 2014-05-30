@@ -1,8 +1,6 @@
 /*
  *  Copyright (c) 2000 - 2014 Samsung Electronics Co., Ltd All Rights Reserved
  *
- *  Contact: Bumjin Im <bj.im@samsung.com>
- *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
  *  You may obtain a copy of the License at
@@ -37,8 +35,7 @@
 
 #include <message-buffer.h>
 
-//#include <key-manager.h>
-#include <ckm/errors.h>
+#include <ckm/ckm-error.h>
 
 IMPLEMENT_SAFE_SINGLETON(CKM::Log::LogSystem);
 

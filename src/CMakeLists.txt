@@ -59,9 +59,12 @@ INCLUDE_DIRECTORIES(
     )
 
 SET(KEY_MANAGER_CLIENT_SOURCES
+    ${KEY_MANAGER_CLIENT_SRC_PATH}/client-control.cpp
     ${KEY_MANAGER_CLIENT_SRC_PATH}/client-common.cpp
     ${KEY_MANAGER_CLIENT_SRC_PATH}/client-echo.cpp
-    ${KEY_MANAGER_CLIENT_SRC_PATH}/client-control.cpp
+    ${KEY_MANAGER_CLIENT_SRC_PATH}/client-key.cpp
+    ${KEY_MANAGER_CLIENT_SRC_PATH}/client-key-impl.cpp
+    ${KEY_MANAGER_CLIENT_SRC_PATH}/client-manager-impl.cpp
     )
 
 ADD_LIBRARY(${TARGET_KEY_MANAGER_CLIENT} SHARED ${KEY_MANAGER_CLIENT_SOURCES})
@@ -87,7 +90,8 @@ INSTALL(TARGETS ${TARGET_KEY_MANAGER} DESTINATION bin)
 
 INSTALL(FILES
     ${KEY_MANAGER_SRC_PATH}/include/ckm/key-manager.h
-    ${KEY_MANAGER_SRC_PATH}/include/ckm/errors.h
+    ${KEY_MANAGER_SRC_PATH}/include/ckm/ckm-error.h
+    ${KEY_MANAGER_SRC_PATH}/include/ckm/ckm-type.h
     DESTINATION /usr/include/ckm/ckm
     )
 

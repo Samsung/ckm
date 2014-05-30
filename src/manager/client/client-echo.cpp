@@ -1,7 +1,5 @@
 /* Copyright (c) 2000 - 2013 Samsung Electronics Co., Ltd All Rights Reserved
  *
- *  Contact: Bumjin Im <bj.im@samsung.com>
- *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
  *  You may obtain a copy of the License at
@@ -13,13 +11,12 @@
  *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *  See the License for the specific language governing permissions and
  *  limitations under the License
- */
-
-/*
+ *
+ *
  * @file        client-echo.cpp
  * @author      Zofia Abramowska (z.abramowska@samsung.com)
  * @version     1.0
- * @version     This file contains example of key-manager client implementation
+ * @brief       This file contains example of key-manager client implementation
  */
 
 #include <dpl/log/log.h>
@@ -29,7 +26,7 @@
 #include <client-common.h>
 #include <protocols.h>
 
-#include <ckm/errors.h>
+#include <ckm/ckm-error.h>
 
 KEY_MANAGER_API
 int key_manager_echo(const char *echo, char** oche) {

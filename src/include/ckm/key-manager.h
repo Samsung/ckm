@@ -1,29 +1,35 @@
+/*
+ *  Copyright (c) 2000 - 2013 Samsung Electronics Co., Ltd All Rights Reserved
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License
+ *
+ *
+ * @file        key-manager.h
+ * @author      Bartlomiej Grzelewski (b.grzelewski@samsung.com)
+ * @version     1.0
+ * @brief       Main header file for client library.
+ */
 #pragma once
 
 #include <string>
 #include <vector>
 #include <memory>
 
-#include <ckm/errors.h>
+#include <ckm/ckm-error.h>
+#include <ckm/ckm-type.h>
 
 // Central Key Manager namespace
 namespace CKM {
-
-// used to pass password and raw key data
-typedef std::vector<unsigned char> RawData;
-typedef std::string Alias;
-typedef std::vector<Alias> AliasVector;
-
-struct Policy {
-	Policy(const RawData &pass = RawData(), bool extract = true, bool rest = false)
-      : password(pass)
-      , extractable(extract)
-      , restricted(rest)
-	{}
-    RawData password;  // byte array used to encrypt data inside CKM
-    bool extractable;  // if true key may be extracted from storage
-    bool restricted;   // if true only key owner may see data
-};
 
 // used by login manager to unlock user data with global password
 // [CR] too generic name for class. maybe UserDataControl?
@@ -55,56 +61,44 @@ private:
     class ControlImpl;
     std::shared_ptr<ControlImpl> m_impl;
 };
-/*
+
 class Key {
 public:
-    // [CR] (just asking): is there any AES private/public?
-    // No. AES is symetric cypher so there is only one key
-    enum class Type : unsigned int {
+    class KeyImpl;
+    enum class ECType : unsigned int {
+        prime192v1
+          // TODO
+    };
+
+    enum class KeyType : unsigned int {
         KEY_NONE,
         KEY_RSA_PUBLIC,
         KEY_RSA_PRIVATE,
-        KEY_ECDSA_PUBLIC,
-        KEY_ECDSA_PRIVATE,
-        KEY_AES
-    };
-
-	enum class ECType : unsigned int {
-		prime192v1
-		// TODO
-	}
-
-    enum class Format : unsigned int {
-        PEM, DER
+//        KEY_ECDSA_PUBLIC,
+//        KEY_ECDSA_PRIVATE,
+//        KEY_AES
     };
 
     Key();
-    Key(const RawData &rawData, Format format, Type type, RawData &password = RawData()); // Import key
-    Key(const Key &key);
-    Key(Key &&key);
-    Key& operator=(const Key &key);
-    Key& operator=(Key &&key);
+    Key(const RawData &rawData, KeyType type, const RawData &password = RawData()); // Import key
+    Key(const Key &key) = delete;
+    Key(Key &&key) = delete;
+    Key& operator=(const Key &key) = delete;
+    Key& operator=(Key &&key) = delete;
     virtual ~Key(); // This destructor must overwrite memory used by key with some random data.
 
-    // [CR] why is this needed?
-    // Default constructor is required by standard containers.
-    // Default constructor will create empty Key class.
     bool empty() const;
-
-    // Type of key
-    Type getType() const;
-
-    // key size in bits RSA specific
+    KeyType getType() const;
     int getSize() const;
-
-	// Eliptic curve type
 	ECType getCurve() const;
+    RawData getKey() const;
+    KeyImpl* getImpl() const;
 
 private:
-    class KeyImpl;
     std::shared_ptr<KeyImpl> m_impl;
 };
 
+/*
 class Certificate {
 public:
     enum class FingerprintType : unsigned int {
@@ -121,10 +115,10 @@ public:
 
     Certificate();
     Certificate(const RawData &rawData, int format);
-	Certificate(const Certificate &certificate);
-	Certificate(Certificate &&certificate);
-	Certificate& operator=(const Certificate &certificate);
-	Certificate& operator=(Certificate &&certificate);
+	Certificate(const Certificate &certificate) = delete;
+	Certificate(Certificate &&certificate) = delete;
+	Certificate& operator=(const Certificate &certificate) = delete;
+	Certificate& operator=(Certificate &&certificate) = delete;
 
 	bool empty() const;
 
@@ -172,90 +166,95 @@ private:
 	class Pkcs12Impl;
 	Pkcs12Impl *m_impl;
 };
+*/
 
 class Manager {
 public:
-    Manager();
-	Manager(int uid);   // connect to database related with uid
-    Manager(const Manager &connection);
-    Manager(Manager &&connection);
-    Manager operator=(const Manager &connection);
-    Manager operator=(Manager && connection);
-    virtual ~Manager();
+    Manager(){}
+//	Manager(int uid);   // connect to database related with uid
+    Manager(const Manager &connection) = delete;
+    Manager(Manager &&connection) = delete;
+    Manager operator=(const Manager &connection) = delete;
+    Manager operator=(Manager && connection) = delete;
+    virtual ~Manager(){}
 
     int saveKey(const Alias &alias, const Key &key, const Policy &policy);
 	// Certificate could not be nonexportable because we must be able to read
 	// extension data in the client during validation process.
-    int saveCertificate(const Alias &alias, const Certificate &cert, const Policy &policy);
+//    int saveCertificate(const Alias &alias, const Certificate &cert, const Policy &policy);
 
     int removeKey(const Alias &alias);
-    int removeCertificate(const Alias &alias);
+//    int removeCertificate(const Alias &alias);
 
-    int getKey(const Alias &alias, Key &key, RawData &password);
-    int getCertificate(const Alias &alias, Certificate &certificate, RawData &password = RawData());
+    int getKey(const Alias &alias, const RawData &password, Key &key);
+//    int getCertificate(
+//            const Alias &alias,
+//            const RawData &password,
+//            Certificate &certificate);
 
     // This will extract list of all Keys and Certificates in Key Store
     int requestKeyAliasVector(AliasVector &alias);          // send request for list of all keys that application/user may use
-    int requestCertificateAliasVector(AliasVector &alias);  // send request for list of all certs that application/user may use
+//    int requestCertificateAliasVector(AliasVector &alias);  // send request for list of all certs that application/user may use
 
     // Added By Dongsun Lee
-    int saveData(const Alias &alias, const RawData &data, const Policy &policy);
-    int removeData(const Alias &alias);
-    int getData(const Alias &alias, RawData &data, RawData &password = RawData());
-    int requestDataAliasVector(AliasVector &alias);
-
-    int createKeyPairRSA(
-			const int size,              // size in bits [1024, 2048, 4096]
-			const Alias &privateKeyAlias,
-			const Alias &publicKeyAlias,
-			const Policy &policyPrivateKey = Policy(),
-			const Policy &policyPublicKey = Policy());
-
-	int createKeyPairECDSA(
-			const Key::ECType type,
-			const Alias &privateKeyAlias,
-			const Alias &publicKeyAlias,
-			const Policy &policyPrivateKey = Policy(),
-			const Policy &policyPublicKey = Policy());
-
-	int createSignature(
-			const Alias &privateKeyAlias,
-			const RawData &password,           // password for private_key
-			const RawData &message,
-			const HashAlgorith hash,
-			TODO Padding,
-			RawData &signature);
-
-	int verifySignature(
-			const Alias &publicKeyOrCertAlias,
-			const RawData &password,           // password for public_key (optional)
-			const RawData &message,
-			const RawData &signature,
-			const HashAlgorithm,
-			TODO Padding);
-
-	// this fuction will return chains of certificates and check it with openssl
-	// status : OK, INCOMPLETE_CHAIN, VERIFICATION_FAILED
-	int getCertiticateChain(
-			const Certificate &certificate,
-			const CertificateVector &untrustedCertificates,
-			CertificateVector &certificateChainVector);
-
-	int getCertificateChain(
-			const Certificate &certificate,
-			const AliasVector &untrustedCertificates,
-			CertificateVector &certificateChainVector);
-
-	int strictCACheck(const CertificateVector &certificateVector);
-
-	// This function will check all certificates in chain except Root CA.
-	int ocspCheck(const CertificateVector &certificateChainVector);
+//    int saveData(const Alias &alias, const RawData &data, const Policy &policy);
+//    int removeData(const Alias &alias);
+//    int getData(const Alias &alias, RawData &data, RawData &password = RawData());
+//    int requestDataAliasVector(AliasVector &alias);
+//
+//    int createKeyPairRSA(
+//			const int size,              // size in bits [1024, 2048, 4096]
+//			const Alias &privateKeyAlias,
+//			const Alias &publicKeyAlias,
+//			const Policy &policyPrivateKey = Policy(),
+//			const Policy &policyPublicKey = Policy());
+//
+//	int createKeyPairECDSA(
+//			const Key::ECType type,
+//			const Alias &privateKeyAlias,
+//			const Alias &publicKeyAlias,
+//			const Policy &policyPrivateKey = Policy(),
+//			const Policy &policyPublicKey = Policy());
+//
+//	int createSignature(
+//			const Alias &privateKeyAlias,
+//			const RawData &password,           // password for private_key
+//			const RawData &message,
+//			HashAlgorith hash,
+//			RSAPaddingAlgorithm padding,
+//			RawData &signature);
+//
+//	int verifySignature(
+//			const Alias &publicKeyOrCertAlias,
+//			const RawData &password,           // password for public_key (optional)
+//			const RawData &message,
+//			const RawData &signature,
+//			HashAlgorithm hash,
+//            RSAPaddingAlgorithm padding);
+//
+//	// this fuction will return chains of certificates and check it with openssl
+//	// status : OK, INCOMPLETE_CHAIN, VERIFICATION_FAILED
+//	int getCertiticateChain(
+//			const Certificate &certificate,
+//			const CertificateVector &untrustedCertificates,
+//			CertificateVector &certificateChainVector);
+//
+//	int getCertificateChain(
+//			const Certificate &certificate,
+//			const AliasVector &untrustedCertificates,
+//			CertificateVector &certificateChainVector);
+//
+//	int strictCACheck(const CertificateVector &certificateVector);
+//
+//	// This function will check all certificates in chain except Root CA.
+//	int ocspCheck(const CertificateVector &certificateChainVector);
 
 private:
     class ManagerImpl;
-    std::shared_ptr<ManagerSyncImpl> m_impl;
+    std::shared_ptr<ManagerImpl> m_impl;
 };
 
+/*
 // Asynchronous interface to Central Key Manager. This implementation uses
 // internal thread for connection.
 class ManagerAsync {

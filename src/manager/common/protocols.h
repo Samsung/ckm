@@ -1,8 +1,6 @@
 /*
  *  Copyright (c) 2000 - 2014 Samsung Electronics Co., Ltd All Rights Reserved
  *
- *  Contact: Bumjin Im <bj.im@samsung.com>
- *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
  *  You may obtain a copy of the License at
@@ -36,6 +34,17 @@ enum class ControlCommand : int {
     REMOVE_USER_DATA,
     CHANGE_USER_PASSWORD,
     RESET_USER_PASSWORD
+};
+
+enum class DBDataType : int {
+    UNKNOWN,
+    KEY_RSA_PUBLIC,
+    KEY_RSA_PRIVATE,
+    KEY_ECDSA_PUBLIC,
+    KEY_ECDSA_PRIVATE,
+    KEY_AES,
+    CERTIFICATE,
+    BINARY_DATA
 };
 
 } // namespace CKM
