@@ -28,19 +28,24 @@
 
 namespace CKM {
 
-int Manager::ManagerImpl::saveKey(const Alias &alias, const Key &key, const Policy &policy) {
+int Manager::ManagerImpl::saveBinaryData(
+    const Alias &alias,
+    DBDataType dataType,
+    const RawData &rawData,
+    const Policy &policy)
+{
     m_counter++;
 
     return try_catch([&] {
-        if (alias.empty() || key.empty())
+        if (alias.empty() || rawData.empty())
             return KEY_MANAGER_API_ERROR_INPUT_PARAM;
 
         MessageBuffer send, recv;
         Serialization::Serialize(send, static_cast<int>(LogicCommand::SAVE));
         Serialization::Serialize(send, m_counter);
-        Serialization::Serialize(send, static_cast<int>(toDBDataType(key.getType())));
+        Serialization::Serialize(send, static_cast<int>(dataType));
         Serialization::Serialize(send, alias);
-        Serialization::Serialize(send, key.getKey());
+        Serialization::Serialize(send, rawData);
         Serialization::Serialize(send, PolicySerializable(policy));
 
         int retCode = sendToServer(
@@ -68,7 +73,20 @@ int Manager::ManagerImpl::saveKey(const Alias &alias, const Key &key, const Poli
     });
 }
 
-int Manager::ManagerImpl::removeKey(const Alias &alias) {
+int Manager::ManagerImpl::saveKey(const Alias &alias, const Key &key, const Policy &policy) {
+    return saveBinaryData(alias, toDBDataType(key.getType()), key.getKey(), policy);
+}
+
+int Manager::ManagerImpl::saveCertificate(
+    const Alias &alias,
+    const Certificate &cert,
+    const Policy &policy)
+{
+    return saveBinaryData(alias, DBDataType::CERTIFICATE, cert.getDER(), policy);
+}
+
+int Manager::ManagerImpl::removeBinaryData(const Alias &alias, DBDataType dataType)
+{
     return try_catch([&] {
         if (alias.empty())
             return KEY_MANAGER_API_ERROR_INPUT_PARAM;
@@ -76,7 +94,7 @@ int Manager::ManagerImpl::removeKey(const Alias &alias) {
         MessageBuffer send, recv;
         Serialization::Serialize(send, static_cast<int>(LogicCommand::REMOVE));
         Serialization::Serialize(send, m_counter);
-        Serialization::Serialize(send, static_cast<int>(DBDataType::KEY_RSA_PUBLIC));
+        Serialization::Serialize(send, static_cast<int>(dataType));
         Serialization::Serialize(send, alias);
 
         int retCode = sendToServer(
@@ -102,6 +120,14 @@ int Manager::ManagerImpl::removeKey(const Alias &alias) {
 
         return retCode;
     });
+}
+
+int Manager::ManagerImpl::removeKey(const Alias &alias) {
+    return removeBinaryData(alias, DBDataType::KEY_RSA_PUBLIC);
+}
+
+int Manager::ManagerImpl::removeCertificate(const Alias &alias) {
+    return removeBinaryData(alias, DBDataType::CERTIFICATE);
 }
 
 int Manager::ManagerImpl::getBinaryData(
@@ -174,6 +200,31 @@ int Manager::ManagerImpl::getKey(const Alias &alias, const RawData &password, Ke
         return KEY_MANAGER_API_ERROR_BAD_RESPONSE;
 
     key = keyParsed;
+
+    return KEY_MANAGER_API_SUCCESS;
+}
+
+int Manager::ManagerImpl::getCertificate(const Alias &alias, const RawData &password, Certificate &cert)
+{
+    DBDataType recvDataType;
+    RawData rawData;
+
+    int retCode = getBinaryData(
+        alias,
+        DBDataType::CERTIFICATE,
+        password,
+        recvDataType,
+        rawData);
+
+    if (retCode != KEY_MANAGER_API_SUCCESS)
+        return retCode;
+
+    Certificate certParsed(rawData, Certificate::Format::FORM_DER);
+
+    if (certParsed.empty())
+        return KEY_MANAGER_API_ERROR_BAD_RESPONSE;
+
+    cert = certParsed;
 
     return KEY_MANAGER_API_SUCCESS;
 }

@@ -71,6 +71,7 @@ enum class RSAPaddingAlgorithm : int {
 
 // Internal types
 class KeyImpl;
+class CertificateImpl;
 
 } // namespace CKM
 

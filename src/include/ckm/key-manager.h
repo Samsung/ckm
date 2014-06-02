@@ -73,7 +73,7 @@ public:
     Key(const RawData &rawData, KeyType type, const RawData &password = RawData()); // Import key
     Key(const Key &key);
     Key& operator=(const Key &key);
-    virtual ~Key(); // This destructor must overwrite memory used by key with some random data.
+    virtual ~Key();
 
     bool empty() const;
     KeyType getType() const;
@@ -86,7 +86,6 @@ private:
     std::shared_ptr<KeyImpl> m_impl;
 };
 
-/*
 class Certificate {
 public:
     enum class FingerprintType : unsigned int {
@@ -96,41 +95,37 @@ public:
     };
 
     enum class Format : unsigned int {
-        PEM,
-        DER,
-        BASE64_DER      // binary form encoded in BASE64
+        FORM_BASE64,
+        FORM_DER
     };
 
     Certificate();
-    Certificate(const RawData &rawData, int format);
-	Certificate(const Certificate &certificate) = delete;
-	Certificate(Certificate &&certificate) = delete;
-	Certificate& operator=(const Certificate &certificate) = delete;
-	Certificate& operator=(Certificate &&certificate) = delete;
+    Certificate(const RawData &rawData, Format format);
+	Certificate(const Certificate &certificate);
+	Certificate& operator=(const Certificate &certificate);
 
 	bool empty() const;
 
-    Key getKey() const;
+//  Key getKey() const;
 
-    // [CR] is this a common principle to leave void* or should we directly return x509 struct and include openssl header here? (just asking)
-    // This function  will return openssl struct X509*. We don't want to
-    // include all openssl headers in this file so we need to return void
-    // or move this function to some other header.
+    // This function  will return openssl struct X509*.
     void *getX509();
-
-    // *** standard certificate operation begin ***
     RawData getDER() const;
-    bool isSignedBy(const Certificate &parent) const;
-    RawData getFingerprint(FingerprintType type) const;
-	bool isCA() const;
-    // *** standard certificate operation end ***
+    CertificateImpl* getImpl();
+
+//    // *** standard certificate operation begin ***
+//    RawData getDER() const;
+//    bool isSignedBy(const Certificate &parent) const;
+//    RawData getFingerprint(FingerprintType type) const;
+//	bool isCA() const;
+//    // *** standard certificate operation end ***
 private:
-    class CertificateImpl;
     std::shared_ptr<CertificateImpl> m_impl;
 };
 
 typedef std::vector<Certificate> CertificateVector;
 
+/*
 class Pkcs12 {
 public:
 	Pkcs12();
@@ -167,18 +162,16 @@ public:
     virtual ~Manager();
 
     int saveKey(const Alias &alias, const Key &key, const Policy &policy);
-	// Certificate could not be nonexportable because we must be able to read
-	// extension data in the client during validation process.
-//    int saveCertificate(const Alias &alias, const Certificate &cert, const Policy &policy);
+    int saveCertificate(const Alias &alias, const Certificate &cert, const Policy &policy);
 
     int removeKey(const Alias &alias);
-//    int removeCertificate(const Alias &alias);
+    int removeCertificate(const Alias &alias);
 
     int getKey(const Alias &alias, const RawData &password, Key &key);
-//    int getCertificate(
-//            const Alias &alias,
-//            const RawData &password,
-//            Certificate &certificate);
+    int getCertificate(
+            const Alias &alias,
+            const RawData &password,
+            Certificate &certificate);
 
     // This will extract list of all Keys and Certificates in Key Store
     int requestKeyAliasVector(AliasVector &alias);          // send request for list of all keys that application/user may use

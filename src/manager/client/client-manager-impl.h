@@ -38,7 +38,21 @@ public:
     int removeKey(const Alias &alias);
     int getKey(const Alias &alias, const RawData &password, Key &key);
 
+    int saveCertificate(const Alias &alias, const Certificate &cert, const Policy &policy);
+    int removeCertificate(const Alias &alias);
+    int getCertificate(const Alias &alias, const RawData &password, Certificate &cert);
+
 protected:
+    int saveBinaryData(
+        const Alias &alias,
+        DBDataType dataType,
+        const RawData &rawData,
+        const Policy &policy);
+
+    int removeBinaryData(
+        const Alias &alias,
+        DBDataType dataType);
+        
     int getBinaryData(
         const Alias &alias,
         DBDataType sendDataType,
