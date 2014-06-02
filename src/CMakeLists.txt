@@ -18,6 +18,7 @@ SET(KEY_MANAGER_SOURCES
     ${KEY_MANAGER_PATH}/service/ckm-service.cpp
     ${KEY_MANAGER_PATH}/service/ckm-logic.cpp
     ${KEY_MANAGER_PATH}/service/key-provider.cpp
+    ${KEY_MANAGER_PATH}/service/ocsp.cpp
     )
 
 SET_SOURCE_FILES_PROPERTIES(
