@@ -13,7 +13,7 @@ public:
 	// we may not be able to set up iv in constructor.
 	// For example KeyProvider will not know the iv, it may set only the
 	// key information.
-	KeyAES();
+	KeyAES(){};
 	KeyAES(const RawData &key, const RawData &iv = RawData());
 
 	KeyAES(const KeyAES &key);

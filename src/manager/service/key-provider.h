@@ -1,6 +1,8 @@
 #pragma once
 
-struct KeyMaterial;
+#include <ckm-key-provider.h>
+#include <ckm/ckm-type.h>
+#include <key-aes.h>
 
 namespace CKM {
 
@@ -26,7 +28,9 @@ class KeyProvider {
 
     // EncryptedKey key extracted from database. Used to encrypt application data.
     // This key will be used to decrypt/encrypt data in ROW
-    KeyAES decryptDEK(const RawData &encrypedDEKInWrapForm);
+	// [tak] modify method name more appropriately
+	// decryptDEK -> unwrapDEK
+    KeyAES unwrapDEK(const RawData &DEKInWrapForm);
 
     // Returns WRAPPED DEK. This will be written to datbase.
     // This key will be used to encrypt all application information.
@@ -41,13 +45,19 @@ class KeyProvider {
     static RawData generateDomainKEK(const std::string &user, const RawData &userPassword);
 
     // This will be called by framework at the begin of the program
-    static initializeLibrary();
+	// [tak] need to declare return type
+    static int initializeLibrary();
     // This will be called by framework at the end of the program
-    static closeLibrary();
+	// [tak] need to declare return type
+    static int closeLibrary();
 
     virtual ~KeyProvider();
 private:
-    KeyMaterial* m_dkek;
+	// [tak] modify variable name
+	// m_dkek -> m_rawDKEK
+    KeyMaterial* m_rawDKEK;
+
+	static int s_isInitialized;
 };
 
 } // namespace CKM

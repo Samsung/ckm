@@ -31,6 +31,7 @@ INCLUDE_DIRECTORIES(
     ${COMMON_PATH}/common
     ${COMMON_PATH}/dpl/core/include
     ${COMMON_PATH}/dpl/log/include
+	${COMMON_PATH}/service
     )
 
 ADD_LIBRARY(${TARGET_KEY_MANAGER_COMMON} SHARED ${COMMON_SOURCES})
@@ -47,7 +48,25 @@ TARGET_LINK_LIBRARIES(${TARGET_KEY_MANAGER_COMMON}
     ${COMMON_DEP_LIBRARIES}
     )
 
+###########################################################################
+SET(KEY_PROVIDER_SOURCES
+    ${COMMON_PATH}/service/ckm-key-provider-dummy.c                             
+    )
+
+ADD_LIBRARY(${TARGET_KEY_MANAGER_KEY_PROVIDER} SHARED ${KEY_PROVIDER_SOURCES})
+SET_TARGET_PROPERTIES(
+	${TARGET_KEY_MANAGER_KEY_PROVIDER}
+	PROPERTIES
+		COMPILE_FLAGS "-fPIC -c"
+		SOVERSION 1.0.0
+		VERSION 1.0.0
+	)
+
+##########################################################################
+
 ################################################################################
 
 INSTALL(TARGETS ${TARGET_KEY_MANAGER_COMMON} DESTINATION lib)
+
+INSTALL(TARGETS ${TARGET_KEY_MANAGER_KEY_PROVIDER} DESTINATION lib)
 

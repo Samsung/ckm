@@ -47,6 +47,7 @@ Central Key Manager (Development)
 %prep
 %setup -q
 
+
 %build
 %if 0%{?sec_build_binary_debug_enable}
     export CFLAGS="$CFLAGS -DTIZEN_DEBUG_ENABLE"
@@ -54,11 +55,12 @@ Central Key Manager (Development)
     export FFLAGS="$FFLAGS -DTIZEN_DEBUG_ENABLE"
 %endif
 
-export LDFLAGS+="-Wl,--rpath=%{_libdir}"
+
+export LDFLAGS+="-Wl,--rpath=%{_libdir} "
 
 %cmake . -DVERSION=%{version} \
         -DCMAKE_BUILD_TYPE=%{?build_type:%build_type}%{!?build_type:RELEASE} \
-        -DCMAKE_VERBOSE_MAKEFILE=ON
+        -DCMAKE_VERBOSE_MAKEFILE=ON 
 make %{?jobs:-j%jobs}
 
 %install
@@ -67,14 +69,15 @@ mkdir -p %{buildroot}/usr/share/license
 cp LICENSE %{buildroot}/usr/share/license/%{name}
 cp LICENSE %{buildroot}/usr/share/license/libkey-manager-client
 mkdir -p %{buildroot}/etc/security/
-%make_install
 
+%make_install
 mkdir -p %{buildroot}/usr/lib/systemd/system/multi-user.target.wants
 mkdir -p %{buildroot}/usr/lib/systemd/system/sockets.target.wants
 ln -s ../central-key-manager.service %{buildroot}/usr/lib/systemd/system/multi-user.target.wants/central-key-manager.service
 ln -s ../central-key-manager-echo.socket %{buildroot}/usr/lib/systemd/system/sockets.target.wants/central-key-manager-echo.socket
 ln -s ../central-key-manager-api-control.socket %{buildroot}/usr/lib/systemd/system/sockets.target.wants/central-key-manager-api-control.socket
 ln -s ../central-key-manager-api-storage.socket %{buildroot}/usr/lib/systemd/system/sockets.target.wants/central-key-manager-api-storage.socket
+
 
 %clean
 rm -rf %{buildroot}
@@ -112,6 +115,8 @@ fi
 %manifest %{_datadir}/key-manager.manifest
 %attr(755,root,root) /usr/bin/key-manager
 %{_libdir}/libkey-manager-commons.so.*
+%{_libdir}/libkey-manager-key-provider.so.*
+%{_libdir}/libkey-manager-key-provider.so
 %attr(-,root,root) /usr/lib/systemd/system/multi-user.target.wants/central-key-manager.service
 %attr(-,root,root) /usr/lib/systemd/system/central-key-manager.service
 %attr(-,root,root) /usr/lib/systemd/system/central-key-manager.target
