@@ -30,6 +30,7 @@
 
 #include <ckm-service.h>
 #include <ckm-logic.h>
+#include <client-key-impl.h>
 
 namespace {
 const CKM::InterfaceID SOCKET_ID_CONTROL = 0;
@@ -68,25 +69,24 @@ void CKMService::process(const ReadEvent &event) {
     LogDebug("Read event");
     auto &info = m_connectionInfoMap[event.connectionID.counter];
     info.buffer.Push(event.rawBuffer);
-    while(processOne(event.connectionID, info.buffer, info.interfaceID));
+    while(processOne(event.connectionID, info));
 }
 
 bool CKMService::processOne(
     const ConnectionID &conn,
-    MessageBuffer &buffer,
-    InterfaceID interfaceID)
+    ConnectionInfo &info)
 {
     LogDebug ("process One");
     RawBuffer response;
 
     Try {
-        if (!buffer.Ready())
+        if (!info.buffer.Ready())
             return false;
 
-        if (interfaceID == SOCKET_ID_CONTROL)
-            response = processControl(buffer);
+        if (info.interfaceID == SOCKET_ID_CONTROL)
+            response = processControl(info.buffer);
         else
-            response = processStorage(conn, buffer);
+            response = processStorage(info.credentials, info.buffer);
 
         m_serviceManager->Write(conn, response);
 
@@ -133,10 +133,63 @@ RawBuffer CKMService::processControl(MessageBuffer &buffer) {
     }
 }
 
-RawBuffer CKMService::processStorage(const ConnectionID &conn, MessageBuffer &buffer){
-    (void)conn;
-    (void)buffer;
-    return RawBuffer();
+RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer){
+    int command;
+    int commandId;
+    int tmpDataType;
+    Alias alias;
+    std::string user;
+    LogicCommand sc;
+
+    Deserialization::Deserialize(buffer, command);
+    Deserialization::Deserialize(buffer, commandId);
+
+    sc = static_cast<LogicCommand>(command);
+
+    switch(sc) {
+        case LogicCommand::SAVE:
+        {
+            RawData rawData;
+            PolicySerializable policy;
+            Deserialization::Deserialize(buffer, tmpDataType);
+            Deserialization::Deserialize(buffer, alias);
+            Deserialization::Deserialize(buffer, rawData);
+            Deserialization::Deserialize(buffer, policy);
+            return m_logic->saveData(
+                cred,
+                commandId,
+                static_cast<DBDataType>(tmpDataType),
+                alias,
+                rawData,
+                policy);
+        }
+        case LogicCommand::REMOVE:
+        {
+            Deserialization::Deserialize(buffer, tmpDataType);
+            Deserialization::Deserialize(buffer, alias);
+            return m_logic->removeData(
+                cred,
+                commandId,
+                static_cast<DBDataType>(tmpDataType),
+                alias);
+        }
+        case LogicCommand::GET:
+        {
+            RawData password;
+            Deserialization::Deserialize(buffer, tmpDataType);
+            Deserialization::Deserialize(buffer, alias);
+            Deserialization::Deserialize(buffer, password);
+            return m_logic->getData(
+                cred,
+                commandId,
+                static_cast<DBDataType>(tmpDataType),
+                alias,
+                password);
+        }
+        default:
+        // TODO
+            throw 1; // broken protocol
+    }
 }
 
 

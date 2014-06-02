@@ -64,7 +64,6 @@ private:
 
 class Key {
 public:
-    class KeyImpl;
     enum class ECType : unsigned int {
         prime192v1
           // TODO
@@ -72,10 +71,8 @@ public:
 
     Key();
     Key(const RawData &rawData, KeyType type, const RawData &password = RawData()); // Import key
-    Key(const Key &key) = delete;
-    Key(Key &&key) = delete;
-    Key& operator=(const Key &key) = delete;
-    Key& operator=(Key &&key) = delete;
+    Key(const Key &key);
+    Key& operator=(const Key &key);
     virtual ~Key(); // This destructor must overwrite memory used by key with some random data.
 
     bool empty() const;

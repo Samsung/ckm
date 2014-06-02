@@ -18,12 +18,13 @@
  * @version     1.0
  * @brief       Manager implementation.
  */
-#include <client-manager-impl.h>
-#include <message-buffer.h>
-#include <client-common.h>
 #include <dpl/serialization.h>
-#include <protocols.h>
+
+#include <client-manager-impl.h>
+#include <client-common.h>
 #include <client-key-impl.h>
+#include <message-buffer.h>
+#include <protocols.h>
 
 namespace CKM {
 
@@ -35,11 +36,11 @@ int Manager::ManagerImpl::saveKey(const Alias &alias, const Key &key, const Poli
             return KEY_MANAGER_API_ERROR_INPUT_PARAM;
 
         MessageBuffer send, recv;
-        Serialization::Serialize(send, static_cast<int>(StorageCommand::SAVE));
+        Serialization::Serialize(send, static_cast<int>(LogicCommand::SAVE));
         Serialization::Serialize(send, m_counter);
         Serialization::Serialize(send, static_cast<int>(toDBDataType(key.getType())));
         Serialization::Serialize(send, alias);
-        Serialization::Serialize(send, key.getImpl());
+        Serialization::Serialize(send, key.getKey());
         Serialization::Serialize(send, PolicySerializable(policy));
 
         int retCode = sendToServer(
@@ -73,7 +74,7 @@ int Manager::ManagerImpl::removeKey(const Alias &alias) {
             return KEY_MANAGER_API_ERROR_INPUT_PARAM;
 
         MessageBuffer send, recv;
-        Serialization::Serialize(send, static_cast<int>(StorageCommand::REMOVE));
+        Serialization::Serialize(send, static_cast<int>(LogicCommand::REMOVE));
         Serialization::Serialize(send, m_counter);
         Serialization::Serialize(send, static_cast<int>(DBDataType::KEY_RSA_PUBLIC));
         Serialization::Serialize(send, alias);
@@ -103,15 +104,21 @@ int Manager::ManagerImpl::removeKey(const Alias &alias) {
     });
 }
 
-int Manager::ManagerImpl::getKey(const Alias &alias, const RawData &password, Key &key) {
+int Manager::ManagerImpl::getBinaryData(
+    const Alias &alias,
+    DBDataType sendDataType,
+    const RawData &password,
+    DBDataType &recvDataType,
+    RawData &rawData)
+{
     return try_catch([&] {
         if (alias.empty())
             return KEY_MANAGER_API_ERROR_INPUT_PARAM;
 
         MessageBuffer send, recv;
-        Serialization::Serialize(send, static_cast<int>(StorageCommand::GET));
+        Serialization::Serialize(send, static_cast<int>(LogicCommand::GET));
         Serialization::Serialize(send, m_counter);
-        Serialization::Serialize(send, static_cast<int>(DBDataType::KEY_RSA_PUBLIC));
+        Serialization::Serialize(send, static_cast<int>(sendDataType));
         Serialization::Serialize(send, alias);
         Serialization::Serialize(send, password);
 
@@ -132,8 +139,12 @@ int Manager::ManagerImpl::getKey(const Alias &alias, const RawData &password, Ke
         Deserialization::Deserialize(recv, opType);
         Deserialization::Deserialize(recv, retCode);
 
-        if (retCode == KEY_MANAGER_API_SUCCESS)
-            Deserialization::Deserialize(recv, *(key.getImpl()));
+        if (retCode == KEY_MANAGER_API_SUCCESS) {
+            int tmpDataType;
+            Deserialization::Deserialize(recv, tmpDataType);
+            Deserialization::Deserialize(recv, rawData);
+            recvDataType = static_cast<DBDataType>(tmpDataType);
+        }
 
         if (counter != m_counter) {
             return KEY_MANAGER_API_ERROR_UNKNOWN;
@@ -141,6 +152,30 @@ int Manager::ManagerImpl::getKey(const Alias &alias, const RawData &password, Ke
 
         return retCode;
     });
+}
+
+int Manager::ManagerImpl::getKey(const Alias &alias, const RawData &password, Key &key) {
+    DBDataType recvDataType;
+    RawData rawData;
+
+    int retCode = getBinaryData(
+        alias,
+        DBDataType::KEY_RSA_PUBLIC,
+        password,
+        recvDataType,
+        rawData);
+
+    if (retCode != KEY_MANAGER_API_SUCCESS)
+        return retCode;
+
+    Key keyParsed(rawData, toKeyType(recvDataType));
+
+    if (keyParsed.empty())
+        return KEY_MANAGER_API_ERROR_BAD_RESPONSE;
+
+    key = keyParsed;
+
+    return KEY_MANAGER_API_SUCCESS;
 }
 
 } // namespace CKM

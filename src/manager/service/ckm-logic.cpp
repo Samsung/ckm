@@ -62,5 +62,50 @@ RawBuffer CKMLogic::resetUserPassword(
     return RawBuffer();
 }
 
+RawBuffer CKMLogic::saveData(
+    Credentials &cred,
+    int commandId,
+    DBDataType dataType,
+    const Alias &alias,
+    const RawData &key,
+    const PolicySerializable &policy)
+{
+    (void)cred;
+    (void)commandId;
+    (void)dataType;
+    (void)alias;
+    (void)key;
+    (void)policy;
+    return RawData();
+}
+
+RawBuffer CKMLogic::removeData(
+    Credentials &cred,
+    int commandId,
+    DBDataType dataType,
+    const Alias &alias)
+{
+    (void)cred;
+    (void)commandId;
+    (void)dataType;
+    (void)alias;
+    return RawData();
+}
+
+RawBuffer CKMLogic::getData(
+    Credentials &cred,
+    int commandId,
+    DBDataType dataType,
+    const Alias &alias,
+    const RawData &password)
+{
+    (void)cred;
+    (void)commandId;
+    (void)dataType;
+    (void)alias;
+    (void)password;
+    return RawData();
+}
+
 } // namespace CKM
 

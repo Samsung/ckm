@@ -32,9 +32,15 @@
 
 namespace CKM
 {
+    struct Credentials {
+        std::string realUser;
+        std::string realSmackLabel;
+    };
+
     struct ConnectionInfo {
         InterfaceID interfaceID;
         MessageBuffer buffer;
+        Credentials credentials;
     };
 
     typedef std::map<int, ConnectionInfo> ConnectionInfoMap;

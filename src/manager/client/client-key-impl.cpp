@@ -31,40 +31,40 @@ const char PEM_FIRST_CHAR = '-';
 
 namespace CKM {
 
-Key::KeyImpl::KeyImpl()
+KeyImpl::KeyImpl()
   : m_type(KeyType::KEY_NONE)
 {}
 
-Key::KeyImpl::KeyImpl(const KeyImpl &second)
+KeyImpl::KeyImpl(const KeyImpl &second)
   : m_type(second.m_type)
   , m_key(second.m_key)
 {}
 
-Key::KeyImpl::KeyImpl(KeyImpl &&second)
+KeyImpl::KeyImpl(KeyImpl &&second)
   : m_type(second.m_type)
   , m_key(std::move(second.m_key))
 {}
 
-Key::KeyImpl& Key::KeyImpl::operator=(const KeyImpl &second) {
+KeyImpl& KeyImpl::operator=(const KeyImpl &second) {
     m_type = second.m_type;
     m_key = second.m_key;
     return *this;
 }
 
-Key::KeyImpl& Key::KeyImpl::operator=(KeyImpl &&second) {
+KeyImpl& KeyImpl::operator=(KeyImpl &&second) {
     m_type = std::move(second.m_type);
     m_key = std::move(second.m_key);
     return *this;
 }
 
-Key::KeyImpl::KeyImpl(IStream &stream) {
-    int type;
-    Deserialization::Deserialize(stream, type);
-    Deserialization::Deserialize(stream, m_key);
-    m_type = static_cast<KeyType>(type);
-}
+//KeyImpl::KeyImpl(IStream &stream) {
+//    int type;
+//    Deserialization::Deserialize(stream, type);
+//    Deserialization::Deserialize(stream, m_key);
+//    m_type = static_cast<KeyType>(type);
+//}
 
-Key::KeyImpl::KeyImpl(const RawData &data, KeyType type, const RawData &password)
+KeyImpl::KeyImpl(const RawData &data, KeyType type, const RawData &password)
   : m_type(KeyType::KEY_NONE)
 {
     int size = 0;
@@ -118,12 +118,12 @@ Key::KeyImpl::KeyImpl(const RawData &data, KeyType type, const RawData &password
     BIO_free_all(bio);
 }
 
-void Key::KeyImpl::Serialize(IStream &stream) const {
-    Serialization::Serialize(stream, static_cast<int>(m_type));
-    Serialization::Serialize(stream, m_key);
-}
+//void KeyImpl::Serialize(IStream &stream) const {
+//    Serialization::Serialize(stream, static_cast<int>(m_type));
+//    Serialization::Serialize(stream, m_key);
+//}
 
-Key::KeyImpl::~KeyImpl(){}
+KeyImpl::~KeyImpl(){}
 
 } // namespace CKM
 

@@ -69,5 +69,8 @@ enum class RSAPaddingAlgorithm : int {
     XRSA_X931_PADDING
 };
 
+// Internal types
+class KeyImpl;
+
 } // namespace CKM
 

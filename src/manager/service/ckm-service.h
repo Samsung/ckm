@@ -56,14 +56,13 @@ public:
 private:
     bool processOne(
         const ConnectionID &conn,
-        MessageBuffer &buffer,
-        InterfaceID interfaceID);
+        ConnectionInfo &info);
 
     RawBuffer processControl(
         MessageBuffer &buffer);
 
     RawBuffer processStorage(
-        const ConnectionID &conn,
+        Credentials &cred,
         MessageBuffer &buffer);
 
     ConnectionInfoMap m_connectionInfoMap;

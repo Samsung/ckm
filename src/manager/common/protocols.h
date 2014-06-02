@@ -40,7 +40,7 @@ enum class ControlCommand : int {
     RESET_USER_PASSWORD
 };
 
-enum class StorageCommand : int {
+enum class LogicCommand : int {
     GET,
     SAVE,
     REMOVE,
@@ -57,10 +57,12 @@ enum class DBDataType : int {
 };
 
 DBDataType toDBDataType(KeyType key);
+KeyType toKeyType(DBDataType dbDataType);
 
 class IStream;
 
 struct PolicySerializable : public Policy, ISerializable {
+    PolicySerializable();
     explicit PolicySerializable(const Policy &);
     explicit PolicySerializable(IStream &);
     void Serialize(IStream &) const;

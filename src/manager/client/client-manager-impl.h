@@ -20,6 +20,9 @@
  */
 #pragma once
 
+#include <protocols.h>
+
+#include <ckm/ckm-type.h>
 #include <ckm/key-manager.h>
 
 namespace CKM {
@@ -35,7 +38,14 @@ public:
     int removeKey(const Alias &alias);
     int getKey(const Alias &alias, const RawData &password, Key &key);
 
-private:
+protected:
+    int getBinaryData(
+        const Alias &alias,
+        DBDataType sendDataType,
+        const RawData &password,
+        DBDataType &recvDataType,
+        RawData &rawData);
+
     int m_counter;
 };
 

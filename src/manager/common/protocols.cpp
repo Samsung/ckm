@@ -43,6 +43,20 @@ DBDataType toDBDataType(KeyType key) {
     }
 }
 
+KeyType toKeyType(DBDataType dbtype) {
+    switch(dbtype) {
+    case DBDataType::KEY_RSA_PUBLIC: return KeyType::KEY_RSA_PUBLIC;
+    case DBDataType::KEY_RSA_PRIVATE: return KeyType::KEY_RSA_PRIVATE;
+    default:
+        // TODO
+        throw 1;
+    }
+}
+
+PolicySerializable::PolicySerializable()
+{}
+
+
 PolicySerializable::PolicySerializable(const Policy &policy)
   : Policy(policy)
 {}

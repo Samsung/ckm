@@ -20,17 +20,19 @@
  */
 #pragma once
 
-#include <dpl/serialization.h>
+//#include <dpl/serialization.h>
 
 #include <ckm/ckm-type.h>
 #include <ckm/key-manager.h>
 
 namespace CKM {
 
-class Key::KeyImpl : public ISerializable {
+class KeyImpl
+//  : public ISerializable
+{
 public:
     KeyImpl();
-    KeyImpl(IStream &stream);
+//  KeyImpl(IStream &stream);
     KeyImpl(const RawData &data, KeyType type, const RawData &password);
     KeyImpl(const KeyImpl &);
     KeyImpl(KeyImpl &&);
@@ -46,10 +48,10 @@ public:
     }
 
     bool empty() const {
-        return m_key.empty();
+        return (m_type == KeyType::KEY_NONE) || m_key.empty();
     }
 
-    void Serialize(IStream &stream) const;
+//    void Serialize(IStream &stream) const;
 
     virtual ~KeyImpl();
 private:

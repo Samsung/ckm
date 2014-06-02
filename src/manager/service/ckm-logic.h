@@ -24,6 +24,9 @@
 #include <string>
 #include <vector>
 #include <message-buffer.h>
+#include <protocols.h>
+#include <ckm/ckm-type.h>
+#include <connection-info.h>
 
 namespace CKM {
 
@@ -50,6 +53,28 @@ public:
     RawBuffer resetUserPassword(
         const std::string &user,
         const RawBuffer &newPassword);
+
+    RawBuffer saveData(
+        Credentials &cred,
+        int commandId,
+        DBDataType dataType,
+        const Alias &alias,
+        const RawData &key,
+        const PolicySerializable &policy);
+
+    RawBuffer removeData(
+        Credentials &cred,
+        int commandId,
+        DBDataType dataType,
+        const Alias &alias);
+
+    RawBuffer getData(
+        Credentials &cred,
+        int commandId,
+        DBDataType dataType,
+        const Alias &alias,
+        const RawData &password);
+
 private:
 
 };

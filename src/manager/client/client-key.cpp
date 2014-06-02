@@ -18,6 +18,7 @@
  * @version     1.0
  * @brief       Key - api implementation.
  */
+#include <ckm/ckm-type.h>
 #include <ckm/key-manager.h>
 
 #include <client-key-impl.h>
@@ -35,22 +36,40 @@ Key::Key(
   : m_impl(new KeyImpl(rawData, type, password))
 {}
 
-Key::~Key(){}
+Key::Key(const Key &second) {
+    m_impl = second.m_impl;
+}
+
+Key& Key::operator=(const Key &second) {
+    m_impl = second.m_impl;
+    return *this;
+}
+
+Key::~Key(){
+}
 
 bool Key::empty() const {
-    return m_impl->empty();
+    if (m_impl)
+        return m_impl->empty();
+    return true;
 }
 
 KeyType Key::getType() const {
-    return m_impl->getType();
+    if (m_impl)
+        return m_impl->getType();
+    return KeyType::KEY_NONE;
 }
 
 RawData Key::getKey() const {
-    return m_impl->getKey();
+    if (m_impl)
+        return m_impl->getKey();
+    return RawData();
 }
 
-Key::KeyImpl* Key::getImpl() const {
-    return m_impl.get();
+KeyImpl* Key::getImpl() const {
+    if (m_impl)
+        return m_impl.get();
+    return NULL;
 };
 
 
