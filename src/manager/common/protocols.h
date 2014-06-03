@@ -42,6 +42,7 @@ enum class ControlCommand : int {
 
 enum class LogicCommand : int {
     GET,
+    GET_LIST,
     SAVE,
     REMOVE,
 };

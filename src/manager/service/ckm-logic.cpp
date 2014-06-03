@@ -141,5 +141,21 @@ RawBuffer CKMLogic::getData(
     return response.Pop();
 }
 
+RawBuffer CKMLogic::getDataList(
+    Credentials &cred,
+    int commandId,
+    DBDataType dataType)
+{
+    (void)cred;
+
+    MessageBuffer response;
+    Serialization::Serialize(response, static_cast<int>(LogicCommand::GET_LIST));
+    Serialization::Serialize(response, commandId);
+    Serialization::Serialize(response, static_cast<int>(KEY_MANAGER_API_SUCCESS));
+    Serialization::Serialize(response, static_cast<int>(dataType));
+    Serialization::Serialize(response, AliasVector());
+    return response.Pop();
+}
+
 } // namespace CKM
 

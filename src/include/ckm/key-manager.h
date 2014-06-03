@@ -32,8 +32,6 @@
 namespace CKM {
 
 // used by login manager to unlock user data with global password
-// [CR] too generic name for class. maybe UserDataControl?
-// It's in name space KeyStore so I don't see any problem but
 class Control
 {
 public:
@@ -88,11 +86,11 @@ private:
 
 class Certificate {
 public:
-    enum class FingerprintType : unsigned int {
-        FINGERPRINT_MD5,
-        FINGERPRINT_SHA1,
-        FINGERPRINT_SHA256
-    };
+//    enum class FingerprintType : unsigned int {
+//        FINGERPRINT_MD5,
+//        FINGERPRINT_SHA1,
+//        FINGERPRINT_SHA256
+//    };
 
     enum class Format : unsigned int {
         FORM_BASE64,
@@ -117,7 +115,7 @@ public:
 //    RawBuffer getDER() const;
 //    bool isSignedBy(const Certificate &parent) const;
 //    RawBuffer getFingerprint(FingerprintType type) const;
-//	bool isCA() const;
+//    bool isCA() const;
 //    // *** standard certificate operation end ***
 private:
     std::shared_ptr<CertificateImpl> m_impl;
@@ -163,26 +161,24 @@ public:
 
     int saveKey(const Alias &alias, const Key &key, const Policy &policy);
     int saveCertificate(const Alias &alias, const Certificate &cert, const Policy &policy);
+    int saveData(const Alias &alias, const RawBuffer &data, const Policy &policy);
 
     int removeKey(const Alias &alias);
     int removeCertificate(const Alias &alias);
+    int removeData(const Alias &alias);
 
     int getKey(const Alias &alias, const std::string &password, Key &key);
     int getCertificate(
             const Alias &alias,
             const std::string &password,
             Certificate &certificate);
-
-    // This will extract list of all Keys and Certificates in Key Store
-    int requestKeyAliasVector(AliasVector &alias);          // send request for list of all keys that application/user may use
-//    int requestCertificateAliasVector(AliasVector &alias);  // send request for list of all certs that application/user may use
-
-    // Added By Dongsun Lee
-    int saveData(const Alias &alias, const RawBuffer &data, const Policy &policy);
-    int removeData(const Alias &alias);
     int getData(const Alias &alias, const std::string &password, RawBuffer &data);
-//    int requestDataAliasVector(AliasVector &alias);
-//
+
+    // send request for list of all keys/certificates/data that application/user may use
+    int requestKeyAliasVector(AliasVector &aliasVector);
+    int requestCertificateAliasVector(AliasVector &aliasVector);
+    int requestDataAliasVector(AliasVector &aliasVector);
+
 //    int createKeyPairRSA(
 //			const int size,              // size in bits [1024, 2048, 4096]
 //			const Alias &privateKeyAlias,

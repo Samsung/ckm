@@ -75,6 +75,11 @@ public:
         const Alias &alias,
         const std::string &password);
 
+    RawBuffer getDataList(
+        Credentials &cred,
+        int commandId,
+        DBDataType dataType);
+
 private:
 
 };

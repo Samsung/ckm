@@ -167,16 +167,13 @@ int Manager::ManagerImpl::getBinaryData(
 
         int command;
         int counter;
+        int tmpDataType;
         Deserialization::Deserialize(recv, command);
         Deserialization::Deserialize(recv, counter);
         Deserialization::Deserialize(recv, retCode);
-
-        if (retCode == KEY_MANAGER_API_SUCCESS) {
-            int tmpDataType;
-            Deserialization::Deserialize(recv, tmpDataType);
-            Deserialization::Deserialize(recv, rawData);
-            recvDataType = static_cast<DBDataType>(tmpDataType);
-        }
+        Deserialization::Deserialize(recv, tmpDataType);
+        Deserialization::Deserialize(recv, rawData);
+        recvDataType = static_cast<DBDataType>(tmpDataType);
 
         if (counter != m_counter) {
             return KEY_MANAGER_API_ERROR_UNKNOWN;
@@ -256,6 +253,54 @@ int Manager::ManagerImpl::getData(const Alias &alias, const std::string &passwor
         return KEY_MANAGER_API_ERROR_BAD_RESPONSE;
 
     return KEY_MANAGER_API_SUCCESS;
+}
+
+int Manager::ManagerImpl::requestBinaryDataAliasVector(DBDataType dataType, AliasVector &aliasVector)
+{
+    return try_catch([&] {
+
+        MessageBuffer send, recv;
+        Serialization::Serialize(send, static_cast<int>(LogicCommand::GET_LIST));
+        Serialization::Serialize(send, m_counter);
+        Serialization::Serialize(send, static_cast<int>(dataType));
+
+        int retCode = sendToServer(
+            SERVICE_SOCKET_CKM_STORAGE,
+            send.Pop(),
+            recv);
+
+        if (KEY_MANAGER_API_SUCCESS != retCode) {
+            return retCode;
+        }
+
+        int command;
+        int counter;
+        int tmpDataType;
+
+        Deserialization::Deserialize(recv, command);
+        Deserialization::Deserialize(recv, counter);
+        Deserialization::Deserialize(recv, retCode);
+        Deserialization::Deserialize(recv, tmpDataType);
+        Deserialization::Deserialize(recv, aliasVector);
+
+        if (counter != m_counter) {
+            return KEY_MANAGER_API_ERROR_UNKNOWN;
+        }
+
+        return retCode;
+    });
+}
+
+int Manager::ManagerImpl::requestKeyAliasVector(AliasVector &aliasVector) {
+    return requestBinaryDataAliasVector(DBDataType::KEY_RSA_PUBLIC, aliasVector);
+}
+
+int Manager::ManagerImpl::requestCertificateAliasVector(AliasVector &aliasVector) {
+    return requestBinaryDataAliasVector(DBDataType::CERTIFICATE, aliasVector);
+}
+
+int Manager::ManagerImpl::requestDataAliasVector(AliasVector &aliasVector) {
+    return requestBinaryDataAliasVector(DBDataType::BINARY_DATA, aliasVector);
 }
 
 } // namespace CKM

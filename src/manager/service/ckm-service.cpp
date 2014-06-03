@@ -186,6 +186,14 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer){
                 alias,
                 password);
         }
+        case LogicCommand::GET_LIST:
+        {
+            Deserialization::Deserialize(buffer, tmpDataType);
+            return m_logic->getDataList(
+                cred,
+                commandId,
+                static_cast<DBDataType>(tmpDataType));
+        }
         default:
         // TODO
             throw 1; // broken protocol

@@ -66,5 +66,17 @@ int Manager::getData(const Alias &alias, const std::string &password, RawBuffer 
     return m_impl->getData(alias, password, data);
 }
 
+int Manager::requestKeyAliasVector(AliasVector &av) {
+    return m_impl->requestKeyAliasVector(av);
+}
+
+int Manager::requestCertificateAliasVector(AliasVector &av) {
+    return m_impl->requestCertificateAliasVector(av);
+}
+
+int Manager::requestDataAliasVector(AliasVector &av) {
+    return m_impl->requestDataAliasVector(av);
+}
+
 } // namespace CKM
 
