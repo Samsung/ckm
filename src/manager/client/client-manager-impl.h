@@ -36,15 +36,15 @@ public:
 
     int saveKey(const Alias &alias, const Key &key, const Policy &policy);
     int removeKey(const Alias &alias);
-    int getKey(const Alias &alias, const RawBuffer &password, Key &key);
+    int getKey(const Alias &alias, const std::string &password, Key &key);
 
     int saveCertificate(const Alias &alias, const Certificate &cert, const Policy &policy);
     int removeCertificate(const Alias &alias);
-    int getCertificate(const Alias &alias, const RawBuffer &password, Certificate &cert);
+    int getCertificate(const Alias &alias, const std::string &password, Certificate &cert);
 
     int saveData(const Alias &alias, const RawBuffer &rawData, const Policy &policy);
     int removeData(const Alias &alias);
-    int getData(const Alias &alias, const RawBuffer &password, RawBuffer &cert);
+    int getData(const Alias &alias, const std::string &password, RawBuffer &cert);
 
 protected:
     int saveBinaryData(
@@ -60,7 +60,7 @@ protected:
     int getBinaryData(
         const Alias &alias,
         DBDataType sendDataType,
-        const RawBuffer &password,
+        const std::string &password,
         DBDataType &recvDataType,
         RawBuffer &rawData);
 

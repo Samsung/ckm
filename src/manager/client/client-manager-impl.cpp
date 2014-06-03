@@ -141,7 +141,7 @@ int Manager::ManagerImpl::removeData(const Alias &alias) {
 int Manager::ManagerImpl::getBinaryData(
     const Alias &alias,
     DBDataType sendDataType,
-    const RawBuffer &password,
+    const std::string &password,
     DBDataType &recvDataType,
     RawBuffer &rawData)
 {
@@ -186,7 +186,7 @@ int Manager::ManagerImpl::getBinaryData(
     });
 }
 
-int Manager::ManagerImpl::getKey(const Alias &alias, const RawBuffer &password, Key &key) {
+int Manager::ManagerImpl::getKey(const Alias &alias, const std::string &password, Key &key) {
     DBDataType recvDataType;
     RawBuffer rawData;
 
@@ -210,7 +210,7 @@ int Manager::ManagerImpl::getKey(const Alias &alias, const RawBuffer &password, 
     return KEY_MANAGER_API_SUCCESS;
 }
 
-int Manager::ManagerImpl::getCertificate(const Alias &alias, const RawBuffer &password, Certificate &cert)
+int Manager::ManagerImpl::getCertificate(const Alias &alias, const std::string &password, Certificate &cert)
 {
     DBDataType recvDataType;
     RawBuffer rawData;
@@ -238,7 +238,7 @@ int Manager::ManagerImpl::getCertificate(const Alias &alias, const RawBuffer &pa
     return KEY_MANAGER_API_SUCCESS;
 }
 
-int Manager::ManagerImpl::getData(const Alias &alias, const RawBuffer &password, RawBuffer &rawData)
+int Manager::ManagerImpl::getData(const Alias &alias, const std::string &password, RawBuffer &rawData)
 {
     DBDataType recvDataType;
 

@@ -32,7 +32,7 @@ Key::Key()
 Key::Key(
     const RawBuffer &rawData,
     KeyType type,
-    const RawBuffer &password)
+    const std::string &password)
   : m_impl(new KeyImpl(rawData, type, password))
 {}
 

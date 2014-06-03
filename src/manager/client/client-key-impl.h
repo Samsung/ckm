@@ -28,12 +28,10 @@
 namespace CKM {
 
 class KeyImpl
-//  : public ISerializable
 {
 public:
     KeyImpl();
-//  KeyImpl(IStream &stream);
-    KeyImpl(const RawBuffer &data, KeyType type, const RawBuffer &password);
+    KeyImpl(const RawBuffer &data, KeyType type, const std::string &password);
     KeyImpl(const KeyImpl &);
     KeyImpl(KeyImpl &&);
     KeyImpl& operator=(const KeyImpl &);
@@ -50,8 +48,6 @@ public:
     bool empty() const {
         return (m_type == KeyType::KEY_NONE) || m_key.empty();
     }
-
-//    void Serialize(IStream &stream) const;
 
     virtual ~KeyImpl();
 private:

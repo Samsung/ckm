@@ -39,7 +39,7 @@ public:
     CKMLogic& operator=(CKMLogic &&) = delete;
     virtual ~CKMLogic();
 
-    RawBuffer unlockUserKey(const std::string &user, const RawBuffer &password);
+    RawBuffer unlockUserKey(const std::string &user, const std::string &password);
 
     RawBuffer lockUserKey(const std::string &user);
 
@@ -47,12 +47,12 @@ public:
 
     RawBuffer changeUserPassword(
         const std::string &user,
-        const RawBuffer &oldPassword,
-        const RawBuffer &newPassword);
+        const std::string &oldPassword,
+        const std::string &newPassword);
 
     RawBuffer resetUserPassword(
         const std::string &user,
-        const RawBuffer &newPassword);
+        const std::string &newPassword);
 
     RawBuffer saveData(
         Credentials &cred,
@@ -73,7 +73,7 @@ public:
         int commandId,
         DBDataType dataType,
         const Alias &alias,
-        const RawBuffer &password);
+        const std::string &password);
 
 private:
 

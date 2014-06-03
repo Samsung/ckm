@@ -38,7 +38,7 @@ int Manager::removeKey(const Alias &alias) {
     return m_impl->removeKey(alias);
 }
 
-int Manager::getKey(const Alias &alias, const RawBuffer &password, Key &key) {
+int Manager::getKey(const Alias &alias, const std::string &password, Key &key) {
     return m_impl->getKey(alias, password, key);
 }
 
@@ -50,7 +50,7 @@ int Manager::removeCertificate(const Alias &alias) {
     return m_impl->removeCertificate(alias);
 }
 
-int Manager::getCertificate(const Alias &alias, const RawBuffer &password, Certificate &cert) {
+int Manager::getCertificate(const Alias &alias, const std::string &password, Certificate &cert) {
     return m_impl->getCertificate(alias, password, cert);
 }
 
@@ -62,7 +62,7 @@ int Manager::removeData(const Alias &alias) {
     return m_impl->removeData(alias);
 }
 
-int Manager::getData(const Alias &alias, const RawBuffer &password, RawBuffer &data) {
+int Manager::getData(const Alias &alias, const std::string &password, RawBuffer &data) {
     return m_impl->getData(alias, password, data);
 }
 

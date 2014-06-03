@@ -30,7 +30,7 @@ namespace CKM {
 CKMLogic::CKMLogic(){}
 CKMLogic::~CKMLogic(){}
 
-RawBuffer CKMLogic::unlockUserKey(const std::string &user, const RawBuffer &password) {
+RawBuffer CKMLogic::unlockUserKey(const std::string &user, const std::string &password) {
     (void)user;
     (void)password;
 
@@ -57,8 +57,8 @@ RawBuffer CKMLogic::removeUserData(const std::string &user) {
 
 RawBuffer CKMLogic::changeUserPassword(
     const std::string &user,
-    const RawBuffer &oldPassword,
-    const RawBuffer &newPassword)
+    const std::string &oldPassword,
+    const std::string &newPassword)
 {
     (void)user;
     (void)oldPassword;
@@ -71,7 +71,7 @@ RawBuffer CKMLogic::changeUserPassword(
 
 RawBuffer CKMLogic::resetUserPassword(
     const std::string &user,
-    const RawBuffer &newPassword)
+    const std::string &newPassword)
 {
     (void)user;
     (void)newPassword;
@@ -126,7 +126,7 @@ RawBuffer CKMLogic::getData(
     int commandId,
     DBDataType dataType,
     const Alias &alias,
-    const RawBuffer &password)
+    const std::string &password)
 {
     (void)cred;
     (void)alias;

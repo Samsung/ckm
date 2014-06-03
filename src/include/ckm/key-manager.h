@@ -39,7 +39,7 @@ class Control
 public:
     Control();
     // decrypt user key with password
-    int unlockUserKey(const std::string &user, const RawBuffer &password) const;
+    int unlockUserKey(const std::string &user, const std::string &password) const;
 
     // remove user key from memory
     int lockUserKey(const std::string &user) const;
@@ -48,13 +48,13 @@ public:
     int removeUserData(const std::string &user) const;
 
     // change password for user
-    int changeUserPassword(const std::string &user, const RawBuffer &oldPassword, const RawBuffer &newPassword) const;
+    int changeUserPassword(const std::string &user, const std::string &oldPassword, const std::string &newPassword) const;
 
 	// This is work around for security-server api - resetPassword that may be called without passing oldPassword.
 	// This api should not be supported on tizen 3.0
 	// User must be already logged in and his DKEK is already loaded into memory in plain text form.
 	// The service will use DKEK in plain text and encrypt it in encrypted form (using new password).
-	int resetUserPassword(const std::string &user, const RawBuffer &newPassword) const;
+	int resetUserPassword(const std::string &user, const std::string &newPassword) const;
 
     virtual ~Control();
 private:
@@ -70,7 +70,7 @@ public:
     };
 
     Key();
-    Key(const RawBuffer &rawData, KeyType type, const RawBuffer &password = RawBuffer()); // Import key
+    Key(const RawBuffer &rawData, KeyType type, const std::string &password = std::string()); // Import key
     Key(const Key &key);
     Key& operator=(const Key &key);
     virtual ~Key();
@@ -167,10 +167,10 @@ public:
     int removeKey(const Alias &alias);
     int removeCertificate(const Alias &alias);
 
-    int getKey(const Alias &alias, const RawBuffer &password, Key &key);
+    int getKey(const Alias &alias, const std::string &password, Key &key);
     int getCertificate(
             const Alias &alias,
-            const RawBuffer &password,
+            const std::string &password,
             Certificate &certificate);
 
     // This will extract list of all Keys and Certificates in Key Store
@@ -180,7 +180,7 @@ public:
     // Added By Dongsun Lee
     int saveData(const Alias &alias, const RawBuffer &data, const Policy &policy);
     int removeData(const Alias &alias);
-    int getData(const Alias &alias, const RawBuffer &password, RawBuffer &data);
+    int getData(const Alias &alias, const std::string &password, RawBuffer &data);
 //    int requestDataAliasVector(AliasVector &alias);
 //
 //    int createKeyPairRSA(

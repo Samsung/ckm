@@ -105,7 +105,7 @@ RawBuffer CKMService::processControl(MessageBuffer &buffer) {
     int command;
     std::string user;
     ControlCommand cc;
-    RawBuffer newPass, oldPass;
+    std::string newPass, oldPass;
 
     Deserialization::Deserialize(buffer, command);
     Deserialization::Deserialize(buffer, user);
@@ -175,7 +175,7 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer){
         }
         case LogicCommand::GET:
         {
-            RawBuffer password;
+            std::string password;
             Deserialization::Deserialize(buffer, tmpDataType);
             Deserialization::Deserialize(buffer, alias);
             Deserialization::Deserialize(buffer, password);

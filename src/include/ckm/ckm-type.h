@@ -41,13 +41,13 @@ enum class KeyType : int {
 };
 
 struct Policy {
-    Policy(const RawBuffer &pass = RawBuffer(), bool extract = true, bool rest = false)
+    Policy(const std::string &pass = std::string(), bool extract = true, bool rest = false)
       : password(pass)
       , extractable(extract)
       , restricted(rest)
     {}
     virtual ~Policy(){}
-    RawBuffer password;  // byte array used to encrypt data inside CKM
+    std::string password;  // byte array used to encrypt data inside CKM
     bool extractable;  // if true key may be extracted from storage
     bool restricted;   // if true only key owner may see data
 };

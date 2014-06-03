@@ -57,24 +57,16 @@ KeyImpl& KeyImpl::operator=(KeyImpl &&second) {
     return *this;
 }
 
-//KeyImpl::KeyImpl(IStream &stream) {
-//    int type;
-//    Deserialization::Deserialize(stream, type);
-//    Deserialization::Deserialize(stream, m_key);
-//    m_type = static_cast<KeyType>(type);
-//}
-
-KeyImpl::KeyImpl(const RawBuffer &data, KeyType type, const RawBuffer &password)
+KeyImpl::KeyImpl(const RawBuffer &data, KeyType type, const std::string &password)
   : m_type(KeyType::KEY_NONE)
 {
     int size = 0;
     RSA *rsa = NULL;
     char *pass = NULL;
-    RawBuffer passtmp(password);
+    std::string passtmp(password);
 
     if (!passtmp.empty()) {
-        passtmp.push_back(0);
-        pass = reinterpret_cast<char*>(passtmp.data());
+        pass = const_cast<char *>(passtmp.c_str());
     }
 
     if (data[0] == PEM_FIRST_CHAR && type == KeyType::KEY_RSA_PUBLIC) {
