@@ -54,5 +54,17 @@ int Manager::getCertificate(const Alias &alias, const RawData &password, Certifi
     return m_impl->getCertificate(alias, password, cert);
 }
 
+int Manager::saveData(const Alias &alias, const RawData &data, const Policy &policy) {
+    return m_impl->saveData(alias, data, policy);
+}
+
+int Manager::removeData(const Alias &alias) {
+    return m_impl->removeData(alias);
+}
+
+int Manager::getData(const Alias &alias, const RawData &password, RawData &data) {
+    return m_impl->getData(alias, password, data);
+}
+
 } // namespace CKM
 

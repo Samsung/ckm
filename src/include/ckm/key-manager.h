@@ -178,9 +178,9 @@ public:
 //    int requestCertificateAliasVector(AliasVector &alias);  // send request for list of all certs that application/user may use
 
     // Added By Dongsun Lee
-//    int saveData(const Alias &alias, const RawData &data, const Policy &policy);
-//    int removeData(const Alias &alias);
-//    int getData(const Alias &alias, RawData &data, RawData &password = RawData());
+    int saveData(const Alias &alias, const RawData &data, const Policy &policy);
+    int removeData(const Alias &alias);
+    int getData(const Alias &alias, const RawData &password, RawData &data);
 //    int requestDataAliasVector(AliasVector &alias);
 //
 //    int createKeyPairRSA(

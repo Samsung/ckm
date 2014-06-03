@@ -19,8 +19,10 @@
  * @version     1.0
  * @brief       Sample service implementation.
  */
-#include <ckm-logic.h>
+#include <ckm/ckm-error.h>
+#include <ckm/ckm-type.h>
 
+#include <ckm-logic.h>
 namespace CKM {
 
 CKMLogic::CKMLogic(){}
@@ -71,12 +73,17 @@ RawBuffer CKMLogic::saveData(
     const PolicySerializable &policy)
 {
     (void)cred;
-    (void)commandId;
-    (void)dataType;
     (void)alias;
     (void)key;
     (void)policy;
-    return RawData();
+
+    MessageBuffer response;
+    Serialization::Serialize(response, static_cast<int>(LogicCommand::SAVE));
+    Serialization::Serialize(response, commandId);
+    Serialization::Serialize(response, static_cast<int>(KEY_MANAGER_API_SUCCESS));
+    Serialization::Serialize(response, static_cast<int>(dataType));
+
+    return response.Pop();
 }
 
 RawBuffer CKMLogic::removeData(
@@ -86,10 +93,15 @@ RawBuffer CKMLogic::removeData(
     const Alias &alias)
 {
     (void)cred;
-    (void)commandId;
-    (void)dataType;
     (void)alias;
-    return RawData();
+
+    MessageBuffer response;
+    Serialization::Serialize(response, static_cast<int>(LogicCommand::REMOVE));
+    Serialization::Serialize(response, commandId);
+    Serialization::Serialize(response, static_cast<int>(KEY_MANAGER_API_SUCCESS));
+    Serialization::Serialize(response, static_cast<int>(dataType));
+
+    return response.Pop();
 }
 
 RawBuffer CKMLogic::getData(
@@ -100,11 +112,16 @@ RawBuffer CKMLogic::getData(
     const RawData &password)
 {
     (void)cred;
-    (void)commandId;
-    (void)dataType;
     (void)alias;
     (void)password;
-    return RawData();
+
+    MessageBuffer response;
+    Serialization::Serialize(response, static_cast<int>(LogicCommand::GET));
+    Serialization::Serialize(response, commandId);
+    Serialization::Serialize(response, static_cast<int>(KEY_MANAGER_API_SUCCESS));
+    Serialization::Serialize(response, static_cast<int>(dataType));
+    Serialization::Serialize(response, RawData());
+    return response.Pop();
 }
 
 } // namespace CKM

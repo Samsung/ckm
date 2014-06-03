@@ -62,8 +62,8 @@ int Manager::ManagerImpl::saveBinaryData(
         int opType;
         Deserialization::Deserialize(recv, command);
         Deserialization::Deserialize(recv, counter);
-        Deserialization::Deserialize(recv, opType);
         Deserialization::Deserialize(recv, retCode);
+        Deserialization::Deserialize(recv, opType);
 
         if (counter != m_counter) {
             return KEY_MANAGER_API_ERROR_UNKNOWN;
@@ -83,6 +83,10 @@ int Manager::ManagerImpl::saveCertificate(
     const Policy &policy)
 {
     return saveBinaryData(alias, DBDataType::CERTIFICATE, cert.getDER(), policy);
+}
+
+int Manager::ManagerImpl::saveData(const Alias &alias, const RawData &rawData, const Policy &policy) {
+    return saveBinaryData(alias, DBDataType::BINARY_DATA, rawData, policy);
 }
 
 int Manager::ManagerImpl::removeBinaryData(const Alias &alias, DBDataType dataType)
@@ -111,8 +115,8 @@ int Manager::ManagerImpl::removeBinaryData(const Alias &alias, DBDataType dataTy
         int opType;
         Deserialization::Deserialize(recv, command);
         Deserialization::Deserialize(recv, counter);
-        Deserialization::Deserialize(recv, opType);
         Deserialization::Deserialize(recv, retCode);
+        Deserialization::Deserialize(recv, opType);
 
         if (counter != m_counter) {
             return KEY_MANAGER_API_ERROR_UNKNOWN;
@@ -128,6 +132,10 @@ int Manager::ManagerImpl::removeKey(const Alias &alias) {
 
 int Manager::ManagerImpl::removeCertificate(const Alias &alias) {
     return removeBinaryData(alias, DBDataType::CERTIFICATE);
+}
+
+int Manager::ManagerImpl::removeData(const Alias &alias) {
+    return removeBinaryData(alias, DBDataType::BINARY_DATA);
 }
 
 int Manager::ManagerImpl::getBinaryData(
@@ -159,10 +167,8 @@ int Manager::ManagerImpl::getBinaryData(
 
         int command;
         int counter;
-        int opType;
         Deserialization::Deserialize(recv, command);
         Deserialization::Deserialize(recv, counter);
-        Deserialization::Deserialize(recv, opType);
         Deserialization::Deserialize(recv, retCode);
 
         if (retCode == KEY_MANAGER_API_SUCCESS) {
@@ -219,12 +225,35 @@ int Manager::ManagerImpl::getCertificate(const Alias &alias, const RawData &pass
     if (retCode != KEY_MANAGER_API_SUCCESS)
         return retCode;
 
+    if (recvDataType != DBDataType::CERTIFICATE)
+        return KEY_MANAGER_API_ERROR_BAD_RESPONSE;
+
     Certificate certParsed(rawData, Certificate::Format::FORM_DER);
 
     if (certParsed.empty())
         return KEY_MANAGER_API_ERROR_BAD_RESPONSE;
 
     cert = certParsed;
+
+    return KEY_MANAGER_API_SUCCESS;
+}
+
+int Manager::ManagerImpl::getData(const Alias &alias, const RawData &password, RawData &rawData)
+{
+    DBDataType recvDataType;
+
+    int retCode = getBinaryData(
+        alias,
+        DBDataType::CERTIFICATE,
+        password,
+        recvDataType,
+        rawData);
+
+    if (retCode != KEY_MANAGER_API_SUCCESS)
+        return retCode;
+
+    if (recvDataType != DBDataType::BINARY_DATA)
+        return KEY_MANAGER_API_ERROR_BAD_RESPONSE;
 
     return KEY_MANAGER_API_SUCCESS;
 }

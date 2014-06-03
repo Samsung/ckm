@@ -42,6 +42,10 @@ public:
     int removeCertificate(const Alias &alias);
     int getCertificate(const Alias &alias, const RawData &password, Certificate &cert);
 
+    int saveData(const Alias &alias, const RawData &rawData, const Policy &policy);
+    int removeData(const Alias &alias);
+    int getData(const Alias &alias, const RawData &password, RawData &cert);
+
 protected:
     int saveBinaryData(
         const Alias &alias,
