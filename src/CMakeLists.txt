@@ -19,6 +19,7 @@ SET(KEY_MANAGER_SOURCES
     ${KEY_MANAGER_PATH}/service/ckm-logic.cpp
     ${KEY_MANAGER_PATH}/service/key-provider.cpp
     ${KEY_MANAGER_PATH}/service/ocsp.cpp
+    ${KEY_MANAGER_PATH}/service/DBCryptoModule.cpp
     )
 
 SET_SOURCE_FILES_PROPERTIES(
