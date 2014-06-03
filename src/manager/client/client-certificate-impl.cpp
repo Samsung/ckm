@@ -27,10 +27,10 @@
 
 namespace CKM {
 
-CertificateImpl::CertificateImpl(const RawData &der, Certificate::Format format) {
+CertificateImpl::CertificateImpl(const RawBuffer &der, Certificate::Format format) {
     int size;
     const unsigned char *ptr;
-    RawData tmp;
+    RawBuffer tmp;
 
     if (Certificate::Format::FORM_BASE64 == format) {
         Base64Decoder base64;
@@ -54,7 +54,7 @@ CertificateImpl::CertificateImpl(const RawData &der, Certificate::Format format)
     }
 }
 
-RawData CertificateImpl::getDER(void) const {
+RawBuffer CertificateImpl::getDER(void) const {
     unsigned char *rawDer = NULL;
     int size = i2d_X509(m_x509, &rawDer);
     if (!rawDer || size <= 0) {
@@ -64,7 +64,7 @@ RawData CertificateImpl::getDER(void) const {
 //          "i2d_X509 failed");
     }
 
-    RawData output(
+    RawBuffer output(
         reinterpret_cast<char*>(rawDer),
         reinterpret_cast<char*>(rawDer) + size);
     OPENSSL_free(rawDer);

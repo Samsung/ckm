@@ -36,7 +36,7 @@ public:
     ControlImpl& operator=(const ControlImpl &) = delete;
     ControlImpl& operator=(ControlImpl &&) = delete;
 
-    static int unlockUserKey(const std::string &user, const RawData &password) {
+    static int unlockUserKey(const std::string &user, const RawBuffer &password) {
         return try_catch([&] {
             if (user.empty())
                 return KEY_MANAGER_API_ERROR_INPUT_PARAM;
@@ -109,7 +109,7 @@ public:
         });
     }
 
-    static int changeUserPassword(const std::string &user, const RawData &oldPassword, const RawData &newPassword) {
+    static int changeUserPassword(const std::string &user, const RawBuffer &oldPassword, const RawBuffer &newPassword) {
         return try_catch([&] {
             if (user.empty())
                 return KEY_MANAGER_API_ERROR_INPUT_PARAM;
@@ -135,7 +135,7 @@ public:
         });
     }
 
-    static int resetUserPassword(const std::string &user, const RawData &newPassword) {
+    static int resetUserPassword(const std::string &user, const RawBuffer &newPassword) {
         return try_catch([&] {
             if (user.empty())
                 return KEY_MANAGER_API_ERROR_INPUT_PARAM;
@@ -169,7 +169,7 @@ Control::Control()
 
 Control::~Control(){}
 
-int Control::unlockUserKey(const std::string &user, const RawData &password) const {
+int Control::unlockUserKey(const std::string &user, const RawBuffer &password) const {
     return m_impl->unlockUserKey(user, password);
 }
 
@@ -181,11 +181,11 @@ int Control::removeUserData(const std::string &user) const {
     return m_impl->removeUserData(user);
 }
 
-int Control::changeUserPassword(const std::string &user, const RawData &oldPassword, const RawData &newPassword) const {
+int Control::changeUserPassword(const std::string &user, const RawBuffer &oldPassword, const RawBuffer &newPassword) const {
     return m_impl->changeUserPassword(user, oldPassword, newPassword);
 }
 
-int Control::resetUserPassword(const std::string &user, const RawData &newPassword) const {
+int Control::resetUserPassword(const std::string &user, const RawBuffer &newPassword) const {
     return m_impl->resetUserPassword(user, newPassword);
 }
 

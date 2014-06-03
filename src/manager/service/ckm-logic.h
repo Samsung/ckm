@@ -59,7 +59,7 @@ public:
         int commandId,
         DBDataType dataType,
         const Alias &alias,
-        const RawData &key,
+        const RawBuffer &key,
         const PolicySerializable &policy);
 
     RawBuffer removeData(
@@ -73,7 +73,7 @@ public:
         int commandId,
         DBDataType dataType,
         const Alias &alias,
-        const RawData &password);
+        const RawBuffer &password);
 
 private:
 

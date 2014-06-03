@@ -35,9 +35,9 @@ namespace CKM {
 class CertificateImpl {
 public:
     CertificateImpl(){}
-    CertificateImpl(const RawData &data, Certificate::Format format);
+    CertificateImpl(const RawBuffer &data, Certificate::Format format);
     CertificateImpl& operator=(const CertificateImpl &) = delete;
-    RawData getDER() const;
+    RawBuffer getDER() const;
     bool empty() const;
 
     ~CertificateImpl();

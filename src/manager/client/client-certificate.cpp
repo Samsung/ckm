@@ -27,7 +27,7 @@ namespace CKM {
 
 Certificate::Certificate(){}
 
-Certificate::Certificate(const RawData &rawData, Format format)
+Certificate::Certificate(const RawBuffer &rawData, Format format)
   : m_impl(new CertificateImpl(rawData, format))
 {}
 
@@ -46,10 +46,10 @@ bool Certificate::empty() const {
     return true;
 }
 
-RawData Certificate::getDER() const {
+RawBuffer Certificate::getDER() const {
     if (m_impl)
         return m_impl->getDER();
-    return RawData();
+    return RawBuffer();
 }
 
 void* Certificate::getX509() {

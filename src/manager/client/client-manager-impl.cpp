@@ -31,7 +31,7 @@ namespace CKM {
 int Manager::ManagerImpl::saveBinaryData(
     const Alias &alias,
     DBDataType dataType,
-    const RawData &rawData,
+    const RawBuffer &rawData,
     const Policy &policy)
 {
     m_counter++;
@@ -85,7 +85,7 @@ int Manager::ManagerImpl::saveCertificate(
     return saveBinaryData(alias, DBDataType::CERTIFICATE, cert.getDER(), policy);
 }
 
-int Manager::ManagerImpl::saveData(const Alias &alias, const RawData &rawData, const Policy &policy) {
+int Manager::ManagerImpl::saveData(const Alias &alias, const RawBuffer &rawData, const Policy &policy) {
     return saveBinaryData(alias, DBDataType::BINARY_DATA, rawData, policy);
 }
 
@@ -141,9 +141,9 @@ int Manager::ManagerImpl::removeData(const Alias &alias) {
 int Manager::ManagerImpl::getBinaryData(
     const Alias &alias,
     DBDataType sendDataType,
-    const RawData &password,
+    const RawBuffer &password,
     DBDataType &recvDataType,
-    RawData &rawData)
+    RawBuffer &rawData)
 {
     return try_catch([&] {
         if (alias.empty())
@@ -186,9 +186,9 @@ int Manager::ManagerImpl::getBinaryData(
     });
 }
 
-int Manager::ManagerImpl::getKey(const Alias &alias, const RawData &password, Key &key) {
+int Manager::ManagerImpl::getKey(const Alias &alias, const RawBuffer &password, Key &key) {
     DBDataType recvDataType;
-    RawData rawData;
+    RawBuffer rawData;
 
     int retCode = getBinaryData(
         alias,
@@ -210,10 +210,10 @@ int Manager::ManagerImpl::getKey(const Alias &alias, const RawData &password, Ke
     return KEY_MANAGER_API_SUCCESS;
 }
 
-int Manager::ManagerImpl::getCertificate(const Alias &alias, const RawData &password, Certificate &cert)
+int Manager::ManagerImpl::getCertificate(const Alias &alias, const RawBuffer &password, Certificate &cert)
 {
     DBDataType recvDataType;
-    RawData rawData;
+    RawBuffer rawData;
 
     int retCode = getBinaryData(
         alias,
@@ -238,7 +238,7 @@ int Manager::ManagerImpl::getCertificate(const Alias &alias, const RawData &pass
     return KEY_MANAGER_API_SUCCESS;
 }
 
-int Manager::ManagerImpl::getData(const Alias &alias, const RawData &password, RawData &rawData)
+int Manager::ManagerImpl::getData(const Alias &alias, const RawBuffer &password, RawBuffer &rawData)
 {
     DBDataType recvDataType;
 

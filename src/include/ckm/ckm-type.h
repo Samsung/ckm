@@ -27,7 +27,7 @@
 namespace CKM {
 
 // used to pass password and raw key data
-typedef std::vector<unsigned char> RawData;
+typedef std::vector<unsigned char> RawBuffer;
 typedef std::string Alias;
 typedef std::vector<Alias> AliasVector;
 
@@ -41,13 +41,13 @@ enum class KeyType : int {
 };
 
 struct Policy {
-    Policy(const RawData &pass = RawData(), bool extract = true, bool rest = false)
+    Policy(const RawBuffer &pass = RawBuffer(), bool extract = true, bool rest = false)
       : password(pass)
       , extractable(extract)
       , restricted(rest)
     {}
     virtual ~Policy(){}
-    RawData password;  // byte array used to encrypt data inside CKM
+    RawBuffer password;  // byte array used to encrypt data inside CKM
     bool extractable;  // if true key may be extracted from storage
     bool restricted;   // if true only key owner may see data
 };

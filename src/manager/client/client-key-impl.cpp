@@ -64,13 +64,13 @@ KeyImpl& KeyImpl::operator=(KeyImpl &&second) {
 //    m_type = static_cast<KeyType>(type);
 //}
 
-KeyImpl::KeyImpl(const RawData &data, KeyType type, const RawData &password)
+KeyImpl::KeyImpl(const RawBuffer &data, KeyType type, const RawBuffer &password)
   : m_type(KeyType::KEY_NONE)
 {
     int size = 0;
     RSA *rsa = NULL;
     char *pass = NULL;
-    RawData passtmp(password);
+    RawBuffer passtmp(password);
 
     if (!passtmp.empty()) {
         passtmp.push_back(0);

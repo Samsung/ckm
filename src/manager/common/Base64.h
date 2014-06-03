@@ -39,9 +39,9 @@ class Base64Encoder : public CKM::Noncopyable
         DECLARE_EXCEPTION_TYPE(Base, AlreadyFinalized)
     };
     Base64Encoder();
-    void append(const RawData &data);
+    void append(const RawBuffer &data);
     void finalize();
-    RawData get();
+    RawBuffer get();
     void reset();
     ~Base64Encoder();
 
@@ -63,22 +63,22 @@ class Base64Decoder : public CKM::Noncopyable
         DECLARE_EXCEPTION_TYPE(Base, AlreadyFinalized)
     };
     Base64Decoder();
-    void append(const RawData &data);
+    void append(const RawBuffer &data);
 
     /*
      *  Function will return false when BIO_read fails
      *  (for example: when string was not in base64 format).
      */
     bool finalize();
-    RawData get() const;
+    RawBuffer get() const;
     void reset();
     ~Base64Decoder()
     {
     }
 
   private:
-    RawData m_input;
-    RawData m_output;
+    RawBuffer m_input;
+    RawBuffer m_output;
     bool m_finalized;
 };
 } // namespace CKM

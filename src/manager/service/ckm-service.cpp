@@ -149,7 +149,7 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer){
     switch(sc) {
         case LogicCommand::SAVE:
         {
-            RawData rawData;
+            RawBuffer rawData;
             PolicySerializable policy;
             Deserialization::Deserialize(buffer, tmpDataType);
             Deserialization::Deserialize(buffer, alias);
@@ -175,7 +175,7 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer){
         }
         case LogicCommand::GET:
         {
-            RawData password;
+            RawBuffer password;
             Deserialization::Deserialize(buffer, tmpDataType);
             Deserialization::Deserialize(buffer, alias);
             Deserialization::Deserialize(buffer, password);

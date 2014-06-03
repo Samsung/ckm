@@ -33,7 +33,7 @@ class KeyImpl
 public:
     KeyImpl();
 //  KeyImpl(IStream &stream);
-    KeyImpl(const RawData &data, KeyType type, const RawData &password);
+    KeyImpl(const RawBuffer &data, KeyType type, const RawBuffer &password);
     KeyImpl(const KeyImpl &);
     KeyImpl(KeyImpl &&);
     KeyImpl& operator=(const KeyImpl &);
@@ -43,7 +43,7 @@ public:
         return m_type;
     }
 
-    RawData getKey() const {
+    RawBuffer getKey() const {
         return m_key;
     }
 
@@ -56,7 +56,7 @@ public:
     virtual ~KeyImpl();
 private:
     KeyType m_type;
-    RawData m_key;
+    RawBuffer m_key;
 };
 
 } // namespace CKM

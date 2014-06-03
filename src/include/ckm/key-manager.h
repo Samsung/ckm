@@ -39,7 +39,7 @@ class Control
 public:
     Control();
     // decrypt user key with password
-    int unlockUserKey(const std::string &user, const RawData &password) const;
+    int unlockUserKey(const std::string &user, const RawBuffer &password) const;
 
     // remove user key from memory
     int lockUserKey(const std::string &user) const;
@@ -48,13 +48,13 @@ public:
     int removeUserData(const std::string &user) const;
 
     // change password for user
-    int changeUserPassword(const std::string &user, const RawData &oldPassword, const RawData &newPassword) const;
+    int changeUserPassword(const std::string &user, const RawBuffer &oldPassword, const RawBuffer &newPassword) const;
 
 	// This is work around for security-server api - resetPassword that may be called without passing oldPassword.
 	// This api should not be supported on tizen 3.0
 	// User must be already logged in and his DKEK is already loaded into memory in plain text form.
 	// The service will use DKEK in plain text and encrypt it in encrypted form (using new password).
-	int resetUserPassword(const std::string &user, const RawData &newPassword) const;
+	int resetUserPassword(const std::string &user, const RawBuffer &newPassword) const;
 
     virtual ~Control();
 private:
@@ -70,7 +70,7 @@ public:
     };
 
     Key();
-    Key(const RawData &rawData, KeyType type, const RawData &password = RawData()); // Import key
+    Key(const RawBuffer &rawData, KeyType type, const RawBuffer &password = RawBuffer()); // Import key
     Key(const Key &key);
     Key& operator=(const Key &key);
     virtual ~Key();
@@ -79,7 +79,7 @@ public:
     KeyType getType() const;
     int getSize() const;
 	ECType getCurve() const;
-    RawData getKey() const;
+    RawBuffer getKey() const;
     KeyImpl* getImpl() const;
 
 private:
@@ -100,7 +100,7 @@ public:
     };
 
     Certificate();
-    Certificate(const RawData &rawData, Format format);
+    Certificate(const RawBuffer &rawData, Format format);
 	Certificate(const Certificate &certificate);
 	Certificate& operator=(const Certificate &certificate);
 
@@ -110,13 +110,13 @@ public:
 
     // This function  will return openssl struct X509*.
     void *getX509();
-    RawData getDER() const;
+    RawBuffer getDER() const;
     CertificateImpl* getImpl();
 
 //    // *** standard certificate operation begin ***
-//    RawData getDER() const;
+//    RawBuffer getDER() const;
 //    bool isSignedBy(const Certificate &parent) const;
-//    RawData getFingerprint(FingerprintType type) const;
+//    RawBuffer getFingerprint(FingerprintType type) const;
 //	bool isCA() const;
 //    // *** standard certificate operation end ***
 private:
@@ -129,14 +129,14 @@ typedef std::vector<Certificate> CertificateVector;
 class Pkcs12 {
 public:
 	Pkcs12();
-	Pkcs12(const RawData &rawData, const RawData &password = RawData());
+	Pkcs12(const RawBuffer &rawData, const RawBuffer &password = RawBuffer());
 
 	Pkcs12(const Pkcs12 &pkcs);
 	Pkcs12(Pkcs12 &&pkcs);
 	Pkcs12& operator=(const Pkcs12 &pkcs);
 	Pkcs12& operator=(Pkcs12 &&pkcs);
 
-	Key getKey(const RawData &password = RawData());
+	Key getKey(const RawBuffer &password = RawBuffer());
 	Certificate getCertificate(); // this is connected with Key
 
 	// check the API in openssl and translate it 1 to 1.
@@ -167,10 +167,10 @@ public:
     int removeKey(const Alias &alias);
     int removeCertificate(const Alias &alias);
 
-    int getKey(const Alias &alias, const RawData &password, Key &key);
+    int getKey(const Alias &alias, const RawBuffer &password, Key &key);
     int getCertificate(
             const Alias &alias,
-            const RawData &password,
+            const RawBuffer &password,
             Certificate &certificate);
 
     // This will extract list of all Keys and Certificates in Key Store
@@ -178,9 +178,9 @@ public:
 //    int requestCertificateAliasVector(AliasVector &alias);  // send request for list of all certs that application/user may use
 
     // Added By Dongsun Lee
-    int saveData(const Alias &alias, const RawData &data, const Policy &policy);
+    int saveData(const Alias &alias, const RawBuffer &data, const Policy &policy);
     int removeData(const Alias &alias);
-    int getData(const Alias &alias, const RawData &password, RawData &data);
+    int getData(const Alias &alias, const RawBuffer &password, RawBuffer &data);
 //    int requestDataAliasVector(AliasVector &alias);
 //
 //    int createKeyPairRSA(
@@ -199,17 +199,17 @@ public:
 //
 //	int createSignature(
 //			const Alias &privateKeyAlias,
-//			const RawData &password,           // password for private_key
-//			const RawData &message,
+//			const RawBuffer &password,           // password for private_key
+//			const RawBuffer &message,
 //			HashAlgorith hash,
 //			RSAPaddingAlgorithm padding,
-//			RawData &signature);
+//			RawBuffer &signature);
 //
 //	int verifySignature(
 //			const Alias &publicKeyOrCertAlias,
-//			const RawData &password,           // password for public_key (optional)
-//			const RawData &message,
-//			const RawData &signature,
+//			const RawBuffer &password,           // password for public_key (optional)
+//			const RawBuffer &message,
+//			const RawBuffer &signature,
 //			HashAlgorithm hash,
 //            RSAPaddingAlgorithm padding);
 //
@@ -264,7 +264,7 @@ public:
         virtual void ReceivedRemovedCertificate() {}
 
         // Added By Dongsun Lee
-        virtual void ReceivedData(RawData && data) {}
+        virtual void ReceivedData(RawBuffer && data) {}
         virtual void ReceivedDataAliasVector(AliasVector && aliasVector) {}
 
         // This callbacks will confirm successful operation
@@ -272,7 +272,7 @@ public:
         virtual void ReceivedRemovedData() {}
         virtual void ReceivedCreateKeyPairRSA() {}
 		virtual void ReceivedCreateKeyPairECDSA() {}
-        virtual void ReceivedCreateSignature(RawData && signature) {}
+        virtual void ReceivedCreateSignature(RawBuffer && signature) {}
 
         // TODO: describe status
         virtual void ReceivedVerifySignature() {}
@@ -309,14 +309,14 @@ public:
     void requestCertificateAliasVector(Observer *observer); // send request for list of all certs that application/user may use
 
     // Added By Dongsun Lee
-    void saveData(Observer *observer, const Alias &alias, const RawData &data, const Policy &policy);
+    void saveData(Observer *observer, const Alias &alias, const RawBuffer &data, const Policy &policy);
     void removeData(Observer *observer, const Alias &alias);
     void requestData(Observer *observer, const Alias &alias);
     void requestDataAliasVector(Observer *observer);  // send request for list of all data that application/user may use
     void createKeyPairRSA(Observer *observer, const Alias &privateKeyAlias, const Alias &publicKeyAlias, const int &size, const Policy &policy);
 	void createKeyPairECDSA(Observer *observer, const Alias &privateKeyAlias, const Alias &publicKeyAlias, ECType type, const int &size, const Policy &policy);
-    void createSignature(Observer *observer, const Alias &privateKeyAlias, const RawData &password, const RawData &message);
-    void verifySignature(Observer *observer, const Alias &publicKeyOrCertAlias, const RawData &password, const RawData &message, const RawData &signature);
+    void createSignature(Observer *observer, const Alias &privateKeyAlias, const RawBuffer &password, const RawBuffer &message);
+    void verifySignature(Observer *observer, const Alias &publicKeyOrCertAlias, const RawBuffer &password, const RawBuffer &message, const RawBuffer &signature);
 
     // Should we use also certificates stored by user in Certral Key Manager?
     // Sometimes we may want to verify certificate without OCSP (for example we are installing side-loaded app and network is not working).

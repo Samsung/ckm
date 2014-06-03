@@ -30,9 +30,9 @@ Key::Key()
 {}
 
 Key::Key(
-    const RawData &rawData,
+    const RawBuffer &rawData,
     KeyType type,
-    const RawData &password)
+    const RawBuffer &password)
   : m_impl(new KeyImpl(rawData, type, password))
 {}
 
@@ -60,10 +60,10 @@ KeyType Key::getType() const {
     return KeyType::KEY_NONE;
 }
 
-RawData Key::getKey() const {
+RawBuffer Key::getKey() const {
     if (m_impl)
         return m_impl->getKey();
-    return RawData();
+    return RawBuffer();
 }
 
 KeyImpl* Key::getImpl() const {

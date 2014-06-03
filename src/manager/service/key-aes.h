@@ -2,8 +2,6 @@
 
 namespace CKM {
 
-// typedef std::vector<unsigned char> RawData; // must be defined in common header.
-
 // Check encryption shema in openssl
 // * what about data length after decryption?
 // * do we need reset EVP_CONTEXT_CTX before each decryption?
@@ -14,7 +12,7 @@ public:
 	// For example KeyProvider will not know the iv, it may set only the
 	// key information.
 	KeyAES(){};
-	KeyAES(const RawData &key, const RawData &iv = RawData());
+	KeyAES(const RawBuffer &key, const RawBuffer &iv = RawBuffer());
 
 	KeyAES(const KeyAES &key);
 	KeyAES(KeyAES &&key);
@@ -23,10 +21,10 @@ public:
 	
 	// iv must be set to perform encrypt/decrypt operation
 	// iv may be set in constructor or directly in encrypt/decrypt operation
-	RawData encrypt(const RawData &data, const RawData &iv = RawData());
-	RawData decrypt(const RawData &data, const RawData &iv = RawData());
+	RawBuffer encrypt(const RawBuffer &data, const RawBuffer &iv = RawBuffer());
+	RawBuffer decrypt(const RawBuffer &data, const RawBuffer &iv = RawBuffer());
 	
-	RawData getKey();
+	RawBuffer getKey();
 	
 	virtual ~KeyAES(){}
 private:
@@ -34,3 +32,4 @@ private:
 };
 
 } // namespace CKM
+

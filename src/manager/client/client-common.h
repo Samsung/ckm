@@ -39,8 +39,6 @@ extern "C" {
 
 namespace CKM {
 
-typedef std::vector<unsigned char> RawBuffer;
-
 int sendToServer(char const * const interface, const RawBuffer &send, MessageBuffer &recv);
 
 /*

@@ -86,7 +86,7 @@ RawBuffer CKMLogic::saveData(
     int commandId,
     DBDataType dataType,
     const Alias &alias,
-    const RawData &key,
+    const RawBuffer &key,
     const PolicySerializable &policy)
 {
     (void)cred;
@@ -126,7 +126,7 @@ RawBuffer CKMLogic::getData(
     int commandId,
     DBDataType dataType,
     const Alias &alias,
-    const RawData &password)
+    const RawBuffer &password)
 {
     (void)cred;
     (void)alias;
@@ -137,7 +137,7 @@ RawBuffer CKMLogic::getData(
     Serialization::Serialize(response, commandId);
     Serialization::Serialize(response, static_cast<int>(KEY_MANAGER_API_SUCCESS));
     Serialization::Serialize(response, static_cast<int>(dataType));
-    Serialization::Serialize(response, RawData());
+    Serialization::Serialize(response, RawBuffer());
     return response.Pop();
 }
 

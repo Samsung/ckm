@@ -6,8 +6,6 @@
 
 namespace CKM {
 
-// typedef std::vector<unsigned char> RawData; this must be defined in common header.
-
 // This is internal api so all functions should throw exception on errors.
 
 class KeyProvider {
@@ -16,33 +14,33 @@ class KeyProvider {
     // if (keyInWrapForm.size() != sizeof(WrappedKeyMaterial))
     //     throw exception; // buffer does not have proper size to store WrappedKeyMaterial
     // WrappedKeyMaterial *wkm = static_cast<WrappedKeyMaterial>(keyInWrapForm.data());
-    KeyProvider(const RawData &domainKEKInWrapForm, const RawData &password);
+    KeyProvider(const RawBuffer &domainKEKInWrapForm, const RawBuffer &password);
 
     // Returns Key used to decrypt database. 
     KeyAES getDomainKEK();
 
     // Returns Key in form used to store key in file
-    // Requied by Control::resetPassword(const RawData &newPassword);
+    // Requied by Control::resetPassword(const RawBuffer &newPassword);
     // This api should be used only on Tizen 2.2.1
-    RawData getDomainKEK(const std::string &password);
+    RawBuffer getDomainKEK(const std::string &password);
 
     // EncryptedKey key extracted from database. Used to encrypt application data.
     // This key will be used to decrypt/encrypt data in ROW
 	// [tak] modify method name more appropriately
 	// decryptDEK -> unwrapDEK
-    KeyAES unwrapDEK(const RawData &DEKInWrapForm);
+    KeyAES unwrapDEK(const RawBuffer &DEKInWrapForm);
 
     // Returns WRAPPED DEK. This will be written to datbase.
     // This key will be used to encrypt all application information.
     // All application are identified by smackLabel.
-    RawData generateDEK(const std::string &smackLabel);
+    RawBuffer generateDEK(const std::string &smackLabel);
 
     // used by change user password. On error -> exception
-    static RawData reencrypt(const RawData &domainKEKInWrapForm, const RawData &oldPass, const RawData &newPass);
+    static RawBuffer reencrypt(const RawBuffer &domainKEKInWrapForm, const RawBuffer &oldPass, const RawBuffer &newPass);
 
     // First run of application for some user. DomainKEK was not created yet. We must create one.
     // This key will be used to encrypt user database.
-    static RawData generateDomainKEK(const std::string &user, const RawData &userPassword);
+    static RawBuffer generateDomainKEK(const std::string &user, const RawBuffer &userPassword);
 
     // This will be called by framework at the begin of the program
 	// [tak] need to declare return type
@@ -61,3 +59,4 @@ private:
 };
 
 } // namespace CKM
+

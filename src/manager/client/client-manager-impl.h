@@ -36,21 +36,21 @@ public:
 
     int saveKey(const Alias &alias, const Key &key, const Policy &policy);
     int removeKey(const Alias &alias);
-    int getKey(const Alias &alias, const RawData &password, Key &key);
+    int getKey(const Alias &alias, const RawBuffer &password, Key &key);
 
     int saveCertificate(const Alias &alias, const Certificate &cert, const Policy &policy);
     int removeCertificate(const Alias &alias);
-    int getCertificate(const Alias &alias, const RawData &password, Certificate &cert);
+    int getCertificate(const Alias &alias, const RawBuffer &password, Certificate &cert);
 
-    int saveData(const Alias &alias, const RawData &rawData, const Policy &policy);
+    int saveData(const Alias &alias, const RawBuffer &rawData, const Policy &policy);
     int removeData(const Alias &alias);
-    int getData(const Alias &alias, const RawData &password, RawData &cert);
+    int getData(const Alias &alias, const RawBuffer &password, RawBuffer &cert);
 
 protected:
     int saveBinaryData(
         const Alias &alias,
         DBDataType dataType,
-        const RawData &rawData,
+        const RawBuffer &rawData,
         const Policy &policy);
 
     int removeBinaryData(
@@ -60,9 +60,9 @@ protected:
     int getBinaryData(
         const Alias &alias,
         DBDataType sendDataType,
-        const RawData &password,
+        const RawBuffer &password,
         DBDataType &recvDataType,
-        RawData &rawData);
+        RawBuffer &rawData);
 
     int m_counter;
 };
