@@ -19,6 +19,8 @@
  * @version     1.0
  * @brief       Sample service implementation.
  */
+#include <dpl/serialization.h>
+
 #include <ckm/ckm-error.h>
 #include <ckm/ckm-type.h>
 
@@ -31,17 +33,26 @@ CKMLogic::~CKMLogic(){}
 RawBuffer CKMLogic::unlockUserKey(const std::string &user, const RawBuffer &password) {
     (void)user;
     (void)password;
-    return RawBuffer();
+
+    MessageBuffer response;
+    Serialization::Serialize(response, static_cast<int>(KEY_MANAGER_API_SUCCESS));
+    return response.Pop();
 }
 
 RawBuffer CKMLogic::lockUserKey(const std::string &user) {
     (void)user;
-    return RawBuffer();
+
+    MessageBuffer response;
+    Serialization::Serialize(response, static_cast<int>(KEY_MANAGER_API_SUCCESS));
+    return response.Pop();
 }
 
 RawBuffer CKMLogic::removeUserData(const std::string &user) {
     (void)user;
-    return RawBuffer();
+
+    MessageBuffer response;
+    Serialization::Serialize(response, static_cast<int>(KEY_MANAGER_API_SUCCESS));
+    return response.Pop();
 }
 
 RawBuffer CKMLogic::changeUserPassword(
@@ -52,7 +63,10 @@ RawBuffer CKMLogic::changeUserPassword(
     (void)user;
     (void)oldPassword;
     (void)newPassword;
-    return RawBuffer();
+
+    MessageBuffer response;
+    Serialization::Serialize(response, static_cast<int>(KEY_MANAGER_API_SUCCESS));
+    return response.Pop();
 }
 
 RawBuffer CKMLogic::resetUserPassword(
@@ -61,7 +75,10 @@ RawBuffer CKMLogic::resetUserPassword(
 {
     (void)user;
     (void)newPassword;
-    return RawBuffer();
+
+    MessageBuffer response;
+    Serialization::Serialize(response, static_cast<int>(KEY_MANAGER_API_SUCCESS));
+    return response.Pop();
 }
 
 RawBuffer CKMLogic::saveData(

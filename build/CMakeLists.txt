@@ -13,7 +13,15 @@
 #    limitations under the License.
 #
 # @file        CMakeLists.txt
-# @author      Tomasz Swierczek (t.swierczek@samsung.com)
+# @author      Barlomiej Grzelewski (b.grzelewski@samsung.com)
+# @author      Zofia Abramowska (z.abramowska@samsung.com)
+# @brief
 #
 
-ADD_SUBDIRECTORY(key-manager)
+CONFIGURE_FILE(key-manager.pc.in key-manager.pc @ONLY)
+
+INSTALL(FILES
+    ${CMAKE_BINARY_DIR}/build/key-manager.pc
+    DESTINATION
+    ${LIB_INSTALL_DIR}/pkgconfig
+    )
