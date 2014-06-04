@@ -59,6 +59,7 @@ void CKMService::accept(const AcceptEvent &event) {
     LogDebug("Accept event");
     auto &info = m_connectionInfoMap[event.connectionID.counter];
     info.interfaceID = event.interfaceID;
+    info.credentials = event.credentials;
 }
 
 void CKMService::write(const WriteEvent &event) {

@@ -50,6 +50,38 @@ namespace {
 
 const time_t SOCKET_TIMEOUT = 20;
 
+int getCredentialsFromSocket(int sock, CKM::Credentials &cred) {
+    CKM::Credentials credentials;
+    std::vector<char> result(1);
+    socklen_t length = 1;
+    ucred peerCred;
+
+    if ((0 > getsockopt(sock, SOL_SOCKET, SO_PEERSEC, result.data(), &length))
+        && errno != ERANGE)
+    {
+        LogError("getsockopt failed");
+        return -1;
+    }
+
+    result.resize(length);
+
+    if (0 > getsockopt(sock, SOL_SOCKET, SO_PEERSEC, result.data(), &length)) {
+        LogError("getsockopt failed");
+        return -1;
+    }
+
+    length = sizeof(ucred);
+
+    if (0 > getsockopt(sock, SOL_SOCKET, SO_PEERCRED, &peerCred, &length)) {
+        LogError("getsockopt failed");
+        return -1;
+    }
+
+    cred.smackLabel.assign(result.begin(), result.end());
+    cred.uid = peerCred.uid;
+    return 0;
+}
+
 } // namespace anonymous
 
 namespace CKM {
@@ -203,6 +235,13 @@ void SocketManager::ReadyForAccept(int sock) {
         return;
     }
 
+    Credentials peerCred;
+    if (0 > getCredentialsFromSocket(client, peerCred)) {
+        LogDebug("Error in getCredentialsFromSocket. Socket closed.");
+        TEMP_FAILURE_RETRY(close(client));
+        return;
+    }
+
     auto &desc = CreateDefaultReadSocketDescription(client, true);
     desc.interfaceID = m_socketDescriptionVector[sock].interfaceID;
     desc.service = m_socketDescriptionVector[sock].service;
@@ -211,6 +250,7 @@ void SocketManager::ReadyForAccept(int sock) {
     event.connectionID.sock = client;
     event.connectionID.counter = desc.counter;
     event.interfaceID = desc.interfaceID;
+    event.credentials = peerCred;
     desc.service->Event(event);
 }
 

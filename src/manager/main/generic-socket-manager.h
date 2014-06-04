@@ -41,6 +41,11 @@ namespace CKM {
 
 typedef int InterfaceID;
 
+struct Credentials {
+    int uid;
+    std::string smackLabel;
+};
+
 struct ConnectionID {
     int sock;                                 // This is decriptor used for connection
     int counter;                              // Unique handler per socket
@@ -78,6 +83,7 @@ struct GenericSocketService {
     struct AcceptEvent : public GenericEvent {
         ConnectionID connectionID;
         InterfaceID interfaceID;
+        Credentials credentials;
     };
 
     struct WriteEvent : public GenericEvent {

@@ -32,11 +32,6 @@
 
 namespace CKM
 {
-    struct Credentials {
-        std::string realUser;
-        std::string realSmackLabel;
-    };
-
     struct ConnectionInfo {
         InterfaceID interfaceID;
         MessageBuffer buffer;
