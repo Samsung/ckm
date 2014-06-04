@@ -169,19 +169,19 @@ public:
     int requestCertificateAliasVector(AliasVector &aliasVector);
     int requestDataAliasVector(AliasVector &aliasVector);
 
-//    int createKeyPairRSA(
-//			const int size,              // size in bits [1024, 2048, 4096]
-//			const Alias &privateKeyAlias,
-//			const Alias &publicKeyAlias,
-//			const Policy &policyPrivateKey = Policy(),
-//			const Policy &policyPublicKey = Policy());
-//
-//	int createKeyPairECDSA(
-//			const Key::ECType type,
-//			const Alias &privateKeyAlias,
-//			const Alias &publicKeyAlias,
-//			const Policy &policyPrivateKey = Policy(),
-//			const Policy &policyPublicKey = Policy());
+    int createKeyPairRSA(
+        const int size,              // size in bits [1024, 2048, 4096]
+        const Alias &privateKeyAlias,
+        const Alias &publicKeyAlias,
+        const Policy &policyPrivateKey = Policy(),
+        const Policy &policyPublicKey = Policy());
+
+    int createKeyPairECDSA(
+        const Key::ECType type,
+        const Alias &privateKeyAlias,
+        const Alias &publicKeyAlias,
+        const Policy &policyPrivateKey = Policy(),
+        const Policy &policyPublicKey = Policy());
 //
 //	int createSignature(
 //			const Alias &privateKeyAlias,

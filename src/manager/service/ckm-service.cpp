@@ -195,6 +195,44 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer){
                 commandId,
                 static_cast<DBDataType>(tmpDataType));
         }
+        case LogicCommand::CREATE_KEY_PAIR_RSA:
+        {
+            int size;
+            Alias privateKeyAlias;
+            Alias publicKeyAlias;
+            PolicySerializable policyPrivateKey;
+            PolicySerializable policyPublicKey;
+            Deserialization::Deserialize(buffer, size);
+            Deserialization::Deserialize(buffer, policyPrivateKey);
+            Deserialization::Deserialize(buffer, policyPublicKey);
+            return m_logic->createKeyPairRSA(
+                cred,
+                commandId,
+                size,
+                privateKeyAlias,
+                publicKeyAlias,
+                policyPrivateKey,
+                policyPublicKey);
+        }
+        case LogicCommand::CREATE_KEY_PAIR_ECDSA:
+        {
+            unsigned int type;
+            Alias privateKeyAlias;
+            Alias publicKeyAlias;
+            PolicySerializable policyPrivateKey;
+            PolicySerializable policyPublicKey;
+            Deserialization::Deserialize(buffer, type);
+            Deserialization::Deserialize(buffer, policyPrivateKey);
+            Deserialization::Deserialize(buffer, policyPublicKey);
+            return m_logic->createKeyPairECDSA(
+                cred,
+                commandId,
+                type,
+                privateKeyAlias,
+                publicKeyAlias,
+                policyPrivateKey,
+                policyPublicKey);
+        }
         default:
         // TODO
             throw 1; // broken protocol

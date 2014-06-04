@@ -45,6 +45,8 @@ enum class LogicCommand : int {
     GET_LIST,
     SAVE,
     REMOVE,
+    CREATE_KEY_PAIR_RSA,
+    CREATE_KEY_PAIR_ECDSA
 };
 
 enum class DBDataType : int {

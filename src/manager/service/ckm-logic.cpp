@@ -157,5 +157,54 @@ RawBuffer CKMLogic::getDataList(
     return response.Pop();
 }
 
+RawBuffer CKMLogic::createKeyPairRSA(
+    Credentials &cred,
+    int commandId,
+    int size,
+    const Alias &privateKeyAlias,
+    const Alias &publicKeyAlias,
+    PolicySerializable policyPrivateKey,
+    PolicySerializable policyPublicKey)
+{ 
+    (void)cred;
+    (void)size;
+    (void)privateKeyAlias;
+    (void)publicKeyAlias,
+    (void)policyPrivateKey;
+    (void)policyPublicKey;
+    MessageBuffer response;
+    Serialization::Serialize(response, static_cast<int>(LogicCommand::CREATE_KEY_PAIR_RSA));
+    Serialization::Serialize(response, commandId);
+    Serialization::Serialize(response, static_cast<int>(KEY_MANAGER_API_SUCCESS));
+ 
+    return response.Pop();
+}
+
+RawBuffer CKMLogic::createKeyPairECDSA(
+    Credentials &cred,
+    int commandId,
+    int type,
+    const Alias &privateKeyAlias,
+    const Alias &publicKeyAlias,
+    PolicySerializable policyPrivateKey,
+    PolicySerializable policyPublicKey)
+{
+    (void)cred;
+    (void)type;
+    (void)privateKeyAlias;
+    (void)publicKeyAlias,
+    (void)policyPrivateKey;
+    (void)policyPublicKey;
+    
+    MessageBuffer response;
+    Serialization::Serialize(response, static_cast<int>(LogicCommand::CREATE_KEY_PAIR_RSA));
+    Serialization::Serialize(response, commandId);
+    Serialization::Serialize(response, static_cast<int>(KEY_MANAGER_API_SUCCESS));
+ 
+    return response.Pop();
+}
+
+
+
 } // namespace CKM
 

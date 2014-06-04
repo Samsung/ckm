@@ -303,5 +303,96 @@ int Manager::ManagerImpl::requestDataAliasVector(AliasVector &aliasVector) {
     return requestBinaryDataAliasVector(DBDataType::BINARY_DATA, aliasVector);
 }
 
+int Manager::ManagerImpl::createKeyPairRSA(
+    const int size,              // size in bits [1024, 2048, 4096]
+    const Alias &privateKeyAlias,
+    const Alias &publicKeyAlias,
+    const Policy &policyPrivateKey,
+    const Policy &policyPublicKey) 
+{
+    m_counter++;
+    int my_counter = m_counter;
+    return try_catch([&] {
+
+        MessageBuffer send, recv;
+        Serialization::Serialize(send, static_cast<int>(LogicCommand::CREATE_KEY_PAIR_RSA));
+        Serialization::Serialize(send, my_counter);
+        Serialization::Serialize(send, static_cast<int>(size));
+        Serialization::Serialize(send, PolicySerializable(policyPrivateKey));
+        Serialization::Serialize(send, PolicySerializable(policyPublicKey));
+        Serialization::Serialize(send, privateKeyAlias);
+        Serialization::Serialize(send, publicKeyAlias);
+        
+        
+
+        int retCode = sendToServer(
+            SERVICE_SOCKET_CKM_STORAGE,
+            send.Pop(),
+            recv);
+
+        if (KEY_MANAGER_API_SUCCESS != retCode) {
+            return retCode;
+        }
+
+        int command;
+        int counter;
+       
+
+        Deserialization::Deserialize(recv, command);
+        Deserialization::Deserialize(recv, counter);
+        Deserialization::Deserialize(recv, retCode);
+        
+        if (counter != my_counter) {
+            return KEY_MANAGER_API_ERROR_UNKNOWN;
+        }
+
+        return retCode;
+    });
+}
+
+int Manager::ManagerImpl::createKeyPairECDSA(
+    const Key::ECType type,
+    const Alias &privateKeyAlias,
+    const Alias &publicKeyAlias,
+    const Policy &policyPrivateKey,
+    const Policy &policyPublicKey) 
+{
+    m_counter++;
+    int my_counter = m_counter;
+    return try_catch([&] {
+
+        MessageBuffer send, recv;
+        Serialization::Serialize(send, static_cast<int>(LogicCommand::CREATE_KEY_PAIR_ECDSA));
+        Serialization::Serialize(send, my_counter);
+        Serialization::Serialize(send, static_cast<unsigned int>(type));
+        Serialization::Serialize(send, PolicySerializable(policyPrivateKey));
+        Serialization::Serialize(send, PolicySerializable(policyPublicKey));
+        Serialization::Serialize(send, privateKeyAlias);
+        Serialization::Serialize(send, publicKeyAlias);
+        
+
+        int retCode = sendToServer(
+            SERVICE_SOCKET_CKM_STORAGE,
+            send.Pop(),
+            recv);
+
+        if (KEY_MANAGER_API_SUCCESS != retCode) {
+            return retCode;
+        }
+
+        int command;
+        int counter;
+
+        Deserialization::Deserialize(recv, command);
+        Deserialization::Deserialize(recv, counter);
+        Deserialization::Deserialize(recv, retCode);
+        
+        if (counter != my_counter) {
+            return KEY_MANAGER_API_ERROR_UNKNOWN;
+        }
+
+        return retCode;
+    });
+}
 } // namespace CKM
 

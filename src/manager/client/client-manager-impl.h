@@ -48,6 +48,20 @@ public:
     int removeData(const Alias &alias);
     int getData(const Alias &alias, const std::string &password, RawBuffer &cert);
     int requestDataAliasVector(AliasVector &aliasVector);
+    
+    int createKeyPairRSA(
+        const int size,              // size in bits [1024, 2048, 4096]
+        const Alias &privateKeyAlias,
+        const Alias &publicKeyAlias,
+        const Policy &policyPrivateKey = Policy(),
+        const Policy &policyPublicKey = Policy());
+
+    int createKeyPairECDSA(
+        const Key::ECType type,
+        const Alias &privateKeyAlias,
+        const Alias &publicKeyAlias,
+        const Policy &policyPrivateKey = Policy(),
+        const Policy &policyPublicKey = Policy());
 
 protected:
     int saveBinaryData(

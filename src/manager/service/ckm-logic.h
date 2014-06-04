@@ -79,6 +79,24 @@ public:
         Credentials &cred,
         int commandId,
         DBDataType dataType);
+        
+    RawBuffer createKeyPairRSA(
+        Credentials &cred,
+        int commandId,
+        int size,
+        const Alias &privateKeyAlias,
+        const Alias &publicKeyAlias,
+        PolicySerializable policyPrivateKey,
+        PolicySerializable policyPublicKey);
+        
+    RawBuffer createKeyPairECDSA(
+        Credentials &cred,
+        int commandId,
+        int type,
+        const Alias &privateKeyAlias,
+        const Alias &publicKeyAlias,
+        PolicySerializable policyPrivateKey,
+        PolicySerializable policyPublicKey);
 
 private:
 

@@ -78,5 +78,24 @@ int Manager::requestDataAliasVector(AliasVector &av) {
     return m_impl->requestDataAliasVector(av);
 }
 
+int Manager::createKeyPairRSA(
+    const int size,              // size in bits [1024, 2048, 4096]
+    const Alias &privateKeyAlias,
+    const Alias &publicKeyAlias,
+    const Policy &policyPrivateKey,
+    const Policy &policyPublicKey) 
+{
+    return m_impl->createKeyPairRSA(size, privateKeyAlias, publicKeyAlias, policyPrivateKey, policyPublicKey);
+}
+
+int Manager::createKeyPairECDSA(
+    const Key::ECType type,
+    const Alias &privateKeyAlias,
+    const Alias &publicKeyAlias,
+    const Policy &policyPrivateKey,
+    const Policy &policyPublicKey) 
+{
+    return m_impl->createKeyPairECDSA(type, privateKeyAlias, publicKeyAlias, policyPrivateKey, policyPublicKey);
+}
 } // namespace CKM
 
