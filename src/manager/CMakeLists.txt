@@ -4,6 +4,11 @@ PKG_CHECK_MODULES(COMMON_DEP
     libsmack
     REQUIRED
     )
+PKG_CHECK_MODULES(KEY_PROVIDER_DEP
+	dlog
+	openssl
+	REQUIRED
+	)
 
 SET(COMMON_PATH ${PROJECT_SOURCE_DIR}/src/manager)
 
@@ -52,7 +57,7 @@ TARGET_LINK_LIBRARIES(${TARGET_KEY_MANAGER_COMMON}
 
 ###########################################################################
 SET(KEY_PROVIDER_SOURCES
-    ${COMMON_PATH}/service/ckm-key-provider-dummy.c                             
+    ${COMMON_PATH}/service/ckm-key-provider-dummy.c
     )
 
 ADD_LIBRARY(${TARGET_KEY_MANAGER_KEY_PROVIDER} SHARED ${KEY_PROVIDER_SOURCES})
@@ -62,6 +67,9 @@ SET_TARGET_PROPERTIES(
 		COMPILE_FLAGS "-fPIC -c"
 		SOVERSION 1.0.0
 		VERSION 1.0.0
+	)
+TARGET_LINK_LIBRARIES(${TARGET_KEY_MANAGER_KEY_PROVIDER}
+	${KEY_PROVIDER_DEP_LIBRARIES}
 	)
 
 ##########################################################################
