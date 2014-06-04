@@ -23,6 +23,7 @@
 #define CENT_KEY_ASSERT_H
 
 #include <dpl/noreturn.h>
+#include <string>
 
 namespace CKM {
 // Assertion handler procedure
