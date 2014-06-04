@@ -63,7 +63,6 @@ int OCSPModule::verify(const CertificateImplVector &certificateChain) {
 	int ocspStatus = -1;
 	int result = -1;
 
-	CertificateImplVector::iterator it;
 	for(unsigned int i=0; i < certificateChain.size() -1; i++) {// except root certificate
 		cert = certificateChain[i].getX509();
 		issuer = certificateChain[i+1].getX509();
