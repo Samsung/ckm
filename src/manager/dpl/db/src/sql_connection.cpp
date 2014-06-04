@@ -28,6 +28,7 @@
 #include <dpl/noncopyable.h>
 #include <dpl/assert.h>
 #include <dpl/scoped_ptr.h>
+#include <dpl/TransitoryString.h>
 #include <db-util.h>
 #include <unistd.h>
 #include <cstdio>
@@ -691,11 +692,33 @@ void SqlConnection::Connect(const std::string &address,
     TurnOnForeignKeys();
 }
 
-static std::string rawToHexString(const std::vector<unsigned char> &raw) {
-    std::string str(raw.size() * 2, '0');
+const std::string SQLCIPHER_RAW_PREFIX="x'";
+const std::string SQLCIPHER_RAW_SUFIX="'";
+const std::size_t SQLCIPHER_RAW_DATA_SIZE = 32;
+
+void rawToHexString(TransitoryString& str,
+                    std::size_t offset,
+                    const std::vector<unsigned char> &raw) {
     for (std::size_t i = 0; i < raw.size(); i++)
-        sprintf(&str[i*2], "%02X", raw[i]);
-    return str;
+        sprintf(&str[offset + i*2], "%02X", raw[i]);
+}
+
+TransitoryString createHexPass(const std::vector<unsigned char> &rawPass){
+    TransitoryString pass = TransitoryString('0', SQLCIPHER_RAW_PREFIX.length() +
+                                             //We are required to pass 64byte
+                                             //long hex password made out of
+                                             //32byte raw binary data
+                                             rawPass.size() * 2 +
+                                             SQLCIPHER_RAW_SUFIX.length());
+    for(std::size_t i = 0; i < SQLCIPHER_RAW_PREFIX.size(); i++)
+        pass[i] = SQLCIPHER_RAW_PREFIX[i];
+    rawToHexString(pass, SQLCIPHER_RAW_PREFIX.size(), rawPass);
+    for(std::size_t i = 0; i < SQLCIPHER_RAW_PREFIX.size(); i++)
+    for(std::size_t i = 0; i < SQLCIPHER_RAW_SUFIX.size(); i++)
+        pass[i + SQLCIPHER_RAW_PREFIX.size() + rawPass.size() * 2]
+            = SQLCIPHER_RAW_SUFIX[i];
+    return pass;
+
 }
 
 void SqlConnection::SetKey(const std::vector<unsigned char> &rawPass){
@@ -703,7 +726,10 @@ void SqlConnection::SetKey(const std::vector<unsigned char> &rawPass){
         LogPedantic("Cannot set key. No connection to DB!");
         return;
     }
-    std::string pass = "x'" + rawToHexString(rawPass) + "'";
+    AssertMsg(rawPass.size() == SQLCIPHER_RAW_DATA_SIZE,
+            "Binary data for raw password should be 32 bytes long."
+            );
+    TransitoryString pass = createHexPass(rawPass);
     int result = sqlcipher3_key(m_connection, pass.c_str(), pass.length());
     if (result == SQLCIPHER_OK) {
         LogPedantic("Set key on DB");
@@ -723,11 +749,15 @@ void SqlConnection::ResetKey(const std::vector<unsigned char> &rawPassOld,
         LogPedantic("Cannot reset key. No connection to DB!");
         return;
     }
+    AssertMsg(rawPassOld.size() == SQLCIPHER_RAW_DATA_SIZE &&
+              rawPassNew.size() == SQLCIPHER_RAW_DATA_SIZE,
+            "Binary data for raw password should be 32 bytes long."
+             );
     // sqlcipher3_rekey requires for key to be already set
     if (!m_isKeySet)
         SetKey(rawPassOld);
 
-    std::string pass = "x'" + rawToHexString(rawPassNew) + "'";
+    TransitoryString pass = createHexPass(rawPassNew);
     int result = sqlcipher3_rekey(m_connection, pass.c_str(), pass.length());
     if (result == SQLCIPHER_OK) {
         LogPedantic("Reset key on DB");
@@ -736,14 +766,6 @@ void SqlConnection::ResetKey(const std::vector<unsigned char> &rawPassOld,
         //                              key length == 0
         LogPedantic("Failed to reset key on DB");
         ThrowMsg(Exception::InvalidArguments, result);
-    }
-    //Wiping out the key (required)
-    pass.assign(pass.length(), '0');
-    for(std::size_t i = 0; i < pass.length(); i++) {
-        if(pass[i] != '0') {
-            LogPedantic("Wiping key failed.");
-            ThrowMsg(Exception::InternalError, "Wiping key failed");
-        }
     }
 }
 
