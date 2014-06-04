@@ -33,6 +33,7 @@ SET(COMMON_SOURCES
     ${COMMON_PATH}/dpl/core/src/serialization.cpp
     ${COMMON_PATH}/dpl/core/src/singleton.cpp
     ${COMMON_PATH}/dpl/core/src/string.cpp
+    ${COMMON_PATH}/dpl/core/src/TransitoryString.cpp
     ${COMMON_PATH}/dpl/core/src/errno_string.cpp
     ${COMMON_PATH}/dpl/db/src/sql_connection.cpp
     ${COMMON_PATH}/dpl/db/src/naive_synchronization_object.cpp
