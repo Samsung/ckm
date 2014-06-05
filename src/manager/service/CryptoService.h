@@ -7,6 +7,7 @@
 #include <ckm/key-manager.h>
 #include <ckm/ckm-type.h>
 #include <string.h>
+#include <vector>
 #include <openssl/evp.h>
 #include <openssl/obj_mac.h>
 #include <openssl/ec.h>
@@ -76,7 +77,14 @@ class CryptoService {
  	                    const CertificateImplVector &userTrustedCertificates,
  	                   CertificateImplVector &certificateChainVector);
 
- };
+ private:		
+     std::vector<X509 *> verifyCertChain(X509 *cert,
+		     std::vector<X509 *> &trustedCerts,
+		     std::vector<X509 *> &userTrustedCerts,
+		     std::vector<X509 *> &untrustedchain);
+
+    bool hasValidCAFlag(std::vector<X509 *> &certChain);
+};
 }
 
 

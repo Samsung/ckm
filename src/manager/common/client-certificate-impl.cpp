@@ -54,6 +54,11 @@ CertificateImpl::CertificateImpl(const RawBuffer &der, Certificate::Format forma
     }
 }
 
+CertificateImpl& CertificateImpl::operator=(const CertificateImpl &second) {
+   m_x509 = X509_dup(second.m_x509);
+   return *this;
+}
+
 RawBuffer CertificateImpl::getDER(void) const {
     unsigned char *rawDer = NULL;
     int size = i2d_X509(m_x509, &rawDer);

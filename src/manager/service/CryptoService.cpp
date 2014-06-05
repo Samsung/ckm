@@ -1,4 +1,7 @@
 #include <iostream>
+#include <exception>
+#include <vector>
+#include <openssl/x509_vfy.h>
 #include <string.h>
 #include <openssl/evp.h>
 #include <openssl/obj_mac.h>
@@ -15,6 +18,10 @@
 #include <ckm/ckm-type.h>
 #include <client-key-impl.h>
 #include <CryptoService.h>
+#include <key-manager-util.h>
+
+#define OPENSSL_SUCCESS 1       // DO NOTCHANGE THIS VALUE
+#define OPENSSL_FAIL    0       // DO NOTCHANGE THIS VALUE
 
 namespace CKM {
 
@@ -535,11 +542,150 @@ int CryptoService::verifySignature(const KeyImpl &publicKey,
 	return ret;
 }
 
-//int CryptoService::verifyCertificateChain(const CertificateImpl &certificate,
-//         const CertificateImplVector &untrustedCertificates,
-//         const CertificateImplVector &userTrustedCertificates,
-//         CertificateImplVector &certificateChainVector) {
-//
-//	return -1;
-//}
+
+int CryptoService::verifyCertificateChain(const CertificateImpl &certificate,
+         const CertificateImplVector &untrustedCertificates,
+         const CertificateImplVector &userTrustedCertificates,
+         CertificateImplVector &certificateChainVector) {
+	X509 *cert = X509_new();
+	rawBufferToX509(&cert, certificate.getDER());
+	
+	std::vector<X509 *> trustedCerts;
+	std::vector<X509 *> userTrustedCerts;
+	std::vector<X509 *> untrustedChain;
+
+	X509 *tempCert;
+
+	STACK_OF(X509) *sysCerts = loadSystemCerts(CKM_SYSTEM_CERTS_PATH);
+
+	while((tempCert = sk_X509_pop(sysCerts)) != NULL) {
+		trustedCerts.push_back(tempCert);
+	}
+ 
+	for(unsigned int i=0;i<userTrustedCertificates.size();i++) {
+                tempCert = X509_new();
+                rawBufferToX509(&tempCert, userTrustedCertificates[i].getDER());
+                userTrustedCerts.push_back(tempCert);
+        }
+
+	for(unsigned int i=0;i<untrustedCertificates.size();i++) {
+		tempCert = X509_new();
+		rawBufferToX509(&tempCert, untrustedCertificates[i].getDER());
+		untrustedChain.push_back(tempCert);
+	}
+
+	std::vector<X509 *> chain = verifyCertChain(cert, trustedCerts, userTrustedCerts, untrustedChain);
+
+	RawBuffer tmpBuf;
+	for(unsigned int i=0;i<chain.size();i++) {
+		x509ToRawBuffer(tmpBuf, chain[i]);
+		CertificateImpl tmpCertImpl((const RawBuffer)tmpBuf,Certificate::Format::FORM_DER);
+		certificateChainVector.push_back(tmpCertImpl);
+	}
+
+	X509_free(cert);
+	
+	for(unsigned int i=0;i<trustedCerts.size();i++) {
+		X509_free(trustedCerts[i]);
+	}
+
+	for(unsigned int i=0;i<untrustedChain.size();i++) {
+		X509_free(untrustedChain[i]);
+	}
+
+	for(unsigned int i=0;i<userTrustedCerts.size();i++) {
+		X509_free(userTrustedCerts[i]);
+	}
+
+	return EVP_SUCCESS;
+}
+
+/*
+* truestedCerts means the system certificate list stored in system securely.
+* return : std::vector<X509 *> certChain; the order is user cert, middle ca certs, and root ca cert.
+*/
+
+std::vector<X509 *> CryptoService::verifyCertChain(X509 *cert,
+		std::vector<X509 *> &trustedCerts,
+		std::vector<X509 *> &userTrustedCerts,
+		std::vector<X509 *> &untrustedchain){
+	std::vector<X509 *> certChain;
+	X509_STORE *tstore = X509_STORE_new();
+	STACK_OF(X509) *uchain = sk_X509_new_null();
+
+	std::vector<X509 *>::iterator iVec_it;
+
+	for(iVec_it = trustedCerts.begin(); iVec_it != trustedCerts.end(); iVec_it++) {
+		X509_STORE_add_cert(tstore, *iVec_it);
+	}
+	for(iVec_it = userTrustedCerts.begin(); iVec_it != userTrustedCerts.end(); iVec_it++) {
+		X509_STORE_add_cert(tstore, *iVec_it);
+	}
+
+
+	for(iVec_it = untrustedchain.begin(); iVec_it != untrustedchain.end(); iVec_it++) {
+		sk_X509_push(uchain, *iVec_it);
+	}
+
+	// Create the context to verify the certificate.
+	X509_STORE_CTX *ctx = X509_STORE_CTX_new();
+
+	// Initial the store to verify the certificate.
+	X509_STORE_CTX_init(ctx, tstore, cert, uchain);
+
+	int verified = X509_verify_cert(ctx);
+	int errnum;
+	const char *errstr;
+	if(verified == OPENSSL_SUCCESS) {
+		STACK_OF(X509) *chain = X509_STORE_CTX_get1_chain(ctx);
+		X509 *cert;
+		while((cert = sk_X509_pop(chain))) {
+			certChain.insert(certChain.begin(),cert);
+		}
+	}else {
+		errnum = X509_STORE_CTX_get_error(ctx);
+		errstr = X509_verify_cert_error_string(errnum);
+	}
+
+	X509_STORE_CTX_cleanup(ctx);
+	X509_STORE_CTX_free(ctx);
+	X509_STORE_free(tstore);
+	sk_X509_free(uchain);
+	ctx = NULL;
+	tstore = NULL;
+	uchain = NULL;
+
+	if(verified != OPENSSL_SUCCESS) {
+		throw std::string(errstr);
+	}
+
+	return certChain;
+}
+
+bool CryptoService::hasValidCAFlag(std::vector<X509 *> &certChain) {
+        // KeyUsage if present should allow cert signing;
+        // If basicConstraints says not a CA then say so.
+
+        X509 *cert = NULL;
+        int isCA;
+
+        if(certChain.size() < 2) // certChain should have more than 2 certs.
+                return false;
+
+        std::vector<X509 *>::iterator it;
+        for(it = certChain.begin()+1; it != certChain.end(); it++) { // start from the second cert
+                cert = *it;
+                isCA = X509_check_ca(cert);
+                // For MDPP compliance.
+                // if it returns 1, this means that the cert has the basicConstraints and CAFlag=true.
+                // X509_check_ca can return 0(is not CACert), 1(is CACert), 3, 4, 5(may be CACert).
+                if(isCA != 1) {
+                        return false;
+                }
+        }
+
+        return true;
+}
+
+
 }
