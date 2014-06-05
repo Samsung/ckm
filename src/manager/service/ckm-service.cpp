@@ -94,6 +94,8 @@ bool CKMService::processOne(
         return true;
     } Catch (MessageBuffer::Exception::Base) {
         LogError("Broken protocol. Closing socket.");
+    } catch (const std::string &e) {
+        LogError("String exception(" << e << "). Closing socket");
     } catch (...) {
         LogError("Unknown exception. Closing socket.");
     }

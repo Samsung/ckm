@@ -9,14 +9,24 @@ namespace CKM {
 // This is internal api so all functions should throw exception on errors.
 
 class KeyProvider {
+public:
+    // To store in std containers
+    KeyProvider();
     // In constructor you must check if SKMM is initialized. On error -> exception
     // keyInWrapForm should be used like this:
     // if (keyInWrapForm.size() != sizeof(WrappedKeyMaterial))
     //     throw exception; // buffer does not have proper size to store WrappedKeyMaterial
     // WrappedKeyMaterial *wkm = static_cast<WrappedKeyMaterial>(keyInWrapForm.data());
-    KeyProvider(const RawBuffer &domainKEKInWrapForm, const RawBuffer &password);
+    KeyProvider(const RawBuffer &domainKEKInWrapForm, const std::string &password);
 
-    // Returns Key used to decrypt database. 
+    KeyProvider(KeyProvider &&);
+    KeyProvider(const KeyProvider &) = delete;
+    KeyProvider& operator=(const KeyProvider &) = delete;
+    KeyProvider& operator=(KeyProvider &&);
+
+    bool isInitialized();
+
+    // Returns Key used to decrypt database.
     KeyAES getDomainKEK();
 
     // Returns Key in form used to store key in file
@@ -36,11 +46,14 @@ class KeyProvider {
     RawBuffer generateDEK(const std::string &smackLabel);
 
     // used by change user password. On error -> exception
-    static RawBuffer reencrypt(const RawBuffer &domainKEKInWrapForm, const RawBuffer &oldPass, const RawBuffer &newPass);
+    static RawBuffer reencrypt(
+        const RawBuffer &domainKEKInWrapForm,
+        const std::string &oldPass,
+        const std::string &newPass);
 
     // First run of application for some user. DomainKEK was not created yet. We must create one.
     // This key will be used to encrypt user database.
-    static RawBuffer generateDomainKEK(const std::string &user, const RawBuffer &userPassword);
+    static RawBuffer generateDomainKEK(const std::string &user, const std::string &userPassword);
 
     // This will be called by framework at the begin of the program
 	// [tak] need to declare return type
@@ -53,9 +66,9 @@ class KeyProvider {
 private:
 	// [tak] modify variable name
 	// m_dkek -> m_rawDKEK
-    KeyMaterial* m_rawDKEK;
-
-	static int s_isInitialized;
+    KeyMaterial *m_rawDKEK;
+    bool m_isInitialized;
+	static bool s_isInitialized;
 };
 
 } // namespace CKM

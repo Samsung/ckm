@@ -23,6 +23,8 @@
 
 #include <ckm/ckm-error.h>
 #include <ckm/ckm-type.h>
+#include <key-provider.h>
+#include <file-system.h>
 
 #include <ckm-logic.h>
 namespace CKM {
@@ -31,16 +33,35 @@ CKMLogic::CKMLogic(){}
 CKMLogic::~CKMLogic(){}
 
 RawBuffer CKMLogic::unlockUserKey(uid_t user, const std::string &password) {
-    (void)user;
-    (void)password;
+    // TODO try catch for all errors that should be supported by error code
+    int retCode = KEY_MANAGER_API_SUCCESS;
+
+    UserData &handle = m_userDataMap[user];
+
+    if (!(handle.keyProvider.isInitialized())) {
+        auto &handle = m_userDataMap[user];
+
+        FileSystem fs(user);
+        auto wrappedDomainKEK = fs.getDomainKEK();
+
+        if (wrappedDomainKEK.empty()) {
+            wrappedDomainKEK = KeyProvider::generateDomainKEK(std::to_string(user), password);
+            fs.saveDomainKEK(wrappedDomainKEK);
+        }
+
+        handle.keyProvider = KeyProvider(wrappedDomainKEK, password);
+
+        // TODO Now create database!
+    }
 
     MessageBuffer response;
-    Serialization::Serialize(response, static_cast<int>(KEY_MANAGER_API_SUCCESS));
+    Serialization::Serialize(response, retCode);
     return response.Pop();
 }
 
 RawBuffer CKMLogic::lockUserKey(uid_t user) {
-    (void)user;
+    // TODO try catch for all errors that should be supported by error code
+    m_userDataMap.erase(user);
 
     MessageBuffer response;
     Serialization::Serialize(response, static_cast<int>(KEY_MANAGER_API_SUCCESS));
@@ -48,7 +69,11 @@ RawBuffer CKMLogic::lockUserKey(uid_t user) {
 }
 
 RawBuffer CKMLogic::removeUserData(uid_t user) {
-    (void)user;
+    // TODO try catch for all errors that should be supported by error code
+    m_userDataMap.erase(user);
+
+    FileSystem fs(user);
+//    fs.removeUserData(); // remove DB also
 
     MessageBuffer response;
     Serialization::Serialize(response, static_cast<int>(KEY_MANAGER_API_SUCCESS));
@@ -60,12 +85,18 @@ RawBuffer CKMLogic::changeUserPassword(
     const std::string &oldPassword,
     const std::string &newPassword)
 {
-    (void)user;
-    (void)oldPassword;
-    (void)newPassword;
-
+    int retCode = KEY_MANAGER_API_SUCCESS;
+    // TODO try-catch
+    FileSystem fs(user);
+    auto wrappedDomainKEK = fs.getDomainKEK();
+    if (wrappedDomainKEK.empty()) {
+        retCode = KEY_MANAGER_API_ERROR_BAD_REQUEST;
+    } else {
+        wrappedDomainKEK = KeyProvider::reencrypt(wrappedDomainKEK, oldPassword, newPassword);
+        fs.saveDomainKEK(wrappedDomainKEK);
+    }
     MessageBuffer response;
-    Serialization::Serialize(response, static_cast<int>(KEY_MANAGER_API_SUCCESS));
+    Serialization::Serialize(response, retCode);
     return response.Pop();
 }
 
@@ -73,11 +104,19 @@ RawBuffer CKMLogic::resetUserPassword(
     uid_t user,
     const std::string &newPassword)
 {
-    (void)user;
-    (void)newPassword;
+    int retCode = KEY_MANAGER_API_SUCCESS;
+    // TODO try-catch
+    if (m_userDataMap.count(user) <= 0) {
+        retCode = KEY_MANAGER_API_ERROR_BAD_REQUEST;
+    } else {
+        auto &handler = m_userDataMap[user];
+        auto wrappedDomainKEK = handler.keyProvider.getDomainKEK(newPassword);
+        FileSystem fs(user);
+        fs.saveDomainKEK(wrappedDomainKEK);
+    }
 
     MessageBuffer response;
-    Serialization::Serialize(response, static_cast<int>(KEY_MANAGER_API_SUCCESS));
+    Serialization::Serialize(response, retCode);
     return response.Pop();
 }
 
@@ -203,8 +242,6 @@ RawBuffer CKMLogic::createKeyPairECDSA(
  
     return response.Pop();
 }
-
-
 
 } // namespace CKM
 

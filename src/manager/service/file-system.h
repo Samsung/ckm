@@ -28,7 +28,7 @@ namespace CKM {
 
 class FileSystem {
 public:
-    FileSystem(int uid);
+    FileSystem(uid_t uid);
 
     std::string getDBPath() const;
     RawBuffer getDomainKEK() const;
@@ -36,8 +36,7 @@ public:
 
     virtual ~FileSystem(){}
 protected:
-    int m_uid;
-    std::string m_user;
+    uid_t m_uid;
 };
 
 }

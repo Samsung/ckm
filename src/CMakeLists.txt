@@ -21,7 +21,7 @@ SET(KEY_MANAGER_SOURCES
     ${KEY_MANAGER_PATH}/service/ocsp.cpp
     ${KEY_MANAGER_PATH}/service/DBCryptoModule.cpp
     ${KEY_MANAGER_PATH}/service/CryptoService.cpp
-    ${KEY_MANAGER_PATH}/service/FileSystem.cpp
+    ${KEY_MANAGER_PATH}/service/file-system.cpp
     )
 
 SET_SOURCE_FILES_PROPERTIES(

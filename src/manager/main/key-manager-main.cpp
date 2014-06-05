@@ -31,6 +31,8 @@
 #include <echo.h>
 #include <ckm-service.h>
 
+#include <key-provider.h>
+
 IMPLEMENT_SAFE_SINGLETON(CKM::Log::LogSystem);
 
 #define REGISTER_SOCKET_SERVICE(manager, service) \
@@ -73,14 +75,21 @@ int main(void) {
             LogError("Error in pthread_sigmask");
             return 1;
         }
+        LogInfo("Init external liblaries SKMM and openssl");
+        CKM::KeyProvider::initializeLibrary();
+        // TODO initialize openssl here
+        {
+            LogInfo("Start!");
+            CKM::SocketManager manager;
 
-        LogInfo("Start!");
-        CKM::SocketManager manager;
+            REGISTER_SOCKET_SERVICE(manager, CKM::EchoService);
+            REGISTER_SOCKET_SERVICE(manager, CKM::CKMService);
 
-        REGISTER_SOCKET_SERVICE(manager, CKM::EchoService);
-        REGISTER_SOCKET_SERVICE(manager, CKM::CKMService);
-
-        manager.MainLoop();
+            manager.MainLoop();
+        }
+        // Manager has been destroyed and we may close external libraries.
+        LogInfo("Deinit SKMM and openssl");
+        CKM::KeyProvider::closeLibrary();
     }
     UNHANDLED_EXCEPTION_HANDLER_END
     return 0;

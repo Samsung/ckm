@@ -20,13 +20,12 @@
  * @brief       Sample service implementation.
  */
 #include <sys/types.h>
-#include <pwd.h>
 
 #include <string>
 #include <sstream>
 #include <fstream>
 
-#include <FileSystem.h>
+#include <file-system.h>
 
 namespace {
 
@@ -38,27 +37,21 @@ static const std::string CKM_DB_PREFIX = "db-";
 
 namespace CKM {
 
-FileSystem::FileSystem(int uid)
+FileSystem::FileSystem(uid_t uid)
   : m_uid(uid)
-{
-    passwd *pass = getpwuid(uid);
-    if (pass->pw_name)
-        m_user = pass->pw_name;
-    else
-        m_user = std::to_string(uid);
-}
+{}
 
 std::string FileSystem::getDBPath() const
 {
     std::stringstream ss;
-    ss << CKM_DATA_PATH << CKM_DB_PREFIX << m_user;
+    ss << CKM_DATA_PATH << CKM_DB_PREFIX << m_uid;
     return ss.str();
 }
 
 RawBuffer FileSystem::getDomainKEK() const
 {
     std::stringstream ss;
-    ss << CKM_DATA_PATH << CKM_KEY_PREFIX << m_user;
+    ss << CKM_DATA_PATH << CKM_KEY_PREFIX << m_uid;
 
     std::ifstream is(ss.str());
     std::istreambuf_iterator<char> begin(is),end;
@@ -69,7 +62,7 @@ RawBuffer FileSystem::getDomainKEK() const
 bool FileSystem::saveDomainKEK(const RawBuffer &buffer) const
 {
     std::stringstream ss;
-    ss << CKM_DATA_PATH << CKM_KEY_PREFIX << m_user;
+    ss << CKM_DATA_PATH << CKM_KEY_PREFIX << m_uid;
 
     std::ofstream os(ss.str(), std::ios::out | std::ofstream::binary);
     std::copy(buffer.begin(), buffer.end(), std::ostreambuf_iterator<char>(os));

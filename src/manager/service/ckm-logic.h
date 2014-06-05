@@ -28,8 +28,13 @@
 #include <protocols.h>
 #include <ckm/ckm-type.h>
 #include <connection-info.h>
+#include <key-provider.h>
 
 namespace CKM {
+
+struct UserData {
+    KeyProvider keyProvider;
+};
 
 class CKMLogic {
 public:
@@ -100,7 +105,7 @@ public:
         PolicySerializable policyPublicKey);
 
 private:
-
+    std::map<uid_t, UserData> m_userDataMap;
 };
 
 } // namespace CKM

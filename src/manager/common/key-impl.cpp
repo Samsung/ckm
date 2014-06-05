@@ -85,7 +85,7 @@ KeyImpl::KeyImpl(const RawBuffer &data, KeyType type, const std::string &passwor
         BIO_write(bio.get(), data.data(), data.size());
         rsa = PEM_read_bio_RSAPrivateKey(bio.get(), NULL, NULL, pass);
     } else if (type == KeyType::KEY_RSA_PUBLIC) {
-        const unsigned char *p = (const unsigned char*)data.data();
+        const unsigned char *p = static_cast<const unsigned char*>(data.data());
         rsa = d2i_RSA_PUBKEY(NULL, &p, data.size());
     } else if (type == KeyType::KEY_RSA_PRIVATE) {
         BioUniquePtr bio(BIO_new(BIO_s_mem()), BIO_free_all);
