@@ -20,7 +20,7 @@
  * @brief       OCSP implementation.
  */
 
-#include "ocsp.h"
+#include <ocsp.h>
 #include <stdio.h>
 #include <string.h>
 #include <openssl/pem.h>
@@ -29,7 +29,7 @@
 #include <openssl/ssl.h>
 #include <fts.h>
 #include <unistd.h>
-
+#include <key-manager-util.h>
 
 /* Maximum leeway in validity period: default 5 minutes */
 #define MAX_VALIDITY_PERIOD     (5 * 60)
@@ -64,10 +64,14 @@ int OCSPModule::verify(const CertificateImplVector &certificateChain) {
 	int result = -1;
 
 	for(unsigned int i=0; i < certificateChain.size() -1; i++) {// except root certificate
-		cert = certificateChain[i].getX509();
-		issuer = certificateChain[i+1].getX509();
+		cert = X509_new();
+		rawBufferToX509(&cert, certificateChain[i].getDER());
+		issuer = X509_new();
+		rawBufferToX509(&issuer, certificateChain[i+1].getDER());
 		extractAIAUrl(cert, url);
 		result = ocsp_verify(cert, issuer, systemCerts, url, &ocspStatus);
+		X509_free(cert);
+		X509_free(issuer);
 		if(result != OCSP_STATUS_GOOD) {
 			return result;
 		}
@@ -321,57 +325,6 @@ int OCSPModule::ocsp_verify(X509 *cert, X509 *issuer, STACK_OF(X509) *systemCert
     return ret;
 }
 
-
-STACK_OF(X509) *OCSPModule::loadSystemCerts( const char * dirpath) {
-    FTS *fts = NULL;
-    FTSENT *ftsent;
-    char tmp[10];
-    STACK_OF(X509) *systemCerts = sk_X509_new_null();
-
-    X509 *cert;
-
-    if (NULL == (fts = fts_open((char * const *) &dirpath, FTS_LOGICAL, NULL))) {
-    	printf("Fail to open directories. dir=%s \n", dirpath);
-    	return NULL;
-    }
-
-    while ((ftsent = fts_read(fts)) != NULL) {
-        if (ftsent->fts_info == FTS_ERR || ftsent->fts_info == FTS_NS) {
-        	printf("Fail to read directories. dir=%s \n", dirpath);
-        	fts_close(fts);
-   	    	return NULL;
-        }
-
-        if (ftsent->fts_info != FTS_F)
-            continue;
-
-        if (-1 != readlink(ftsent->fts_path, tmp, 10)) // ignore link file
-            continue;
-
-        cert = loadCert(ftsent->fts_path);
-        if(cert != NULL) {
-        	sk_X509_push(systemCerts, cert);
-        }
-    }
-    if (fts != NULL)
-        fts_close(fts);
-
-    return systemCerts;
-}
-
-
-X509 *OCSPModule::loadCert(const char *file) {
-	FILE *fp = fopen(file, "r");
-	if(fp == NULL)
-		return NULL;
-	X509 *cert;
-	if(!(cert = d2i_X509_fp(fp, NULL))) {
-		fseek(fp, 0, SEEK_SET);
-		cert = PEM_read_X509(fp, NULL, NULL, NULL);
-	}
-	fclose(fp);
-	return cert;
-}
 
 void OCSPModule::extractAIAUrl(X509 *cert, char *url) {
 	STACK_OF(OPENSSL_STRING) *aia = NULL;

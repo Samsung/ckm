@@ -9,7 +9,7 @@
  *  you may not use this file except in compliance with the License.
  *  You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      ://www.apache.org/licenses/LICENSE-2.0
  *
  *  Unless required by applicable law or agreed to in writing, software
  *  distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,11 +23,16 @@
 #include <stdlib.h>
 #include <sys/smack.h>
 #include <unistd.h>
+#include <fts.h>
+#include <openssl/pem.h>
+#include <openssl/bio.h>
 
 #include <limits>
 
 #include <key-manager-util.h>
 #include <dpl/log/log.h>
+
+
 
 namespace {
 const size_t SIZE_T_MAX = std::numeric_limits<size_t>::max();
@@ -111,6 +116,73 @@ char *read_exe_path_from_proc(pid_t pid)
     exe[cnt] = '\0';
     return exe;
 }
+
+void rawBufferToX509(X509 **ppCert, RawBuffer rawCert) {
+  BIO *bio = BIO_new(BIO_s_mem());
+  BIO_write(bio, rawCert.data(), rawCert.size());
+  d2i_X509_bio(bio, ppCert);
+  BIO_free_all(bio);
+}
+
+void x509ToRawBuffer(RawBuffer &buf, X509 *cert) {
+  int len = i2d_X509(cert, NULL);
+  unsigned char tmpBuff[len];
+  unsigned char *p = tmpBuff;
+  i2d_X509(cert, &p);
+  buf.assign(tmpBuff, tmpBuff +len);
+}
+
+STACK_OF(X509) *loadSystemCerts( const char * dirpath) {
+    FTS *fts = NULL;
+    FTSENT *ftsent;
+    char tmp[10];
+    STACK_OF(X509) *systemCerts = sk_X509_new_null();
+
+    X509 *cert;
+
+    if (NULL == (fts = fts_open((char * const *) &dirpath, FTS_LOGICAL, NULL))) {
+        printf("Fail to open directories. dir=%s \n", dirpath);
+        return NULL;
+    }
+
+    while ((ftsent = fts_read(fts)) != NULL) {
+        if (ftsent->fts_info == FTS_ERR || ftsent->fts_info == FTS_NS) {
+                printf("Fail to read directories. dir=%s \n", dirpath);
+                fts_close(fts);
+                return NULL;
+        }
+
+        if (ftsent->fts_info != FTS_F)
+            continue;
+
+        if (-1 != readlink(ftsent->fts_path, tmp, 10)) // ignore link file
+            continue;
+
+        cert = loadCert(ftsent->fts_path);
+        if(cert != NULL) {
+                sk_X509_push(systemCerts, cert);
+        }
+    }
+    if (fts != NULL)
+        fts_close(fts);
+
+    return systemCerts;
+}
+
+
+X509 *loadCert(const char *file) {
+    FILE *fp = fopen(file, "r");
+    if(fp == NULL)
+        return NULL;
+    X509 *cert;
+    if(!(cert = d2i_X509_fp(fp, NULL))) {
+        fseek(fp, 0, SEEK_SET);
+        cert = PEM_read_X509(fp, NULL, NULL, NULL);
+    }
+    fclose(fp);
+    return cert;
+}
+
 
 } // namespace CKM
 

@@ -23,11 +23,21 @@
 #define CENT_KEY_MNG_UTIL_H
 
 #include <sys/types.h>
+#include <ckm/ckm-type.h>
+#include <openssl/x509v3.h>
+
+#define CKM_SYSTEM_CERTS_PATH "/opt/etc/ssl/certs"
 
 namespace CKM {
 
 int util_smack_label_is_valid(const char *smack_label);
 char *read_exe_path_from_proc(pid_t pid);
+
+void rawBufferToX509(X509 **ppCert, RawBuffer rawCert);
+void x509ToRawBuffer(RawBuffer &buf, X509 *cert);
+
+STACK_OF(X509) *loadSystemCerts( const char * dirpath);
+X509 *loadCert(const char *file);
 
 } // namespace CKM
 
