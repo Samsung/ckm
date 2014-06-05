@@ -63,8 +63,9 @@ private:
 class Key {
 public:
     enum class ECType : unsigned int {
-        prime192v1
-          // TODO
+        prime192v1,
+	prime256v1,
+	secp384r1
     };
 
     Key();

@@ -35,9 +35,9 @@ enum class KeyType : int {
     KEY_NONE,
     KEY_RSA_PUBLIC,
     KEY_RSA_PRIVATE,
-    //        KEY_ECDSA_PUBLIC,
-    //        KEY_ECDSA_PRIVATE,
-    //        KEY_AES
+    KEY_ECDSA_PUBLIC,
+    KEY_ECDSA_PRIVATE,
+    KEY_AES
 };
 
 struct Policy {
