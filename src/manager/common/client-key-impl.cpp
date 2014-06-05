@@ -60,7 +60,7 @@ KeyImpl& KeyImpl::operator=(KeyImpl &&second) {
 KeyImpl::KeyImpl(const RawBuffer &data, KeyType type, const std::string &password)
   : m_type(KeyType::KEY_NONE)
 {
-    int size = 0;
+    int ret = 0;
     RSA *rsa = NULL;
     char *pass = NULL;
     std::string passtmp(password);
@@ -97,14 +97,14 @@ KeyImpl::KeyImpl(const RawBuffer &data, KeyType type, const std::string &passwor
     BIO *bio = BIO_new(BIO_s_mem());
 
     if (type == KeyType::KEY_RSA_PUBLIC) {
-        size = i2d_RSAPublicKey_bio(bio, rsa);
+        ret = i2d_RSAPublicKey_bio(bio, rsa);
     } else {
-        size = i2d_RSAPrivateKey_bio(bio, rsa);
+        ret = i2d_RSAPrivateKey_bio(bio, rsa);
     }
 
-    if (size > 0) {
-        m_key.resize(size);
-        BIO_read(bio, m_key.data(), m_key.size());
+    if (ret > 0) {
+        m_key.resize(data.size());
+        BIO_read(bio, m_key.data(), data.size());
         m_type = type;
     }
     BIO_free_all(bio);
