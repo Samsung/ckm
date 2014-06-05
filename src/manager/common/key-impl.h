@@ -13,41 +13,44 @@
  *  limitations under the License
  *
  *
- * @file        client-certificate-impl.h
- * @author      Barlomiej Grzelewski (b.grzelewski@samsung.com)
+ * @file        client-key-impl.h
+ * @author      Zofia Abramowska (z.abramowska@samsung.com)
  * @version     1.0
- * @brief       Certificate Implmentation.
+ * @brief       Key implementation.
  */
-
 #pragma once
 
-#include <memory>
-#include <vector>
 #include <ckm/ckm-type.h>
-#include <ckm/key-manager.h>
-
-extern "C" {
-struct x509_st;
-typedef struct x509_st X509;
-}
 
 namespace CKM {
 
-class CertificateImpl {
+class KeyImpl
+{
 public:
-    CertificateImpl(){}
-    CertificateImpl(const RawBuffer &data, Certificate::Format format);
-    CertificateImpl& operator=(const CertificateImpl &);
-    RawBuffer getDER() const;
-    bool empty() const;
+    KeyImpl();
+    KeyImpl(const RawBuffer &data, KeyType type, const std::string &password);
+    KeyImpl(const KeyImpl &);
+    KeyImpl(KeyImpl &&);
+    KeyImpl& operator=(const KeyImpl &);
+    KeyImpl& operator=(KeyImpl &&);
 
-    ~CertificateImpl();
+    KeyType getType() const {
+        return m_type;
+    }
 
-protected:
-    X509* m_x509;
+    RawBuffer getKey() const {
+        return m_key;
+    }
+
+    bool empty() const {
+        return (m_type == KeyType::KEY_NONE) || m_key.empty();
+    }
+
+    virtual ~KeyImpl();
+private:
+    KeyType m_type;
+    RawBuffer m_key;
 };
-
-typedef std::vector<CertificateImpl> CertificateImplVector;
 
 } // namespace CKM
 

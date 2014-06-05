@@ -13,65 +13,49 @@
  *  limitations under the License
  *
  *
- * @file        client-key.cpp
+ * @file        client-key-impl.h
  * @author      Bartlomiej Grzelewski (b.grzelewski@samsung.com)
  * @version     1.0
- * @brief       Key - api implementation.
+ * @brief       Certificate class implementation.
  */
-#include <ckm/ckm-type.h>
+
 #include <ckm/key-manager.h>
 
-#include <client-key-impl.h>
+#include <certificate-impl.h>
 
 namespace CKM {
 
-Key::Key()
-  : m_impl(new KeyImpl())
+Certificate::Certificate(){}
+
+Certificate::Certificate(const RawBuffer &rawData, DataFormat format)
+  : m_impl(new CertificateImpl(rawData, format))
 {}
 
-Key::Key(
-    const RawBuffer &rawData,
-    KeyType type,
-    const std::string &password)
-  : m_impl(new KeyImpl(rawData, type, password))
-{}
-
-Key::Key(const Key &second) {
+Certificate::Certificate(const Certificate &second) {
     m_impl = second.m_impl;
 }
 
-Key& Key::operator=(const Key &second) {
+Certificate& Certificate::operator=(const Certificate &second) {
     m_impl = second.m_impl;
     return *this;
 }
 
-Key::~Key(){
-}
-
-bool Key::empty() const {
+bool Certificate::empty() const {
     if (m_impl)
         return m_impl->empty();
     return true;
 }
 
-KeyType Key::getType() const {
+RawBuffer Certificate::getDER() const {
     if (m_impl)
-        return m_impl->getType();
-    return KeyType::KEY_NONE;
-}
-
-RawBuffer Key::getKey() const {
-    if (m_impl)
-        return m_impl->getKey();
+        return m_impl->getDER();
     return RawBuffer();
 }
 
-KeyImpl* Key::getImpl() const {
-    if (m_impl)
-        return m_impl.get();
+void* Certificate::getX509() {
+    // TODO
     return NULL;
-};
-
+}
 
 } // namespace CKM
 

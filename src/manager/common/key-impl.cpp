@@ -21,7 +21,7 @@
 #include <openssl/bio.h>
 #include <openssl/pem.h>
 
-#include <client-key-impl.h>
+#include <key-impl.h>
 
 namespace {
 

@@ -15,14 +15,12 @@ PKG_CHECK_MODULES(KEY_PROVIDER_DEP
 SET(COMMON_PATH ${PROJECT_SOURCE_DIR}/src/manager)
 
 SET(COMMON_SOURCES
+    ${COMMON_PATH}/common/base64.cpp
     ${COMMON_PATH}/common/protocols.cpp
     ${COMMON_PATH}/common/message-buffer.cpp
     ${COMMON_PATH}/common/smack-check.cpp
-    ${COMMON_PATH}/common/Base64.cpp
-    ${COMMON_PATH}/common/client-certificate.cpp
-    ${COMMON_PATH}/common/client-certificate-impl.cpp
-    ${COMMON_PATH}/common/client-key.cpp
-    ${COMMON_PATH}/common/client-key-impl.cpp
+    ${COMMON_PATH}/common/certificate-impl.cpp
+    ${COMMON_PATH}/common/key-impl.cpp
     ${COMMON_PATH}/dpl/log/src/abstract_log_provider.cpp
     ${COMMON_PATH}/dpl/log/src/dlog_log_provider.cpp
     ${COMMON_PATH}/dpl/log/src/log.cpp

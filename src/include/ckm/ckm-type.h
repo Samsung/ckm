@@ -40,6 +40,18 @@ enum class KeyType : int {
     KEY_AES
 };
 
+enum class DataFormat : int {
+    FORM_DER_BASE64,
+    FORM_DER,
+    FORM_PEM
+};
+
+enum class ElipticCurve : int {
+    prime192v1,
+    prime256v1,
+    secp384r1
+};
+
 struct Policy {
     Policy(const std::string &pass = std::string(), bool extract = true, bool rest = false)
       : password(pass)

@@ -22,17 +22,17 @@
 
 #include <dpl/log/log.h>
 
-#include <client-certificate-impl.h>
-#include <Base64.h>
+#include <certificate-impl.h>
+#include <base64.h>
 
 namespace CKM {
 
-CertificateImpl::CertificateImpl(const RawBuffer &der, Certificate::Format format) {
+CertificateImpl::CertificateImpl(const RawBuffer &der, DataFormat format) {
     int size;
     const unsigned char *ptr;
     RawBuffer tmp;
 
-    if (Certificate::Format::FORM_BASE64 == format) {
+    if (DataFormat::FORM_DER_BASE64 == format) {
         Base64Decoder base64;
         base64.reset();
         base64.append(der);

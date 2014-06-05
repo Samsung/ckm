@@ -30,7 +30,7 @@
 
 #include <ckm-service.h>
 #include <ckm-logic.h>
-#include <client-key-impl.h>
+#include <key-impl.h>
 
 namespace {
 const CKM::InterfaceID SOCKET_ID_CONTROL = 0;

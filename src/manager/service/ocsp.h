@@ -3,7 +3,7 @@
 
 #include <openssl/x509v3.h>
 #include <ckm/ckm-type.h>
-#include <client-certificate-impl.h>
+#include <certificate-impl.h>
 
 
 #define OCSP_STATUS_GOOD				1

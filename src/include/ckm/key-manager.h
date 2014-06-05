@@ -62,12 +62,6 @@ private:
 
 class Key {
 public:
-    enum class ECType : unsigned int {
-        prime192v1,
-	prime256v1,
-	secp384r1
-    };
-
     Key();
     Key(const RawBuffer &rawData, KeyType type, const std::string &password = std::string()); // Import key
     Key(const Key &key);
@@ -77,7 +71,7 @@ public:
     bool empty() const;
     KeyType getType() const;
     int getSize() const;
-	ECType getCurve() const;
+	ElipticCurve getCurve() const;
     RawBuffer getKey() const;
     KeyImpl* getImpl() const;
 
@@ -93,13 +87,8 @@ public:
 //        FINGERPRINT_SHA256
 //    };
 
-    enum class Format : unsigned int {
-        FORM_BASE64,
-        FORM_DER
-    };
-
     Certificate();
-    Certificate(const RawBuffer &rawData, Format format);
+    Certificate(const RawBuffer &rawData, DataFormat format);
 	Certificate(const Certificate &certificate);
 	Certificate& operator=(const Certificate &certificate);
 

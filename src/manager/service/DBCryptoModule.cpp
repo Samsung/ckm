@@ -10,7 +10,7 @@
 #include <openssl/sha.h>
 
 #include <dpl/log/log.h>
-#include <Base64.h>
+#include <base64.h>
 
 #include <DBCryptoModule.h>
 

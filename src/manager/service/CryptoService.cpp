@@ -16,7 +16,7 @@
 #include <openssl/x509v3.h>
 #include <openssl/obj_mac.h>
 #include <ckm/ckm-type.h>
-#include <client-key-impl.h>
+#include <key-impl.h>
 #include <CryptoService.h>
 #include <key-manager-util.h>
 
@@ -224,7 +224,7 @@ int CryptoService::createKeyPairRSA(const int size, // size in bits [1024, 2048,
 	return CKM_CRYPTO_CREATEKEY_SUCCESS;
 }
 
-int CryptoService::createKeyPairECDSA(const Key::ECType type,
+int CryptoService::createKeyPairECDSA(ElipticCurve type,
 		KeyImpl &createdPrivateKey,  // returned value
 		KeyImpl &createdPublicKey)  // returned value
 {
@@ -238,14 +238,14 @@ int CryptoService::createKeyPairECDSA(const Key::ECType type,
 		RawBuffer priKey_tmp, pubKey_tmp, null_password;
 
 		switch(type) {
-			case Key::ECType::prime192v1: 
-				ecCurve = NID_X9_62_prime192v1; 
+			case ElipticCurve::prime192v1:
+				ecCurve = NID_X9_62_prime192v1;
 				break;
-			case Key::ECType::prime256v1: 
-				ecCurve = NID_X9_62_prime256v1; 
+			case ElipticCurve::prime256v1:
+				ecCurve = NID_X9_62_prime256v1;
 				break;
-			case Key::ECType::secp384r1: 
-				ecCurve = NID_secp384r1; 
+			case ElipticCurve::secp384r1:
+				ecCurve = NID_secp384r1;
 				break;
 		}
 
@@ -579,7 +579,7 @@ int CryptoService::verifyCertificateChain(const CertificateImpl &certificate,
 	RawBuffer tmpBuf;
 	for(unsigned int i=0;i<chain.size();i++) {
 		x509ToRawBuffer(tmpBuf, chain[i]);
-		CertificateImpl tmpCertImpl((const RawBuffer)tmpBuf,Certificate::Format::FORM_DER);
+		CertificateImpl tmpCertImpl((const RawBuffer)tmpBuf, DataFormat::FORM_DER);
 		certificateChainVector.push_back(tmpCertImpl);
 	}
 

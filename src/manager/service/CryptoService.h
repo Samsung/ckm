@@ -2,9 +2,8 @@
 
 #include <iostream>
 
-#include <client-key-impl.h>
-#include <client-certificate-impl.h>
-#include <ckm/key-manager.h>
+#include <key-impl.h>
+#include <certificate-impl.h>
 #include <ckm/ckm-type.h>
 #include <string.h>
 #include <vector>
@@ -56,7 +55,7 @@ class CryptoService {
                          KeyImpl &createdPrivateKey,  // returned value ==> Key &createdPrivateKey,
                          KeyImpl &createdPublicKey);  // returned value ==> Key &createdPublicKey
 
-     int createKeyPairECDSA(const Key::ECType type1,
+     int createKeyPairECDSA(ElipticCurve type1,
     		 	 	 	 KeyImpl &createdPrivateKey,  // returned value
     		 	 	 	 KeyImpl &createdPublicKey);  // returned value
 

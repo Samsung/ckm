@@ -22,7 +22,7 @@
 
 #include <client-manager-impl.h>
 #include <client-common.h>
-#include <client-key-impl.h>
+#include <key-impl.h>
 #include <message-buffer.h>
 #include <protocols.h>
 
@@ -225,7 +225,7 @@ int Manager::ManagerImpl::getCertificate(const Alias &alias, const std::string &
     if (recvDataType != DBDataType::CERTIFICATE)
         return KEY_MANAGER_API_ERROR_BAD_RESPONSE;
 
-    Certificate certParsed(rawData, Certificate::Format::FORM_DER);
+    Certificate certParsed(rawData, DataFormat::FORM_DER);
 
     if (certParsed.empty())
         return KEY_MANAGER_API_ERROR_BAD_RESPONSE;
