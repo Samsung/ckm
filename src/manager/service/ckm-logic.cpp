@@ -149,7 +149,7 @@ RawBuffer CKMLogic::saveData(
             policy.restricted,
             policy.extractable,
             dataType,
-            0,
+            DBCMAlgType::NONE,
             0,
             iv,
             key.size(),

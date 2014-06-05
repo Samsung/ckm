@@ -12,7 +12,7 @@ namespace CKM {
         int restricted;
         int exportable;
         DBDataType dataType;        // cert/key/data
-        int algorithmType;          // AES mode ?
+        DBCMAlgType algorithmType;  // Algorithm type used for row data encryption
         int encryptionScheme;       // for example: (ENCR_BASE64 | ENCR_PASSWORD)
         RawBuffer iv;               // encoded in base64
         int dataSize;               // size of information without hash and padding

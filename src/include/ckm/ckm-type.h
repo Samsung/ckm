@@ -81,6 +81,12 @@ enum class RSAPaddingAlgorithm : int {
     XRSA_X931_PADDING
 };
 
+enum class DBCMAlgType : int {
+    NONE,
+    AES_CBC_256,
+    COUNT
+};
+
 // Internal types
 class KeyImpl;
 class CertificateImpl;

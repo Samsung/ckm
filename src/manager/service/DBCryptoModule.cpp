@@ -11,6 +11,7 @@
 
 #include <dpl/log/log.h>
 #include <base64.h>
+#include <ckm/ckm-error.h>
 
 #include <DBCryptoModule.h>
 
@@ -29,104 +30,106 @@ bool DBCryptoModule::haveKey(const std::string &smackLabel)
 int DBCryptoModule::pushKey(const std::string &smackLabel,
                             const RawBuffer &applicationKey)
 {
-    int ret = -1;
-
-    if (m_domainKEK.size() == 0)
-        return ret;
-    if (smackLabel.length() == 0)
-        return ret;
-    if (applicationKey.size() == 0)
-        return ret;
-    if (haveKey(smackLabel))
-        return ret;
+    if (m_domainKEK.size() == 0) {
+        ThrowMsg(Exception::DomainKeyError, "Empty domain key.");
+    }
+    if (smackLabel.length() == 0) {
+        ThrowMsg(Exception::SmackLabelError, "Empty smack label.");
+    }
+    if (applicationKey.size() == 0) {
+        ThrowMsg(Exception::AppKeyError, "Empty application key.");
+    }
+    if (haveKey(smackLabel)) {
+        ThrowMsg(Exception::AppKeyError, "Application key for " << smackLabel
+                 << "label already exists.");
+    }
     RawBuffer appkey = applicationKey;
     RawBuffer emptyiv;
-    if ((ret = decryptAES(appkey, 0, m_domainKEK, emptyiv)))
-        return ret;
+    try {
+        decryptAES(appkey, 0, m_domainKEK, emptyiv);
+    } catch (Exception::Base &e) {
+        LogError("Application key decription has failed: " << e.DumpToString());
+        throw;
+    }
     m_keyMap[smackLabel] = appkey;
-
-    return EXIT_SUCCESS;
+    return KEY_MANAGER_API_SUCCESS;
 }
 
-int DBCryptoModule::insertDigest(RawBuffer &data, const int dataSize)
+std::size_t DBCryptoModule::insertDigest(RawBuffer &data, const int dataSize)
 {
-    int ret = -1;
     RawBuffer digest;
 
-    ret = digestData(data, dataSize, digest);
-    if (ret != 0)
-        return -1;
-    if (SHA_DIGEST_LENGTH != digest.size())
-        return -1;
+    try {
+        digest = digestData(data, dataSize);
+    } catch (Exception::Base &e) {
+        LogError("Failed to calculate digest in insertDigest: " <<
+                 e.DumpToString());
+        throw;
+    }
+    if (SHA_DIGEST_LENGTH != digest.size()) {
+        ThrowMsg(Exception::DigestError, "Cannot insert digest: size mismatch.");
+    }
     data.insert(data.begin(), digest.begin(), digest.end());
-    ret = digest.size();
-
-    return ret;
+    return digest.size();
 }
 
-int DBCryptoModule::removeDigest(RawBuffer &data, RawBuffer &digest)
+void DBCryptoModule::removeDigest(RawBuffer &data, RawBuffer &digest)
 {
-    if (data.size() < SHA_DIGEST_LENGTH)
-        return -1;
+    if (data.size() < SHA_DIGEST_LENGTH) {
+        ThrowMsg(Exception::DigestError, "Cannot remove digest: data size "
+                 "mismatch.");
+    }
 
-    int len = data.size();
     digest.assign(data.begin(), data.begin() + SHA_DIGEST_LENGTH);
-    digest.resize(SHA_DIGEST_LENGTH);
     data.erase(data.begin(), data.begin() + SHA_DIGEST_LENGTH);
-    data.resize(len - SHA_DIGEST_LENGTH);
-
-    return EXIT_SUCCESS;
 }
 
 int DBCryptoModule::encryptRow(const RawBuffer &password, DBRow &row)
 {
-    int ret = -1;
     RawBuffer emptyiv;
     DBRow crow = row;
-    int dlen;
+    std::size_t dlen;
     RawBuffer userkey;
     RawBuffer appkey;
 
-    if (m_domainKEK.size() == 0)
-        return ret;
-    if (row.dataSize <= 0)
-        return ret;
-    if (!haveKey(row.smackLabel))
-        return ret;
+    crow.algorithmType = DBCMAlgType::NONE;
+    if (m_domainKEK.size() == 0) {
+        ThrowMsg(Exception::DomainKeyError, "Empty domain key.");
+    }
+    if (row.dataSize <= 0) {
+        ThrowMsg(Exception::EncryptDBRowError, "Invalid dataSize.");
+    }
+    if (!haveKey(row.smackLabel)) {
+        ThrowMsg(Exception::EncryptDBRowError, "Missing application key for " <<
+                 row.smackLabel << " label.");
+    }
     appkey = m_keyMap[row.smackLabel];
     crow.encryptionScheme = 0;
 
-    dlen = insertDigest(crow.data, crow.dataSize);
-    if (dlen <= 0)
-        return ret;
-    ret = cryptAES(crow.data, crow.dataSize + dlen, appkey, emptyiv);
-    if (ret != 0)
-        return ret;
-    crow.encryptionScheme |= ENCR_APPKEY;
-    if (password.size() > 0) {
-        if ((ret = generateKeysFromPassword(password, userkey, crow.iv)))
-            return ret;
-        ret = cryptAES(crow.data, 0, userkey, crow.iv);
-        if (ret != 0)
-            return ret;
-        crow.encryptionScheme |= ENCR_PASSWORD;
+    try {
+        dlen = insertDigest(crow.data, crow.dataSize);
+        cryptAES(crow.data, crow.dataSize + dlen, appkey, emptyiv);
+        crow.encryptionScheme |= ENCR_APPKEY;
+        if (password.size() > 0) {
+            generateKeysFromPassword(password, userkey, crow.iv);
+            cryptAES(crow.data, 0, userkey, crow.iv);
+            crow.encryptionScheme |= ENCR_PASSWORD;
+        }
+        encBase64(crow.data);
+        crow.encryptionScheme |= ENCR_BASE64;
+        encBase64(crow.iv);
+    } catch (Exception::Base &e) {
+        LogError("Failed to encrypt db row: " << e.DumpToString());
+        throw;
     }
-    ret = encBase64(crow.data);
-    if (ret != 0)
-        return ret;
-    crow.encryptionScheme |= ENCR_BASE64;
-    ret = encBase64(crow.iv);
-    if (ret != 0)
-        return ret;
-    /* TODO: Add setting of algorithmType */
+    crow.algorithmType = DBCMAlgType::AES_CBC_256;
     row = crow;
 
-    return ret;
+    return KEY_MANAGER_API_SUCCESS;
 }
 
 int DBCryptoModule::decryptRow(const RawBuffer &password, DBRow &row)
 {
-    int ret = -1;
     DBRow crow = row;
     RawBuffer appkey;
     RawBuffer userkey;
@@ -134,71 +137,72 @@ int DBCryptoModule::decryptRow(const RawBuffer &password, DBRow &row)
     RawBuffer emptyiv;
     RawBuffer digest, dataDigest;
 
-    if (m_domainKEK.size() == 0)
-        return ret;
-    if (row.dataSize <= 0)
-        return ret;
+    if (m_domainKEK.size() == 0) {
+        ThrowMsg(Exception::DomainKeyError, "Empty domain key.");
+    }
+    if (row.dataSize <= 0) {
+        ThrowMsg(Exception::DecryptDBRowError, "Invalid dataSize.");
+    }
+    if (row.algorithmType != DBCMAlgType::AES_CBC_256) {
+        ThrowMsg(Exception::DecryptDBRowError, "Invalid algorithm type.");
+    }
     if (row.encryptionScheme && ENCR_PASSWORD)
-        if (password.size() == 0)
-            return ret;
-    if (!haveKey(row.smackLabel))
-        return ret;
+        if (password.size() == 0) {
+            ThrowMsg(Exception::DecryptDBRowError,
+                     "DB row is password protected, but given password is "
+                     "empty.");
+        }
+    if (!haveKey(row.smackLabel)) {
+        ThrowMsg(Exception::DecryptDBRowError, "Missing application key for " <<
+                 row.smackLabel << " label.");
+    }
     appkey = m_keyMap[row.smackLabel];
 
-    ret = decBase64(crow.iv);
-    if (ret)
-        return ret;
-    if (crow.encryptionScheme && ENCR_BASE64) {
-        ret = decBase64(crow.data);
-        if (ret)
-            return ret;
+    try {
+        decBase64(crow.iv);
+        if (crow.encryptionScheme && ENCR_BASE64) {
+            decBase64(crow.data);
+        }
+        if (crow.encryptionScheme && ENCR_PASSWORD) {
+            generateKeysFromPassword(password, userkey, dropiv);
+            decryptAES(crow.data, 0, userkey, crow.iv);
+        }
+        if (crow.encryptionScheme && ENCR_APPKEY) {
+            decryptAES(crow.data, 0, appkey, emptyiv);
+        }
+        removeDigest(crow.data, digest);
+        if (static_cast<std::size_t>(crow.dataSize) != crow.data.size()) {
+            ThrowMsg(Exception::DecryptDBRowError,
+                     "Decrypted db row data size mismatch.");
+        }
+        dataDigest = digestData(crow.data, 0);
+    } catch (Exception::Base &e) {
+        LogError("Failed to decrypt db row: " << e.DumpToString());
+        throw;
     }
-    if (crow.encryptionScheme && ENCR_PASSWORD) {
-        if ((ret = generateKeysFromPassword(password, userkey, dropiv)))
-            return ret;
-        ret = decryptAES(crow.data, 0, userkey, crow.iv);
-        if (ret)
-            return ret;
+    if (not equalDigests(digest, dataDigest)) {
+        ThrowMsg(Exception::DecryptDBRowError,
+                 "Decrypted db row data digest mismatch.");
     }
-    if (crow.encryptionScheme && ENCR_APPKEY) {
-        ret = decryptAES(crow.data, 0, appkey, emptyiv);
-        if (ret)
-            return ret;
-    }
-    ret = removeDigest(crow.data, digest);
-    if (ret)
-        return ret;
-    if ((unsigned int)crow.dataSize != crow.data.size())
-        return -1;
-    ret = digestData(crow.data, 0, dataDigest);
-    if (ret)
-        return ret;
-    if (not equalDigests(digest, dataDigest))
-        return -1;
     row = crow;
 
-    return EXIT_SUCCESS;
+    return KEY_MANAGER_API_SUCCESS;
 }
 
-int DBCryptoModule::generateRandIV(RawBuffer &iv)
+RawBuffer DBCryptoModule::generateRandIV(void)
 {
     int ret = -1;
     RawBuffer civ(EVP_MAX_IV_LENGTH);
 
-    if (iv.size() > 0)
-        ret = RAND_bytes(&civ[0], civ.size());
-    if (1 == ret) {
-        iv = civ;
-        ret = EXIT_SUCCESS;
-    } else {
-        ret = -1;
+    ret = RAND_bytes(civ.data(), civ.size());
+    if (ret != 1) {
+        ThrowMsg(Exception::OpenSSLError, "RAND_bytes failed");
     }
-
-    return ret;
+    return civ;
 }
 
-int DBCryptoModule::generateKeysFromPassword(const RawBuffer &password,
-                                             RawBuffer &key, RawBuffer &iv)
+void DBCryptoModule::generateKeysFromPassword(const RawBuffer &password,
+                                              RawBuffer &key, RawBuffer &iv)
 {
     int ret = -1;
     const EVP_CIPHER *cipher = EVP_aes_256_cbc();
@@ -208,18 +212,17 @@ int DBCryptoModule::generateKeysFromPassword(const RawBuffer &password,
     const EVP_MD *md = EVP_sha1();
 #endif
 
-    if ((password.size() == 0) || (password[0] == 0))
-        return ret;
+    if ((password.size() == 0) || (password[0] == 0)) {
+        ThrowMsg(Exception::KeyGenerationError, "Password is empty.");
+    }
     key.resize(keyLen);
     iv.resize(ivLen);
-    if ((ret = generateRandIV(iv)))
-        return ret;
-    ret = PKCS5_PBKDF2_HMAC_SHA1(reinterpret_cast<const char *>(&password[0]),
-                                 -1, NULL, 0, 1024, keyLen, &key[0]);
-    if (ret != 1)
-        return -1;
-    else
-        ret = EXIT_SUCCESS;
+    iv = generateRandIV();
+    ret = PKCS5_PBKDF2_HMAC_SHA1(reinterpret_cast<const char *>(password.data()),
+                                 -1, NULL, 0, 1024, keyLen, key.data());
+    if (ret != 1) {
+        ThrowMsg(Exception::OpenSSLError, "PKCS5_PBKDF2_HMAC_SHA1 has failed.");
+    }
 #if 0
     ret = EVP_BytesToKey(cipher, md, NULL,
                          const_cast<const unsigned char *>(&password[0]),
@@ -229,31 +232,34 @@ int DBCryptoModule::generateKeysFromPassword(const RawBuffer &password,
     if (ret > 0)
         ret = EXIT_SUCCESS;
 #endif
-
-    return ret;
 }
 
-int DBCryptoModule::cryptAES(RawBuffer &data, int len, const RawBuffer &key,
-                             const RawBuffer &iv)
+void DBCryptoModule::cryptAES(RawBuffer &data, std::size_t len,
+                              const RawBuffer &key, const RawBuffer &iv)
 {
     int ret = -1;
     EVP_CIPHER_CTX ctx;
     const EVP_CIPHER *cipher = EVP_aes_256_cbc();
-    unsigned int keyLen = EVP_CIPHER_key_length(cipher);
-    unsigned int ivLen = EVP_CIPHER_iv_length(cipher);
+    std::size_t keyLen = EVP_CIPHER_key_length(cipher);
+    std::size_t ivLen = EVP_CIPHER_iv_length(cipher);
     int maxBufLen;
     int outl, outlf;
 
-    if (keyLen <= 0)
-        return ret;
-    if (key.size() != keyLen)
-        return ret;
-    if (data.size() == 0)
-        return ret;
+    if (keyLen == 0) {
+        ThrowMsg(Exception::OpenSSLEncryptError, "Got invalid key length for "
+                 "our cipher from openssl.");
+    }
+    if (key.size() != keyLen) {
+        ThrowMsg(Exception::AESEncryptionError, "Wrong key size.");
+    }
+    if (data.size() == 0) {
+        ThrowMsg(Exception::AESEncryptionError, "Empty data.");
+    }
     /* iv may be empty */
     if (iv.size() > 0)
-        if (iv.size() != ivLen)
-            return -1;
+        if (iv.size() != ivLen) {
+            ThrowMsg(Exception::AESEncryptionError, "IV size mismatch.");
+        }
     if (0 == len)
         len = data.size();
     maxBufLen = len + EVP_CIPHER_block_size(cipher);
@@ -267,41 +273,48 @@ int DBCryptoModule::cryptAES(RawBuffer &data, int len, const RawBuffer &key,
 
     EVP_CIPHER_CTX_init(&ctx);
     ret = EVP_EncryptInit_ex(&ctx, cipher, NULL, &key[0], &iv[0]);
-    if (ret != 1)
-        return -1;
+    if (ret != 1) {
+        ThrowMsg(Exception::OpenSSLEncryptError, "Failed to initialize "
+                 "encryption in openssl.");
+    }
     EVP_CIPHER_CTX_set_padding(&ctx, 1);
     ret = EVP_EncryptUpdate(&ctx, &buf[0], &outl, &data[0], len);
-    if (ret != 1)
-        return -1;
+    if (ret != 1) {
+        ThrowMsg(Exception::OpenSSLEncryptError, "Failed to encrypt data in "
+                 "openssl");
+    }
     ret = EVP_EncryptFinal_ex(&ctx, &buf[outl], &outlf);
-    if (ret != 1)
-        return -1;
+    if (ret != 1) {
+        ThrowMsg(Exception::OpenSSLEncryptError, "Failed to encrypt data in "
+                 "openssl (final)");
+    }
     LogDebug("Total out len: " << outl + outlf);
     EVP_CIPHER_CTX_cleanup(&ctx);
-    data.assign(buf.begin(), buf.end());
-    data.resize(outl + outlf);
-
-    return EXIT_SUCCESS;
+    data.assign(buf.begin(), buf.begin() + outl + outlf);
 }
 
-int DBCryptoModule::decryptAES(RawBuffer &data, int len, const RawBuffer &key,
-                               const RawBuffer &iv)
+void DBCryptoModule::decryptAES(RawBuffer &data, std::size_t len,
+                                const RawBuffer &key, const RawBuffer &iv)
 {
     int ret = -1;
     EVP_CIPHER_CTX ctx;
     const EVP_CIPHER *cipher = EVP_aes_256_cbc();
-    unsigned int keyLen = EVP_CIPHER_key_length(cipher);
-    unsigned int ivLen = EVP_CIPHER_iv_length(cipher);
+    std::size_t keyLen = EVP_CIPHER_key_length(cipher);
+    std::size_t ivLen = EVP_CIPHER_iv_length(cipher);
     int maxBufLen;
     int outl, outlf;
 
-    if (keyLen <= 0)
-        return ret;
-    if (key.size() != keyLen)
-        return ret;
+    if (keyLen == 0) {
+        ThrowMsg(Exception::OpenSSLDecryptError, "Got invalid key length for "
+                 "our cipher from openssl.");
+    }
+    if (key.size() != keyLen) {
+        ThrowMsg(Exception::AESDecryptionError, "Wrong key size.");
+    }
     if (iv.size() > 0)
-        if (iv.size() != ivLen)
-            return -1;
+        if (iv.size() != ivLen) {
+            ThrowMsg(Exception::AESDecryptionError, "Wrong IV size.");
+        }
     if (0 == len)
         len = data.size();
 
@@ -314,86 +327,110 @@ int DBCryptoModule::decryptAES(RawBuffer &data, int len, const RawBuffer &key,
 
     EVP_CIPHER_CTX_init(&ctx);
     ret = EVP_DecryptInit_ex(&ctx, cipher, NULL, &key[0], &iv[0]);
-    if (ret != 1)
-        return -1;
+    if (ret != 1) {
+        ThrowMsg(Exception::OpenSSLDecryptError, "Failed to initialize "
+                 "decryption in openssl.");
+    }
     EVP_CIPHER_CTX_set_padding(&ctx, 1);
     ret = EVP_DecryptUpdate(&ctx, &buf[0], &outl, &data[0], len);
-    if (ret != 1)
-        return -1;
+    if (ret != 1) {
+        ThrowMsg(Exception::OpenSSLDecryptError, "Failed to decrypt data in "
+                 "openssl");
+    }
     ret = EVP_DecryptFinal_ex(&ctx, &buf[outl], &outlf);
-    if (ret != 1)
-        return -1;
+    if (ret != 1) {
+        ThrowMsg(Exception::OpenSSLDecryptError, "Failed to decrypt data in "
+                 "openssl (final)");
+    }
     LogDebug("Total out len: " << outl + outlf);
     EVP_CIPHER_CTX_cleanup(&ctx);
-    if ((outl + outlf) == 0)
-        return -1;
-    data.assign(buf.begin(), buf.end());
-    data.resize(outl + outlf);
-
-    return EXIT_SUCCESS;
+    if ((outl + outlf) == 0) {
+        ThrowMsg(Exception::OpenSSLDecryptError, "Failed to decrypt data in "
+                 "openssl - zero output length (wrong input data?)");
+    }
+    data.assign(buf.begin(), buf.begin() + outl + outlf);
 }
 
-int DBCryptoModule::digestData(const RawBuffer &data, int len, RawBuffer &digest)
+RawBuffer DBCryptoModule::digestData(const RawBuffer &data, std::size_t len)
 {
     int ret = -1;
     EVP_MD_CTX ctx;
     const EVP_MD *md = EVP_sha1();
     unsigned int dlen;
 
-    if (data.size() == 0)
-        return -1;
+    if (data.size() == 0) {
+        ThrowMsg(Exception::DigestError, "Empty data.");
+    }
     if (0 == len)
         len = data.size();
 
     ret = EVP_DigestInit(&ctx, md);
-    if (ret != 1)
-        return -1;
+    if (ret != 1) {
+        ThrowMsg(Exception::OpenSSLDigestError, "Failed to initialize digest "
+                 "in openssl.");
+    }
     ret = EVP_DigestUpdate(&ctx, &data[0], len);
-    if (ret != 1)
-        return -1;
-    digest.resize(EVP_MAX_MD_SIZE);
+    if (ret != 1) {
+        ThrowMsg(Exception::OpenSSLDigestError, "Failed in digest calculation "
+                 "in openssl.");
+    }
+    RawBuffer digest(EVP_MAX_MD_SIZE);
     ret = EVP_DigestFinal(&ctx, &digest[0], &dlen);
-    if (ret != 1)
-        return -1;
+    if (ret != 1) {
+        ThrowMsg(Exception::OpenSSLDigestError, "Failed in digest final "
+                 "calculation in openssl.");
+    }
     if (dlen != EVP_MAX_MD_SIZE)
         digest.resize(dlen);
-
-    return EXIT_SUCCESS;
+    return digest;
 }
 
-int DBCryptoModule::encBase64(RawBuffer &data)
+void DBCryptoModule::encBase64(RawBuffer &data)
 {
     Base64Encoder benc;
     RawBuffer encdata;
 
-    benc.append(data);
-    benc.finalize();
-    encdata = benc.get();
+    try {
+        benc.append(data);
+        benc.finalize();
+        encdata = benc.get();
+    } catch (Base64Encoder::Exception::Base &e) {
+        LogError("Failed to encode data in Base64Encoder: " <<
+                 e.DumpToString());
+        throw;
+    }
 
-    if (encdata.size() == 0)
-        return -1;
+    if (encdata.size() == 0) {
+        ThrowMsg(Exception::Base64EncoderError, "Base64Encoder returned empty data.");
+    }
 
     data = std::move(encdata);
-
-    return EXIT_SUCCESS;
 }
 
-int DBCryptoModule::decBase64(RawBuffer &data)
+void DBCryptoModule::decBase64(RawBuffer &data)
 {
     Base64Decoder bdec;
+    RawBuffer decdata;
 
-    bdec.reset();
-    bdec.append(data);
-    if (not bdec.finalize())
-        return -1;
+    try {
+        bdec.reset();
+        bdec.append(data);
+        if (not bdec.finalize()) {
+            ThrowMsg(Exception::Base64DecoderError,
+                     "Failed in Base64Decoder.finalize.");
+        }
 
-    RawBuffer decdata = bdec.get();
-    if (decdata.size() == 0)
-        return -1;
+        decdata = bdec.get();
+    } catch (Base64Decoder::Exception::Base &e) {
+        LogError("Failed to decode data in Base64Decoder: " <<
+                 e.DumpToString());
+        throw;
+    }
+    if (decdata.size() == 0) {
+        ThrowMsg(Exception::Base64DecoderError, "Base64Decoder returned empty data.");
+    }
 
     data = std::move(decdata);
-
-    return EXIT_SUCCESS;
 }
 
 bool DBCryptoModule::equalDigests(RawBuffer &dig1, RawBuffer &dig2)
@@ -401,7 +438,7 @@ bool DBCryptoModule::equalDigests(RawBuffer &dig1, RawBuffer &dig2)
     if ((dig1.size() != SHA_DIGEST_LENGTH) ||
         (dig2.size() != SHA_DIGEST_LENGTH))
         return false;
-    return std::equal(dig1.begin(), dig1.end(), &dig2[0]);
+    return (dig1 == dig2);
 }
 
 } // namespace CKM
