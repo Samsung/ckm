@@ -18,6 +18,8 @@
  * @version     1.0
  * @brief       Key implementation.
  */
+#include <memory>
+
 #include <openssl/bio.h>
 #include <openssl/pem.h>
 
@@ -26,6 +28,7 @@
 namespace {
 
 const char PEM_FIRST_CHAR = '-';
+typedef std::unique_ptr<BIO, std::function<void(BIO*)>> BioUniquePtr;
 
 } // namespace anonymous
 
@@ -70,23 +73,26 @@ KeyImpl::KeyImpl(const RawBuffer &data, KeyType type, const std::string &passwor
     }
 
     if (data[0] == PEM_FIRST_CHAR && type == KeyType::KEY_RSA_PUBLIC) {
-        BIO *bio = BIO_new(BIO_s_mem());
-        BIO_write(bio, data.data(), data.size());
-        rsa = PEM_read_bio_RSA_PUBKEY(bio, NULL, NULL, pass);
-        BIO_free_all(bio);
+        BioUniquePtr bio(BIO_new(BIO_s_mem()), BIO_free_all);
+        if (NULL == bio.get())
+            return;
+        BIO_write(bio.get(), data.data(), data.size());
+        rsa = PEM_read_bio_RSA_PUBKEY(bio.get(), NULL, NULL, pass);
     } else if (data[0] == PEM_FIRST_CHAR && type == KeyType::KEY_RSA_PRIVATE) {
-        BIO *bio = BIO_new(BIO_s_mem());
-        BIO_write(bio, data.data(), data.size());
-        rsa = PEM_read_bio_RSAPrivateKey(bio, NULL, NULL, pass);
-        BIO_free_all(bio);
+        BioUniquePtr bio(BIO_new(BIO_s_mem()), BIO_free_all);
+        if (NULL == bio.get())
+            return;
+        BIO_write(bio.get(), data.data(), data.size());
+        rsa = PEM_read_bio_RSAPrivateKey(bio.get(), NULL, NULL, pass);
     } else if (type == KeyType::KEY_RSA_PUBLIC) {
         const unsigned char *p = (const unsigned char*)data.data();
         rsa = d2i_RSA_PUBKEY(NULL, &p, data.size());
     } else if (type == KeyType::KEY_RSA_PRIVATE) {
-        BIO *bio = BIO_new(BIO_s_mem());
-        BIO_write(bio, data.data(), data.size());
-        rsa = d2i_RSAPrivateKey_bio(bio, NULL);
-        BIO_free_all(bio);
+        BioUniquePtr bio(BIO_new(BIO_s_mem()), BIO_free_all);
+        if (NULL == bio.get())
+            return;
+        BIO_write(bio.get(), data.data(), data.size());
+        rsa = d2i_RSAPrivateKey_bio(bio.get(), NULL);
     } else {
         return;
     }
@@ -94,26 +100,30 @@ KeyImpl::KeyImpl(const RawBuffer &data, KeyType type, const std::string &passwor
     if (!rsa)
         return;
 
-    BIO *bio = BIO_new(BIO_s_mem());
+    BioUniquePtr bio(BIO_new(BIO_s_mem()), BIO_free_all);
+
+    if (NULL == bio.get())
+        return;
 
     if (type == KeyType::KEY_RSA_PUBLIC) {
-        ret = i2d_RSAPublicKey_bio(bio, rsa);
+        ret = i2d_RSAPublicKey_bio(bio.get(), rsa);
     } else {
-        ret = i2d_RSAPrivateKey_bio(bio, rsa);
+        ret = i2d_RSAPrivateKey_bio(bio.get(), rsa);
     }
 
-    if (ret > 0) {
-        m_key.resize(data.size());
-        BIO_read(bio, m_key.data(), data.size());
-        m_type = type;
+    if (ret == 0)
+        return;
+
+    m_key.resize(data.size());
+    ret = BIO_read(bio.get(), m_key.data(), m_key.size());
+    if (ret <= 0) {
+        m_key.clear();
+        return;
     }
-    BIO_free_all(bio);
+
+    m_key.resize(ret);
+    m_type = type;
 }
-
-//void KeyImpl::Serialize(IStream &stream) const {
-//    Serialization::Serialize(stream, static_cast<int>(m_type));
-//    Serialization::Serialize(stream, m_key);
-//}
 
 KeyImpl::~KeyImpl(){}
 

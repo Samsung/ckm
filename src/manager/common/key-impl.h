@@ -14,7 +14,7 @@
  *
  *
  * @file        client-key-impl.h
- * @author      Zofia Abramowska (z.abramowska@samsung.com)
+ * @author      Bartlomiej Grzelewski (b.grzelewski@samsung.com)
  * @version     1.0
  * @brief       Key implementation.
  */
