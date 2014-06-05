@@ -19,6 +19,10 @@ SET(COMMON_SOURCES
     ${COMMON_PATH}/common/message-buffer.cpp
     ${COMMON_PATH}/common/smack-check.cpp
     ${COMMON_PATH}/common/Base64.cpp
+    ${COMMON_PATH}/common/client-certificate.cpp
+    ${COMMON_PATH}/common/client-certificate-impl.cpp
+    ${COMMON_PATH}/common/client-key.cpp
+    ${COMMON_PATH}/common/client-key-impl.cpp
     ${COMMON_PATH}/dpl/log/src/abstract_log_provider.cpp
     ${COMMON_PATH}/dpl/log/src/dlog_log_provider.cpp
     ${COMMON_PATH}/dpl/log/src/log.cpp

@@ -68,12 +68,8 @@ SET(KEY_MANAGER_CLIENT_SOURCES
     ${KEY_MANAGER_CLIENT_SRC_PATH}/client-control.cpp
     ${KEY_MANAGER_CLIENT_SRC_PATH}/client-common.cpp
     ${KEY_MANAGER_CLIENT_SRC_PATH}/client-echo.cpp
-    ${KEY_MANAGER_CLIENT_SRC_PATH}/client-key.cpp
-    ${KEY_MANAGER_CLIENT_SRC_PATH}/client-key-impl.cpp
     ${KEY_MANAGER_CLIENT_SRC_PATH}/client-manager.cpp
     ${KEY_MANAGER_CLIENT_SRC_PATH}/client-manager-impl.cpp
-    ${KEY_MANAGER_CLIENT_SRC_PATH}/client-certificate.cpp
-    ${KEY_MANAGER_CLIENT_SRC_PATH}/client-certificate-impl.cpp
     )
 
 ADD_LIBRARY(${TARGET_KEY_MANAGER_CLIENT} SHARED ${KEY_MANAGER_CLIENT_SOURCES})

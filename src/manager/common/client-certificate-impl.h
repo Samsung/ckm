@@ -22,6 +22,7 @@
 #pragma once
 
 #include <memory>
+#include <vector>
 #include <ckm/ckm-type.h>
 #include <ckm/key-manager.h>
 
@@ -45,6 +46,8 @@ public:
 protected:
     X509* m_x509;
 };
+
+typedef std::vector<CertificateImpl> CertificateImplVector;
 
 } // namespace CKM
 
