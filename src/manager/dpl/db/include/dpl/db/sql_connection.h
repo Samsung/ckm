@@ -160,6 +160,15 @@ class SqlConnection
         void BindString(ArgumentIndex position, const String& value);
 
         /**
+         * Bind string to the prepared statement argument
+         *
+         * @param position Index of argument to bind value to
+         * @param value Value to bind
+         */
+        void BindBlob(ArgumentIndex position,
+                const std::vector<unsigned char> &value);
+
+        /**
          * Bind optional int to the prepared statement argument.
          * If optional is not set null will be bound
          *
@@ -230,6 +239,16 @@ class SqlConnection
          * @param value Value to bind
          */
         void BindString(ArgumentIndex position, const boost::optional<String> &value);
+
+        /**
+         * Bind optional string to the prepared statement argument.
+         * If optional is not set null will be bound
+         *
+         * @param position Index of argument to bind value to
+         * @param value Value to bind
+         */
+        void BindBlob(ArgumentIndex position,
+                const boost::optional<std::vector<unsigned char>> &value);
 
         /**
          * Execute the prepared statement and/or move
@@ -308,6 +327,13 @@ class SqlConnection
         std::string GetColumnString(ColumnIndex column);
 
         /**
+         * Get string value from column in current row.
+         *
+         * @throw Exception::InvalidColumn
+         */
+        std::vector<unsigned char> GetColumnBlob(ColumnIndex column);
+
+        /**
          * Get optional integer value from column in current row.
          *
          * @throw Exception::InvalidColumn
@@ -362,6 +388,14 @@ class SqlConnection
          * @throw Exception::InvalidColumn
          */
         boost::optional<String> GetColumnOptionalString(ColumnIndex column);
+
+        /**
+         * Get string value from column in current row.
+         *
+         * @throw Exception::InvalidColumn
+         */
+        boost::optional<std::vector<unsigned char>>
+            GetColumnOptionalBlob(ColumnIndex column);
     };
 
     // Move on copy semantics

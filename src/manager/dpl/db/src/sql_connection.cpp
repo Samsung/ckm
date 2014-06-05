@@ -228,6 +228,23 @@ void SqlConnection::DataCommand::BindString(
                 << position << "] -> " << value);
 }
 
+void SqlConnection::DataCommand::BindBlob(
+    SqlConnection::ArgumentIndex position,
+    const std::vector<unsigned char> &raw)
+{
+    if (raw.size() == 0) {
+        BindNull(position);
+        return;
+    }
+
+    // Assume that blob may dissappear
+    CheckBindResult(sqlcipher3_bind_blob(m_stmt, position,
+                                      raw.data(), raw.size(),
+                                      SQLCIPHER_TRANSIENT));
+    LogPedantic("SQL data command bind blob of size "
+                << raw.size());
+}
+
 void SqlConnection::DataCommand::BindString(
     SqlConnection::ArgumentIndex position,
     const String &value)
@@ -318,6 +335,17 @@ void SqlConnection::DataCommand::BindString(
 {
     if (!!value) {
         BindString(position, ToUTF8String(*value).c_str());
+    } else {
+        BindNull(position);
+    }
+}
+
+void SqlConnection::DataCommand::BindBlob(
+    SqlConnection::ArgumentIndex position,
+    const boost::optional<std::vector<unsigned char>> &value)
+{
+    if (!!value) {
+        BindBlob(position, *value);
     } else {
         BindNull(position);
     }
@@ -483,6 +511,25 @@ std::string SqlConnection::DataCommand::GetColumnString(
     return std::string(value);
 }
 
+std::vector<unsigned char> SqlConnection::DataCommand::GetColumnBlob(
+    SqlConnection::ColumnIndex column)
+{
+    LogPedantic("SQL data command get column blog: [" << column << "]");
+    CheckColumnIndex(column);
+
+    const unsigned char *value = reinterpret_cast<const unsigned char*>(
+            sqlcipher3_column_blob(m_stmt, column));
+
+    if (value == NULL) {
+        return std::vector<unsigned char>();
+    }
+
+    int length = sqlcipher3_column_bytes(m_stmt, column);
+    LogPedantic("Got blob of length: " << length);
+
+    return std::vector<unsigned char>(value, value + length);
+}
+
 boost::optional<int> SqlConnection::DataCommand::GetColumnOptionalInteger(
     SqlConnection::ColumnIndex column)
 {
@@ -595,6 +642,25 @@ boost::optional<String> SqlConnection::DataCommand::GetColumnOptionalString(
     LogPedantic("Value: " << value);
     String s = FromUTF8String(value);
     return boost::optional<String>(s);
+}
+
+boost::optional<std::vector<unsigned char>> SqlConnection::DataCommand::GetColumnOptionalBlob(
+    SqlConnection::ColumnIndex column)
+{
+    LogPedantic("SQL data command get column blog: [" << column << "]");
+    CheckColumnIndex(column);
+
+    if (sqlcipher3_column_type(m_stmt, column) == SQLCIPHER_NULL) {
+        return boost::optional<std::vector<unsigned char>>();
+    }
+    const unsigned char *value = reinterpret_cast<const unsigned char*>(
+            sqlcipher3_column_blob(m_stmt, column));
+
+    int length = sqlcipher3_column_bytes(m_stmt, column);
+    LogPedantic("Got blob of length: " << length);
+
+    std::vector<unsigned char> temp(value, value + length);
+    return boost::optional<std::vector<unsigned char>>(temp);
 }
 
 void SqlConnection::Connect(const std::string &address,
