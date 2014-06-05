@@ -29,6 +29,8 @@
 #include <vector>
 #include <string>
 
+#include <sys/types.h>
+
 #include <dpl/exception.h>
 
 #include <generic-event.h>
@@ -42,7 +44,7 @@ namespace CKM {
 typedef int InterfaceID;
 
 struct Credentials {
-    int uid;
+    uid_t uid;
     std::string smackLabel;
 };
 

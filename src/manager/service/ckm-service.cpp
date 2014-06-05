@@ -104,7 +104,7 @@ bool CKMService::processOne(
 
 RawBuffer CKMService::processControl(MessageBuffer &buffer) {
     int command;
-    std::string user;
+    uid_t user;
     ControlCommand cc;
     std::string newPass, oldPass;
 

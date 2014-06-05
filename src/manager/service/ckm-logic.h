@@ -23,6 +23,7 @@
 
 #include <string>
 #include <vector>
+
 #include <message-buffer.h>
 #include <protocols.h>
 #include <ckm/ckm-type.h>
@@ -39,19 +40,19 @@ public:
     CKMLogic& operator=(CKMLogic &&) = delete;
     virtual ~CKMLogic();
 
-    RawBuffer unlockUserKey(const std::string &user, const std::string &password);
+    RawBuffer unlockUserKey(uid_t user, const std::string &password);
 
-    RawBuffer lockUserKey(const std::string &user);
+    RawBuffer lockUserKey(uid_t user);
 
-    RawBuffer removeUserData(const std::string &user);
+    RawBuffer removeUserData(uid_t user);
 
     RawBuffer changeUserPassword(
-        const std::string &user,
+        uid_t user,
         const std::string &oldPassword,
         const std::string &newPassword);
 
     RawBuffer resetUserPassword(
-        const std::string &user,
+        uid_t user,
         const std::string &newPassword);
 
     RawBuffer saveData(

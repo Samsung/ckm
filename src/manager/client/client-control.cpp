@@ -36,11 +36,8 @@ public:
     ControlImpl& operator=(const ControlImpl &) = delete;
     ControlImpl& operator=(ControlImpl &&) = delete;
 
-    static int unlockUserKey(const std::string &user, const std::string &password) {
+    static int unlockUserKey(uid_t user, const std::string &password) {
         return try_catch([&] {
-            if (user.empty())
-                return KEY_MANAGER_API_ERROR_INPUT_PARAM;
-
             MessageBuffer send, recv;
             Serialization::Serialize(send, static_cast<int>(ControlCommand::UNLOCK_USER_KEY));
             Serialization::Serialize(send, user);
@@ -61,11 +58,8 @@ public:
         });
     }
 
-    static int lockUserKey(const std::string &user) {
+    static int lockUserKey(uid_t user) {
         return try_catch([&] {
-            if (user.empty())
-                return KEY_MANAGER_API_ERROR_INPUT_PARAM;
-
             MessageBuffer send, recv;
             Serialization::Serialize(send, static_cast<int>(ControlCommand::LOCK_USER_KEY));
             Serialization::Serialize(send, user);
@@ -85,11 +79,8 @@ public:
         });
     }
 
-    static int removeUserData(const std::string &user) {
+    static int removeUserData(uid_t user) {
         return try_catch([&] {
-            if (user.empty())
-                return KEY_MANAGER_API_ERROR_INPUT_PARAM;
-
             MessageBuffer send, recv;
             Serialization::Serialize(send, static_cast<int>(ControlCommand::REMOVE_USER_DATA));
             Serialization::Serialize(send, user);
@@ -109,11 +100,8 @@ public:
         });
     }
 
-    static int changeUserPassword(const std::string &user, const std::string &oldPassword, const std::string &newPassword) {
+    static int changeUserPassword(uid_t user, const std::string &oldPassword, const std::string &newPassword) {
         return try_catch([&] {
-            if (user.empty())
-                return KEY_MANAGER_API_ERROR_INPUT_PARAM;
-
             MessageBuffer send, recv;
             Serialization::Serialize(send, static_cast<int>(ControlCommand::CHANGE_USER_PASSWORD));
             Serialization::Serialize(send, user);
@@ -135,11 +123,8 @@ public:
         });
     }
 
-    static int resetUserPassword(const std::string &user, const std::string &newPassword) {
+    static int resetUserPassword(uid_t user, const std::string &newPassword) {
         return try_catch([&] {
-            if (user.empty())
-                return KEY_MANAGER_API_ERROR_INPUT_PARAM;
-
             MessageBuffer send, recv;
             Serialization::Serialize(send, static_cast<int>(ControlCommand::RESET_USER_PASSWORD));
             Serialization::Serialize(send, user);
@@ -169,23 +154,23 @@ Control::Control()
 
 Control::~Control(){}
 
-int Control::unlockUserKey(const std::string &user, const std::string &password) const {
+int Control::unlockUserKey(uid_t user, const std::string &password) const {
     return m_impl->unlockUserKey(user, password);
 }
 
-int Control::lockUserKey(const std::string &user) const {
+int Control::lockUserKey(uid_t user) const {
     return m_impl->lockUserKey(user);
 }
 
-int Control::removeUserData(const std::string &user) const {
+int Control::removeUserData(uid_t user) const {
     return m_impl->removeUserData(user);
 }
 
-int Control::changeUserPassword(const std::string &user, const std::string &oldPassword, const std::string &newPassword) const {
+int Control::changeUserPassword(uid_t user, const std::string &oldPassword, const std::string &newPassword) const {
     return m_impl->changeUserPassword(user, oldPassword, newPassword);
 }
 
-int Control::resetUserPassword(const std::string &user, const std::string &newPassword) const {
+int Control::resetUserPassword(uid_t user, const std::string &newPassword) const {
     return m_impl->resetUserPassword(user, newPassword);
 }
 

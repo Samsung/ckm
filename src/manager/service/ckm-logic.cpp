@@ -30,7 +30,7 @@ namespace CKM {
 CKMLogic::CKMLogic(){}
 CKMLogic::~CKMLogic(){}
 
-RawBuffer CKMLogic::unlockUserKey(const std::string &user, const std::string &password) {
+RawBuffer CKMLogic::unlockUserKey(uid_t user, const std::string &password) {
     (void)user;
     (void)password;
 
@@ -39,7 +39,7 @@ RawBuffer CKMLogic::unlockUserKey(const std::string &user, const std::string &pa
     return response.Pop();
 }
 
-RawBuffer CKMLogic::lockUserKey(const std::string &user) {
+RawBuffer CKMLogic::lockUserKey(uid_t user) {
     (void)user;
 
     MessageBuffer response;
@@ -47,7 +47,7 @@ RawBuffer CKMLogic::lockUserKey(const std::string &user) {
     return response.Pop();
 }
 
-RawBuffer CKMLogic::removeUserData(const std::string &user) {
+RawBuffer CKMLogic::removeUserData(uid_t user) {
     (void)user;
 
     MessageBuffer response;
@@ -56,7 +56,7 @@ RawBuffer CKMLogic::removeUserData(const std::string &user) {
 }
 
 RawBuffer CKMLogic::changeUserPassword(
-    const std::string &user,
+    uid_t user,
     const std::string &oldPassword,
     const std::string &newPassword)
 {
@@ -70,7 +70,7 @@ RawBuffer CKMLogic::changeUserPassword(
 }
 
 RawBuffer CKMLogic::resetUserPassword(
-    const std::string &user,
+    uid_t user,
     const std::string &newPassword)
 {
     (void)user;
