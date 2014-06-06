@@ -351,7 +351,7 @@ int Manager::ManagerImpl::createKeyPairRSA(
 }
 
 int Manager::ManagerImpl::createKeyPairECDSA(
-    const Key::ECType type,
+    ElipticCurve type,
     const Alias &privateKeyAlias,
     const Alias &publicKeyAlias,
     const Policy &policyPrivateKey,

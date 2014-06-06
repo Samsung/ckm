@@ -57,7 +57,7 @@ public:
         const Policy &policyPublicKey = Policy());
 
     int createKeyPairECDSA(
-        const Key::ECType type,
+        ElipticCurve type,
         const Alias &privateKeyAlias,
         const Alias &publicKeyAlias,
         const Policy &policyPrivateKey = Policy(),
