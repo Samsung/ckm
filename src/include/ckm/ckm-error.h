@@ -87,18 +87,16 @@
 /*! \brief   indicating Central Key Manager has been failed for some reason */
 #define KEY_MANAGER_API_ERROR_SERVER_ERROR -11
 
-/*! \brief   indicating getting smack label from socket failed  */
-#define KEY_MANAGER_API_ERROR_GETTING_SOCKET_LABEL_FAILED -12
-
-/*! \brief   indicating getting smack label from file failed  */
-#define KEY_MANAGER_API_ERROR_GETTING_FILE_LABEL_FAILED -13
-
-/*! \brief   indicating setting smack label for file failed  */
-#define KEY_MANAGER_API_ERROR_SETTING_FILE_LABEL_FAILED -14
+/*! \brief   indicating the database was not unlocked - user did not login */
+#define KEY_MANAGER_API_ERROR_DB_LOCKED -12
 
 /*! \brief   indicating the error with unknown reason */
 #define KEY_MANAGER_API_ERROR_UNKNOWN -255
 /** @}*/
+
+namespace CKM {
+const char * ErrorToString(int error);
+} // namespace CKM
 
 
 #ifdef __cplusplus
