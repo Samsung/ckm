@@ -19,11 +19,15 @@
  * @version     1.0
  * @brief       Sample service implementation.
  */
+#include <string.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 
 #include <string>
 #include <sstream>
 #include <fstream>
+
+#include <dpl/log/log.h>
 
 #include <file-system.h>
 
@@ -67,6 +71,17 @@ bool FileSystem::saveDomainKEK(const RawBuffer &buffer) const
     std::ofstream os(ss.str(), std::ios::out | std::ofstream::binary);
     std::copy(buffer.begin(), buffer.end(), std::ostreambuf_iterator<char>(os));
     return !os.fail();
+}
+
+int FileSystem::init() {
+    errno = 0;
+    if ((mkdir(CKM_DATA_PATH.c_str(), 0700)) && (errno != EEXIST)) {
+        int err = errno;
+        LogError("Error in mkdir. Data directory could not be created. Errno: "
+            << err << " (" << strerror(err) << ")");
+        return -1; // TODO set up some error code
+    }
+    return 0;
 }
 
 } // namespace CKM

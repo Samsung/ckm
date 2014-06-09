@@ -20,6 +20,7 @@
  * @brief       Sample service implementation.
  */
 #include <dpl/serialization.h>
+#include <dpl/log/log.h>
 
 #include <ckm/ckm-error.h>
 #include <ckm/ckm-type.h>
@@ -29,7 +30,14 @@
 #include <ckm-logic.h>
 namespace CKM {
 
-CKMLogic::CKMLogic(){}
+CKMLogic::CKMLogic(){
+    int retCode = FileSystem::init();
+    // TODO what can I do when init went wrong? exit(-1) ??
+    if (retCode) {
+        LogError("Fatal error in FileSystem::init()");
+    }
+}
+
 CKMLogic::~CKMLogic(){}
 
 RawBuffer CKMLogic::unlockUserKey(uid_t user, const std::string &password) {

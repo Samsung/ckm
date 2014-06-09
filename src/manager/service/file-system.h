@@ -34,6 +34,8 @@ public:
     RawBuffer getDomainKEK() const;
     bool saveDomainKEK(const RawBuffer &buffer) const;
 
+    static int init();
+
     virtual ~FileSystem(){}
 protected:
     uid_t m_uid;
