@@ -88,19 +88,19 @@ rm -rf %{buildroot}
 systemctl daemon-reload
 if [ $1 = 1 ]; then
     # installation
-    systemctl start key-manager.service
+    systemctl start central-key-manager.service
 fi
 
 if [ $1 = 2 ]; then
     # update
-    systemctl restart key-manager.service
+    systemctl restart central-key-manager.service
 fi
 
 
 %preun
 if [ $1 = 0 ]; then
     # unistall
-    systemctl stop key-manager.service
+    systemctl stop central-key-manager.service
 fi
 
 %postun
