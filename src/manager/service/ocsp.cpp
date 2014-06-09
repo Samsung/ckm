@@ -50,7 +50,7 @@ OCSPModule::~OCSPModule(){
 }
 
 // Loads all system certificates into memory.
-int OCSPModule::initailize() {
+int OCSPModule::initialize() {
 	systemCerts = loadSystemCerts(CKM_SYSTEM_CERTS_PATH);
 	return CKM_OCSP_OPER_SUCCESS;
 }

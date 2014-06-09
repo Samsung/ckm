@@ -25,7 +25,7 @@ public:
 	virtual ~OCSPModule();
 
 	// Loads all system certificates into memory.
-	static int initailize();
+	static int initialize();
 
 	// all error code from project will be defined in public client api
 	// OK, UNKNOWN, REVOKED, NO_NETWORK, TIMEOUT
