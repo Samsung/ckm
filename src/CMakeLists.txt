@@ -38,8 +38,10 @@ INCLUDE_DIRECTORIES(
     ${KEY_MANAGER_PATH}/main
     ${KEY_MANAGER_PATH}/common
     ${KEY_MANAGER_PATH}/service
+    ${KEY_MANAGER_PATH}/sqlcipher
     ${KEY_MANAGER_PATH}/dpl/core/include
     ${KEY_MANAGER_PATH}/dpl/log/include
+    ${KEY_MANAGER_PATH}/dpl/db/include
     )
 
 ADD_EXECUTABLE(${TARGET_KEY_MANAGER} ${KEY_MANAGER_SOURCES})

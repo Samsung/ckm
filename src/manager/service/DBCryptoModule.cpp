@@ -102,19 +102,19 @@ int DBCryptoModule::encryptRow(const RawBuffer &password, DBRow &row)
     ret = cryptAES(crow.data, crow.dataSize + dlen, appkey, emptyiv);
     if (ret != 0)
         return ret;
-    crow.encryptionScheme |= DBRow::ENCR_APPKEY;
+    crow.encryptionScheme |= ENCR_APPKEY;
     if (password.size() > 0) {
         if ((ret = generateKeysFromPassword(password, userkey, crow.iv)))
             return ret;
         ret = cryptAES(crow.data, 0, userkey, crow.iv);
         if (ret != 0)
             return ret;
-        crow.encryptionScheme |= DBRow::ENCR_PASSWORD;
+        crow.encryptionScheme |= ENCR_PASSWORD;
     }
     ret = encBase64(crow.data);
     if (ret != 0)
         return ret;
-    crow.encryptionScheme |= DBRow::ENCR_BASE64;
+    crow.encryptionScheme |= ENCR_BASE64;
     ret = encBase64(crow.iv);
     if (ret != 0)
         return ret;
@@ -138,7 +138,7 @@ int DBCryptoModule::decryptRow(const RawBuffer &password, DBRow &row)
         return ret;
     if (row.dataSize <= 0)
         return ret;
-    if (row.encryptionScheme && DBRow::ENCR_PASSWORD)
+    if (row.encryptionScheme && ENCR_PASSWORD)
         if (password.size() == 0)
             return ret;
     if (!haveKey(row.smackLabel))
@@ -148,19 +148,19 @@ int DBCryptoModule::decryptRow(const RawBuffer &password, DBRow &row)
     ret = decBase64(crow.iv);
     if (ret)
         return ret;
-    if (crow.encryptionScheme && DBRow::ENCR_BASE64) {
+    if (crow.encryptionScheme && ENCR_BASE64) {
         ret = decBase64(crow.data);
         if (ret)
             return ret;
     }
-    if (crow.encryptionScheme && DBRow::ENCR_PASSWORD) {
+    if (crow.encryptionScheme && ENCR_PASSWORD) {
         if ((ret = generateKeysFromPassword(password, userkey, dropiv)))
             return ret;
         ret = decryptAES(crow.data, 0, userkey, crow.iv);
         if (ret)
             return ret;
     }
-    if (crow.encryptionScheme && DBRow::ENCR_APPKEY) {
+    if (crow.encryptionScheme && ENCR_APPKEY) {
         ret = decryptAES(crow.data, 0, appkey, emptyiv);
         if (ret)
             return ret;

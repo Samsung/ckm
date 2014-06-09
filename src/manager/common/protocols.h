@@ -59,6 +59,12 @@ enum class DBDataType : int {
     BINARY_DATA
 };
 
+enum class DBQueryType : int {
+    KEY_QUERY,
+    CERTIFICATE_QUERY,
+    BINARY_DATA_QUERY
+};
+
 DBDataType toDBDataType(KeyType key);
 KeyType toKeyType(DBDataType dbDataType);
 
