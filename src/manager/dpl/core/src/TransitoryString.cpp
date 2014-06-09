@@ -48,6 +48,7 @@ TransitoryString::~TransitoryString(){
 
 TransitoryString& TransitoryString::operator=(TransitoryString&& other) {
     if (this != &other) {
+        wipeOut();
         delete[] m_tString;
 
         m_tString = other.m_tString;
