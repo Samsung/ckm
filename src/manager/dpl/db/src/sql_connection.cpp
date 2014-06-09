@@ -726,9 +726,9 @@ void SqlConnection::SetKey(const std::vector<unsigned char> &rawPass){
         LogPedantic("Cannot set key. No connection to DB!");
         return;
     }
-    AssertMsg(rawPass.size() == SQLCIPHER_RAW_DATA_SIZE,
-            "Binary data for raw password should be 32 bytes long."
-            );
+    if (rawPass.size() == SQLCIPHER_RAW_DATA_SIZE)
+            ThrowMsg(Exception::InvalidArguments,
+                    "Binary data for raw password should be 32 bytes long.");
     TransitoryString pass = createHexPass(rawPass);
     int result = sqlcipher3_key(m_connection, pass.c_str(), pass.length());
     if (result == SQLCIPHER_OK) {
