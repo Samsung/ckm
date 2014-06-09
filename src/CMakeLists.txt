@@ -22,6 +22,7 @@ SET(KEY_MANAGER_SOURCES
     ${KEY_MANAGER_PATH}/service/DBCryptoModule.cpp
     ${KEY_MANAGER_PATH}/service/CryptoService.cpp
     ${KEY_MANAGER_PATH}/service/file-system.cpp
+    ${KEY_MANAGER_PATH}/service/db-crypto.cpp
     )
 
 SET_SOURCE_FILES_PROPERTIES(
@@ -73,6 +74,7 @@ SET(KEY_MANAGER_CLIENT_SOURCES
     ${KEY_MANAGER_CLIENT_SRC_PATH}/client-control.cpp
     ${KEY_MANAGER_CLIENT_SRC_PATH}/client-common.cpp
     ${KEY_MANAGER_CLIENT_SRC_PATH}/client-echo.cpp
+    ${KEY_MANAGER_CLIENT_SRC_PATH}/client-error.cpp
     ${KEY_MANAGER_CLIENT_SRC_PATH}/client-key.cpp
     ${KEY_MANAGER_CLIENT_SRC_PATH}/client-manager.cpp
     ${KEY_MANAGER_CLIENT_SRC_PATH}/client-manager-impl.cpp

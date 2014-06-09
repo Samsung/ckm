@@ -85,8 +85,15 @@ KeyImpl::KeyImpl(const RawBuffer &data, KeyType type, const std::string &passwor
         BIO_write(bio.get(), data.data(), data.size());
         rsa = PEM_read_bio_RSAPrivateKey(bio.get(), NULL, NULL, pass);
     } else if (type == KeyType::KEY_RSA_PUBLIC) {
+        // First we will try to read der file
         const unsigned char *p = static_cast<const unsigned char*>(data.data());
         rsa = d2i_RSA_PUBKEY(NULL, &p, data.size());
+        if (rsa == NULL) {
+            // This is internal der format used by openssl?
+            BioUniquePtr bio(BIO_new(BIO_s_mem()), BIO_free_all);
+            BIO_write(bio.get(), data.data(), data.size());
+            rsa = d2i_RSAPublicKey_bio(bio.get(), NULL);
+        }
     } else if (type == KeyType::KEY_RSA_PRIVATE) {
         BioUniquePtr bio(BIO_new(BIO_s_mem()), BIO_free_all);
         if (NULL == bio.get())

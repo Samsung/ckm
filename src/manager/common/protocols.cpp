@@ -34,8 +34,8 @@ char const * const SERVICE_SOCKET_CKM_STORAGE = "/tmp/.central-key-manager-api-s
 
 DBDataType toDBDataType(KeyType key) {
     switch(key) {
-    case KeyType::KEY_RSA_PUBLIC:  return DBDataType::KEY_RSA_PRIVATE;
-    case KeyType::KEY_RSA_PRIVATE: return DBDataType::KEY_RSA_PUBLIC;
+    case KeyType::KEY_RSA_PUBLIC:  return DBDataType::KEY_RSA_PUBLIC;
+    case KeyType::KEY_RSA_PRIVATE: return DBDataType::KEY_RSA_PRIVATE;
     default:
         // TODO
         throw 1;

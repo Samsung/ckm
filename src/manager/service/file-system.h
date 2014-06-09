@@ -33,11 +33,14 @@ public:
     std::string getDBPath() const;
     RawBuffer getDomainKEK() const;
     bool saveDomainKEK(const RawBuffer &buffer) const;
+    int removeUserData() const;
 
     static int init();
 
     virtual ~FileSystem(){}
 protected:
+    std::string getDKEKPath() const;
+
     uid_t m_uid;
 };
 

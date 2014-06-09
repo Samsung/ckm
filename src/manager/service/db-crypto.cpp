@@ -61,6 +61,13 @@ namespace {
             //                                   1           2
             "SELECT * FROM CKM_TABLE WHERE alias=? AND label=?;";
 
+    const char *select_key_alias_cmd =
+            "SELECT * FROM CKM_TABLE WHERE "
+                " dataType >= ? AND "
+                " dataType <= ? AND "
+                " (restricted=0 OR label=?)";
+
+
     const char *select_type_cmd =
             //                                          1
             "SELECT alias FROM CKM_TABLE WHERE dataType=? AND restricted=0 "
@@ -157,9 +164,11 @@ using namespace DB;
         return KEY_MANAGER_API_SUCCESS;
     }
 
-    int DBCrypto::getDBRow(const Alias &alias, const std::string &label,
-                              DBRow &row) {
-
+    int DBCrypto::getDBRow(
+        const Alias &alias,
+        const std::string &label,
+        DBRow &row)
+    {
         if(!m_init)
             return KEY_MANAGER_API_ERROR_DB_ERROR;
         Try {
@@ -169,16 +178,16 @@ using namespace DB;
         selectCommand->BindString(2, label.c_str());
 
         if(selectCommand->Step()) {
-            row.alias = selectCommand->GetColumnString(1);
-            row.smackLabel = selectCommand->GetColumnString(2);
-            row.restricted = selectCommand->GetColumnInteger(3);
-            row.exportable = selectCommand->GetColumnInteger(4);
-            row.dataType = static_cast<DBDataType>(selectCommand->GetColumnInteger(5));
-            row.algorithmType = selectCommand->GetColumnInteger(6);
-            row.encryptionScheme = selectCommand->GetColumnInteger(7);
-            row.iv = selectCommand->GetColumnBlob(8);
-            row.dataSize = selectCommand->GetColumnInteger(9);
-            row.data = selectCommand->GetColumnBlob(10);
+            row.alias = selectCommand->GetColumnString(0);
+            row.smackLabel = selectCommand->GetColumnString(1);
+            row.restricted = selectCommand->GetColumnInteger(2);
+            row.exportable = selectCommand->GetColumnInteger(3);
+            row.dataType = static_cast<DBDataType>(selectCommand->GetColumnInteger(4));
+            row.algorithmType = selectCommand->GetColumnInteger(5);
+            row.encryptionScheme = selectCommand->GetColumnInteger(6);
+            row.iv = selectCommand->GetColumnBlob(7);
+            row.dataSize = selectCommand->GetColumnInteger(8);
+            row.data = selectCommand->GetColumnBlob(9);
         } else {
             return KEY_MANAGER_API_ERROR_BAD_REQUEST;
         }
@@ -209,7 +218,7 @@ using namespace DB;
 
             while(selectCommand->Step()) {
                 Alias alias;
-                alias = selectCommand->GetColumnString(1);
+                alias = selectCommand->GetColumnString(0);
                 aliases.push_back(alias);
             }
         } Catch (SqlConnection::Exception::InvalidColumn) {
@@ -225,31 +234,45 @@ using namespace DB;
         return KEY_MANAGER_API_SUCCESS;
     }
 
-    int DBCrypto::getAliases(DBQueryType type, const std::string& label,
-            AliasVector& aliases) {
-
+    int DBCrypto::getAliases(
+        DBDataType type,
+        const std::string& label,
+        AliasVector& aliases)
+    {
         if(!m_init)
             return KEY_MANAGER_API_ERROR_DB_ERROR;
-        int ret;
-        switch(type) {
-        case DBQueryType::KEY_QUERY:
-            ret = getSingleType(DBDataType::KEY_AES, label, aliases);
-            if(ret != KEY_MANAGER_API_SUCCESS)
-                return ret;
-            ret = getSingleType(DBDataType::KEY_ECDSA_PRIVATE, label, aliases);
-            if(ret != KEY_MANAGER_API_SUCCESS)
-                return ret;
-            ret = getSingleType(DBDataType::KEY_ECDSA_PUBLIC, label, aliases);
-            if(ret != KEY_MANAGER_API_SUCCESS)
-                return ret;
-            ret = getSingleType(DBDataType::KEY_RSA_PRIVATE, label, aliases);
-            if(ret != KEY_MANAGER_API_SUCCESS)
-                return ret;
-            return(getSingleType(DBDataType::KEY_RSA_PUBLIC, label, aliases));
-        case DBQueryType::CERTIFICATE_QUERY:
-            return getSingleType(DBDataType::CERTIFICATE, label, aliases);
-        case DBQueryType::BINARY_DATA_QUERY:
-            return getSingleType(DBDataType::BINARY_DATA, label, aliases);
+
+        return getSingleType(type, label, aliases);
+    }
+
+    int DBCrypto::getKeyAliases(
+        const std::string &label,
+        AliasVector &aliases)
+    {
+        if (!m_init)
+            return KEY_MANAGER_API_ERROR_DB_ERROR;
+
+        Try{
+            SqlConnection::DataCommandAutoPtr selectCommand =
+                            m_connection->PrepareDataCommand(select_key_alias_cmd);
+            selectCommand->BindInteger(1, static_cast<int>(DBDataType::DB_KEY_FIRST));
+            selectCommand->BindInteger(2, static_cast<int>(DBDataType::DB_KEY_LAST));
+            selectCommand->BindString(3, label.c_str());
+
+            while(selectCommand->Step()) {
+                Alias alias;
+                alias = selectCommand->GetColumnString(1);
+                aliases.push_back(alias);
+            }
+        } Catch (SqlConnection::Exception::InvalidColumn) {
+            LogError("Select statement invalid column error");
+            return KEY_MANAGER_API_ERROR_DB_ERROR;
+        } Catch (SqlConnection::Exception::SyntaxError) {
+            LogError("Couldn't prepare select statement");
+            return KEY_MANAGER_API_ERROR_DB_ERROR;
+        } Catch (SqlConnection::Exception::InternalError) {
+            LogError("Couldn't execute select statement");
+            return KEY_MANAGER_API_ERROR_DB_ERROR;
         }
         return KEY_MANAGER_API_SUCCESS;
     }

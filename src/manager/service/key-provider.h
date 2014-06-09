@@ -38,7 +38,7 @@ public:
     bool isInitialized();
 
     // Returns Key used to decrypt database.
-    KeyAES getDomainKEK();
+    RawBuffer getDomainKEK();
 
     // Returns Key in form used to store key in file
     // Requied by Control::resetPassword(const RawBuffer &newPassword);

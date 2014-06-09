@@ -22,6 +22,7 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <unistd.h>
 
 #include <string>
 #include <sstream>
@@ -52,12 +53,15 @@ std::string FileSystem::getDBPath() const
     return ss.str();
 }
 
-RawBuffer FileSystem::getDomainKEK() const
-{
+std::string FileSystem::getDKEKPath() const {
     std::stringstream ss;
     ss << CKM_DATA_PATH << CKM_KEY_PREFIX << m_uid;
+    return ss.str();
+}
 
-    std::ifstream is(ss.str());
+RawBuffer FileSystem::getDomainKEK() const
+{
+    std::ifstream is(getDKEKPath());
     std::istreambuf_iterator<char> begin(is),end;
     RawBuffer buffer(begin, end);
     return buffer;
@@ -65,10 +69,7 @@ RawBuffer FileSystem::getDomainKEK() const
 
 bool FileSystem::saveDomainKEK(const RawBuffer &buffer) const
 {
-    std::stringstream ss;
-    ss << CKM_DATA_PATH << CKM_KEY_PREFIX << m_uid;
-
-    std::ofstream os(ss.str(), std::ios::out | std::ofstream::binary);
+    std::ofstream os(getDKEKPath(), std::ios::out | std::ofstream::binary);
     std::copy(buffer.begin(), buffer.end(), std::ostreambuf_iterator<char>(os));
     return !os.fail();
 }
@@ -82,6 +83,23 @@ int FileSystem::init() {
         return -1; // TODO set up some error code
     }
     return 0;
+}
+
+int FileSystem::removeUserData() const {
+    int err, retCode = 0;
+    if (unlink(getDBPath().c_str())) {
+        retCode = -1;
+        err = errno;
+        LogError("Error in unlink user database: " << getDBPath()
+            << "Errno: " << errno << " " << strerror(err));
+    }
+    if (unlink(getDKEKPath().c_str())) {
+        retCode = -1;
+        err = errno;
+        LogError("Error in unlink user DKEK: " << getDKEKPath()
+            << "Errno: " << errno << " " << strerror(err));
+    }
+    return retCode;
 }
 
 } // namespace CKM

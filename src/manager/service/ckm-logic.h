@@ -28,12 +28,14 @@
 #include <protocols.h>
 #include <ckm/ckm-type.h>
 #include <connection-info.h>
+#include <db-crypto.h>
 #include <key-provider.h>
 
 namespace CKM {
 
 struct UserData {
     KeyProvider keyProvider;
+    DBCrypto    database;
 };
 
 class CKMLogic {

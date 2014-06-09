@@ -25,24 +25,15 @@
 
 #include <vector>
 #include <string>
-#include <ckm/ckm-type.h>
+
 #include <dpl/db/sql_connection.h>
+
+#include <ckm/ckm-type.h>
+#include <db-row.h>
 #include <protocols.h>
 
-namespace CKM {
-    struct DBRow {
-        std::string alias;
-        std::string smackLabel;
-        int restricted;
-        int exportable;
-        DBDataType dataType;        // cert/key/data
-        int algorithmType;          // AES mode ?
-        int encryptionScheme;       // for example: (ENCR_BASE64 | ENCR_PASSWORD)
-        RawBuffer iv;               // encoded in base64
-        int dataSize;               // size of information without hash and padding
-        RawBuffer data;
-    };
 
+namespace CKM {
     class DBCrypto {
          public:
             DBCrypto() : m_connection(NULL), m_init(false) {};
@@ -55,12 +46,17 @@ namespace CKM {
             DBCrypto& operator=(const DBCrypto& ) = delete;
             DBCrypto& operator=(DBCrypto&& other);
 
-            ~DBCrypto();
+            virtual ~DBCrypto();
 
             bool isInit() {return m_init;};
             int saveDBRow(const DBRow &row);
             int getDBRow(const Alias &alias, const std::string &label, DBRow &row);
-            int getAliases(DBQueryType dataType, const std::string &label,
+            int getAliases(
+                    DBDataType dataType,
+                    const std::string &label,
+                    AliasVector &aliases);
+            int getKeyAliases(
+                    const std::string &label,
                     AliasVector &aliases);
             int deleteDBRow(const Alias& alias, const std::string &label);
 
@@ -74,5 +70,6 @@ namespace CKM {
                     AliasVector& aliases);
 
    };
-}
+} // namespace CKM
+
 #endif //DB_CRYPTO_H

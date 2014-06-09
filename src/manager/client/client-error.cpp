@@ -18,15 +18,12 @@
  * @version     1.0
  * @brief       This file contains example of key-manager client implementation
  */
-#include <protocol.h>
-
 #include <ckm/ckm-error.h>
 
 #define ERRORDESCRIBE(name) case name: return #name
 
 namespace CKM {
-
-KEY_MANAGER_API
+__attribute__ ((visibility ("default")))
 const char * ErrorToString(int error) {
     switch(error) {
         ERRORDESCRIBE(KEY_MANAGER_API_SUCCESS);
@@ -48,5 +45,5 @@ const char * ErrorToString(int error) {
     }
 }
 
-}
+} // namespace CKM
 

@@ -49,20 +49,18 @@ enum class LogicCommand : int {
     CREATE_KEY_PAIR_ECDSA
 };
 
+// Do not use DB_KEY_FIRST and DB_KEY_LAST in the code.
+// This values are only for db module!
 enum class DBDataType : int {
     KEY_RSA_PUBLIC,
+    DB_KEY_FIRST = KEY_RSA_PUBLIC,
     KEY_RSA_PRIVATE,
     KEY_ECDSA_PUBLIC,
     KEY_ECDSA_PRIVATE,
     KEY_AES,
+    DB_KEY_LAST = KEY_AES,
     CERTIFICATE,
     BINARY_DATA
-};
-
-enum class DBQueryType : int {
-    KEY_QUERY,
-    CERTIFICATE_QUERY,
-    BINARY_DATA_QUERY
 };
 
 DBDataType toDBDataType(KeyType key);

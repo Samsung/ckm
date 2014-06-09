@@ -58,8 +58,7 @@ RawBuffer CKMLogic::unlockUserKey(uid_t user, const std::string &password) {
         }
 
         handle.keyProvider = KeyProvider(wrappedDomainKEK, password);
-
-        // TODO Now create database!
+        handle.database = DBCrypto(fs.getDBPath(), handle.keyProvider.getDomainKEK());
     }
 
     MessageBuffer response;
@@ -68,23 +67,25 @@ RawBuffer CKMLogic::unlockUserKey(uid_t user, const std::string &password) {
 }
 
 RawBuffer CKMLogic::lockUserKey(uid_t user) {
+    int retCode = KEY_MANAGER_API_SUCCESS;
     // TODO try catch for all errors that should be supported by error code
     m_userDataMap.erase(user);
 
     MessageBuffer response;
-    Serialization::Serialize(response, static_cast<int>(KEY_MANAGER_API_SUCCESS));
+    Serialization::Serialize(response, retCode);
     return response.Pop();
 }
 
 RawBuffer CKMLogic::removeUserData(uid_t user) {
+    int retCode = KEY_MANAGER_API_SUCCESS;
     // TODO try catch for all errors that should be supported by error code
     m_userDataMap.erase(user);
 
     FileSystem fs(user);
-//    fs.removeUserData(); // remove DB also
+    fs.removeUserData();
 
     MessageBuffer response;
-    Serialization::Serialize(response, static_cast<int>(KEY_MANAGER_API_SUCCESS));
+    Serialization::Serialize(response, retCode);
     return response.Pop();
 }
 
@@ -114,7 +115,7 @@ RawBuffer CKMLogic::resetUserPassword(
 {
     int retCode = KEY_MANAGER_API_SUCCESS;
     // TODO try-catch
-    if (m_userDataMap.count(user) <= 0) {
+    if (0 == m_userDataMap.count(user)) {
         retCode = KEY_MANAGER_API_ERROR_BAD_REQUEST;
     } else {
         auto &handler = m_userDataMap[user];
@@ -136,15 +137,33 @@ RawBuffer CKMLogic::saveData(
     const RawBuffer &key,
     const PolicySerializable &policy)
 {
-    (void)cred;
-    (void)alias;
-    (void)key;
-    (void)policy;
+    int retCode = KEY_MANAGER_API_SUCCESS;
+
+    if (0 == m_userDataMap.count(cred.uid)) {
+        retCode = KEY_MANAGER_API_ERROR_DB_LOCKED;
+    } else {
+        RawBuffer iv(10,'c');
+
+        DBRow row = {
+            alias,
+            cred.smackLabel,
+            policy.restricted,
+            policy.extractable,
+            dataType,
+            0,
+            0,
+            iv,
+            key.size(),
+            key };
+
+        auto &handler = m_userDataMap[cred.uid];
+        retCode = handler.database.saveDBRow(row);
+    }
 
     MessageBuffer response;
     Serialization::Serialize(response, static_cast<int>(LogicCommand::SAVE));
     Serialization::Serialize(response, commandId);
-    Serialization::Serialize(response, static_cast<int>(KEY_MANAGER_API_SUCCESS));
+    Serialization::Serialize(response, retCode);
     Serialization::Serialize(response, static_cast<int>(dataType));
 
     return response.Pop();
@@ -159,10 +178,20 @@ RawBuffer CKMLogic::removeData(
     (void)cred;
     (void)alias;
 
+    int retCode = KEY_MANAGER_API_SUCCESS;
+
+    if (0 == m_userDataMap.count(cred.uid)) {
+        retCode = KEY_MANAGER_API_ERROR_DB_LOCKED;
+    } else {
+        // TODO
+        auto &handler = m_userDataMap[cred.uid];
+        (void)handler;
+    }
+
     MessageBuffer response;
     Serialization::Serialize(response, static_cast<int>(LogicCommand::REMOVE));
     Serialization::Serialize(response, commandId);
-    Serialization::Serialize(response, static_cast<int>(KEY_MANAGER_API_SUCCESS));
+    Serialization::Serialize(response, retCode);
     Serialization::Serialize(response, static_cast<int>(dataType));
 
     return response.Pop();
@@ -175,16 +204,25 @@ RawBuffer CKMLogic::getData(
     const Alias &alias,
     const std::string &password)
 {
-    (void)cred;
-    (void)alias;
+    (void)dataType;
     (void)password;
+
+    int retCode = KEY_MANAGER_API_SUCCESS;
+    DBRow row;
+
+    if (0 == m_userDataMap.count(cred.uid)) {
+        retCode = KEY_MANAGER_API_ERROR_DB_LOCKED;
+    } else {
+        auto &handler = m_userDataMap[cred.uid];
+        retCode = handler.database.getDBRow(alias, cred.smackLabel, row);
+    }
 
     MessageBuffer response;
     Serialization::Serialize(response, static_cast<int>(LogicCommand::GET));
     Serialization::Serialize(response, commandId);
-    Serialization::Serialize(response, static_cast<int>(KEY_MANAGER_API_SUCCESS));
-    Serialization::Serialize(response, static_cast<int>(dataType));
-    Serialization::Serialize(response, RawBuffer());
+    Serialization::Serialize(response, retCode);
+    Serialization::Serialize(response, static_cast<int>(row.dataType));
+    Serialization::Serialize(response, row.data);
     return response.Pop();
 }
 
@@ -193,12 +231,20 @@ RawBuffer CKMLogic::getDataList(
     int commandId,
     DBDataType dataType)
 {
-    (void)cred;
+    int retCode = KEY_MANAGER_API_SUCCESS;
+
+    if (0 == m_userDataMap.count(cred.uid)) {
+        retCode = KEY_MANAGER_API_ERROR_DB_LOCKED;
+    } else {
+        auto &handler = m_userDataMap[cred.uid];
+        // TODO
+        (void)handler;
+    }
 
     MessageBuffer response;
     Serialization::Serialize(response, static_cast<int>(LogicCommand::GET_LIST));
     Serialization::Serialize(response, commandId);
-    Serialization::Serialize(response, static_cast<int>(KEY_MANAGER_API_SUCCESS));
+    Serialization::Serialize(response, retCode);
     Serialization::Serialize(response, static_cast<int>(dataType));
     Serialization::Serialize(response, AliasVector());
     return response.Pop();

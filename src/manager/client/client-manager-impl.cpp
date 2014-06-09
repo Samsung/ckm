@@ -241,7 +241,7 @@ int Manager::ManagerImpl::getData(const Alias &alias, const std::string &passwor
 
     int retCode = getBinaryData(
         alias,
-        DBDataType::CERTIFICATE,
+        DBDataType::BINARY_DATA,
         password,
         recvDataType,
         rawData);
