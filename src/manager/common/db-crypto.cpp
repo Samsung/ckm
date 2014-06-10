@@ -65,6 +65,9 @@ namespace {
             "UNION ALL "
             //                                          2                            3
             "SELECT alias FROM CKM_TABLE WHERE dataType=? AND restricted=1 AND label=?;";
+
+    const char *delete_alias_cmd =
+            "DELETE FROM CKM_TABLE WHERE alias=?;";
 }
 
 namespace CKM {
@@ -243,6 +246,22 @@ using namespace DB;
             return getSingleType(DBDataType::CERTIFICATE, label, aliases);
         case DBQueryType::BINARY_DATA_QUERY:
             return getSingleType(DBDataType::BINARY_DATA, label, aliases);
+        }
+        return DBCryptoReturn::DBCRYPTO_SUCCESS;
+    }
+
+    DBCryptoReturn DBCrypto::deleteAlias(const Alias &alias) {
+        Try {
+            SqlConnection::DataCommandAutoPtr deleteCommand =
+                    m_connection->PrepareDataCommand(delete_alias_cmd);
+            deleteCommand->BindString(1, alias.c_str());
+            deleteCommand->Step();
+        } Catch (SqlConnection::Exception::SyntaxError) {
+            LogError("Couldn't prepare delete statement");
+            return DBCryptoReturn::DBCRYPTO_ERROR_INTERNAL;
+        } Catch (SqlConnection::Exception::InternalError) {
+            LogError("Couldn't execute delete statement");
+            return DBCryptoReturn::DBCRYPTO_ERROR_INTERNAL;
         }
         return DBCryptoReturn::DBCRYPTO_SUCCESS;
     }

@@ -67,6 +67,7 @@ namespace CKM {
             DBCryptoReturn getDBRow(const Alias &alias, DBRow& row);
             DBCryptoReturn getAliases(DBQueryType dataType, const std::string &label,
                     AliasVector &aliases);
+            DBCryptoReturn deleteAlias(const Alias& alias);
 
          private:
             DB::SqlConnection* m_connection;
