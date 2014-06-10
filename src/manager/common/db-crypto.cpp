@@ -23,6 +23,7 @@
 #include <db-crypto.h>
 #include <dpl/db/sql_connection.h>
 #include <dpl/log/log.h>
+#include <ckm/ckm-error.h>
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic warning "-Wdeprecated-declarations"
@@ -124,9 +125,9 @@ using namespace DB;
         }
     }
 
-    DBCryptoReturn DBCrypto::saveDBRow(const DBRow &row){
+    int DBCrypto::saveDBRow(const DBRow &row){
         if(!m_init)
-            return DBCryptoReturn::DBCRYPTO_ERROR_INTERNAL;
+            return KEY_MANAGER_API_ERROR_DB_ERROR;
         Try {
             SqlConnection::DataCommandAutoPtr insertCommand =
                     m_connection->PrepareDataCommand(insert_cmd);
@@ -145,20 +146,20 @@ using namespace DB;
                     "Insert statement should not return any row");
         } Catch(SqlConnection::Exception::SyntaxError) {
             LogError("Couldn't prepare insert statement");
-            return DBCryptoReturn::DBCRYPTO_ERROR_INTERNAL;
+            return KEY_MANAGER_API_ERROR_DB_ERROR;
         } Catch(SqlConnection::Exception::InternalError) {
             LogError("Couldn't execute insert statement");
-            return DBCryptoReturn::DBCRYPTO_ERROR_INTERNAL;
+            return KEY_MANAGER_API_ERROR_DB_ERROR;
         }
 
-        return DBCryptoReturn::DBCRYPTO_SUCCESS;
+        return KEY_MANAGER_API_SUCCESS;
     }
 
-    DBCryptoReturn DBCrypto::getDBRow(const Alias &alias,
+    int DBCrypto::getDBRow(const Alias &alias,
                                                    DBRow &row) {
 
         if(!m_init)
-            return DBCryptoReturn::DBCRYPTO_ERROR_INTERNAL;
+            return KEY_MANAGER_API_ERROR_DB_ERROR;
         Try {
         SqlConnection::DataCommandAutoPtr selectCommand =
                 m_connection->PrepareDataCommand(select_alias_cmd);
@@ -176,25 +177,25 @@ using namespace DB;
             row.dataSize = selectCommand->GetColumnInteger(9);
             row.data = selectCommand->GetColumnBlob(10);
         } else {
-            return DBCryptoReturn::DBCRYPTO_ERROR_NO_ROW;
+            return KEY_MANAGER_API_ERROR_BAD_REQUEST;
         }
 
         AssertMsg(!selectCommand->Step(),
                 "Select returned multiple rows for unique column.");
         } Catch (SqlConnection::Exception::InvalidColumn) {
             LogError("Select statement invalid column error");
-            return DBCryptoReturn::DBCRYPTO_ERROR_INTERNAL;
+            return KEY_MANAGER_API_ERROR_DB_ERROR;
         } Catch (SqlConnection::Exception::SyntaxError) {
             LogError("Couldn't prepare select statement");
-            return DBCryptoReturn::DBCRYPTO_ERROR_INTERNAL;
+            return KEY_MANAGER_API_ERROR_DB_ERROR;
         } Catch (SqlConnection::Exception::InternalError) {
             LogError("Couldn't execute select statement");
-            return DBCryptoReturn::DBCRYPTO_ERROR_INTERNAL;
+            return KEY_MANAGER_API_ERROR_DB_ERROR;
         }
-        return DBCryptoReturn::DBCRYPTO_SUCCESS;
+        return KEY_MANAGER_API_SUCCESS;
     }
 
-    DBCryptoReturn DBCrypto::getSingleType(DBDataType type, const std::string& label,
+    int DBCrypto::getSingleType(DBDataType type, const std::string& label,
             AliasVector& aliases) {
         Try{
             SqlConnection::DataCommandAutoPtr selectCommand =
@@ -210,36 +211,36 @@ using namespace DB;
             }
         } Catch (SqlConnection::Exception::InvalidColumn) {
             LogError("Select statement invalid column error");
-            return DBCryptoReturn::DBCRYPTO_ERROR_INTERNAL;
+            return KEY_MANAGER_API_ERROR_DB_ERROR;
         } Catch (SqlConnection::Exception::SyntaxError) {
             LogError("Couldn't prepare select statement");
-            return DBCryptoReturn::DBCRYPTO_ERROR_INTERNAL;
+            return KEY_MANAGER_API_ERROR_DB_ERROR;
         } Catch (SqlConnection::Exception::InternalError) {
             LogError("Couldn't execute select statement");
-            return DBCryptoReturn::DBCRYPTO_ERROR_INTERNAL;
+            return KEY_MANAGER_API_ERROR_DB_ERROR;
         }
-        return DBCryptoReturn::DBCRYPTO_SUCCESS;
+        return KEY_MANAGER_API_SUCCESS;
     }
 
-    DBCryptoReturn DBCrypto::getAliases(DBQueryType type, const std::string& label,
+    int DBCrypto::getAliases(DBQueryType type, const std::string& label,
             AliasVector& aliases) {
 
         if(!m_init)
-            return DBCryptoReturn::DBCRYPTO_ERROR_INTERNAL;
-        DBCryptoReturn ret;
+            return KEY_MANAGER_API_ERROR_DB_ERROR;
+        int ret;
         switch(type) {
         case DBQueryType::KEY_QUERY:
             ret = getSingleType(DBDataType::KEY_AES, label, aliases);
-            if(ret != DBCryptoReturn::DBCRYPTO_SUCCESS)
+            if(ret != KEY_MANAGER_API_SUCCESS)
                 return ret;
             ret = getSingleType(DBDataType::KEY_ECDSA_PRIVATE, label, aliases);
-            if(ret != DBCryptoReturn::DBCRYPTO_SUCCESS)
+            if(ret != KEY_MANAGER_API_SUCCESS)
                 return ret;
             ret = getSingleType(DBDataType::KEY_ECDSA_PUBLIC, label, aliases);
-            if(ret != DBCryptoReturn::DBCRYPTO_SUCCESS)
+            if(ret != KEY_MANAGER_API_SUCCESS)
                 return ret;
             ret = getSingleType(DBDataType::KEY_RSA_PRIVATE, label, aliases);
-            if(ret != DBCryptoReturn::DBCRYPTO_SUCCESS)
+            if(ret != KEY_MANAGER_API_SUCCESS)
                 return ret;
             return(getSingleType(DBDataType::KEY_RSA_PUBLIC, label, aliases));
         case DBQueryType::CERTIFICATE_QUERY:
@@ -247,10 +248,10 @@ using namespace DB;
         case DBQueryType::BINARY_DATA_QUERY:
             return getSingleType(DBDataType::BINARY_DATA, label, aliases);
         }
-        return DBCryptoReturn::DBCRYPTO_SUCCESS;
+        return KEY_MANAGER_API_SUCCESS;
     }
 
-    DBCryptoReturn DBCrypto::deleteAlias(const Alias &alias) {
+    int DBCrypto::deleteAlias(const Alias &alias) {
         Try {
             SqlConnection::DataCommandAutoPtr deleteCommand =
                     m_connection->PrepareDataCommand(delete_alias_cmd);
@@ -258,12 +259,12 @@ using namespace DB;
             deleteCommand->Step();
         } Catch (SqlConnection::Exception::SyntaxError) {
             LogError("Couldn't prepare delete statement");
-            return DBCryptoReturn::DBCRYPTO_ERROR_INTERNAL;
+            return KEY_MANAGER_API_ERROR_DB_ERROR;
         } Catch (SqlConnection::Exception::InternalError) {
             LogError("Couldn't execute delete statement");
-            return DBCryptoReturn::DBCRYPTO_ERROR_INTERNAL;
+            return KEY_MANAGER_API_ERROR_DB_ERROR;
         }
-        return DBCryptoReturn::DBCRYPTO_SUCCESS;
+        return KEY_MANAGER_API_SUCCESS;
     }
 
 } // CKM

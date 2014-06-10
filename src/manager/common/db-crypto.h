@@ -42,12 +42,7 @@ namespace CKM {
         int dataSize;               // size of information without hash and padding
         RawBuffer data;
     };
-    enum class DBCryptoReturn : int {
-        DBCRYPTO_SUCCESS = 0,
-        DBCRYPTO_ERROR_NO_ROW,
-        DBCRYPTO_ERROR_INTERNAL,
-        DBCRYPTO_ERROR_INVALID_ARGUMENTS
-    };
+
     class DBCrypto {
          public:
             DBCrypto() : m_connection(NULL), m_init(false) {};
@@ -63,11 +58,11 @@ namespace CKM {
             ~DBCrypto();
 
             bool isInit() {return m_init;};
-            DBCryptoReturn saveDBRow(const DBRow &row);
-            DBCryptoReturn getDBRow(const Alias &alias, DBRow& row);
-            DBCryptoReturn getAliases(DBQueryType dataType, const std::string &label,
+            int saveDBRow(const DBRow &row);
+            int getDBRow(const Alias &alias, DBRow& row);
+            int getAliases(DBQueryType dataType, const std::string &label,
                     AliasVector &aliases);
-            DBCryptoReturn deleteAlias(const Alias& alias);
+            int deleteAlias(const Alias& alias);
 
          private:
             DB::SqlConnection* m_connection;
@@ -75,7 +70,7 @@ namespace CKM {
 
             void initDatabase();
             bool checkTableExist(const std::string& table);
-            DBCryptoReturn getSingleType(DBDataType type, const std::string& label,
+            int getSingleType(DBDataType type, const std::string& label,
                     AliasVector& aliases);
 
    };
