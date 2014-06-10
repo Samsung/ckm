@@ -62,6 +62,7 @@ namespace CKM {
 
             ~DBCrypto();
 
+            bool isInit() {return m_init;};
             DBCryptoReturn saveDBRow(const DBRow &row);
             DBCryptoReturn getDBRow(const Alias &alias, DBRow& row);
             DBCryptoReturn getAliases(DBQueryType dataType, const std::string &label,

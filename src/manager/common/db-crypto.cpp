@@ -93,6 +93,10 @@ using namespace DB;
         other.m_init = false;
     }
 
+    DBCrypto::~DBCrypto() {
+        delete m_connection;
+    }
+
     DBCrypto& DBCrypto::operator=(DBCrypto&& other) {
         if (this == &other)
             return *this;
