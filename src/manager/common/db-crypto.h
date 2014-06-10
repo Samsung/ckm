@@ -59,10 +59,10 @@ namespace CKM {
 
             bool isInit() {return m_init;};
             int saveDBRow(const DBRow &row);
-            int getDBRow(const Alias &alias, DBRow& row);
+            int getDBRow(const Alias &alias, const std::string &label, DBRow &row);
             int getAliases(DBQueryType dataType, const std::string &label,
                     AliasVector &aliases);
-            int deleteAlias(const Alias& alias);
+            int deleteDBRow(const Alias& alias, const std::string &label);
 
          private:
             DB::SqlConnection* m_connection;

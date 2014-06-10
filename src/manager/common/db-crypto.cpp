@@ -33,7 +33,7 @@ namespace {
 
     const char *db_create_cmd =
             "CREATE TABLE CKM_TABLE("
-            "   alias TEXT PRIMARY KEY,"
+            "   alias TEXT NOT NULL,"
             "   label TEXT NOT NULL,"
             "   restricted INTEGER NOT NULL,"
             "   exportable INTEGER NOT NULL,"
@@ -42,7 +42,8 @@ namespace {
             "   encryptionScheme INTEGER NOT NULL,"
             "   iv BLOB NOT NULL,"
             "   dataSize INTEGER NOT NULL,"
-            "   date BLOB NOT NULL"
+            "   date BLOB NOT NULL,"
+            "   PRIMARY KEY(alias, label)"
             ");";
 
     const char *insert_cmd =
@@ -57,8 +58,8 @@ namespace {
             "   ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
 
     const char *select_alias_cmd =
-            //                                   1
-            "SELECT * FROM CKM_TABLE WHERE alias=?;";
+            //                                   1           2
+            "SELECT * FROM CKM_TABLE WHERE alias=? AND label=?;";
 
     const char *select_type_cmd =
             //                                          1
@@ -68,7 +69,8 @@ namespace {
             "SELECT alias FROM CKM_TABLE WHERE dataType=? AND restricted=1 AND label=?;";
 
     const char *delete_alias_cmd =
-            "DELETE FROM CKM_TABLE WHERE alias=?;";
+            //                                 1           2
+            "DELETE FROM CKM_TABLE WHERE alias=? AND label=?;";
 }
 
 namespace CKM {
@@ -155,8 +157,8 @@ using namespace DB;
         return KEY_MANAGER_API_SUCCESS;
     }
 
-    int DBCrypto::getDBRow(const Alias &alias,
-                                                   DBRow &row) {
+    int DBCrypto::getDBRow(const Alias &alias, const std::string &label,
+                              DBRow &row) {
 
         if(!m_init)
             return KEY_MANAGER_API_ERROR_DB_ERROR;
@@ -164,6 +166,7 @@ using namespace DB;
         SqlConnection::DataCommandAutoPtr selectCommand =
                 m_connection->PrepareDataCommand(select_alias_cmd);
         selectCommand->BindString(1, alias.c_str());
+        selectCommand->BindString(2, label.c_str());
 
         if(selectCommand->Step()) {
             row.alias = selectCommand->GetColumnString(1);
@@ -251,11 +254,12 @@ using namespace DB;
         return KEY_MANAGER_API_SUCCESS;
     }
 
-    int DBCrypto::deleteAlias(const Alias &alias) {
+    int DBCrypto::deleteDBRow(const Alias &alias, const std::string &label) {
         Try {
             SqlConnection::DataCommandAutoPtr deleteCommand =
                     m_connection->PrepareDataCommand(delete_alias_cmd);
             deleteCommand->BindString(1, alias.c_str());
+            deleteCommand->BindString(2, label.c_str());
             deleteCommand->Step();
         } Catch (SqlConnection::Exception::SyntaxError) {
             LogError("Couldn't prepare delete statement");
