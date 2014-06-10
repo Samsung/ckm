@@ -1,6 +1,7 @@
 #define BOOST_TEST_MODULE KEY_MANAGER_TEST
-#include <boost/test/included/unit_test.hpp>
+#include <boost/test/unit_test.hpp>
 #include <key-provider.h>
+#include <test_common.h>
 
 #define PASSWORD "12345TIZEN12345AAAAAAAAA"
 #define INCORRECT_PASSWORD "AAAAAAAAAAAAAAAAAAAAA"
@@ -16,11 +17,13 @@ CKM::RawBuffer rb_test;
 CKM::RawBuffer rb_DEK1;
 CKM::RawBuffer rb_pureDEK1;
 
+BOOST_GLOBAL_FIXTURE(TestConfig)
+
 // Test suite for key-provider module.
 BOOST_AUTO_TEST_SUITE(S1_KEY_PROVIDER)
 
 BOOST_AUTO_TEST_CASE(T00100_initialize){
-    boost::unit_test::unit_test_log.set_threshold_level( boost::unit_test::log_test_units);
+    boost::unit_test::results_reporter::set_level(boost::unit_test::SHORT_REPORT);
     BOOST_CHECK_NO_THROW(CKM::KeyProvider::initializeLibrary());
 }
 

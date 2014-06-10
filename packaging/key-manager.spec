@@ -151,6 +151,7 @@ fi
 %{_libdir}/libkey-manager-client.so.*
 %{_datadir}/license/libkey-manager-client
 
+
 %files -n libkey-manager-client-devel
 %defattr(-,root,root,-)
 %{_libdir}/libkey-manager-client.so
@@ -162,4 +163,4 @@ fi
 
 %files -n key-manager-tests
 %defattr(-,root,root,-)
-%{_bindir}/ckm-tests-internal-provider
+%{_bindir}/ckm-tests-internal
