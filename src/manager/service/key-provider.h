@@ -3,6 +3,7 @@
 #include <ckm-key-provider.h>
 #include <ckm/ckm-type.h>
 #include <key-aes.h>
+#include <dpl/exception.h>
 
 namespace CKM {
 
@@ -10,6 +11,16 @@ namespace CKM {
 
 class KeyProvider {
 public:
+	class Exception {
+	public:
+		DECLARE_EXCEPTION_TYPE(CKM::Exception, Base)
+		DECLARE_EXCEPTION_TYPE(Base, InitFailed)
+		DECLARE_EXCEPTION_TYPE(Base, GenFailed)
+		DECLARE_EXCEPTION_TYPE(Base, WrapFailed)
+		DECLARE_EXCEPTION_TYPE(Base, UnwrapFailed)
+		DECLARE_EXCEPTION_TYPE(Base, InputParamError)
+	};
+
     // To store in std containers
     KeyProvider();
     // In constructor you must check if SKMM is initialized. On error -> exception
