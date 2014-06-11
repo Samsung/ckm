@@ -38,8 +38,7 @@ namespace CKM {
          public:
             DBCrypto() : m_connection(NULL), m_init(false) {};
             //user name instead of path?
-            DBCrypto(const std::string &path,
-                                const RawBuffer &rawPass);
+            DBCrypto(const std::string &path, const RawBuffer &rawPass);
             DBCrypto(const DBCrypto &other) = delete;
             DBCrypto(DBCrypto &&other);
 
@@ -50,7 +49,10 @@ namespace CKM {
 
             bool isInit() {return m_init;};
             int saveDBRow(const DBRow &row);
-            int getDBRow(const Alias &alias, const std::string &label, DBRow &row);
+            int getDBRow(
+                    const Alias &alias,
+                    const std::string &label,
+                    DBRow &row);
             int getAliases(
                     DBDataType dataType,
                     const std::string &label,
@@ -58,15 +60,24 @@ namespace CKM {
             int getKeyAliases(
                     const std::string &label,
                     AliasVector &aliases);
-            int deleteDBRow(const Alias& alias, const std::string &label);
+            int deleteDBRow(
+                    const Alias& alias,
+                    const std::string &label);
+
+            int saveKey(const std::string& label, const RawBuffer &key);
+            int getKey(const std::string& label, RawBuffer &key);
+            int deleteKey(const std::string& label);
 
          private:
             DB::SqlConnection* m_connection;
             bool m_init;
 
             void initDatabase();
+            void createTable(const char* create_cmd);
             bool checkTableExist(const std::string& table);
-            int getSingleType(DBDataType type, const std::string& label,
+            int getSingleType(
+                    DBDataType type,
+                    const std::string& label,
                     AliasVector& aliases);
 
    };

@@ -30,8 +30,12 @@
 
 namespace {
     const char *main_table = "CKM_TABLE";
+    const char *key_table = "KEY_TABLE";
 
-    const char *db_create_cmd =
+// CKM_TABLE (alias TEXT, label TEXT, restricted INT, exportable INT, dataType INT,
+//            algorithmType INT, encryptionScheme INT, iv BLOB, dataSize INT, data BLOB)
+
+    const char *db_create_main_cmd =
             "CREATE TABLE CKM_TABLE("
             "   alias TEXT NOT NULL,"
             "   label TEXT NOT NULL,"
@@ -42,18 +46,19 @@ namespace {
             "   encryptionScheme INTEGER NOT NULL,"
             "   iv BLOB NOT NULL,"
             "   dataSize INTEGER NOT NULL,"
-            "   date BLOB NOT NULL,"
+            "   data BLOB NOT NULL,"
             "   PRIMARY KEY(alias, label)"
             ");";
 
-    const char *insert_cmd =
+
+    const char *insert_main_cmd =
             "INSERT INTO CKM_TABLE("
             //      1   2       3           4
             "   alias, label, restricted, exportable,"
             //      5           6           7
             "   dataType, algorithmType, encryptionScheme,"
             //  8       9       10
-            "   iv, dataSize, date) "
+            "   iv, dataSize, data) "
             "VALUES("
             "   ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
 
@@ -67,7 +72,6 @@ namespace {
                 " dataType <= ? AND "
                 " (restricted=0 OR label=?)";
 
-
     const char *select_type_cmd =
             //                                          1
             "SELECT alias FROM CKM_TABLE WHERE dataType=? AND restricted=0 "
@@ -78,6 +82,21 @@ namespace {
     const char *delete_alias_cmd =
             //                                 1           2
             "DELETE FROM CKM_TABLE WHERE alias=? AND label=?;";
+
+// KEY_TABLE (label TEXT, key BLOB)
+
+    const char *db_create_key_cmd =
+            "CREATE TABLE KEY_TABLE("
+            "   label TEXT PRIMARY KEY,"
+            "   key BLOB NOT NULL"
+            ");";
+
+    const char *insert_key_cmd =
+            "INSERT INTO KEY_TABLE(label, key) VALUES (?, ?);";
+    const char *select_key_cmd =
+            "SELECT key FROM KEY_TABLE WHERE label=?;";
+    const char *delete_key_cmd =
+            "DELETE FROM KEY_TABLE WHERE label=?";
 }
 
 namespace CKM {
@@ -89,13 +108,14 @@ using namespace DB;
         Try {
             m_connection = new SqlConnection(path, SqlConnection::Flag::Option::CRW);
             m_connection->SetKey(rawPass);
+            initDatabase();
             m_init = true;
-            if(!(m_connection->CheckTableExist(main_table)))
-                initDatabase();
         } Catch(SqlConnection::Exception::ConnectionBroken) {
             LogError("Couldn't connect to database: " << path);
         } Catch(SqlConnection::Exception::InvalidArguments) {
             LogError("Couldn't set the key for database");
+        } Catch(SqlConnection::Exception::SyntaxError) {
+            LogError("Couldn't initiate the database");
         }
     }
 
@@ -124,13 +144,22 @@ using namespace DB;
         return *this;
     }
 
-    void DBCrypto::initDatabase() {
+    void DBCrypto::createTable(const char* create_cmd) {
         Try {
-            m_connection->ExecCommand(db_create_cmd);
-            m_init = true;
+            m_connection->ExecCommand(create_cmd);
         } Catch(SqlConnection::Exception::SyntaxError) {
             LogError("Couldn't create the main table!");
-            m_init = false;
+            throw;
+        }
+    }
+
+    void DBCrypto::initDatabase() {
+
+        if(!m_connection->CheckTableExist(main_table)) {
+            createTable(db_create_main_cmd);
+        }
+        if(!m_connection->CheckTableExist(key_table)) {
+            createTable(db_create_key_cmd);
         }
     }
 
@@ -139,7 +168,7 @@ using namespace DB;
             return KEY_MANAGER_API_ERROR_DB_ERROR;
         Try {
             SqlConnection::DataCommandAutoPtr insertCommand =
-                    m_connection->PrepareDataCommand(insert_cmd);
+                    m_connection->PrepareDataCommand(insert_main_cmd);
             insertCommand->BindString(1, row.alias.c_str());
             insertCommand->BindString(2, row.smackLabel.c_str());
             insertCommand->BindInteger(3, row.restricted);
@@ -207,8 +236,11 @@ using namespace DB;
         return KEY_MANAGER_API_SUCCESS;
     }
 
-    int DBCrypto::getSingleType(DBDataType type, const std::string& label,
-            AliasVector& aliases) {
+    int DBCrypto::getSingleType(
+            DBDataType type,
+            const std::string& label,
+            AliasVector& aliases)
+    {
         Try{
             SqlConnection::DataCommandAutoPtr selectCommand =
                             m_connection->PrepareDataCommand(select_type_cmd);
@@ -277,7 +309,10 @@ using namespace DB;
         return KEY_MANAGER_API_SUCCESS;
     }
 
-    int DBCrypto::deleteDBRow(const Alias &alias, const std::string &label) {
+    int DBCrypto::deleteDBRow(
+            const Alias &alias,
+            const std::string &label)
+    {
         Try {
             SqlConnection::DataCommandAutoPtr deleteCommand =
                     m_connection->PrepareDataCommand(delete_alias_cmd);
@@ -289,6 +324,85 @@ using namespace DB;
             return KEY_MANAGER_API_ERROR_DB_ERROR;
         } Catch (SqlConnection::Exception::InternalError) {
             LogError("Couldn't execute delete statement");
+            return KEY_MANAGER_API_ERROR_DB_ERROR;
+        }
+        return KEY_MANAGER_API_SUCCESS;
+    }
+
+    int DBCrypto::saveKey(
+            const std::string& label,
+            const RawBuffer &key)
+    {
+        if (!m_init)
+            return KEY_MANAGER_API_ERROR_DB_ERROR;
+
+        Try {
+            SqlConnection::DataCommandAutoPtr insertCommand =
+                    m_connection->PrepareDataCommand(insert_key_cmd);
+            insertCommand->BindString(1, label.c_str());
+            insertCommand->BindBlob(2, key);
+
+            insertCommand->Step();
+
+        } Catch (SqlConnection::Exception::SyntaxError) {
+            LogError("Couldn't prepare insert key statement");
+            return KEY_MANAGER_API_ERROR_DB_ERROR;
+        } Catch (SqlConnection::Exception::InternalError) {
+            LogError("Couldn't execute insert statement");
+            return KEY_MANAGER_API_ERROR_DB_ERROR;
+        }
+
+        return KEY_MANAGER_API_SUCCESS;
+    }
+    int DBCrypto::getKey(
+            const std::string& label,
+            RawBuffer &key)
+    {
+        if (!m_init)
+            return KEY_MANAGER_API_ERROR_DB_ERROR;
+
+        Try {
+            SqlConnection::DataCommandAutoPtr selectCommand =
+                    m_connection->PrepareDataCommand(select_key_cmd);
+            selectCommand->BindString(1, label.c_str());
+
+            if (selectCommand->Step()) {
+                key = selectCommand->GetColumnBlob(0);
+            } else {
+                return KEY_MANAGER_API_ERROR_DB_BAD_REQUEST;
+            }
+
+            AssertMsg(!selectCommand->Step(),
+                "Select returned multiple rows for unique column.");
+
+        } Catch (SqlConnection::Exception::InvalidColumn) {
+            LogError("Select statement invalid column error");
+            return KEY_MANAGER_API_ERROR_DB_ERROR;
+        } Catch (SqlConnection::Exception::SyntaxError) {
+            LogError("Couldn't prepare insert key statement");
+            return KEY_MANAGER_API_ERROR_DB_ERROR;
+        } Catch (SqlConnection::Exception::InternalError) {
+            LogError("Couldn't execute insert statement");
+            return KEY_MANAGER_API_ERROR_DB_ERROR;
+        }
+        return KEY_MANAGER_API_SUCCESS;
+    }
+    int DBCrypto::deleteKey(const std::string& label) {
+        if (!m_init)
+            return KEY_MANAGER_API_ERROR_DB_ERROR;
+
+        Try {
+            SqlConnection::DataCommandAutoPtr deleteCommand =
+                    m_connection->PrepareDataCommand(delete_key_cmd);
+            deleteCommand->BindString(1, label.c_str());
+
+            deleteCommand->Step();
+
+        } Catch (SqlConnection::Exception::SyntaxError) {
+            LogError("Couldn't prepare insert key statement");
+            return KEY_MANAGER_API_ERROR_DB_ERROR;
+        } Catch (SqlConnection::Exception::InternalError) {
+            LogError("Couldn't execute insert statement");
             return KEY_MANAGER_API_ERROR_DB_ERROR;
         }
         return KEY_MANAGER_API_SUCCESS;
