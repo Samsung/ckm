@@ -58,7 +58,7 @@ RawBuffer CKMLogic::unlockUserKey(uid_t user, const std::string &password) {
         }
 
         handle.keyProvider = KeyProvider(wrappedDomainKEK, password);
-        handle.database = DBCrypto(fs.getDBPath(), handle.keyProvider.getDomainKEK());
+        handle.database = DBCrypto(fs.getDBPath(), handle.keyProvider.getPureDomainKEK());
     }
 
     MessageBuffer response;
@@ -119,9 +119,8 @@ RawBuffer CKMLogic::resetUserPassword(
         retCode = KEY_MANAGER_API_ERROR_BAD_REQUEST;
     } else {
         auto &handler = m_userDataMap[user];
-        auto wrappedDomainKEK = handler.keyProvider.getDomainKEK(newPassword);
         FileSystem fs(user);
-        fs.saveDomainKEK(wrappedDomainKEK);
+        fs.saveDomainKEK(handler.keyProvider.getWrappedDomainKEK(newPassword));
     }
 
     MessageBuffer response;

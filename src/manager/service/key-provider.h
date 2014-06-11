@@ -38,12 +38,12 @@ public:
     bool isInitialized();
 
     // Returns Key used to decrypt database.
-    RawBuffer getDomainKEK();
+    RawBuffer getPureDomainKEK();
 
     // Returns Key in form used to store key in file
     // Requied by Control::resetPassword(const RawBuffer &newPassword);
     // This api should be used only on Tizen 2.2.1
-    RawBuffer getDomainKEK(const std::string &password);
+    RawBuffer getWrappedDomainKEK(const std::string &password);
 
     // EncryptedKey key extracted from database. Used to encrypt application data.
     // This key will be used to decrypt/encrypt data in ROW
