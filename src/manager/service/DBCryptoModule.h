@@ -45,10 +45,17 @@ public:
             DECLARE_EXCEPTION_TYPE(Base, EncryptDBRowError)
             DECLARE_EXCEPTION_TYPE(Base, DecryptDBRowError)
     };
+    DBCryptoModule();
+    DBCryptoModule(const DBCryptoModule &second) = delete;
+    DBCryptoModule(DBCryptoModule &&second);
     DBCryptoModule(RawBuffer &domainKEK);
+    DBCryptoModule& operator=(DBCryptoModule &&second);
+    DBCryptoModule& operator=(const DBCryptoModule &second) = delete;
 
-    int decryptRow(const RawBuffer &password, DBRow &row);
-    int encryptRow(const RawBuffer &password, DBRow &row);
+    virtual ~DBCryptoModule(){}
+
+    int decryptRow(const std::string &password, DBRow &row);
+    int encryptRow(const std::string &password, DBRow &row);
 
     bool haveKey(const std::string &smackLabel);
     int pushKey(const std::string &smackLabel,
@@ -72,7 +79,7 @@ private:
     void encBase64(RawBuffer &data);
     bool equalDigests(RawBuffer &dig1, RawBuffer &dig2);
     std::size_t insertDigest(RawBuffer &data, const int dataSize);
-    void generateKeysFromPassword(const RawBuffer &password,
+    void generateKeysFromPassword(const std::string &password,
                                   RawBuffer &key, RawBuffer &iv);
     RawBuffer generateRandIV(void);
     void removeDigest(RawBuffer &data, RawBuffer &digest);

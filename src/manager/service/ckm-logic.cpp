@@ -28,6 +28,7 @@
 #include <file-system.h>
 
 #include <ckm-logic.h>
+
 namespace CKM {
 
 CKMLogic::CKMLogic(){
@@ -44,21 +45,27 @@ RawBuffer CKMLogic::unlockUserKey(uid_t user, const std::string &password) {
     // TODO try catch for all errors that should be supported by error code
     int retCode = KEY_MANAGER_API_SUCCESS;
 
-    UserData &handle = m_userDataMap[user];
+    try {
+        if (0 == m_userDataMap.count(user) || !(m_userDataMap[user].keyProvider.isInitialized())) {
+            auto &handle = m_userDataMap[user];
+            FileSystem fs(user);
+            auto wrappedDomainKEK = fs.getDomainKEK();
 
-    if (!(handle.keyProvider.isInitialized())) {
-        auto &handle = m_userDataMap[user];
+            if (wrappedDomainKEK.empty()) {
+                wrappedDomainKEK = KeyProvider::generateDomainKEK(std::to_string(user), password);
+                fs.saveDomainKEK(wrappedDomainKEK);
+            }
 
-        FileSystem fs(user);
-        auto wrappedDomainKEK = fs.getDomainKEK();
+            handle.keyProvider = KeyProvider(wrappedDomainKEK, password);
 
-        if (wrappedDomainKEK.empty()) {
-            wrappedDomainKEK = KeyProvider::generateDomainKEK(std::to_string(user), password);
-            fs.saveDomainKEK(wrappedDomainKEK);
+            RawBuffer key = handle.keyProvider.getPureDomainKEK();
+            handle.database = DBCrypto(fs.getDBPath(), key);
+            handle.crypto = DBCryptoModule(key);
+            // TODO wipe key
         }
-
-        handle.keyProvider = KeyProvider(wrappedDomainKEK, password);
-        handle.database = DBCrypto(fs.getDBPath(), handle.keyProvider.getPureDomainKEK());
+    } catch (const KeyProvider::Exception::Base &e) {
+        LogError("Error in KeyProvider " << e.GetMessage());
+        retCode = KEY_MANAGER_API_ERROR_SERVER_ERROR;
     }
 
     MessageBuffer response;
@@ -128,6 +135,36 @@ RawBuffer CKMLogic::resetUserPassword(
     return response.Pop();
 }
 
+int CKMLogic::saveDataHelper(
+    Credentials &cred,
+    DBDataType dataType,
+    const Alias &alias,
+    const RawBuffer &key,
+    const PolicySerializable &policy)
+{
+    if (0 == m_userDataMap.count(cred.uid))
+        return KEY_MANAGER_API_ERROR_DB_LOCKED;
+
+    DBRow row = {   alias,  cred.smackLabel, policy.restricted,
+         policy.extractable, dataType, DBCMAlgType::NONE,
+         0, RawBuffer(10, 'c'), key.size(), key };
+
+    auto &handler = m_userDataMap[cred.uid];
+    if (!handler.crypto.haveKey(cred.smackLabel)) {
+        RawBuffer key;
+        int status = handler.database.getKey(cred.smackLabel, key);
+        if (KEY_MANAGER_API_ERROR_DB_BAD_REQUEST == status) {
+            key = handler.keyProvider.generateDEK(cred.smackLabel);
+            if (KEY_MANAGER_API_SUCCESS != handler.database.saveKey(cred.smackLabel, key))
+                return KEY_MANAGER_API_ERROR_DB_ERROR;
+        }
+        key = handler.keyProvider.getPureDEK(key);
+        handler.crypto.pushKey(cred.smackLabel, key);
+    }
+    handler.crypto.encryptRow(policy.password, row);
+    return handler.database.saveDBRow(row);
+}
+
 RawBuffer CKMLogic::saveData(
     Credentials &cred,
     int commandId,
@@ -138,25 +175,14 @@ RawBuffer CKMLogic::saveData(
 {
     int retCode = KEY_MANAGER_API_SUCCESS;
 
-    if (0 == m_userDataMap.count(cred.uid)) {
-        retCode = KEY_MANAGER_API_ERROR_DB_LOCKED;
-    } else {
-        RawBuffer iv(10,'c');
-
-        DBRow row = {
-            alias,
-            cred.smackLabel,
-            policy.restricted,
-            policy.extractable,
-            dataType,
-            DBCMAlgType::NONE,
-            0,
-            iv,
-            key.size(),
-            key };
-
-        auto &handler = m_userDataMap[cred.uid];
-        retCode = handler.database.saveDBRow(row);
+    try {
+        retCode = saveDataHelper(cred, dataType, alias, key, policy);
+    } catch (const KeyProvider::Exception::Base &e) {
+        LogError("KeyProvider failed with message: " << e.GetMessage());
+        retCode = KEY_MANAGER_API_ERROR_SERVER_ERROR;
+    } catch (const DBCryptoModule::Exception::Base &e) {
+        LogError("DBCryptoModule failed with message: " << e.GetMessage());
+        retCode = KEY_MANAGER_API_ERROR_SERVER_ERROR;
     }
 
     MessageBuffer response;
@@ -196,6 +222,41 @@ RawBuffer CKMLogic::removeData(
     return response.Pop();
 }
 
+int CKMLogic::getDataHelper(
+    Credentials &cred,
+    DBDataType dataType,
+    const Alias &alias,
+    const std::string &password,
+    DBRow &row)
+{
+    (void) dataType;
+
+    if (0 == m_userDataMap.count(cred.uid))
+        return KEY_MANAGER_API_ERROR_DB_LOCKED;
+
+    auto &handler = m_userDataMap[cred.uid];
+    int retCode = handler.database.getDBRow(alias, cred.smackLabel, row);
+
+    if (KEY_MANAGER_API_SUCCESS != retCode){
+        LogDebug("DBCrypto::getDBRow failed with code: " << retCode);
+        return retCode;
+    }
+
+    if (!handler.crypto.haveKey(row.smackLabel)) {
+        RawBuffer key;
+        retCode = handler.database.getKey(row.smackLabel, key);
+        if (KEY_MANAGER_API_SUCCESS != retCode) {
+            LogDebug("DBCrypto::getKey failed with: " << retCode);
+            return retCode;
+        }
+        key = handler.keyProvider.getPureDEK(key);
+        handler.crypto.pushKey(cred.smackLabel, key);
+    }
+    handler.crypto.decryptRow(password, row);
+
+    return KEY_MANAGER_API_SUCCESS;
+}
+
 RawBuffer CKMLogic::getData(
     Credentials &cred,
     int commandId,
@@ -203,17 +264,17 @@ RawBuffer CKMLogic::getData(
     const Alias &alias,
     const std::string &password)
 {
-    (void)dataType;
-    (void)password;
-
     int retCode = KEY_MANAGER_API_SUCCESS;
     DBRow row;
 
-    if (0 == m_userDataMap.count(cred.uid)) {
-        retCode = KEY_MANAGER_API_ERROR_DB_LOCKED;
-    } else {
-        auto &handler = m_userDataMap[cred.uid];
-        retCode = handler.database.getDBRow(alias, cred.smackLabel, row);
+    try {
+        retCode = getDataHelper(cred, dataType, alias, password, row);
+    } catch (const KeyProvider::Exception::Base &e) {
+        LogError("KeyProvider failed with error: " << e.GetMessage());
+        retCode = KEY_MANAGER_API_ERROR_SERVER_ERROR;
+    } catch (const DBCryptoModule::Exception::Base &e) {
+        LogError("DBCryptoModule failed with message: " << e.GetMessage());
+        retCode = KEY_MANAGER_API_ERROR_SERVER_ERROR;
     }
 
     MessageBuffer response;

@@ -77,7 +77,8 @@ int getCredentialsFromSocket(int sock, CKM::Credentials &cred) {
         return -1;
     }
 
-    cred.smackLabel.assign(result.begin(), result.end());
+    result.push_back('\0');
+    cred.smackLabel = result.data();
     cred.uid = peerCred.uid;
     return 0;
 }

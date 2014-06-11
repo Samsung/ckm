@@ -17,6 +17,21 @@
 
 namespace CKM {
 
+DBCryptoModule::DBCryptoModule(){}
+
+DBCryptoModule::DBCryptoModule(DBCryptoModule &&second) {
+    m_domainKEK = std::move(second.m_domainKEK);
+    m_keyMap = std::move(second.m_keyMap);
+}
+
+DBCryptoModule& DBCryptoModule::operator=(DBCryptoModule &&second) {
+    if (this == &second)
+        return *this;
+    m_domainKEK = std::move(second.m_domainKEK);
+    m_keyMap = std::move(second.m_keyMap);
+    return *this;
+}
+
 DBCryptoModule::DBCryptoModule(RawBuffer &domainKEK)
 {
     m_domainKEK = domainKEK;
@@ -43,15 +58,7 @@ int DBCryptoModule::pushKey(const std::string &smackLabel,
         ThrowMsg(Exception::AppKeyError, "Application key for " << smackLabel
                  << "label already exists.");
     }
-    RawBuffer appkey = applicationKey;
-    RawBuffer emptyiv;
-    try {
-        decryptAES(appkey, 0, m_domainKEK, emptyiv);
-    } catch (Exception::Base &e) {
-        LogError("Application key decription has failed: " << e.DumpToString());
-        throw;
-    }
-    m_keyMap[smackLabel] = appkey;
+    m_keyMap[smackLabel] = applicationKey;
     return KEY_MANAGER_API_SUCCESS;
 }
 
@@ -84,7 +91,7 @@ void DBCryptoModule::removeDigest(RawBuffer &data, RawBuffer &digest)
     data.erase(data.begin(), data.begin() + SHA_DIGEST_LENGTH);
 }
 
-int DBCryptoModule::encryptRow(const RawBuffer &password, DBRow &row)
+int DBCryptoModule::encryptRow(const std::string &password, DBRow &row)
 {
     RawBuffer emptyiv;
     DBRow crow = row;
@@ -110,7 +117,7 @@ int DBCryptoModule::encryptRow(const RawBuffer &password, DBRow &row)
         dlen = insertDigest(crow.data, crow.dataSize);
         cryptAES(crow.data, crow.dataSize + dlen, appkey, emptyiv);
         crow.encryptionScheme |= ENCR_APPKEY;
-        if (password.size() > 0) {
+        if (!password.empty()) {
             generateKeysFromPassword(password, userkey, crow.iv);
             cryptAES(crow.data, 0, userkey, crow.iv);
             crow.encryptionScheme |= ENCR_PASSWORD;
@@ -128,7 +135,7 @@ int DBCryptoModule::encryptRow(const RawBuffer &password, DBRow &row)
     return KEY_MANAGER_API_SUCCESS;
 }
 
-int DBCryptoModule::decryptRow(const RawBuffer &password, DBRow &row)
+int DBCryptoModule::decryptRow(const std::string &password, DBRow &row)
 {
     DBRow crow = row;
     RawBuffer appkey;
@@ -146,8 +153,8 @@ int DBCryptoModule::decryptRow(const RawBuffer &password, DBRow &row)
     if (row.algorithmType != DBCMAlgType::AES_CBC_256) {
         ThrowMsg(Exception::DecryptDBRowError, "Invalid algorithm type.");
     }
-    if (row.encryptionScheme && ENCR_PASSWORD)
-        if (password.size() == 0) {
+    if (row.encryptionScheme & ENCR_PASSWORD)
+        if (password.empty()) {
             ThrowMsg(Exception::DecryptDBRowError,
                      "DB row is password protected, but given password is "
                      "empty.");
@@ -160,14 +167,14 @@ int DBCryptoModule::decryptRow(const RawBuffer &password, DBRow &row)
 
     try {
         decBase64(crow.iv);
-        if (crow.encryptionScheme && ENCR_BASE64) {
+        if (crow.encryptionScheme & ENCR_BASE64) {
             decBase64(crow.data);
         }
-        if (crow.encryptionScheme && ENCR_PASSWORD) {
+        if (crow.encryptionScheme & ENCR_PASSWORD) {
             generateKeysFromPassword(password, userkey, dropiv);
             decryptAES(crow.data, 0, userkey, crow.iv);
         }
-        if (crow.encryptionScheme && ENCR_APPKEY) {
+        if (crow.encryptionScheme & ENCR_APPKEY) {
             decryptAES(crow.data, 0, appkey, emptyiv);
         }
         removeDigest(crow.data, digest);
@@ -201,7 +208,7 @@ RawBuffer DBCryptoModule::generateRandIV(void)
     return civ;
 }
 
-void DBCryptoModule::generateKeysFromPassword(const RawBuffer &password,
+void DBCryptoModule::generateKeysFromPassword(const std::string &password,
                                               RawBuffer &key, RawBuffer &iv)
 {
     int ret = -1;
@@ -212,14 +219,14 @@ void DBCryptoModule::generateKeysFromPassword(const RawBuffer &password,
     const EVP_MD *md = EVP_sha1();
 #endif
 
-    if ((password.size() == 0) || (password[0] == 0)) {
+    if (password.empty()) {
         ThrowMsg(Exception::KeyGenerationError, "Password is empty.");
     }
     key.resize(keyLen);
     iv.resize(ivLen);
     iv = generateRandIV();
-    ret = PKCS5_PBKDF2_HMAC_SHA1(reinterpret_cast<const char *>(password.data()),
-                                 -1, NULL, 0, 1024, keyLen, key.data());
+    ret = PKCS5_PBKDF2_HMAC_SHA1(password.c_str(), password.size(),
+            NULL, 0, 1024, keyLen, key.data());
     if (ret != 1) {
         ThrowMsg(Exception::OpenSSLError, "PKCS5_PBKDF2_HMAC_SHA1 has failed.");
     }

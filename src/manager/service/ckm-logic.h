@@ -30,12 +30,14 @@
 #include <connection-info.h>
 #include <db-crypto.h>
 #include <key-provider.h>
+#include <DBCryptoModule.h>
 
 namespace CKM {
 
 struct UserData {
-    KeyProvider keyProvider;
-    DBCrypto    database;
+    KeyProvider    keyProvider;
+    DBCrypto       database;
+    DBCryptoModule crypto;
 };
 
 class CKMLogic {
@@ -87,7 +89,7 @@ public:
         Credentials &cred,
         int commandId,
         DBDataType dataType);
-        
+
     RawBuffer createKeyPairRSA(
         Credentials &cred,
         int commandId,
@@ -96,7 +98,7 @@ public:
         const Alias &publicKeyAlias,
         PolicySerializable policyPrivateKey,
         PolicySerializable policyPublicKey);
-        
+
     RawBuffer createKeyPairECDSA(
         Credentials &cred,
         int commandId,
@@ -107,6 +109,20 @@ public:
         PolicySerializable policyPublicKey);
 
 private:
+    int saveDataHelper(
+        Credentials &cred,
+        DBDataType dataType,
+        const Alias &alias,
+        const RawBuffer &key,
+        const PolicySerializable &policy);
+
+    int getDataHelper(
+        Credentials &cred,
+        DBDataType dataType,
+        const Alias &alias,
+        const std::string &password,
+        DBRow &row);
+
     std::map<uid_t, UserData> m_userDataMap;
 };
 

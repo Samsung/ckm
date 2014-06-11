@@ -22,6 +22,11 @@
 #include <stdlib.h>
 #include <signal.h>
 
+#include <openssl/ssl.h>
+#include <openssl/conf.h>
+#include <openssl/err.h>
+#include <openssl/evp.h>
+
 #include <dpl/log/log.h>
 #include <dpl/singleton.h>
 #include <dpl/singleton_safe_impl.h>
@@ -76,8 +81,14 @@ int main(void) {
             return 1;
         }
         LogInfo("Init external liblaries SKMM and openssl");
+
+        SSL_load_error_strings();
+        SSL_library_init();
+        OpenSSL_add_all_ciphers();
+        OPENSSL_config(NULL);
+
         CKM::KeyProvider::initializeLibrary();
-        // TODO initialize openssl here
+
         {
             LogInfo("Start!");
             CKM::SocketManager manager;
@@ -90,6 +101,9 @@ int main(void) {
         // Manager has been destroyed and we may close external libraries.
         LogInfo("Deinit SKMM and openssl");
         CKM::KeyProvider::closeLibrary();
+        // Deinit OPENSSL ?
+        EVP_cleanup();
+        ERR_free_strings();
     }
     UNHANDLED_EXCEPTION_HANDLER_END
     return 0;

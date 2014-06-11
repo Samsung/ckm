@@ -71,9 +71,7 @@ public:
 
 	// EncryptedKey key extracted from database. Used to encrypt application data.
 	// This key will be used to decrypt/encrypt data in ROW
-	// [tak] modify method name more appropriately getPureDEK
-	// decryptDEK -> getPureDEK
-	KeyAES getPureDEK(const RawBuffer &DEKInWrapForm);
+	RawBuffer getPureDEK(const RawBuffer &DEKInWrapForm);
 
 	// Returns WRAPPED DEK. This will be written to datbase.
 	// This key will be used to encrypt all application information.
@@ -91,10 +89,8 @@ public:
 	static RawBuffer generateDomainKEK(const std::string &user, const std::string &userPassword);
 
 	// This will be called by framework at the begin of the program
-	// [tak] need to declare return type
 	static int initializeLibrary();
 	// This will be called by framework at the end of the program
-	// [tak] need to declare return type
 	static int closeLibrary();
 
 	virtual ~KeyProvider();
