@@ -19,6 +19,7 @@
  * @brief       Key implementation.
  */
 #include <openssl/x509.h>
+#include <openssl/pem.h>
 
 #include <dpl/log/log.h>
 
@@ -27,7 +28,9 @@
 
 namespace CKM {
 
-CertificateImpl::CertificateImpl(const RawBuffer &der, DataFormat format) {
+CertificateImpl::CertificateImpl(const RawBuffer &der, DataFormat format)
+  : m_x509(NULL)
+{
     int size;
     const unsigned char *ptr;
     RawBuffer tmp;
@@ -40,18 +43,26 @@ CertificateImpl::CertificateImpl(const RawBuffer &der, DataFormat format) {
         tmp = base64.get();
         ptr = reinterpret_cast<const unsigned char*>(tmp.data());
         size = static_cast<int>(tmp.size());
-    } else {
+        m_x509 = d2i_X509(NULL, &ptr, size);
+    } else if (DataFormat::FORM_DER == format) {
         ptr = reinterpret_cast<const unsigned char*>(der.data());
         size = static_cast<int>(der.size());
+        m_x509 = d2i_X509(NULL, &ptr, size);
+    } else if (DataFormat::FORM_PEM == format) {
+        BIO *buff = BIO_new(BIO_s_mem());
+        BIO_write(buff, der.data(), der.size());
+        m_x509 = PEM_read_bio_X509(buff, NULL, NULL, NULL);
+    } else {
+        // TODO
+        LogError("Unknown certificate format");
     }
 
-    m_x509 = d2i_X509(NULL, &ptr, size);
-    if (!m_x509) {
-        // TODO
+//    if (!m_x509) {
+//        // TODO
 //        LogError("Internal Openssl error in d2i_X509 function.");
 //        ThrowMsg(Exception::OpensslInternalError,
 //          "Internal Openssl error in d2i_X509 function.");
-    }
+//    }
 }
 
 CertificateImpl& CertificateImpl::operator=(const CertificateImpl &second) {
