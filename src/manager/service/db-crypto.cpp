@@ -218,7 +218,7 @@ using namespace DB;
             row.dataSize = selectCommand->GetColumnInteger(8);
             row.data = selectCommand->GetColumnBlob(9);
         } else {
-            return KEY_MANAGER_API_ERROR_BAD_REQUEST;
+            return KEY_MANAGER_API_ERROR_DB_BAD_REQUEST;
         }
 
         AssertMsg(!selectCommand->Step(),
