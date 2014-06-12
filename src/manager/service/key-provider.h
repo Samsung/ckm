@@ -47,9 +47,9 @@ public:
 
     // EncryptedKey key extracted from database. Used to encrypt application data.
     // This key will be used to decrypt/encrypt data in ROW
-	// [tak] modify method name more appropriately
-	// decryptDEK -> unwrapDEK
-    KeyAES unwrapDEK(const RawBuffer &DEKInWrapForm);
+	// [tak] modify method name more appropriately getPureDEK
+	// decryptDEK -> getPureDEK
+    KeyAES getPureDEK(const RawBuffer &DEKInWrapForm);
 
     // Returns WRAPPED DEK. This will be written to datbase.
     // This key will be used to encrypt all application information.
