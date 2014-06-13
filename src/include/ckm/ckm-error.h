@@ -96,6 +96,9 @@
 /*! \brief   indicating an internal error inside the database */
 #define KEY_MANAGER_API_ERROR_DB_ERROR -14
 
+/*! \brief   indicating that provided alias already exists in the database */
+#define KEY_MANAGER_API_ERROR_DB_ALIAS_EXISTS -15
+
 /*! \brief   indicating the error with unknown reason */
 #define KEY_MANAGER_API_ERROR_UNKNOWN -255
 /** @}*/

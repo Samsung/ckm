@@ -47,7 +47,8 @@ namespace {
             "   iv BLOB NOT NULL,"
             "   dataSize INTEGER NOT NULL,"
             "   data BLOB NOT NULL,"
-            "   PRIMARY KEY(alias, label)"
+            "   PRIMARY KEY(alias, label),"
+            "   UNIQUE(alias, restricted)"
             ");";
 
 
@@ -63,17 +64,35 @@ namespace {
             "   ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
 
     const char *select_alias_cmd =
-            //                                   1           2              3
-            "SELECT * FROM CKM_TABLE WHERE alias=? AND label=? AND dataType=?;";
+            //                                   1              2                            3
+            "SELECT * FROM CKM_TABLE WHERE alias=? AND dataType=? AND restricted=1 AND label=? "
+            " UNION ALL "
+            //                                    4              5
+            " SELECT * FROM CKM_TABLE WHERE alias=? AND dataType=?  AND restricted=0;";
+
+    const char *select_check_alias_cmd =
+            //                                          1           2
+            "SELECT dataType FROM CKM_TABLE WHERE alias=? AND label=? AND restricted=1; ";
+
+    const char *select_check_global_alias_cmd =
+            //                                       1
+            "SELECT label FROM CKM_TABLE WHERE alias=? AND restricted=0;";
 
     const char *select_key_alias_cmd =
-            "SELECT * FROM CKM_TABLE WHERE alias=? AND label=? "
-            " AND dataType BETWEEN ? AND ?;";
+            //                                   1
+            "SELECT * FROM CKM_TABLE WHERE alias=?"
+            //                     2     3
+            " AND dataType BETWEEN ? AND ? "
+            //                           4
+            " AND (restricted=0 OR label=?);";
 
     const char *select_key_type_cmd =
             "SELECT alias FROM CKM_TABLE WHERE "
+            //                1
                 " dataType >= ? AND "
+            //                2
                 " dataType <= ? AND "
+            //                           3
                 " (restricted=0 OR label=?)";
 
     const char *select_type_cmd =
@@ -158,7 +177,6 @@ using namespace DB;
     }
 
     void DBCrypto::initDatabase() {
-
         if(!m_connection->CheckTableExist(main_table)) {
             createTable(db_create_main_cmd);
         }
@@ -167,10 +185,45 @@ using namespace DB;
         }
     }
 
+    bool DBCrypto::checkGlobalAliasExist(const std::string& alias) {
+        SqlConnection::DataCommandAutoPtr checkCmd =
+                m_connection->PrepareDataCommand(select_check_global_alias_cmd);
+        checkCmd->BindString(1, alias.c_str());
+        if(checkCmd->Step()) {
+            LogDebug("Global alias '" << alias  << "' exists already for label "
+                    << checkCmd->GetColumnString(0));
+            return true;
+        } else
+            return false;
+    }
+
+    bool DBCrypto::checkAliasExist(
+            const std::string& alias,
+            const std::string& label) {
+        SqlConnection::DataCommandAutoPtr checkCmd =
+                m_connection->PrepareDataCommand(select_check_alias_cmd);
+        checkCmd->BindString(1, alias.c_str());
+        checkCmd->BindString(2, label.c_str());
+        if(checkCmd->Step()) {
+            LogDebug("Private alias '" << alias  << "' exists already for type "
+                    << checkCmd->GetColumnInteger(0));
+            return true;
+        } else
+            return false;
+    }
+
     int DBCrypto::saveDBRow(const DBRow &row){
         if(!m_init)
             return KEY_MANAGER_API_ERROR_DB_ERROR;
         Try {
+
+            //Sqlite does not support partial index in our version,
+            //so we do it by hand
+            if((row.restricted == 1 && checkAliasExist(row.alias, row.smackLabel)) ||
+                    (row.restricted == 0 && checkGlobalAliasExist(row.alias))) {
+                return KEY_MANAGER_API_ERROR_DB_ALIAS_EXISTS;
+            }
+
             SqlConnection::DataCommandAutoPtr insertCommand =
                     m_connection->PrepareDataCommand(insert_main_cmd);
             insertCommand->BindString(1, row.alias.c_str());
@@ -184,8 +237,8 @@ using namespace DB;
             insertCommand->BindInteger(9, row.dataSize);
             insertCommand->BindBlob(10, row.data);
 
-            AssertMsg(insertCommand->Step() == false,
-                    "Insert statement should not return any row");
+            insertCommand->Step();
+
         } Catch(SqlConnection::Exception::SyntaxError) {
             LogError("Couldn't prepare insert statement");
             return KEY_MANAGER_API_ERROR_DB_ERROR;
@@ -224,8 +277,11 @@ using namespace DB;
         SqlConnection::DataCommandAutoPtr selectCommand =
                 m_connection->PrepareDataCommand(select_alias_cmd);
         selectCommand->BindString(1, alias.c_str());
-        selectCommand->BindString(2, label.c_str());
-        selectCommand->BindInteger(3, static_cast<int>(type));
+        selectCommand->BindInteger(2, static_cast<int>(type));
+        selectCommand->BindString(3, label.c_str());
+        selectCommand->BindString(4, alias.c_str());
+        selectCommand->BindInteger(5, static_cast<int>(type));
+
 
         if(selectCommand->Step()) {
             row = getRow(selectCommand);
@@ -258,9 +314,9 @@ using namespace DB;
             SqlConnection::DataCommandAutoPtr selectCommand =
                     m_connection->PrepareDataCommand(select_key_alias_cmd);
             selectCommand->BindString(1, alias.c_str());
-            selectCommand->BindString(2, label.c_str());
-            selectCommand->BindInteger(3, static_cast<int>(DBDataType::DB_KEY_FIRST));
-            selectCommand->BindInteger(4, static_cast<int>(DBDataType::DB_KEY_LAST));
+            selectCommand->BindInteger(2, static_cast<int>(DBDataType::DB_KEY_FIRST));
+            selectCommand->BindInteger(3, static_cast<int>(DBDataType::DB_KEY_LAST));
+            selectCommand->BindString(4, label.c_str());
 
             if(selectCommand->Step()){
                 row = getRow(selectCommand);

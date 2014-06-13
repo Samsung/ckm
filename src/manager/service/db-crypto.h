@@ -80,7 +80,10 @@ namespace CKM {
             void initDatabase();
             DBRow getRow(const DB::SqlConnection::DataCommandAutoPtr &selectCommand);
             void createTable(const char* create_cmd);
-            bool checkTableExist(const std::string& table);
+            bool checkAliasExist(
+                    const std::string &alias,
+                    const std::string &label);
+            bool checkGlobalAliasExist(const std::string& alias);
             int getSingleType(
                     DBDataType type,
                     const std::string& label,
