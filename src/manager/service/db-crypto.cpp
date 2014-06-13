@@ -258,7 +258,7 @@ using namespace DB;
             SqlConnection::DataCommandAutoPtr selectCommand =
                     m_connection->PrepareDataCommand(select_key_alias_cmd);
             selectCommand->BindString(1, alias.c_str());
-            selectCommand->BindString(1, label.c_str());
+            selectCommand->BindString(2, label.c_str());
             selectCommand->BindInteger(3, static_cast<int>(DBDataType::DB_KEY_FIRST));
             selectCommand->BindInteger(4, static_cast<int>(DBDataType::DB_KEY_LAST));
 
