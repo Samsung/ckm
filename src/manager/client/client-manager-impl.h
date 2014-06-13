@@ -37,17 +37,17 @@ public:
     int saveKey(const Alias &alias, const Key &key, const Policy &policy);
     int removeKey(const Alias &alias);
     int getKey(const Alias &alias, const std::string &password, Key &key);
-    int requestKeyAliasVector(AliasVector &aliasVector);
+    int getKeyAliasVector(AliasVector &aliasVector);
 
     int saveCertificate(const Alias &alias, const Certificate &cert, const Policy &policy);
     int removeCertificate(const Alias &alias);
     int getCertificate(const Alias &alias, const std::string &password, Certificate &cert);
-    int requestCertificateAliasVector(AliasVector &aliasVector);
+    int getCertificateAliasVector(AliasVector &aliasVector);
 
     int saveData(const Alias &alias, const RawBuffer &rawData, const Policy &policy);
     int removeData(const Alias &alias);
     int getData(const Alias &alias, const std::string &password, RawBuffer &cert);
-    int requestDataAliasVector(AliasVector &aliasVector);
+    int getDataAliasVector(AliasVector &aliasVector);
     
     int createKeyPairRSA(
         const int size,              // size in bits [1024, 2048, 4096]
@@ -81,7 +81,7 @@ protected:
         DBDataType &recvDataType,
         RawBuffer &rawData);
 
-    int requestBinaryDataAliasVector(
+    int getBinaryDataAliasVector(
         DBDataType sendDataType,
         AliasVector &aliasVector);
 

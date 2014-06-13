@@ -165,9 +165,9 @@ public:
     int getData(const Alias &alias, const std::string &password, RawBuffer &data);
 
     // send request for list of all keys/certificates/data that application/user may use
-    int requestKeyAliasVector(AliasVector &aliasVector);
-    int requestCertificateAliasVector(AliasVector &aliasVector);
-    int requestDataAliasVector(AliasVector &aliasVector);
+    int getKeyAliasVector(AliasVector &aliasVector);
+    int getCertificateAliasVector(AliasVector &aliasVector);
+    int getDataAliasVector(AliasVector &aliasVector);
 
     int createKeyPairRSA(
         const int size,              // size in bits [1024, 2048, 4096]

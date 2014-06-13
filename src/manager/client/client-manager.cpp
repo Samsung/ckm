@@ -66,16 +66,16 @@ int Manager::getData(const Alias &alias, const std::string &password, RawBuffer 
     return m_impl->getData(alias, password, data);
 }
 
-int Manager::requestKeyAliasVector(AliasVector &av) {
-    return m_impl->requestKeyAliasVector(av);
+int Manager::getKeyAliasVector(AliasVector &av) {
+    return m_impl->getKeyAliasVector(av);
 }
 
-int Manager::requestCertificateAliasVector(AliasVector &av) {
-    return m_impl->requestCertificateAliasVector(av);
+int Manager::getCertificateAliasVector(AliasVector &av) {
+    return m_impl->getCertificateAliasVector(av);
 }
 
-int Manager::requestDataAliasVector(AliasVector &av) {
-    return m_impl->requestDataAliasVector(av);
+int Manager::getDataAliasVector(AliasVector &av) {
+    return m_impl->getDataAliasVector(av);
 }
 
 int Manager::createKeyPairRSA(

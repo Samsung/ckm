@@ -154,9 +154,12 @@ int CKMLogic::saveDataHelper(
         RawBuffer key;
         int status = handler.database.getKey(cred.smackLabel, key);
         if (KEY_MANAGER_API_ERROR_DB_BAD_REQUEST == status) {
+            LogDebug("No Key in database found. Generating new one for label: " << cred.smackLabel);
             key = handler.keyProvider.generateDEK(cred.smackLabel);
-            if (KEY_MANAGER_API_SUCCESS != handler.database.saveKey(cred.smackLabel, key))
+            if (KEY_MANAGER_API_SUCCESS != handler.database.saveKey(cred.smackLabel, key)) {
+                LogError("Failed to save key for smack label: " << cred.smackLabel);
                 return KEY_MANAGER_API_ERROR_DB_ERROR;
+            }
         }
         key = handler.keyProvider.getPureDEK(key);
         handler.crypto.pushKey(cred.smackLabel, key);
@@ -177,6 +180,7 @@ RawBuffer CKMLogic::saveData(
 
     try {
         retCode = saveDataHelper(cred, dataType, alias, key, policy);
+        LogDebug("SaveDataHelper returned: " << retCode);
     } catch (const KeyProvider::Exception::Base &e) {
         LogError("KeyProvider failed with message: " << e.GetMessage());
         retCode = KEY_MANAGER_API_ERROR_SERVER_ERROR;
@@ -200,17 +204,12 @@ RawBuffer CKMLogic::removeData(
     DBDataType dataType,
     const Alias &alias)
 {
-    (void)cred;
-    (void)alias;
-
     int retCode = KEY_MANAGER_API_SUCCESS;
 
-    if (0 == m_userDataMap.count(cred.uid)) {
-        retCode = KEY_MANAGER_API_ERROR_DB_LOCKED;
+    if (0 < m_userDataMap.count(cred.uid)) {
+        retCode = m_userDataMap[cred.uid].database.deleteDBRow(alias, cred.smackLabel);
     } else {
-        // TODO
-        auto &handler = m_userDataMap[cred.uid];
-        (void)handler;
+        retCode = KEY_MANAGER_API_ERROR_DB_LOCKED;
     }
 
     MessageBuffer response;
@@ -229,13 +228,23 @@ int CKMLogic::getDataHelper(
     const std::string &password,
     DBRow &row)
 {
-    (void) dataType;
+    int retCode = KEY_MANAGER_API_SUCCESS;
 
     if (0 == m_userDataMap.count(cred.uid))
         return KEY_MANAGER_API_ERROR_DB_LOCKED;
 
     auto &handler = m_userDataMap[cred.uid];
-    int retCode = handler.database.getDBRow(alias, cred.smackLabel, dataType, row);
+
+    if (dataType == DBDataType::CERTIFICATE || dataType == DBDataType::BINARY_DATA) {
+        retCode = handler.database.getDBRow(alias, cred.smackLabel, dataType, row);
+    } else if ((static_cast<int>(dataType) >= static_cast<int>(DBDataType::DB_KEY_FIRST))
+            && (static_cast<int>(dataType) <= static_cast<int>(DBDataType::DB_KEY_LAST)))
+    {
+        retCode = handler.database.getKeyDBRow(alias, cred.smackLabel, row);
+    } else {
+        LogError("Unknown type of requested data" << (int)dataType);
+        return KEY_MANAGER_API_ERROR_BAD_REQUEST;
+    }
 
     if (KEY_MANAGER_API_SUCCESS != retCode){
         LogDebug("DBCrypto::getDBRow failed with code: " << retCode);
@@ -277,6 +286,11 @@ RawBuffer CKMLogic::getData(
         retCode = KEY_MANAGER_API_ERROR_SERVER_ERROR;
     }
 
+    if (KEY_MANAGER_API_SUCCESS != retCode) {
+        row.data.clear();
+        row.dataType = dataType;
+    }
+
     MessageBuffer response;
     Serialization::Serialize(response, static_cast<int>(LogicCommand::GET));
     Serialization::Serialize(response, commandId);
@@ -292,13 +306,17 @@ RawBuffer CKMLogic::getDataList(
     DBDataType dataType)
 {
     int retCode = KEY_MANAGER_API_SUCCESS;
+    AliasVector aliasVector;
 
-    if (0 == m_userDataMap.count(cred.uid)) {
-        retCode = KEY_MANAGER_API_ERROR_DB_LOCKED;
-    } else {
+    if (0 < m_userDataMap.count(cred.uid)) {
         auto &handler = m_userDataMap[cred.uid];
-        // TODO
-        (void)handler;
+        if (dataType == DBDataType::CERTIFICATE || dataType == DBDataType::BINARY_DATA) {
+            retCode = handler.database.getAliases(dataType, cred.smackLabel, aliasVector);
+        } else {
+            retCode = handler.database.getKeyAliases(cred.smackLabel, aliasVector);
+        }
+    } else {
+        retCode = KEY_MANAGER_API_ERROR_DB_LOCKED;
     }
 
     MessageBuffer response;
@@ -306,7 +324,7 @@ RawBuffer CKMLogic::getDataList(
     Serialization::Serialize(response, commandId);
     Serialization::Serialize(response, retCode);
     Serialization::Serialize(response, static_cast<int>(dataType));
-    Serialization::Serialize(response, AliasVector());
+    Serialization::Serialize(response, aliasVector);
     return response.Pop();
 }
 
@@ -318,7 +336,7 @@ RawBuffer CKMLogic::createKeyPairRSA(
     const Alias &publicKeyAlias,
     PolicySerializable policyPrivateKey,
     PolicySerializable policyPublicKey)
-{ 
+{
     (void)cred;
     (void)size;
     (void)privateKeyAlias;

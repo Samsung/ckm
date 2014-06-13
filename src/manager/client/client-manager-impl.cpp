@@ -255,7 +255,7 @@ int Manager::ManagerImpl::getData(const Alias &alias, const std::string &passwor
     return KEY_MANAGER_API_SUCCESS;
 }
 
-int Manager::ManagerImpl::requestBinaryDataAliasVector(DBDataType dataType, AliasVector &aliasVector)
+int Manager::ManagerImpl::getBinaryDataAliasVector(DBDataType dataType, AliasVector &aliasVector)
 {
     return try_catch([&] {
 
@@ -291,16 +291,16 @@ int Manager::ManagerImpl::requestBinaryDataAliasVector(DBDataType dataType, Alia
     });
 }
 
-int Manager::ManagerImpl::requestKeyAliasVector(AliasVector &aliasVector) {
-    return requestBinaryDataAliasVector(DBDataType::KEY_RSA_PUBLIC, aliasVector);
+int Manager::ManagerImpl::getKeyAliasVector(AliasVector &aliasVector) {
+    return getBinaryDataAliasVector(DBDataType::KEY_RSA_PUBLIC, aliasVector);
 }
 
-int Manager::ManagerImpl::requestCertificateAliasVector(AliasVector &aliasVector) {
-    return requestBinaryDataAliasVector(DBDataType::CERTIFICATE, aliasVector);
+int Manager::ManagerImpl::getCertificateAliasVector(AliasVector &aliasVector) {
+    return getBinaryDataAliasVector(DBDataType::CERTIFICATE, aliasVector);
 }
 
-int Manager::ManagerImpl::requestDataAliasVector(AliasVector &aliasVector) {
-    return requestBinaryDataAliasVector(DBDataType::BINARY_DATA, aliasVector);
+int Manager::ManagerImpl::getDataAliasVector(AliasVector &aliasVector) {
+    return getBinaryDataAliasVector(DBDataType::BINARY_DATA, aliasVector);
 }
 
 int Manager::ManagerImpl::createKeyPairRSA(
