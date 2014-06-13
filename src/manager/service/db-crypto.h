@@ -52,6 +52,11 @@ namespace CKM {
             int getDBRow(
                     const Alias &alias,
                     const std::string &label,
+                    DBDataType type,
+                    DBRow &row);
+            int getKeyDBRow(
+                    const Alias &alias,
+                    const std::string &label,
                     DBRow &row);
             int getAliases(
                     DBDataType dataType,
@@ -73,6 +78,7 @@ namespace CKM {
             bool m_init;
 
             void initDatabase();
+            DBRow getRow(const DB::SqlConnection::DataCommandAutoPtr &selectCommand);
             void createTable(const char* create_cmd);
             bool checkTableExist(const std::string& table);
             int getSingleType(

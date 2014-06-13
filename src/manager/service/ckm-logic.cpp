@@ -235,7 +235,7 @@ int CKMLogic::getDataHelper(
         return KEY_MANAGER_API_ERROR_DB_LOCKED;
 
     auto &handler = m_userDataMap[cred.uid];
-    int retCode = handler.database.getDBRow(alias, cred.smackLabel, row);
+    int retCode = handler.database.getDBRow(alias, cred.smackLabel, dataType, row);
 
     if (KEY_MANAGER_API_SUCCESS != retCode){
         LogDebug("DBCrypto::getDBRow failed with code: " << retCode);
