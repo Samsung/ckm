@@ -13,7 +13,7 @@
  *  limitations under the License
  *
  *
- * @file        client-key-impl.h
+ * @file        client-certificate.h
  * @author      Bartlomiej Grzelewski (b.grzelewski@samsung.com)
  * @version     1.0
  * @brief       Certificate class implementation.

@@ -72,11 +72,11 @@ public:
     KeyType getType() const;
     int getSize() const;
 	ElipticCurve getCurve() const;
-    RawBuffer getKey() const;
-    KeyImpl* getImpl() const;
+    RawBuffer getDER() const;
+    GenericKey* getImpl() const;
 
 private:
-    std::shared_ptr<KeyImpl> m_impl;
+    std::shared_ptr<GenericKey> m_impl;
 };
 
 class Certificate {

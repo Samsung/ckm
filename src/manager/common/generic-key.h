@@ -13,7 +13,7 @@
  *  limitations under the License
  *
  *
- * @file        client-key-impl.h
+ * @file        generic-key.h
  * @author      Bartlomiej Grzelewski (b.grzelewski@samsung.com)
  * @version     1.0
  * @brief       Key implementation.
@@ -24,32 +24,14 @@
 
 namespace CKM {
 
-class KeyImpl
-{
+class GenericKey {
 public:
-    KeyImpl();
-    KeyImpl(const RawBuffer &data, KeyType type, const std::string &password);
-    KeyImpl(const KeyImpl &);
-    KeyImpl(KeyImpl &&);
-    KeyImpl& operator=(const KeyImpl &);
-    KeyImpl& operator=(KeyImpl &&);
+    virtual KeyType getType() const = 0;
+    virtual RawBuffer getDER() const = 0;
+    virtual EVP_PKEY* getEVPKEY() const = 0;
 
-    KeyType getType() const {
-        return m_type;
-    }
-
-    RawBuffer getKey() const {
-        return m_key;
-    }
-
-    bool empty() const {
-        return (m_type == KeyType::KEY_NONE) || m_key.empty();
-    }
-
-    virtual ~KeyImpl();
-private:
-    KeyType m_type;
-    RawBuffer m_key;
+    virtual bool empty() const = 0;
+    virtual ~GenericKey(){}
 };
 
 } // namespace CKM

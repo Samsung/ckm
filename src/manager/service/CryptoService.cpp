@@ -16,9 +16,12 @@
 #include <openssl/x509v3.h>
 #include <openssl/obj_mac.h>
 #include <ckm/ckm-type.h>
-#include <key-impl.h>
+#include <key-rsa.h>
+#include <key-ecdsa.h>
 #include <CryptoService.h>
 #include <key-manager-util.h>
+
+#include <dpl/log/log.h>
 
 #define OPENSSL_SUCCESS 1       // DO NOTCHANGE THIS VALUE
 #define OPENSSL_FAIL    0       // DO NOTCHANGE THIS VALUE
@@ -32,65 +35,65 @@ CryptoService::~CryptoService(){
 }
 
 // The returned (EVP_PKEY *) should be freed like this [if(pkey) EVP_PKEY_free(pkey);] after use.
-void to_string_rsa_private_key(RSA *pkey, unsigned char **derPrivateKey, int *length) {
-	unsigned char *ucTmp;
-	*length = i2d_RSAPrivateKey(pkey, NULL);
-	*derPrivateKey = (unsigned char *)malloc(*length);
-	ucTmp = *derPrivateKey;
-	i2d_RSAPrivateKey(pkey, &ucTmp);
-}
+//void to_string_rsa_private_key(RSA *pkey, unsigned char **derPrivateKey, int *length) {
+//	unsigned char *ucTmp;
+//	*length = i2d_RSAPrivateKey(pkey, NULL);
+//	*derPrivateKey = (unsigned char *)malloc(*length);
+//	ucTmp = *derPrivateKey;
+//	i2d_RSAPrivateKey(pkey, &ucTmp);
+//}
 
-void to_string_rsa_public_key(RSA *pkey, unsigned char **derPublicKey, int *length) {
-	unsigned char *ucTmp;
-	*length = i2d_RSA_PUBKEY(pkey, NULL);
-	*derPublicKey = (unsigned char *)malloc(*length);
-	ucTmp = *derPublicKey;
-	i2d_RSA_PUBKEY(pkey, &ucTmp);
-}
+//void to_string_rsa_public_key(RSA *pkey, unsigned char **derPublicKey, int *length) {
+//	unsigned char *ucTmp;
+//	*length = i2d_RSA_PUBKEY(pkey, NULL);
+//	*derPublicKey = (unsigned char *)malloc(*length);
+//	ucTmp = *derPublicKey;
+//	i2d_RSA_PUBKEY(pkey, &ucTmp);
+//}
 
-void to_string_ec_private_key(EC_KEY *pkey, unsigned char **derPrivateKey, int *length) {
-	unsigned char *ucTmp;
-	*length = i2d_ECPrivateKey(pkey, NULL);
-	*derPrivateKey = (unsigned char *)malloc(*length);
-	ucTmp = *derPrivateKey;
-	i2d_ECPrivateKey(pkey, &ucTmp);
-}
-
-void to_string_ec_public_key(EC_KEY *pkey, unsigned char **derPublicKey, int *length) {
-	unsigned char *ucTmp;	//RawData test;
-	*length = i2d_EC_PUBKEY(pkey, NULL);
-	*derPublicKey = (unsigned char *)malloc(*length);
-	ucTmp = *derPublicKey;
-	i2d_EC_PUBKEY(pkey, &ucTmp);
-}
-
-// The returned (EVP_PKEY *) should be freed like this [if(pkey) EVP_PKEY_free(pkey);] after use.
-EVP_PKEY *to_pkey_rsa_public_key(const unsigned char *derPublicKey, int length) {
-	EVP_PKEY *pkey = EVP_PKEY_new();
-	RSA *rsa;
-
-	BIO *bio = BIO_new(BIO_s_mem());
-    BIO_write(bio, derPublicKey, length);
-    rsa = d2i_RSA_PUBKEY_bio(bio, NULL);
-    BIO_free_all(bio);
-    EVP_PKEY_set1_RSA(pkey,rsa);
-
-	return pkey;
-}
+//void to_string_ec_private_key(EC_KEY *pkey, unsigned char **derPrivateKey, int *length) {
+//	unsigned char *ucTmp;
+//	*length = i2d_ECPrivateKey(pkey, NULL);
+//	*derPrivateKey = (unsigned char *)malloc(*length);
+//	ucTmp = *derPrivateKey;
+//	i2d_ECPrivateKey(pkey, &ucTmp);
+//}
+//
+//void to_string_ec_public_key(EC_KEY *pkey, unsigned char **derPublicKey, int *length) {
+//	unsigned char *ucTmp;	//RawData test;
+//	*length = i2d_EC_PUBKEY(pkey, NULL);
+//	*derPublicKey = (unsigned char *)malloc(*length);
+//	ucTmp = *derPublicKey;
+//	i2d_EC_PUBKEY(pkey, &ucTmp);
+//}
 
 // The returned (EVP_PKEY *) should be freed like this [if(pkey) EVP_PKEY_free(pkey);] after use.
-EVP_PKEY *to_pkey_rsa_private_key(const unsigned char *derPrivateKey, int length) {
-	EVP_PKEY *pkey = EVP_PKEY_new();
-	RSA *rsa;
+//EVP_PKEY *to_pkey_rsa_public_key(const unsigned char *derPublicKey, int length) {
+//	EVP_PKEY *pkey = EVP_PKEY_new();
+//	RSA *rsa;
+//
+//	BIO *bio = BIO_new(BIO_s_mem());
+//    BIO_write(bio, derPublicKey, length);
+//    rsa = d2i_RSA_PUBKEY_bio(bio, NULL);
+//    BIO_free_all(bio);
+//    EVP_PKEY_set1_RSA(pkey,rsa);
+//
+//	return pkey;
+//}
 
-	BIO *bio = BIO_new(BIO_s_mem());
-    BIO_write(bio, derPrivateKey, length);
-    rsa = d2i_RSAPrivateKey_bio(bio, NULL);
-    BIO_free_all(bio);
-    EVP_PKEY_set1_RSA(pkey,rsa);
-
-	return pkey;
-}
+// The returned (EVP_PKEY *) should be freed like this [if(pkey) EVP_PKEY_free(pkey);] after use.
+//EVP_PKEY *to_pkey_rsa_private_key(const unsigned char *derPrivateKey, int length) {
+//	EVP_PKEY *pkey = EVP_PKEY_new();
+//	RSA *rsa;
+//
+//	BIO *bio = BIO_new(BIO_s_mem());
+//    BIO_write(bio, derPrivateKey, length);
+//    rsa = d2i_RSAPrivateKey_bio(bio, NULL);
+//    BIO_free_all(bio);
+//    EVP_PKEY_set1_RSA(pkey,rsa);
+//
+//	return pkey;
+//}
 
 // The returned (EVP_PKEY *) should be freed like this [if(pkey) EVP_PKEY_free(pkey);] after use.
 EVP_PKEY *to_pkey_ec_public_key(const unsigned char *derPublicKey, int length) {
@@ -120,7 +123,7 @@ EVP_PKEY *to_pkey_ec_private_key(const unsigned char *derPrivateKey, int length)
 	return pkey;
 }
 
-int CryptoService::initalize() {
+int CryptoService::initialize() {
 	int mode, ret, rc;
 
 	// try to initialize using ERR_load_crypto_strings and OpenSSL_add_all_algorithms
@@ -152,14 +155,12 @@ int CryptoService::initalize() {
 }
 
 int CryptoService::createKeyPairRSA(const int size, // size in bits [1024, 2048, 4096]
-		KeyImpl &createdPrivateKey,  // returned value
-		KeyImpl &createdPublicKey)  // returned value
+		KeyRSAPrivate &createdPrivateKey,  // returned value
+        KeyRSAPublic &createdPublicKey)  // returned value
 {
 	EVP_PKEY_CTX *ctx = NULL;
 	EVP_PKEY *pkey = NULL;
 
-	unsigned char *derPrivateKey = NULL, *derPublicKey = NULL;
-	int priKeyLength, pubKeyLength;
 	RawBuffer priKey_tmp, pubKey_tmp;
 	const std::string null_password;
 
@@ -171,7 +172,9 @@ int CryptoService::createKeyPairRSA(const int size, // size in bits [1024, 2048,
 	EVP_PKEY_CTX_new(pparam, NULL);
 	EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL);
 
-	if(!ctx) {
+    LogDebug("Generating RSA key pair start.");
+
+    if(!ctx) {
 		return CKM_CRYPTO_CTX_ERROR;
 	}
 
@@ -190,32 +193,14 @@ int CryptoService::createKeyPairRSA(const int size, // size in bits [1024, 2048,
 		return CKM_CRYPTO_PKEYGEN_ERROR;
 	}
 
-	// convert to rsa key
+    LogDebug("Generating RSA key pair end.");
+
+    // convert to rsa key
 	RSA *rsa_key = EVP_PKEY_get1_RSA(pkey);
 
-	// Extract private and public key
-	to_string_rsa_private_key(rsa_key, &derPrivateKey, &priKeyLength);
-	to_string_rsa_public_key(rsa_key, &derPublicKey, &pubKeyLength);
+    createdPrivateKey = KeyRSAPrivate(rsa_key);
+    createdPublicKey = KeyRSAPublic(rsa_key);
 
-	// Key copy to vector structure
-	priKey_tmp.assign(derPrivateKey, derPrivateKey+priKeyLength);
-	pubKey_tmp.assign(derPublicKey, derPublicKey+pubKeyLength);
-
-	// Create two keys
-	KeyImpl privateKey(priKey_tmp, KeyType::KEY_RSA_PRIVATE, null_password);
-	KeyImpl Publickey(pubKey_tmp, KeyType::KEY_RSA_PUBLIC, null_password);
-
-	// Two made key copy to reference structure
-	createdPrivateKey = privateKey;
-	createdPublicKey = Publickey;
-
-	RawBuffer data;
-	data = privateKey.getKey();
-
-	if(derPrivateKey)
-		free(derPrivateKey);
-	if(derPublicKey)
-		free(derPublicKey);
 	if(pkey)
 		EVP_PKEY_free(pkey);
 	if(ctx)
@@ -225,11 +210,9 @@ int CryptoService::createKeyPairRSA(const int size, // size in bits [1024, 2048,
 }
 
 int CryptoService::createKeyPairECDSA(ElipticCurve type,
-		KeyImpl &createdPrivateKey,  // returned value
-		KeyImpl &createdPublicKey)  // returned value
+		KeyECDSAPrivate &createdPrivateKey,  // returned value
+        KeyECDSAPublic &createdPublicKey)  // returned value
 {
-		unsigned char *derPrivateKey = NULL, *derPublicKey = NULL;
-		int priKeyLength, pubKeyLength;
 		int ecCurve = -1;
 		EVP_PKEY_CTX *pctx = NULL;
 		EVP_PKEY_CTX *kctx = NULL;
@@ -304,31 +287,9 @@ int CryptoService::createKeyPairECDSA(ElipticCurve type,
 		// convert to rsa key
 		EC_KEY *ec_key = EVP_PKEY_get1_EC_KEY(pkey);
 
-		// Extract private and public key
-		to_string_ec_private_key(ec_key, &derPrivateKey, &priKeyLength);
-		to_string_ec_public_key(ec_key, &derPublicKey, &pubKeyLength);
+        createdPrivateKey = KeyECDSAPrivate(ec_key);
+        createdPublicKey = KeyECDSAPublic(ec_key);
 
-		// Key copy to vector structure
-		priKey_tmp.assign(derPrivateKey, derPrivateKey+priKeyLength);
-		pubKey_tmp.assign(derPublicKey, derPublicKey+pubKeyLength);
-
-		// Create two keys
-
-		//Key(const RawBuffer &rawData, KeyType type, const std::string &password = std::string());
-
-		KeyImpl privateKey(priKey_tmp, KeyType::KEY_ECDSA_PRIVATE, NULL);
-		KeyImpl Publickey(pubKey_tmp, KeyType::KEY_ECDSA_PUBLIC, NULL);
-
-		// Two made key copy to reference structure
-		// To operate this function, client-key-impl should be modified
-
-		createdPrivateKey = privateKey;
-		createdPublicKey = Publickey;
-
-		if(derPrivateKey)
-			free(derPrivateKey);
-		if(derPublicKey)
-			free(derPublicKey);
 		if(pkey)
 			EVP_PKEY_free(pkey);
 		if(pparam)
@@ -341,7 +302,7 @@ int CryptoService::createKeyPairECDSA(ElipticCurve type,
 		return CKM_CRYPTO_CREATEKEY_SUCCESS;
 }
 
-int CryptoService::createSignature(const KeyImpl &privateKey,
+int CryptoService::createSignature(const GenericKey &privateKey,
                          const RawBuffer &message,
                          const HashAlgorithm hashAlgo,
                          const RSAPaddingAlgorithm padAlgo,
@@ -383,19 +344,11 @@ int CryptoService::createSignature(const KeyImpl &privateKey,
 		default:
 			return CKM_CRYPTO_NOT_SUPPORT_ALGO_ERROR;
 		}
+    } else if (privateKey.getType() != KeyType::KEY_ECDSA_PRIVATE) {
+        return CKM_CRYPTO_NOT_SUPPORT_KEY_TYPE;
+    }
 
-		data = privateKey.getKey();
-		unsigned char derPrivateKey[data.size()];
-		memcpy(derPrivateKey, data.data(),data.size());
-		private_pkey = to_pkey_rsa_private_key(derPrivateKey, data.size());
-	} else if(privateKey.getType()==KeyType::KEY_ECDSA_PRIVATE) {
-		data = privateKey.getKey();
-		unsigned char derPrivateKey[data.size()];
-		memcpy(derPrivateKey, data.data(),data.size());
-		private_pkey = to_pkey_ec_private_key(derPrivateKey, data.size());
-	} else {
-		return CKM_CRYPTO_NOT_SUPPORT_KEY_TYPE;
-	}
+    private_pkey = privateKey.getEVPKEY();
 
 	// Create the Message Digest Context
 	if(!(mdctx = EVP_MD_CTX_create())) {
@@ -403,6 +356,7 @@ int CryptoService::createSignature(const KeyImpl &privateKey,
 	}
 	if(EVP_SUCCESS != EVP_DigestSignInit(mdctx, &pctx, md_algo, NULL, private_pkey)) {
 		if(mdctx) EVP_MD_CTX_destroy(mdctx);
+        if(private_pkey) EVP_PKEY_free(private_pkey);
 		return CKM_SIG_GEN_ERROR;
 	}
 
@@ -410,6 +364,7 @@ int CryptoService::createSignature(const KeyImpl &privateKey,
 	if(privateKey.getType()==KeyType::KEY_RSA_PRIVATE) {
 		if(EVP_SUCCESS != EVP_PKEY_CTX_set_rsa_padding(pctx, rsa_padding)) {
 			if(mdctx) EVP_MD_CTX_destroy(mdctx);
+            if(private_pkey) EVP_PKEY_free(private_pkey);
 			return CKM_SIG_GEN_ERROR;
 		}
 	}
@@ -419,6 +374,7 @@ int CryptoService::createSignature(const KeyImpl &privateKey,
 	memcpy(msg, message.data(),message.size());
 	if(EVP_SUCCESS != EVP_DigestSignUpdate(mdctx, msg, message.size())) {
 		if(mdctx) EVP_MD_CTX_destroy(mdctx);
+        if(private_pkey) EVP_PKEY_free(private_pkey);
 		return CKM_SIG_GEN_ERROR;
 	}
 
@@ -428,6 +384,7 @@ int CryptoService::createSignature(const KeyImpl &privateKey,
 	size_t slen;
 	if(EVP_SUCCESS != EVP_DigestSignFinal(mdctx, NULL, &slen)) {
 		if(mdctx) EVP_MD_CTX_destroy(mdctx);
+        if(private_pkey) EVP_PKEY_free(private_pkey);
 		return CKM_SIG_GEN_ERROR;
 	}
 	/* Allocate memory for the signature based on size in slen */
@@ -436,6 +393,7 @@ int CryptoService::createSignature(const KeyImpl &privateKey,
 	/* Obtain the signature */
 	if(EVP_SUCCESS != EVP_DigestSignFinal(mdctx, sig, &slen)) {
 		if(mdctx) EVP_MD_CTX_destroy(mdctx);
+        if(private_pkey) EVP_PKEY_free(private_pkey);
 		return CKM_SIG_GEN_ERROR;
 	}
 
@@ -445,10 +403,11 @@ int CryptoService::createSignature(const KeyImpl &privateKey,
 	/* Success */
 	ret = EVP_SUCCESS;
 	if(mdctx) EVP_MD_CTX_destroy(mdctx);
+    if(private_pkey) EVP_PKEY_free(private_pkey);
 	return ret;
 }
 
-int CryptoService::verifySignature(const KeyImpl &publicKey,
+int CryptoService::verifySignature(const GenericKey &publicKey,
                     const RawBuffer &message,
                     const RawBuffer &signature,
                     const HashAlgorithm hashAlgo,
@@ -491,18 +450,14 @@ int CryptoService::verifySignature(const KeyImpl &publicKey,
 			return CKM_CRYPTO_NOT_SUPPORT_ALGO_ERROR;
 		}
 
-		data = publicKey.getKey();
-		unsigned char derPublicKey[data.size()];
-		memcpy(derPublicKey, data.data(),data.size());
-		public_pkey = to_pkey_rsa_public_key(derPublicKey, data.size());
-	} else if(publicKey.getType()==KeyType::KEY_ECDSA_PUBLIC) {
-		data = publicKey.getKey();
-		unsigned char derPublicKey[data.size()];
-		memcpy(derPublicKey, data.data(),data.size());
-		public_pkey = to_pkey_ec_public_key(derPublicKey, data.size());
-	} else {
+	} else if(publicKey.getType() != KeyType::KEY_ECDSA_PUBLIC) {
 		return CKM_CRYPTO_NOT_SUPPORT_KEY_TYPE;
 	}
+
+    public_pkey = publicKey.getEVPKEY();
+
+    if (NULL == public_pkey)
+        return CKM_CRYPTO_PKEYSET_ERROR;
 
 	char msg[message.size()];
 	memcpy(msg, message.data(),message.size());
@@ -512,33 +467,39 @@ int CryptoService::verifySignature(const KeyImpl &publicKey,
 
 	/* Create the Message Digest Context */
 	if(!(mdctx = EVP_MD_CTX_create())) {
+        if (public_pkey) EVP_PKEY_free(public_pkey);
 		return CKM_SIG_VERIFY_OPER_ERROR;
 	}
 
 	if(EVP_SUCCESS != EVP_DigestVerifyInit(mdctx, &pctx, md_algo, NULL, public_pkey)) {
 		if(mdctx) EVP_MD_CTX_destroy(mdctx);
+        if (public_pkey) EVP_PKEY_free(public_pkey);
 		return CKM_SIG_VERIFY_OPER_ERROR;
 	}
 
 	if(publicKey.getType()==KeyType::KEY_RSA_PUBLIC) {
 		if(EVP_SUCCESS != EVP_PKEY_CTX_set_rsa_padding(pctx, rsa_padding))  {
 			if(mdctx) EVP_MD_CTX_destroy(mdctx);
+            if (public_pkey) EVP_PKEY_free(public_pkey);
 			return CKM_SIG_VERIFY_OPER_ERROR;
 		}
 	}
 
 	if(EVP_SUCCESS != EVP_DigestVerifyUpdate(mdctx, msg, message.size()) ) {
 		if(mdctx) EVP_MD_CTX_destroy(mdctx);
+        if (public_pkey) EVP_PKEY_free(public_pkey);
 		return CKM_SIG_VERIFY_OPER_ERROR;
     }
 
 	if(EVP_SUCCESS != EVP_DigestVerifyFinal(mdctx, sig, signature.size()) ) {
 		if(mdctx) EVP_MD_CTX_destroy(mdctx);
+        if (public_pkey) EVP_PKEY_free(public_pkey);
 		return CKM_SIG_VERIFY_OPER_ERROR;
     }
 
 	ret = EVP_SUCCESS;
 	if(mdctx) EVP_MD_CTX_destroy(mdctx);
+    if (public_pkey) EVP_PKEY_free(public_pkey);
 	return ret;
 }
 

@@ -37,6 +37,7 @@
 #include <ckm-service.h>
 
 #include <key-provider.h>
+#include <CryptoService.h>
 
 IMPLEMENT_SAFE_SINGLETON(CKM::Log::LogSystem);
 
@@ -88,6 +89,7 @@ int main(void) {
         OPENSSL_config(NULL);
 
         CKM::KeyProvider::initializeLibrary();
+        CKM::CryptoService::initialize();
 
         {
             LogInfo("Start!");

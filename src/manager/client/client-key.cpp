@@ -21,20 +21,32 @@
 #include <ckm/ckm-type.h>
 #include <ckm/key-manager.h>
 
-#include <key-impl.h>
+#include <dpl/log/log.h>
+
+#include <key-rsa.h>
 
 namespace CKM {
 
 Key::Key()
-  : m_impl(new KeyImpl())
+  : m_impl(NULL)
 {}
 
 Key::Key(
     const RawBuffer &rawData,
     KeyType type,
     const std::string &password)
-  : m_impl(new KeyImpl(rawData, type, password))
-{}
+{
+    switch (type) {
+        case KeyType::KEY_RSA_PRIVATE:
+            m_impl.reset(new KeyRSAPrivate(rawData, password));
+            break;
+        case KeyType::KEY_RSA_PUBLIC:
+            m_impl.reset(new KeyRSAPublic(rawData, password));
+            break;
+        default:
+            LogError("Key Type not implemented");
+    }
+}
 
 Key::Key(const Key &second) {
     m_impl = second.m_impl;
@@ -45,8 +57,7 @@ Key& Key::operator=(const Key &second) {
     return *this;
 }
 
-Key::~Key(){
-}
+Key::~Key(){}
 
 bool Key::empty() const {
     if (m_impl)
@@ -60,13 +71,13 @@ KeyType Key::getType() const {
     return KeyType::KEY_NONE;
 }
 
-RawBuffer Key::getKey() const {
+RawBuffer Key::getDER() const {
     if (m_impl)
-        return m_impl->getKey();
+        return m_impl->getDER();
     return RawBuffer();
 }
 
-KeyImpl* Key::getImpl() const {
+GenericKey* Key::getImpl() const {
     if (m_impl)
         return m_impl.get();
     return NULL;

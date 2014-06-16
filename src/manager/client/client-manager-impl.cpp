@@ -22,7 +22,6 @@
 
 #include <client-manager-impl.h>
 #include <client-common.h>
-#include <key-impl.h>
 #include <message-buffer.h>
 #include <protocols.h>
 
@@ -74,7 +73,7 @@ int Manager::ManagerImpl::saveBinaryData(
 }
 
 int Manager::ManagerImpl::saveKey(const Alias &alias, const Key &key, const Policy &policy) {
-    return saveBinaryData(alias, toDBDataType(key.getType()), key.getKey(), policy);
+    return saveBinaryData(alias, toDBDataType(key.getType()), key.getDER(), policy);
 }
 
 int Manager::ManagerImpl::saveCertificate(

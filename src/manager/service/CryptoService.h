@@ -2,7 +2,8 @@
 
 #include <iostream>
 
-#include <key-impl.h>
+#include <key-rsa.h>
+#include <key-ecdsa.h>
 #include <certificate-impl.h>
 #include <ckm/ckm-type.h>
 #include <string.h>
@@ -49,23 +50,23 @@ class CryptoService {
      // And system certificates are loaded in the memory during initialization.
      //    FIPS_MODE - ON, OFF(Default)
      //    antropy source - /dev/random,/dev/urandom(Default)
-     static int initalize();
+     static int initialize();
 
      int createKeyPairRSA(const int size,      // size in bits [1024, 2048, 4096]
-                         KeyImpl &createdPrivateKey,  // returned value ==> Key &createdPrivateKey,
-                         KeyImpl &createdPublicKey);  // returned value ==> Key &createdPublicKey
+                         KeyRSAPrivate &createdPrivateKey,  // returned value ==> Key &createdPrivateKey,
+                         KeyRSAPublic &createdPublicKey);  // returned value ==> Key &createdPublicKey
 
      int createKeyPairECDSA(ElipticCurve type1,
-    		 	 	 	 KeyImpl &createdPrivateKey,  // returned value
-    		 	 	 	 KeyImpl &createdPublicKey);  // returned value
+    		 	 	 	 KeyECDSAPrivate &createdPrivateKey,  // returned value
+    		 	 	 	 KeyECDSAPublic &createdPublicKey);  // returned value
 
-     int createSignature(const KeyImpl &privateKey,
+     int createSignature(const GenericKey &privateKey,
                          const RawBuffer &message,
                          const HashAlgorithm hashAlgo,
                          const RSAPaddingAlgorithm padAlgo,
                          RawBuffer &signature);
 
-     int verifySignature(const KeyImpl &publicKey,
+     int verifySignature(const GenericKey &publicKey,
                          const RawBuffer &message,
                          const RawBuffer &signature,
                          const HashAlgorithm hashAlgo,

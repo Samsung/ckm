@@ -94,19 +94,19 @@ public:
         Credentials &cred,
         int commandId,
         int size,
-        const Alias &privateKeyAlias,
-        const Alias &publicKeyAlias,
-        PolicySerializable policyPrivateKey,
-        PolicySerializable policyPublicKey);
+        const Alias &aliasPrivate,
+        const Alias &alaisPublic,
+        const PolicySerializable &policyPrivate,
+        const PolicySerializable &policyPublic);
 
     RawBuffer createKeyPairECDSA(
         Credentials &cred,
         int commandId,
         int type,
-        const Alias &privateKeyAlias,
-        const Alias &publicKeyAlias,
-        PolicySerializable policyPrivateKey,
-        PolicySerializable policyPublicKey);
+        const Alias &aliasPrivate,
+        const Alias &aliasPublic,
+        const PolicySerializable &policyPrivate,
+        const PolicySerializable &policyPublic);
 
 private:
     int saveDataHelper(
@@ -122,6 +122,14 @@ private:
         const Alias &alias,
         const std::string &password,
         DBRow &row);
+
+    int createKeyPairRSAHelper(
+        Credentials &cred,
+        int size,
+        const Alias &aliasPrivate,
+        const Alias &aliasPublic,
+        const PolicySerializable &policyPrivate,
+        const PolicySerializable &policyPublic);
 
     std::map<uid_t, UserData> m_userDataMap;
 };

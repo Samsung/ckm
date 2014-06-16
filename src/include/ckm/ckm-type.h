@@ -88,7 +88,7 @@ enum class DBCMAlgType : int {
 };
 
 // Internal types
-class KeyImpl;
+class GenericKey;
 class CertificateImpl;
 
 } // namespace CKM

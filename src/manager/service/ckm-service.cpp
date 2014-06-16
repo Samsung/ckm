@@ -30,7 +30,6 @@
 
 #include <ckm-service.h>
 #include <ckm-logic.h>
-#include <key-impl.h>
 
 namespace {
 const CKM::InterfaceID SOCKET_ID_CONTROL = 0;
@@ -207,6 +206,8 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer){
             Deserialization::Deserialize(buffer, size);
             Deserialization::Deserialize(buffer, policyPrivateKey);
             Deserialization::Deserialize(buffer, policyPublicKey);
+            Deserialization::Deserialize(buffer, privateKeyAlias);
+            Deserialization::Deserialize(buffer, publicKeyAlias);
             return m_logic->createKeyPairRSA(
                 cred,
                 commandId,
@@ -226,6 +227,8 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer){
             Deserialization::Deserialize(buffer, type);
             Deserialization::Deserialize(buffer, policyPrivateKey);
             Deserialization::Deserialize(buffer, policyPublicKey);
+            Deserialization::Deserialize(buffer, privateKeyAlias);
+            Deserialization::Deserialize(buffer, publicKeyAlias);
             return m_logic->createKeyPairECDSA(
                 cred,
                 commandId,

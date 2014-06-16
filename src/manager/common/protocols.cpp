@@ -36,10 +36,12 @@ DBDataType toDBDataType(KeyType key) {
     switch(key) {
     case KeyType::KEY_RSA_PUBLIC:  return DBDataType::KEY_RSA_PUBLIC;
     case KeyType::KEY_RSA_PRIVATE: return DBDataType::KEY_RSA_PRIVATE;
+    case KeyType::KEY_ECDSA_PUBLIC: return DBDataType::KEY_ECDSA_PUBLIC;
+    case KeyType::KEY_ECDSA_PRIVATE: return DBDataType::KEY_ECDSA_PRIVATE;
+    case KeyType::KEY_AES: return DBDataType::KEY_AES;
     default:
         // TODO
         throw 1;
-
     }
 }
 
