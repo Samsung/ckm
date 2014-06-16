@@ -71,7 +71,7 @@ RawBuffer CKMLogic::unlockUserKey(uid_t user, const std::string &password) {
 
             RawBuffer key = handle.keyProvider.getPureDomainKEK();
             handle.database = DBCrypto(fs.getDBPath(), key);
-            handle.crypto = DBCryptoModule(key);
+            handle.crypto = DBCryptoModule();
             // TODO wipe key
         }
     } catch (const KeyProvider::Exception::Base &e) {

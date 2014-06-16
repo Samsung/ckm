@@ -16,6 +16,8 @@ SET(COMMON_PATH ${PROJECT_SOURCE_DIR}/src/manager)
 
 SET(COMMON_SOURCES
     ${COMMON_PATH}/common/base64.cpp
+    ${COMMON_PATH}/common/digest.cpp
+    ${COMMON_PATH}/common/aesCrypt.cpp
     ${COMMON_PATH}/common/protocols.cpp
     ${COMMON_PATH}/common/message-buffer.cpp
     ${COMMON_PATH}/common/smack-check.cpp

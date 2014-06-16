@@ -20,6 +20,7 @@
 #include <ckm/ckm-type.h>
 #include <db-crypto.h>
 #include <dpl/exception.h>
+#include <aesCrypt.h>
 
 namespace CKM {
 
@@ -29,17 +30,7 @@ public:
     {
         public:
             DECLARE_EXCEPTION_TYPE(CKM::Exception, Base)
-            DECLARE_EXCEPTION_TYPE(Base, DomainKeyError)
-            DECLARE_EXCEPTION_TYPE(Base, SmackLabelError)
-            DECLARE_EXCEPTION_TYPE(Base, AppKeyError)
-            DECLARE_EXCEPTION_TYPE(Base, AESDecryptionError)
-            DECLARE_EXCEPTION_TYPE(Base, AESEncryptionError)
-            DECLARE_EXCEPTION_TYPE(Base, OpenSSLDecryptError)
-            DECLARE_EXCEPTION_TYPE(Base, OpenSSLEncryptError)
-            DECLARE_EXCEPTION_TYPE(Base, DigestError)
-            DECLARE_EXCEPTION_TYPE(Base, OpenSSLDigestError)
-            DECLARE_EXCEPTION_TYPE(Base, OpenSSLError)
-            DECLARE_EXCEPTION_TYPE(Base, KeyGenerationError)
+            DECLARE_EXCEPTION_TYPE(Base, InternalError)
             DECLARE_EXCEPTION_TYPE(Base, Base64EncoderError)
             DECLARE_EXCEPTION_TYPE(Base, Base64DecoderError)
             DECLARE_EXCEPTION_TYPE(Base, EncryptDBRowError)
@@ -48,7 +39,6 @@ public:
     DBCryptoModule();
     DBCryptoModule(const DBCryptoModule &second) = delete;
     DBCryptoModule(DBCryptoModule &&second);
-    DBCryptoModule(RawBuffer &domainKEK);
     DBCryptoModule& operator=(DBCryptoModule &&second);
     DBCryptoModule& operator=(const DBCryptoModule &second) = delete;
 
@@ -66,22 +56,19 @@ private:
 	static const int ENCR_APPKEY =   1 << 1;
 	static const int ENCR_PASSWORD = 1 << 2;
 	
-	RawBuffer m_domainKEK;
 	std::map<std::string, RawBuffer> m_keyMap;
 
     /* TODO: Move it to private/protected after tests (or remove if not needed) */
-    void cryptAES(RawBuffer &data, std::size_t len, const RawBuffer &key,
-                  const RawBuffer &iv);
-    void decryptAES(RawBuffer &data, std::size_t len, const RawBuffer &key,
-                    const RawBuffer &iv);
+    CryptoAlgConf cryptAES(RawBuffer &data, const RawBuffer &key,
+                           const RawBuffer &iv, std::string password);
+    void decryptAES(RawBuffer &data, const RawBuffer &key, const RawBuffer &iv,
+                    std::string password);
     void decBase64(RawBuffer &data);
-    RawBuffer digestData(const RawBuffer &data, std::size_t len);
     void encBase64(RawBuffer &data);
     bool equalDigests(RawBuffer &dig1, RawBuffer &dig2);
     std::size_t insertDigest(RawBuffer &data, const int dataSize);
     void generateKeysFromPassword(const std::string &password,
                                   RawBuffer &key, RawBuffer &iv);
-    RawBuffer generateRandIV(void);
     void removeDigest(RawBuffer &data, RawBuffer &digest);
 };
 
