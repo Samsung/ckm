@@ -97,9 +97,9 @@ SqlConnection::DataCommand::DataCommand(SqlConnection *connection,
         // Fatal error
         const char *error = sqlcipher3_errmsg(m_masterConnection->m_connection);
 
-        LogPedantic("SQL prepare data command failed");
-        LogPedantic("    Statement: " << buffer);
-        LogPedantic("    Error: " << error);
+        LogError("SQL prepare data command failed");
+        LogError("    Statement: " << buffer);
+        LogError("    Error: " << error);
 
         ThrowMsg(Exception::SyntaxError, error);
     }
@@ -115,7 +115,7 @@ SqlConnection::DataCommand::~DataCommand()
     LogPedantic("SQL data command finalizing");
 
     if (sqlcipher3_finalize(m_stmt) != SQLCIPHER_OK) {
-        LogPedantic("Failed to finalize data command");
+        LogError("Failed to finalize data command");
     }
 
     // Decrement stored data command count
@@ -128,8 +128,8 @@ void SqlConnection::DataCommand::CheckBindResult(int result)
         const char *error = sqlcipher3_errmsg(
                 m_masterConnection->m_connection);
 
-        LogPedantic("Failed to bind SQL statement parameter");
-        LogPedantic("    Error: " << error);
+        LogError("Failed to bind SQL statement parameter");
+        LogError("    Error: " << error);
 
         ThrowMsg(Exception::SyntaxError, error);
     }
@@ -242,8 +242,8 @@ void SqlConnection::DataCommand::BindBlob(
     CheckBindResult(sqlcipher3_bind_blob(m_stmt, position,
                                       raw.data(), raw.size(),
                                       SQLCIPHER_TRANSIENT));
-    LogPedantic("SQL data command bind blob of size "
-                << raw.size());
+    LogPedantic("SQL data command bind blob of size: ["
+                << position << "] -> " << raw.size());
 }
 
 void SqlConnection::DataCommand::BindString(
@@ -386,8 +386,8 @@ bool SqlConnection::DataCommand::Step()
         // Fatal error
         const char *error = sqlcipher3_errmsg(m_masterConnection->m_connection);
 
-        LogPedantic("SQL step data command failed");
-        LogPedantic("    Error: " << error);
+        LogError("SQL step data command failed");
+        LogError("    Error: " << error);
 
         ThrowMsg(Exception::InternalError, error);
     }
@@ -684,7 +684,7 @@ void SqlConnection::Connect(const std::string &address,
     if (result == SQLCIPHER_OK) {
         LogPedantic("Connected to DB");
     } else {
-        LogPedantic("Failed to connect to DB!");
+        LogError("Failed to connect to DB!");
         ThrowMsg(Exception::ConnectionBroken, address);
     }
 
@@ -736,7 +736,7 @@ void SqlConnection::SetKey(const std::vector<unsigned char> &rawPass){
     } else {
         //sqlcipher3_key fails only when m_connection == NULL || key == NULL ||
         //                            key length == 0
-        LogPedantic("Failed to set key on DB");
+        LogError("Failed to set key on DB");
         ThrowMsg(Exception::InvalidArguments, result);
     }
 
@@ -764,7 +764,7 @@ void SqlConnection::ResetKey(const std::vector<unsigned char> &rawPassOld,
     } else {
         //sqlcipher3_rekey fails only when m_connection == NULL || key == NULL ||
         //                              key length == 0
-        LogPedantic("Failed to reset key on DB");
+        LogError("Failed to reset key on DB");
         ThrowMsg(Exception::InvalidArguments, result);
     }
 }
@@ -789,8 +789,8 @@ void SqlConnection::Disconnect()
 
     if (result != SQLCIPHER_OK) {
         const char *error = sqlcipher3_errmsg(m_connection);
-        LogPedantic("SQL close failed");
-        LogPedantic("    Error: " << error);
+        LogError("SQL close failed");
+        LogError("    Error: " << error);
         Throw(Exception::InternalError);
     }
 
@@ -848,19 +848,19 @@ SqlConnection::~SqlConnection()
     }
     Catch(Exception::Base)
     {
-        LogPedantic("Failed to disconnect from database");
+        LogError("Failed to disconnect from database");
     }
 }
 
 void SqlConnection::ExecCommand(const char *format, ...)
 {
     if (m_connection == NULL) {
-        LogPedantic("Cannot execute command. Not connected to DB!");
+        LogError("Cannot execute command. Not connected to DB!");
         return;
     }
 
     if (format == NULL) {
-        LogPedantic("Null query!");
+        LogError("Null query!");
         ThrowMsg(Exception::SyntaxError, "Null statement");
     }
 
@@ -878,7 +878,7 @@ void SqlConnection::ExecCommand(const char *format, ...)
     CharUniquePtr buffer(rawBuffer);
 
     if (!buffer) {
-        LogPedantic("Failed to allocate statement string");
+        LogError("Failed to allocate statement string");
         return;
     }
 
@@ -922,7 +922,7 @@ void SqlConnection::ExecCommand(const char *format, ...)
         }
 
         // Fatal error
-        LogPedantic("Failed to execute SQL command. Error: " << errorMsg);
+        LogError("Failed to execute SQL command. Error: " << errorMsg);
         ThrowMsg(Exception::SyntaxError, errorMsg);
     }
 }
@@ -932,7 +932,7 @@ SqlConnection::DataCommandAutoPtr SqlConnection::PrepareDataCommand(
     ...)
 {
     if (m_connection == NULL) {
-        LogPedantic("Cannot execute data command. Not connected to DB!");
+        LogError("Cannot execute data command. Not connected to DB!");
         return DataCommandAutoPtr();
     }
 
@@ -950,7 +950,7 @@ SqlConnection::DataCommandAutoPtr SqlConnection::PrepareDataCommand(
     CharUniquePtr buffer(rawBuffer);
 
     if (!buffer) {
-        LogPedantic("Failed to allocate statement string");
+        LogError("Failed to allocate statement string");
         return DataCommandAutoPtr();
     }
 
