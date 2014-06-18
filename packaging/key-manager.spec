@@ -45,6 +45,13 @@ Requires:   key-manager = %{version}-%{release}
 %description -n key-manager-devel
 Central Key Manager (Development)
 
+%package -n key-manager-tests
+Summary:    internal test for key-manager
+Group:      Development
+Requires:   key-manager = %{version}-%{release}
+
+%description -n key-manager-tests
+Internal test for key-manager
 
 %prep
 %setup -q
@@ -96,6 +103,12 @@ if [ $1 = 2 ]; then
     systemctl restart central-key-manager.service
 fi
 
+%if "%{sec_product_feature_security_mdfpp_enable}" == "1"
+rm %{_libdir}/libkey-manager-key-provider.so.1.0.0
+ln -s %{_libdir}/libskmm.so %{_libdir}/libkey-manager-key-provider.so.1.0.0
+%endif
+
+
 
 %preun
 if [ $1 = 0 ]; then
@@ -144,3 +157,7 @@ fi
 %{_includedir}/ckm/ckm/ckm-error.h
 %{_includedir}/ckm/ckm/ckm-type.h
 %{_libdir}/pkgconfig/*.pc
+
+%files -n key-manager-tests
+%defattr(-,root,root,-)
+%{_bindir}/key-manager-tests
