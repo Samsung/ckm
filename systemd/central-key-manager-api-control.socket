@@ -1,8 +1,8 @@
 [Socket]
 ListenStream=/tmp/.central-key-manager-api-control.sock
 SockMode=0777
-SmackLabelIpIn=ckm::api-control
-SmackLabelIpOut=@
+SmackLabelIPIn=ckm::api-control
+SmackLabelIPOut=@
 
 Service=central-key-manager.service
 
