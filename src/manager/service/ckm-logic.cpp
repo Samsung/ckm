@@ -146,27 +146,29 @@ int CKMLogic::saveDataHelper(
     if (0 == m_userDataMap.count(cred.uid))
         return KEY_MANAGER_API_ERROR_DB_LOCKED;
 
-    DBRow row = {   alias,  cred.smackLabel, policy.restricted,
+    DBRow row = { alias, cred.smackLabel, policy.restricted,
          policy.extractable, dataType, DBCMAlgType::NONE,
          0, RawBuffer(10, 'c'), key.size(), key };
 
     auto &handler = m_userDataMap[cred.uid];
     if (!handler.crypto.haveKey(cred.smackLabel)) {
         RawBuffer key;
-        int status = handler.database.getKey(cred.smackLabel, key);
-        if (KEY_MANAGER_API_ERROR_DB_ALIAS_UNKNOWN == status) {
-            LogDebug("No Key in database found. Generating new one for label: " << cred.smackLabel);
+        auto key_optional = handler.database.getKey(cred.smackLabel);
+        if(!key_optional) {
+            LogDebug("No Key in database found. Generating new one for label: "
+                    << cred.smackLabel);
             key = handler.keyProvider.generateDEK(cred.smackLabel);
-            if (KEY_MANAGER_API_SUCCESS != handler.database.saveKey(cred.smackLabel, key)) {
-                LogError("Failed to save key for smack label: " << cred.smackLabel);
-                return KEY_MANAGER_API_ERROR_DB_ERROR;
-            }
+        } else {
+            key = *key_optional;
         }
+
         key = handler.keyProvider.getPureDEK(key);
         handler.crypto.pushKey(cred.smackLabel, key);
+        handler.database.saveKey(cred.smackLabel, key);
     }
     handler.crypto.encryptRow(policy.password, row);
-    return handler.database.saveDBRow(row);
+    handler.database.saveDBRow(row);
+    return KEY_MANAGER_API_SUCCESS;
 }
 
 RawBuffer CKMLogic::saveData(
@@ -178,7 +180,6 @@ RawBuffer CKMLogic::saveData(
     const PolicySerializable &policy)
 {
     int retCode = KEY_MANAGER_API_SUCCESS;
-
     try {
         retCode = saveDataHelper(cred, dataType, alias, key, policy);
         LogDebug("SaveDataHelper returned: " << retCode);
@@ -188,6 +189,12 @@ RawBuffer CKMLogic::saveData(
     } catch (const DBCryptoModule::Exception::Base &e) {
         LogError("DBCryptoModule failed with message: " << e.GetMessage());
         retCode = KEY_MANAGER_API_ERROR_SERVER_ERROR;
+    } catch (const DBCrypto::Exception::InternalError &e) {
+        LogError("DBCrypto failed with message: " << e.GetMessage());
+        retCode = KEY_MANAGER_API_ERROR_DB_ERROR;
+    } catch (const DBCrypto::Exception::AliasExists &e) {
+        LogError("DBCrypto couldn't save duplicate alias");
+        retCode = KEY_MANAGER_API_ERROR_DB_ALIAS_EXISTS;
     }
 
     MessageBuffer response;
@@ -208,7 +215,12 @@ RawBuffer CKMLogic::removeData(
     int retCode = KEY_MANAGER_API_SUCCESS;
 
     if (0 < m_userDataMap.count(cred.uid)) {
-        retCode = m_userDataMap[cred.uid].database.deleteDBRow(alias, cred.smackLabel);
+        Try {
+            m_userDataMap[cred.uid].database.deleteDBRow(alias, cred.smackLabel);
+        } Catch (CKM::Exception) {
+            LogError("Error in deleting row!");
+            retCode = KEY_MANAGER_API_ERROR_DB_ERROR;
+        }
     } else {
         retCode = KEY_MANAGER_API_ERROR_DB_LOCKED;
     }
@@ -229,36 +241,38 @@ int CKMLogic::getDataHelper(
     const std::string &password,
     DBRow &row)
 {
-    int retCode = KEY_MANAGER_API_SUCCESS;
 
     if (0 == m_userDataMap.count(cred.uid))
         return KEY_MANAGER_API_ERROR_DB_LOCKED;
 
     auto &handler = m_userDataMap[cred.uid];
 
+    DBCrypto::DBRowOptional row_optional;
     if (dataType == DBDataType::CERTIFICATE || dataType == DBDataType::BINARY_DATA) {
-        retCode = handler.database.getDBRow(alias, cred.smackLabel, dataType, row);
+        row_optional = handler.database.getDBRow(alias, cred.smackLabel, dataType);
     } else if ((static_cast<int>(dataType) >= static_cast<int>(DBDataType::DB_KEY_FIRST))
             && (static_cast<int>(dataType) <= static_cast<int>(DBDataType::DB_KEY_LAST)))
     {
-        retCode = handler.database.getKeyDBRow(alias, cred.smackLabel, row);
+        row_optional = handler.database.getKeyDBRow(alias, cred.smackLabel);
     } else {
         LogError("Unknown type of requested data" << (int)dataType);
         return KEY_MANAGER_API_ERROR_BAD_REQUEST;
     }
-
-    if (KEY_MANAGER_API_SUCCESS != retCode){
-        LogDebug("DBCrypto::getDBRow failed with code: " << retCode);
-        return retCode;
+    if(!row_optional) {
+        LogError("No row for given alias, label and type");
+        return KEY_MANAGER_API_ERROR_DB_ALIAS_UNKNOWN;
+    } else {
+        row = *row_optional;
     }
 
     if (!handler.crypto.haveKey(row.smackLabel)) {
         RawBuffer key;
-        retCode = handler.database.getKey(row.smackLabel, key);
-        if (KEY_MANAGER_API_SUCCESS != retCode) {
-            LogDebug("DBCrypto::getKey failed with: " << retCode);
-            return retCode;
+        auto key_optional = handler.database.getKey(row.smackLabel);
+        if(!key_optional) {
+            LogError("No key for given label in database");
+            return KEY_MANAGER_API_ERROR_DB_ERROR;
         }
+        key = *key_optional;
         key = handler.keyProvider.getPureDEK(key);
         handler.crypto.pushKey(cred.smackLabel, key);
     }
@@ -287,6 +301,9 @@ RawBuffer CKMLogic::getData(
     } catch (const DBCryptoModule::Exception::Base &e) {
         LogError("DBCryptoModule failed with message: " << e.GetMessage());
         retCode = KEY_MANAGER_API_ERROR_SERVER_ERROR;
+    } catch (const DBCrypto::Exception::Base &e) {
+        LogError("DBCrypto failed with message: " << e.GetMessage());
+        retCode = KEY_MANAGER_API_ERROR_DB_ERROR;
     }
 
     if (KEY_MANAGER_API_SUCCESS != retCode) {
@@ -315,10 +332,15 @@ RawBuffer CKMLogic::getDataList(
 
     if (0 < m_userDataMap.count(cred.uid)) {
         auto &handler = m_userDataMap[cred.uid];
-        if (dataType == DBDataType::CERTIFICATE || dataType == DBDataType::BINARY_DATA) {
-            retCode = handler.database.getAliases(dataType, cred.smackLabel, aliasVector);
-        } else {
-            retCode = handler.database.getKeyAliases(cred.smackLabel, aliasVector);
+        Try {
+            if (dataType == DBDataType::CERTIFICATE || dataType == DBDataType::BINARY_DATA) {
+                handler.database.getAliases(dataType, cred.smackLabel, aliasVector);
+            } else {
+                handler.database.getKeyAliases(cred.smackLabel, aliasVector);
+            }
+        } Catch (CKM::Exception) {
+            LogError("Failed to get aliases");
+            retCode = KEY_MANAGER_API_ERROR_DB_ERROR;
         }
     } else {
         retCode = KEY_MANAGER_API_ERROR_DB_LOCKED;

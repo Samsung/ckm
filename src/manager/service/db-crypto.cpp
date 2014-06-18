@@ -127,26 +127,28 @@ using namespace DB;
     DBCrypto::DBCrypto(const std::string& path,
                          const RawBuffer &rawPass) {
         m_connection = NULL;
-        m_init = false;
         Try {
             m_connection = new SqlConnection(path, SqlConnection::Flag::Option::CRW);
             m_connection->SetKey(rawPass);
             initDatabase();
-            m_init = true;
         } Catch(SqlConnection::Exception::ConnectionBroken) {
             LogError("Couldn't connect to database: " << path);
+            ReThrow(DBCrypto::Exception::InternalError);
         } Catch(SqlConnection::Exception::InvalidArguments) {
             LogError("Couldn't set the key for database");
+            ReThrow(DBCrypto::Exception::InternalError);
         } Catch(SqlConnection::Exception::SyntaxError) {
             LogError("Couldn't initiate the database");
+            ReThrow(DBCrypto::Exception::InternalError);
+        } Catch(SqlConnection::Exception::InternalError) {
+            LogError("Couldn't create the database");
+            ReThrow(DBCrypto::Exception::InternalError);
         }
     }
 
     DBCrypto::DBCrypto(DBCrypto &&other) :
-            m_connection(other.m_connection),
-            m_init(other.m_init) {
+            m_connection(other.m_connection) {
         other.m_connection = NULL;
-        other.m_init = false;
     }
 
     DBCrypto::~DBCrypto() {
@@ -161,27 +163,27 @@ using namespace DB;
         m_connection = other.m_connection;
         other.m_connection = NULL;
 
-        m_init = other.m_init;
-        other.m_init = false;
-
         return *this;
     }
 
-    void DBCrypto::createTable(const char* create_cmd) {
+    void DBCrypto::createTable(
+            const char* create_cmd,
+            const char *table_name)
+    {
         Try {
             m_connection->ExecCommand(create_cmd);
         } Catch(SqlConnection::Exception::SyntaxError) {
-            LogError("Couldn't create the main table!");
+            LogError("Couldn't create table : " << table_name << "!");
             throw;
         }
     }
 
     void DBCrypto::initDatabase() {
         if(!m_connection->CheckTableExist(main_table)) {
-            createTable(db_create_main_cmd);
+            createTable(db_create_main_cmd, main_table);
         }
         if(!m_connection->CheckTableExist(key_table)) {
-            createTable(db_create_key_cmd);
+            createTable(db_create_key_cmd, key_table);
         }
     }
 
@@ -212,16 +214,16 @@ using namespace DB;
             return false;
     }
 
-    int DBCrypto::saveDBRow(const DBRow &row){
-        if(!m_init)
-            return KEY_MANAGER_API_ERROR_DB_ERROR;
+    void DBCrypto::saveDBRow(const DBRow &row){
         Try {
 
             //Sqlite does not support partial index in our version,
             //so we do it by hand
             if((row.restricted == 1 && checkAliasExist(row.alias, row.smackLabel)) ||
                     (row.restricted == 0 && checkGlobalAliasExist(row.alias))) {
-                return KEY_MANAGER_API_ERROR_DB_ALIAS_EXISTS;
+                ThrowMsg(DBCrypto::Exception::AliasExists,
+                        "Alias exists for alias: " << row.alias
+                        << ", label: " << row.smackLabel);
             }
 
             SqlConnection::DataCommandAutoPtr insertCommand =
@@ -238,16 +240,15 @@ using namespace DB;
             insertCommand->BindBlob(10, row.data);
 
             insertCommand->Step();
+            return;
 
         } Catch(SqlConnection::Exception::SyntaxError) {
             LogError("Couldn't prepare insert statement");
-            return KEY_MANAGER_API_ERROR_DB_ERROR;
         } Catch(SqlConnection::Exception::InternalError) {
             LogError("Couldn't execute insert statement");
-            return KEY_MANAGER_API_ERROR_DB_ERROR;
         }
-
-        return KEY_MANAGER_API_SUCCESS;
+        ThrowMsg(DBCrypto::Exception::InternalError,
+                "Couldn't save DBRow");
     }
 
     DBRow DBCrypto::getRow(const SqlConnection::DataCommandAutoPtr &selectCommand) {
@@ -265,51 +266,41 @@ using namespace DB;
         return row;
     }
 
-    int DBCrypto::getDBRow(
+    DBCrypto::DBRowOptional DBCrypto::getDBRow(
         const Alias &alias,
         const std::string &label,
-        DBDataType type,
-        DBRow &row)
+        DBDataType type)
     {
-        if(!m_init)
-            return KEY_MANAGER_API_ERROR_DB_ERROR;
         Try {
-        SqlConnection::DataCommandAutoPtr selectCommand =
-                m_connection->PrepareDataCommand(select_alias_cmd);
-        selectCommand->BindString(1, alias.c_str());
-        selectCommand->BindInteger(2, static_cast<int>(type));
-        selectCommand->BindString(3, label.c_str());
-        selectCommand->BindString(4, alias.c_str());
-        selectCommand->BindInteger(5, static_cast<int>(type));
+            SqlConnection::DataCommandAutoPtr selectCommand =
+                    m_connection->PrepareDataCommand(select_alias_cmd);
+            selectCommand->BindString(1, alias.c_str());
+            selectCommand->BindInteger(2, static_cast<int>(type));
+            selectCommand->BindString(3, label.c_str());
+            selectCommand->BindString(4, alias.c_str());
+            selectCommand->BindInteger(5, static_cast<int>(type));
 
-
-        if(selectCommand->Step()) {
-            row = getRow(selectCommand);
-        } else {
-            return KEY_MANAGER_API_ERROR_DB_ALIAS_UNKNOWN;
-        }
-
-        AssertMsg(!selectCommand->Step(),
-                "Select returned multiple rows for unique column.");
+            if(selectCommand->Step()) {
+                return DBRowOptional(getRow(selectCommand));
+            } else {
+                return DBRowOptional();
+            }
         } Catch (SqlConnection::Exception::InvalidColumn) {
             LogError("Select statement invalid column error");
-            return KEY_MANAGER_API_ERROR_DB_ERROR;
         } Catch (SqlConnection::Exception::SyntaxError) {
             LogError("Couldn't prepare select statement");
-            return KEY_MANAGER_API_ERROR_DB_ERROR;
         } Catch (SqlConnection::Exception::InternalError) {
             LogError("Couldn't execute select statement");
-            return KEY_MANAGER_API_ERROR_DB_ERROR;
         }
-        return KEY_MANAGER_API_SUCCESS;
+        ThrowMsg(DBCrypto::Exception::InternalError,
+                "Couldn't get row for type " << static_cast<int>(type) <<
+                " alias " << alias << " and label " << label);
     }
 
-    int DBCrypto::getKeyDBRow(
+    DBCrypto::DBRowOptional DBCrypto::getKeyDBRow(
         const Alias &alias,
-        const std::string &label,
-        DBRow &row) {
-        if (!m_init)
-            return KEY_MANAGER_API_ERROR_DB_ERROR;
+        const std::string &label)
+    {
         Try{
             SqlConnection::DataCommandAutoPtr selectCommand =
                     m_connection->PrepareDataCommand(select_key_alias_cmd);
@@ -318,25 +309,24 @@ using namespace DB;
             selectCommand->BindInteger(3, static_cast<int>(DBDataType::DB_KEY_LAST));
             selectCommand->BindString(4, label.c_str());
 
-            if(selectCommand->Step()){
-                row = getRow(selectCommand);
+            if(selectCommand->Step()) {
+                return DBRowOptional(getRow(selectCommand));
             } else {
-                return KEY_MANAGER_API_ERROR_DB_ALIAS_UNKNOWN;
+                return DBRowOptional();
             }
         } Catch (SqlConnection::Exception::InvalidColumn) {
             LogError("Select statement invalid column error");
-            return KEY_MANAGER_API_ERROR_DB_ERROR;
         } Catch (SqlConnection::Exception::SyntaxError) {
             LogError("Couldn't prepare select statement");
-            return KEY_MANAGER_API_ERROR_DB_ERROR;
         } Catch (SqlConnection::Exception::InternalError) {
             LogError("Couldn't execute select statement");
-            return KEY_MANAGER_API_ERROR_DB_ERROR;
         }
-        return KEY_MANAGER_API_SUCCESS;
+        ThrowMsg(DBCrypto::Exception::InternalError,
+                "Couldn't get Key for alias " << alias
+                << " and label " << label);
     }
 
-    int DBCrypto::getSingleType(
+    void DBCrypto::getSingleType(
             DBDataType type,
             const std::string& label,
             AliasVector& aliases)
@@ -353,38 +343,32 @@ using namespace DB;
                 alias = selectCommand->GetColumnString(0);
                 aliases.push_back(alias);
             }
+            return;
         } Catch (SqlConnection::Exception::InvalidColumn) {
             LogError("Select statement invalid column error");
-            return KEY_MANAGER_API_ERROR_DB_ERROR;
         } Catch (SqlConnection::Exception::SyntaxError) {
             LogError("Couldn't prepare select statement");
-            return KEY_MANAGER_API_ERROR_DB_ERROR;
         } Catch (SqlConnection::Exception::InternalError) {
             LogError("Couldn't execute select statement");
-            return KEY_MANAGER_API_ERROR_DB_ERROR;
         }
-        return KEY_MANAGER_API_SUCCESS;
+        ThrowMsg(DBCrypto::Exception::InternalError,
+                "Couldn't get type " << static_cast<int>(type)
+                << " for label " << label);
     }
 
-    int DBCrypto::getAliases(
+    void DBCrypto::getAliases(
         DBDataType type,
         const std::string& label,
         AliasVector& aliases)
     {
-        if(!m_init)
-            return KEY_MANAGER_API_ERROR_DB_ERROR;
-
-        return getSingleType(type, label, aliases);
+        getSingleType(type, label, aliases);
     }
 
 
-    int DBCrypto::getKeyAliases(
+    void DBCrypto::getKeyAliases(
         const std::string &label,
         AliasVector &aliases)
     {
-        if (!m_init)
-            return KEY_MANAGER_API_ERROR_DB_ERROR;
-
         Try{
             SqlConnection::DataCommandAutoPtr selectCommand =
                             m_connection->PrepareDataCommand(select_key_type_cmd);
@@ -397,20 +381,19 @@ using namespace DB;
                 alias = selectCommand->GetColumnString(0);
                 aliases.push_back(alias);
             }
+            return;
         } Catch (SqlConnection::Exception::InvalidColumn) {
             LogError("Select statement invalid column error");
-            return KEY_MANAGER_API_ERROR_DB_ERROR;
         } Catch (SqlConnection::Exception::SyntaxError) {
             LogError("Couldn't prepare select statement");
-            return KEY_MANAGER_API_ERROR_DB_ERROR;
         } Catch (SqlConnection::Exception::InternalError) {
             LogError("Couldn't execute select statement");
-            return KEY_MANAGER_API_ERROR_DB_ERROR;
         }
-        return KEY_MANAGER_API_SUCCESS;
+        ThrowMsg(DBCrypto::Exception::InternalError,
+                "Couldn't get key aliases for label " << label);
     }
 
-    int DBCrypto::deleteDBRow(
+    void DBCrypto::deleteDBRow(
             const Alias &alias,
             const std::string &label)
     {
@@ -420,93 +403,77 @@ using namespace DB;
             deleteCommand->BindString(1, alias.c_str());
             deleteCommand->BindString(2, label.c_str());
             deleteCommand->Step();
+            return;
         } Catch (SqlConnection::Exception::SyntaxError) {
             LogError("Couldn't prepare delete statement");
-            return KEY_MANAGER_API_ERROR_DB_ERROR;
         } Catch (SqlConnection::Exception::InternalError) {
             LogError("Couldn't execute delete statement");
-            return KEY_MANAGER_API_ERROR_DB_ERROR;
         }
-        return KEY_MANAGER_API_SUCCESS;
+        ThrowMsg(DBCrypto::Exception::InternalError,
+                "Couldn't delete DBRow for alias " << alias
+                << " and label " << label);
     }
 
-    int DBCrypto::saveKey(
+    void DBCrypto::saveKey(
             const std::string& label,
             const RawBuffer &key)
     {
-        if (!m_init)
-            return KEY_MANAGER_API_ERROR_DB_ERROR;
-
         Try {
             SqlConnection::DataCommandAutoPtr insertCommand =
                     m_connection->PrepareDataCommand(insert_key_cmd);
             insertCommand->BindString(1, label.c_str());
             insertCommand->BindBlob(2, key);
-
             insertCommand->Step();
-
+            return;
         } Catch (SqlConnection::Exception::SyntaxError) {
             LogError("Couldn't prepare insert key statement");
-            return KEY_MANAGER_API_ERROR_DB_ERROR;
         } Catch (SqlConnection::Exception::InternalError) {
             LogError("Couldn't execute insert statement");
-            return KEY_MANAGER_API_ERROR_DB_ERROR;
         }
-
-        return KEY_MANAGER_API_SUCCESS;
+        ThrowMsg(DBCrypto::Exception::InternalError,
+                "Couldn't save key for label " << label);
     }
-    int DBCrypto::getKey(
-            const std::string& label,
-            RawBuffer &key)
-    {
-        if (!m_init)
-            return KEY_MANAGER_API_ERROR_DB_ERROR;
 
+    DBCrypto::RawBufferOptional DBCrypto::getKey(
+            const std::string& label)
+    {
         Try {
             SqlConnection::DataCommandAutoPtr selectCommand =
                     m_connection->PrepareDataCommand(select_key_cmd);
             selectCommand->BindString(1, label.c_str());
 
             if (selectCommand->Step()) {
-                key = selectCommand->GetColumnBlob(0);
+                return RawBufferOptional(
+                        selectCommand->GetColumnBlob(0));
             } else {
-                return KEY_MANAGER_API_ERROR_DB_ALIAS_UNKNOWN;
+                return RawBufferOptional();
             }
-
-            AssertMsg(!selectCommand->Step(),
-                "Select returned multiple rows for unique column.");
 
         } Catch (SqlConnection::Exception::InvalidColumn) {
             LogError("Select statement invalid column error");
-            return KEY_MANAGER_API_ERROR_DB_ERROR;
         } Catch (SqlConnection::Exception::SyntaxError) {
             LogError("Couldn't prepare insert key statement");
-            return KEY_MANAGER_API_ERROR_DB_ERROR;
         } Catch (SqlConnection::Exception::InternalError) {
             LogError("Couldn't execute insert statement");
-            return KEY_MANAGER_API_ERROR_DB_ERROR;
         }
-        return KEY_MANAGER_API_SUCCESS;
+        ThrowMsg(DBCrypto::Exception::InternalError,
+                "Couldn't get key for label " << label);
     }
-    int DBCrypto::deleteKey(const std::string& label) {
-        if (!m_init)
-            return KEY_MANAGER_API_ERROR_DB_ERROR;
 
+    void DBCrypto::deleteKey(const std::string& label) {
         Try {
             SqlConnection::DataCommandAutoPtr deleteCommand =
                     m_connection->PrepareDataCommand(delete_key_cmd);
             deleteCommand->BindString(1, label.c_str());
-
             deleteCommand->Step();
-
+            return;
         } Catch (SqlConnection::Exception::SyntaxError) {
             LogError("Couldn't prepare insert key statement");
-            return KEY_MANAGER_API_ERROR_DB_ERROR;
         } Catch (SqlConnection::Exception::InternalError) {
             LogError("Couldn't execute insert statement");
-            return KEY_MANAGER_API_ERROR_DB_ERROR;
         }
-        return KEY_MANAGER_API_SUCCESS;
+        ThrowMsg(DBCrypto::Exception::InternalError,
+                "Couldn't delete key for label " << label);
     }
 
 } // CKM

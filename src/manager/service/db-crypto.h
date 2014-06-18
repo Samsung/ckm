@@ -36,7 +36,16 @@
 namespace CKM {
     class DBCrypto {
          public:
-            DBCrypto() : m_connection(NULL), m_init(false) {};
+            typedef boost::optional<DBRow> DBRowOptional;
+            typedef boost::optional<RawBuffer> RawBufferOptional;
+            class Exception
+            {
+              public:
+                DECLARE_EXCEPTION_TYPE(CKM::Exception, Base)
+                DECLARE_EXCEPTION_TYPE(Base, AliasExists)
+                DECLARE_EXCEPTION_TYPE(Base, InternalError)
+            };
+            DBCrypto() : m_connection(NULL) {};
             //user name instead of path?
             DBCrypto(const std::string &path, const RawBuffer &rawPass);
             DBCrypto(const DBCrypto &other) = delete;
@@ -47,44 +56,43 @@ namespace CKM {
 
             virtual ~DBCrypto();
 
-            bool isInit() {return m_init;};
-            int saveDBRow(const DBRow &row);
-            int getDBRow(
+            void saveDBRow(const DBRow &row);
+            DBRowOptional getDBRow(
                     const Alias &alias,
                     const std::string &label,
-                    DBDataType type,
-                    DBRow &row);
-            int getKeyDBRow(
+                    DBDataType type);
+            DBRowOptional getKeyDBRow(
                     const Alias &alias,
-                    const std::string &label,
-                    DBRow &row);
-            int getAliases(
+                    const std::string &label);
+            void getAliases(
                     DBDataType dataType,
                     const std::string &label,
                     AliasVector &aliases);
-            int getKeyAliases(
+            void getKeyAliases(
                     const std::string &label,
                     AliasVector &aliases);
-            int deleteDBRow(
+            void deleteDBRow(
                     const Alias& alias,
                     const std::string &label);
 
-            int saveKey(const std::string& label, const RawBuffer &key);
-            int getKey(const std::string& label, RawBuffer &key);
-            int deleteKey(const std::string& label);
+            void saveKey(const std::string& label, const RawBuffer &key);
+            RawBufferOptional getKey(
+                    const std::string& label);
+            void deleteKey(const std::string& label);
 
          private:
             DB::SqlConnection* m_connection;
-            bool m_init;
 
             void initDatabase();
             DBRow getRow(const DB::SqlConnection::DataCommandAutoPtr &selectCommand);
-            void createTable(const char* create_cmd);
+            void createTable(
+                    const char *create_cmd,
+                    const char *table_name);
             bool checkAliasExist(
                     const std::string &alias,
                     const std::string &label);
             bool checkGlobalAliasExist(const std::string& alias);
-            int getSingleType(
+            void getSingleType(
                     DBDataType type,
                     const std::string& label,
                     AliasVector& aliases);
