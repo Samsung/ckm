@@ -32,6 +32,8 @@
 #include <db-row.h>
 #include <protocols.h>
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic warning "-Wdeprecated-declarations"
 
 namespace CKM {
     class DBCrypto {
@@ -44,8 +46,12 @@ namespace CKM {
                 DECLARE_EXCEPTION_TYPE(CKM::Exception, Base)
                 DECLARE_EXCEPTION_TYPE(Base, AliasExists)
                 DECLARE_EXCEPTION_TYPE(Base, InternalError)
+                DECLARE_EXCEPTION_TYPE(Base, TransactionError)
             };
-            DBCrypto() : m_connection(NULL) {};
+            DBCrypto() :
+                m_connection(NULL),
+                m_inUserTransaction(false)
+              {};
             //user name instead of path?
             DBCrypto(const std::string &path, const RawBuffer &rawPass);
             DBCrypto(const DBCrypto &other) = delete;
@@ -80,8 +86,68 @@ namespace CKM {
                     const std::string& label);
             void deleteKey(const std::string& label);
 
+            int beginTransaction();
+            int commitTransaction();
+            int rollbackTransaction();
+
+            class Transaction {
+            public:
+                Transaction(DBCrypto *db)
+                    : m_db(db),
+                      m_inTransaction(false) {
+                    if(!m_db->m_inUserTransaction) {
+                        Try {
+                            m_db->m_connection->ExecCommand("BEGIN EXCLUSIVE");
+                            m_db->m_inUserTransaction = true;
+                            m_inTransaction = true;
+                        } Catch (DB::SqlConnection::Exception::Base) {
+                            LogError("Couldn't begin transaction");
+                            ReThrow(DBCrypto::Exception::TransactionError);
+                        }
+                    }
+                }
+                void commit() {
+                    if(m_inTransaction) {
+                        Try {
+                            m_db->m_connection->CommitTransaction();
+                            m_db->m_inUserTransaction = false;
+                            m_inTransaction = false;
+                        } Catch (DB::SqlConnection::Exception::Base) {
+                            LogError("Couldn't commit transaction");
+                            ReThrow(DBCrypto::Exception::TransactionError);
+                        }
+                    }
+                }
+                void rollback() {
+                    if(m_inTransaction) {
+                        Try {
+                            m_db->m_connection->RollbackTransaction();
+                            m_db->m_inUserTransaction = false;
+                            m_inTransaction = false;
+                        } Catch (DB::SqlConnection::Exception::Base) {
+                            LogError("Couldn't rollback transaction");
+                            ReThrow(DBCrypto::Exception::TransactionError);
+                        }
+                    }
+                }
+                ~Transaction() {
+                    Try {
+                        if(m_inTransaction) {
+                            m_db->m_inUserTransaction = false;
+                            m_db->m_connection->RollbackTransaction();
+                        }
+                    } Catch (DB::SqlConnection::Exception::Base) {
+                        LogError("Transaction rollback failed!");
+                    }
+                }
+            private:
+                DBCrypto *m_db;
+                bool m_inTransaction;
+            };
+
          private:
             DB::SqlConnection* m_connection;
+            bool m_inUserTransaction;
 
             void initDatabase();
             DBRow getRow(const DB::SqlConnection::DataCommandAutoPtr &selectCommand);
@@ -96,8 +162,9 @@ namespace CKM {
                     DBDataType type,
                     const std::string& label,
                     AliasVector& aliases);
-
    };
 } // namespace CKM
 
+#pragma GCC diagnostic pop
 #endif //DB_CRYPTO_H
+

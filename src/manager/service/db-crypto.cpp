@@ -127,6 +127,7 @@ using namespace DB;
     DBCrypto::DBCrypto(const std::string& path,
                          const RawBuffer &rawPass) {
         m_connection = NULL;
+        m_inUserTransaction = false;
         Try {
             m_connection = new SqlConnection(path, SqlConnection::Flag::Option::CRW);
             m_connection->SetKey(rawPass);
@@ -147,8 +148,10 @@ using namespace DB;
     }
 
     DBCrypto::DBCrypto(DBCrypto &&other) :
-            m_connection(other.m_connection) {
+            m_connection(other.m_connection),
+            m_inUserTransaction(other.m_inUserTransaction){
         other.m_connection = NULL;
+        other.m_inUserTransaction = false;
     }
 
     DBCrypto::~DBCrypto() {
@@ -162,6 +165,9 @@ using namespace DB;
 
         m_connection = other.m_connection;
         other.m_connection = NULL;
+
+        m_inUserTransaction = other.m_inUserTransaction;
+        other.m_inUserTransaction = false;
 
         return *this;
     }
@@ -179,12 +185,14 @@ using namespace DB;
     }
 
     void DBCrypto::initDatabase() {
+        Transaction transaction(this);
         if(!m_connection->CheckTableExist(main_table)) {
             createTable(db_create_main_cmd, main_table);
         }
         if(!m_connection->CheckTableExist(key_table)) {
             createTable(db_create_key_cmd, key_table);
         }
+        transaction.commit();
     }
 
     bool DBCrypto::checkGlobalAliasExist(const std::string& alias) {
@@ -219,6 +227,7 @@ using namespace DB;
 
             //Sqlite does not support partial index in our version,
             //so we do it by hand
+            Transaction transaction(this);
             if((row.restricted == 1 && checkAliasExist(row.alias, row.smackLabel)) ||
                     (row.restricted == 0 && checkGlobalAliasExist(row.alias))) {
                 ThrowMsg(DBCrypto::Exception::AliasExists,
@@ -240,6 +249,7 @@ using namespace DB;
             insertCommand->BindBlob(10, row.data);
 
             insertCommand->Step();
+            transaction.commit();
             return;
 
         } Catch(SqlConnection::Exception::SyntaxError) {
@@ -272,6 +282,7 @@ using namespace DB;
         DBDataType type)
     {
         Try {
+            Transaction transaction(this);
             SqlConnection::DataCommandAutoPtr selectCommand =
                     m_connection->PrepareDataCommand(select_alias_cmd);
             selectCommand->BindString(1, alias.c_str());
@@ -281,6 +292,7 @@ using namespace DB;
             selectCommand->BindInteger(5, static_cast<int>(type));
 
             if(selectCommand->Step()) {
+                transaction.commit();
                 return DBRowOptional(getRow(selectCommand));
             } else {
                 return DBRowOptional();
@@ -302,6 +314,7 @@ using namespace DB;
         const std::string &label)
     {
         Try{
+            Transaction transaction(this);
             SqlConnection::DataCommandAutoPtr selectCommand =
                     m_connection->PrepareDataCommand(select_key_alias_cmd);
             selectCommand->BindString(1, alias.c_str());
@@ -310,6 +323,7 @@ using namespace DB;
             selectCommand->BindString(4, label.c_str());
 
             if(selectCommand->Step()) {
+                transaction.commit();
                 return DBRowOptional(getRow(selectCommand));
             } else {
                 return DBRowOptional();
@@ -370,6 +384,7 @@ using namespace DB;
         AliasVector &aliases)
     {
         Try{
+            Transaction transaction(this);
             SqlConnection::DataCommandAutoPtr selectCommand =
                             m_connection->PrepareDataCommand(select_key_type_cmd);
             selectCommand->BindInteger(1, static_cast<int>(DBDataType::DB_KEY_FIRST));
@@ -381,6 +396,7 @@ using namespace DB;
                 alias = selectCommand->GetColumnString(0);
                 aliases.push_back(alias);
             }
+            transaction.commit();
             return;
         } Catch (SqlConnection::Exception::InvalidColumn) {
             LogError("Select statement invalid column error");
@@ -398,11 +414,13 @@ using namespace DB;
             const std::string &label)
     {
         Try {
+            Transaction transaction(this);
             SqlConnection::DataCommandAutoPtr deleteCommand =
                     m_connection->PrepareDataCommand(delete_alias_cmd);
             deleteCommand->BindString(1, alias.c_str());
             deleteCommand->BindString(2, label.c_str());
             deleteCommand->Step();
+            transaction.commit();
             return;
         } Catch (SqlConnection::Exception::SyntaxError) {
             LogError("Couldn't prepare delete statement");
@@ -419,11 +437,13 @@ using namespace DB;
             const RawBuffer &key)
     {
         Try {
+            Transaction transaction(this);
             SqlConnection::DataCommandAutoPtr insertCommand =
                     m_connection->PrepareDataCommand(insert_key_cmd);
             insertCommand->BindString(1, label.c_str());
             insertCommand->BindBlob(2, key);
             insertCommand->Step();
+            transaction.commit();
             return;
         } Catch (SqlConnection::Exception::SyntaxError) {
             LogError("Couldn't prepare insert key statement");
@@ -438,14 +458,17 @@ using namespace DB;
             const std::string& label)
     {
         Try {
+            Transaction transaction(this);
             SqlConnection::DataCommandAutoPtr selectCommand =
                     m_connection->PrepareDataCommand(select_key_cmd);
             selectCommand->BindString(1, label.c_str());
 
             if (selectCommand->Step()) {
+                transaction.commit();
                 return RawBufferOptional(
                         selectCommand->GetColumnBlob(0));
             } else {
+                transaction.commit();
                 return RawBufferOptional();
             }
 
@@ -462,10 +485,12 @@ using namespace DB;
 
     void DBCrypto::deleteKey(const std::string& label) {
         Try {
+            Transaction transaction(this);
             SqlConnection::DataCommandAutoPtr deleteCommand =
                     m_connection->PrepareDataCommand(delete_key_cmd);
             deleteCommand->BindString(1, label.c_str());
             deleteCommand->Step();
+            transaction.commit();
             return;
         } Catch (SqlConnection::Exception::SyntaxError) {
             LogError("Couldn't prepare insert key statement");

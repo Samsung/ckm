@@ -151,6 +151,7 @@ int CKMLogic::saveDataHelper(
          0, RawBuffer(10, 'c'), key.size(), key };
 
     auto &handler = m_userDataMap[cred.uid];
+    DBCrypto::Transaction transaction(&handler.database);
     if (!handler.crypto.haveKey(cred.smackLabel)) {
         RawBuffer key;
         auto key_optional = handler.database.getKey(cred.smackLabel);
@@ -168,6 +169,7 @@ int CKMLogic::saveDataHelper(
     }
     handler.crypto.encryptRow(policy.password, row);
     handler.database.saveDBRow(row);
+    transaction.commit();
     return KEY_MANAGER_API_SUCCESS;
 }
 
@@ -195,6 +197,9 @@ RawBuffer CKMLogic::saveData(
     } catch (const DBCrypto::Exception::AliasExists &e) {
         LogError("DBCrypto couldn't save duplicate alias");
         retCode = KEY_MANAGER_API_ERROR_DB_ALIAS_EXISTS;
+    } catch (const DBCrypto::Exception::TransactionError &e) {
+        LogError("DBCrypto transaction failed with message " << e.GetMessage());
+        retCode = KEY_MANAGER_API_ERROR_DB_ERROR;
     }
 
     MessageBuffer response;
