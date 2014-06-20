@@ -36,6 +36,7 @@ class CertificateImpl {
 public:
     CertificateImpl(){}
     CertificateImpl(const RawBuffer &data, DataFormat format);
+    CertificateImpl(const CertificateImpl &);
     CertificateImpl& operator=(const CertificateImpl &);
     RawBuffer getDER() const;
     bool empty() const;

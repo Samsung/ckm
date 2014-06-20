@@ -65,6 +65,11 @@ CertificateImpl::CertificateImpl(const RawBuffer &der, DataFormat format)
 //    }
 }
 
+CertificateImpl::CertificateImpl(const CertificateImpl &second){
+   m_x509 = X509_dup(second.m_x509);
+}
+
+
 CertificateImpl& CertificateImpl::operator=(const CertificateImpl &second) {
    m_x509 = X509_dup(second.m_x509);
    return *this;
