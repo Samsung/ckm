@@ -107,12 +107,6 @@ if [ $1 = 2 ]; then
     systemctl restart central-key-manager.service
 fi
 
-%if "%{sec_product_feature_security_mdfpp_enable}" == "1"
-rm %{_libdir}/libkey-manager-key-provider.so.1.0.0
-ln -s %{_libdir}/libskmm.so %{_libdir}/libkey-manager-key-provider.so.1.0.0
-%endif
-
-
 
 %preun
 if [ $1 = 0 ]; then
