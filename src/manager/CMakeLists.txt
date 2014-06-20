@@ -20,6 +20,7 @@ SET(COMMON_SOURCES
     ${COMMON_PATH}/common/message-buffer.cpp
     ${COMMON_PATH}/common/smack-check.cpp
     ${COMMON_PATH}/common/certificate-impl.cpp
+    ${COMMON_PATH}/common/generic-key.cpp
     ${COMMON_PATH}/dpl/log/src/abstract_log_provider.cpp
     ${COMMON_PATH}/dpl/log/src/dlog_log_provider.cpp
     ${COMMON_PATH}/dpl/log/src/log.cpp

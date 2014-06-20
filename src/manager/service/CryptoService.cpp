@@ -16,8 +16,7 @@
 #include <openssl/x509v3.h>
 #include <openssl/obj_mac.h>
 #include <ckm/ckm-type.h>
-#include <key-rsa.h>
-#include <key-ecdsa.h>
+#include <generic-key.h>
 #include <CryptoService.h>
 #include <key-manager-util.h>
 
@@ -155,8 +154,8 @@ int CryptoService::initialize() {
 }
 
 int CryptoService::createKeyPairRSA(const int size, // size in bits [1024, 2048, 4096]
-		KeyRSAPrivate &createdPrivateKey,  // returned value
-        KeyRSAPublic &createdPublicKey)  // returned value
+		GenericKey &createdPrivateKey,  // returned value
+        GenericKey &createdPublicKey)  // returned value
 {
 	EVP_PKEY_CTX *ctx = NULL;
 	EVP_PKEY *pkey = NULL;
@@ -195,14 +194,11 @@ int CryptoService::createKeyPairRSA(const int size, // size in bits [1024, 2048,
 
     LogDebug("Generating RSA key pair end.");
 
-    // convert to rsa key
-	RSA *rsa_key = EVP_PKEY_get1_RSA(pkey);
+    GenericKey::EvpShPtr ptr(pkey, EVP_PKEY_free); // shared ptr will free pkey
 
-    createdPrivateKey = KeyRSAPrivate(rsa_key);
-    createdPublicKey = KeyRSAPublic(rsa_key);
+    createdPrivateKey = GenericKey(ptr, KeyType::KEY_RSA_PRIVATE);
+    createdPublicKey = GenericKey(ptr, KeyType::KEY_RSA_PUBLIC);
 
-	if(pkey)
-		EVP_PKEY_free(pkey);
 	if(ctx)
 		EVP_PKEY_CTX_free(ctx);
 
@@ -210,8 +206,8 @@ int CryptoService::createKeyPairRSA(const int size, // size in bits [1024, 2048,
 }
 
 int CryptoService::createKeyPairECDSA(ElipticCurve type,
-		KeyECDSAPrivate &createdPrivateKey,  // returned value
-        KeyECDSAPublic &createdPublicKey)  // returned value
+		GenericKey &createdPrivateKey,  // returned value
+        GenericKey &createdPublicKey)  // returned value
 {
 		int ecCurve = -1;
 		EVP_PKEY_CTX *pctx = NULL;
@@ -284,14 +280,11 @@ int CryptoService::createKeyPairECDSA(ElipticCurve type,
 			if(kctx) EVP_PKEY_CTX_free(kctx);
 		}
 
-		// convert to rsa key
-		EC_KEY *ec_key = EVP_PKEY_get1_EC_KEY(pkey);
+        GenericKey::EvpShPtr ptr(pkey, EVP_PKEY_free); // shared ptr will free pkey
 
-        createdPrivateKey = KeyECDSAPrivate(ec_key);
-        createdPublicKey = KeyECDSAPublic(ec_key);
+        createdPrivateKey = GenericKey(ptr, KeyType::KEY_ECDSA_PRIVATE);
+        createdPublicKey = GenericKey(ptr, KeyType::KEY_ECDSA_PUBLIC);
 
-		if(pkey)
-			EVP_PKEY_free(pkey);
 		if(pparam)
 			EVP_PKEY_free(pparam);
 		if(pctx)
@@ -312,7 +305,6 @@ int CryptoService::createSignature(const GenericKey &privateKey,
 	EVP_PKEY_CTX *pctx;
 	int ret = EVP_FAIL;
 	int rsa_padding = -1;
-	EVP_PKEY *private_pkey;
 	RawBuffer data;
 	const EVP_MD *md_algo;
 
@@ -348,15 +340,17 @@ int CryptoService::createSignature(const GenericKey &privateKey,
         return CKM_CRYPTO_NOT_SUPPORT_KEY_TYPE;
     }
 
-    private_pkey = privateKey.getEVPKEY();
+    auto shrPKey = privateKey.getEvpShPtr();
+
+    if (NULL == shrPKey.get())
+        return CKM_CRYPTO_PKEYSET_ERROR;
 
 	// Create the Message Digest Context
 	if(!(mdctx = EVP_MD_CTX_create())) {
 		return CKM_SIG_GEN_ERROR;
 	}
-	if(EVP_SUCCESS != EVP_DigestSignInit(mdctx, &pctx, md_algo, NULL, private_pkey)) {
+	if(EVP_SUCCESS != EVP_DigestSignInit(mdctx, &pctx, md_algo, NULL, shrPKey.get())) {
 		if(mdctx) EVP_MD_CTX_destroy(mdctx);
-        if(private_pkey) EVP_PKEY_free(private_pkey);
 		return CKM_SIG_GEN_ERROR;
 	}
 
@@ -364,7 +358,6 @@ int CryptoService::createSignature(const GenericKey &privateKey,
 	if(privateKey.getType()==KeyType::KEY_RSA_PRIVATE) {
 		if(EVP_SUCCESS != EVP_PKEY_CTX_set_rsa_padding(pctx, rsa_padding)) {
 			if(mdctx) EVP_MD_CTX_destroy(mdctx);
-            if(private_pkey) EVP_PKEY_free(private_pkey);
 			return CKM_SIG_GEN_ERROR;
 		}
 	}
@@ -374,7 +367,6 @@ int CryptoService::createSignature(const GenericKey &privateKey,
 	memcpy(msg, message.data(),message.size());
 	if(EVP_SUCCESS != EVP_DigestSignUpdate(mdctx, msg, message.size())) {
 		if(mdctx) EVP_MD_CTX_destroy(mdctx);
-        if(private_pkey) EVP_PKEY_free(private_pkey);
 		return CKM_SIG_GEN_ERROR;
 	}
 
@@ -384,7 +376,6 @@ int CryptoService::createSignature(const GenericKey &privateKey,
 	size_t slen;
 	if(EVP_SUCCESS != EVP_DigestSignFinal(mdctx, NULL, &slen)) {
 		if(mdctx) EVP_MD_CTX_destroy(mdctx);
-        if(private_pkey) EVP_PKEY_free(private_pkey);
 		return CKM_SIG_GEN_ERROR;
 	}
 	/* Allocate memory for the signature based on size in slen */
@@ -393,7 +384,6 @@ int CryptoService::createSignature(const GenericKey &privateKey,
 	/* Obtain the signature */
 	if(EVP_SUCCESS != EVP_DigestSignFinal(mdctx, sig, &slen)) {
 		if(mdctx) EVP_MD_CTX_destroy(mdctx);
-        if(private_pkey) EVP_PKEY_free(private_pkey);
 		return CKM_SIG_GEN_ERROR;
 	}
 
@@ -403,7 +393,6 @@ int CryptoService::createSignature(const GenericKey &privateKey,
 	/* Success */
 	ret = EVP_SUCCESS;
 	if(mdctx) EVP_MD_CTX_destroy(mdctx);
-    if(private_pkey) EVP_PKEY_free(private_pkey);
 	return ret;
 }
 
@@ -418,7 +407,6 @@ int CryptoService::verifySignature(const GenericKey &publicKey,
 	int ret = EVP_FAIL;
 	int rsa_padding = -1;
 	const EVP_MD *md_algo;
-	EVP_PKEY *public_pkey;
 	RawBuffer data;
 
 	switch(hashAlgo) {
@@ -454,9 +442,9 @@ int CryptoService::verifySignature(const GenericKey &publicKey,
 		return CKM_CRYPTO_NOT_SUPPORT_KEY_TYPE;
 	}
 
-    public_pkey = publicKey.getEVPKEY();
+    auto public_pkey = publicKey.getEvpShPtr();
 
-    if (NULL == public_pkey)
+    if (NULL == public_pkey.get())
         return CKM_CRYPTO_PKEYSET_ERROR;
 
 	char msg[message.size()];
@@ -467,39 +455,33 @@ int CryptoService::verifySignature(const GenericKey &publicKey,
 
 	/* Create the Message Digest Context */
 	if(!(mdctx = EVP_MD_CTX_create())) {
-        if (public_pkey) EVP_PKEY_free(public_pkey);
 		return CKM_SIG_VERIFY_OPER_ERROR;
 	}
 
-	if(EVP_SUCCESS != EVP_DigestVerifyInit(mdctx, &pctx, md_algo, NULL, public_pkey)) {
+	if(EVP_SUCCESS != EVP_DigestVerifyInit(mdctx, &pctx, md_algo, NULL, public_pkey.get())) {
 		if(mdctx) EVP_MD_CTX_destroy(mdctx);
-        if (public_pkey) EVP_PKEY_free(public_pkey);
 		return CKM_SIG_VERIFY_OPER_ERROR;
 	}
 
 	if(publicKey.getType()==KeyType::KEY_RSA_PUBLIC) {
 		if(EVP_SUCCESS != EVP_PKEY_CTX_set_rsa_padding(pctx, rsa_padding))  {
 			if(mdctx) EVP_MD_CTX_destroy(mdctx);
-            if (public_pkey) EVP_PKEY_free(public_pkey);
 			return CKM_SIG_VERIFY_OPER_ERROR;
 		}
 	}
 
 	if(EVP_SUCCESS != EVP_DigestVerifyUpdate(mdctx, msg, message.size()) ) {
 		if(mdctx) EVP_MD_CTX_destroy(mdctx);
-        if (public_pkey) EVP_PKEY_free(public_pkey);
 		return CKM_SIG_VERIFY_OPER_ERROR;
     }
 
 	if(EVP_SUCCESS != EVP_DigestVerifyFinal(mdctx, sig, signature.size()) ) {
 		if(mdctx) EVP_MD_CTX_destroy(mdctx);
-        if (public_pkey) EVP_PKEY_free(public_pkey);
 		return CKM_SIG_VERIFY_OPER_ERROR;
     }
 
 	ret = EVP_SUCCESS;
 	if(mdctx) EVP_MD_CTX_destroy(mdctx);
-    if (public_pkey) EVP_PKEY_free(public_pkey);
 	return ret;
 }
 

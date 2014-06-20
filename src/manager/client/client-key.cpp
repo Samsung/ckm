@@ -23,7 +23,7 @@
 
 #include <dpl/log/log.h>
 
-#include <key-rsa.h>
+#include <generic-key.h>
 
 namespace CKM {
 
@@ -33,19 +33,11 @@ Key::Key()
 
 Key::Key(
     const RawBuffer &rawData,
-    KeyType type,
-    const std::string &password)
+    const std::string &password,
+    KeyType type)
 {
-    switch (type) {
-        case KeyType::KEY_RSA_PRIVATE:
-            m_impl.reset(new KeyRSAPrivate(rawData, password));
-            break;
-        case KeyType::KEY_RSA_PUBLIC:
-            m_impl.reset(new KeyRSAPublic(rawData, password));
-            break;
-        default:
-            LogError("Key Type not implemented");
-    }
+    (void)type;
+    m_impl.reset(new GenericKey(rawData, password));
 }
 
 Key::Key(const Key &second) {

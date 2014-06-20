@@ -63,7 +63,9 @@ private:
 class Key {
 public:
     Key();
-    Key(const RawBuffer &rawData, KeyType type, const std::string &password = std::string()); // Import key
+    Key(const RawBuffer &rawData,
+        const std::string &password = std::string(),
+        KeyType type = KeyType::KEY_NONE); // Import key
     Key(const Key &key);
     Key& operator=(const Key &key);
     virtual ~Key();

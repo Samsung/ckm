@@ -2,8 +2,7 @@
 
 #include <iostream>
 
-#include <key-rsa.h>
-#include <key-ecdsa.h>
+#include <generic-key.h>
 #include <certificate-impl.h>
 #include <ckm/ckm-type.h>
 #include <string.h>
@@ -53,12 +52,12 @@ class CryptoService {
      static int initialize();
 
      int createKeyPairRSA(const int size,      // size in bits [1024, 2048, 4096]
-                         KeyRSAPrivate &createdPrivateKey,  // returned value ==> Key &createdPrivateKey,
-                         KeyRSAPublic &createdPublicKey);  // returned value ==> Key &createdPublicKey
+                         GenericKey &createdPrivateKey,  // returned value ==> Key &createdPrivateKey,
+                         GenericKey &createdPublicKey);  // returned value ==> Key &createdPublicKey
 
      int createKeyPairECDSA(ElipticCurve type1,
-    		 	 	 	 KeyECDSAPrivate &createdPrivateKey,  // returned value
-    		 	 	 	 KeyECDSAPublic &createdPublicKey);  // returned value
+    		 	 	 	 GenericKey &createdPrivateKey,  // returned value
+    		 	 	 	 GenericKey &createdPublicKey);  // returned value
 
      int createSignature(const GenericKey &privateKey,
                          const RawBuffer &message,

@@ -131,6 +131,14 @@ private:
         const PolicySerializable &policyPrivate,
         const PolicySerializable &policyPublic);
 
+    int createKeyPairECDSAHelper(
+        Credentials &cred,
+        int type,
+        const Alias &aliasPrivate,
+        const Alias &aliasPublic,
+        const PolicySerializable &policyPrivate,
+        const PolicySerializable &policyPublic);
+
     std::map<uid_t, UserData> m_userDataMap;
 };
 

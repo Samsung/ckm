@@ -20,18 +20,33 @@
  */
 #pragma once
 
+#include <memory>
+
 #include <ckm/ckm-type.h>
+#include <openssl/evp.h>
 
 namespace CKM {
 
 class GenericKey {
 public:
-    virtual KeyType getType() const = 0;
-    virtual RawBuffer getDER() const = 0;
-    virtual EVP_PKEY* getEVPKEY() const = 0;
+    typedef std::shared_ptr<EVP_PKEY> EvpShPtr;
 
-    virtual bool empty() const = 0;
+    GenericKey();
+    GenericKey(const GenericKey &second);
+    GenericKey(const RawBuffer& buffer, const std::string &pass);
+    GenericKey(EvpShPtr pkey, KeyType type);
+
+    virtual KeyType getType() const;
+    virtual RawBuffer getDER() const;
+    virtual RawBuffer getDERPUB() const;
+    virtual RawBuffer getDERPRV() const;
+    virtual EvpShPtr getEvpShPtr() const;
+
+    virtual bool empty() const;
     virtual ~GenericKey(){}
+protected:
+    EvpShPtr m_pkey;
+    KeyType m_type;
 };
 
 } // namespace CKM

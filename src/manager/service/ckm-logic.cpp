@@ -28,7 +28,7 @@
 #include <file-system.h>
 #include <CryptoService.h>
 #include <ckm-logic.h>
-#include <key-rsa.h>
+#include <generic-key.h>
 
 namespace CKM {
 
@@ -264,6 +264,8 @@ int CKMLogic::getDataHelper(
     }
     handler.crypto.decryptRow(password, row);
 
+    LogError("Datatype: " << (int) row.dataType);
+
     return KEY_MANAGER_API_SUCCESS;
 }
 
@@ -291,6 +293,8 @@ RawBuffer CKMLogic::getData(
         row.data.clear();
         row.dataType = dataType;
     }
+
+    LogError("Sending dataType: " << (int)row.dataType);
 
     MessageBuffer response;
     Serialization::Serialize(response, static_cast<int>(LogicCommand::GET));
@@ -341,8 +345,7 @@ int CKMLogic::createKeyPairRSAHelper(
         return KEY_MANAGER_API_ERROR_DB_LOCKED;
 
     auto &handler = m_userDataMap[cred.uid];
-    KeyRSAPrivate prv;
-    KeyRSAPublic pub;
+    GenericKey prv, pub;
     CryptoService cr;
     int retCode;
 
@@ -398,6 +401,51 @@ RawBuffer CKMLogic::createKeyPairRSA(
     return response.Pop();
 }
 
+int CKMLogic::createKeyPairECDSAHelper(
+    Credentials &cred,
+    int type,
+    const Alias &aliasPrivate,
+    const Alias &aliasPublic,
+    const PolicySerializable &policyPrivate,
+    const PolicySerializable &policyPublic)
+{
+    if (0 >= m_userDataMap.count(cred.uid))
+        return KEY_MANAGER_API_ERROR_DB_LOCKED;
+
+    auto &handler = m_userDataMap[cred.uid];
+    GenericKey prv, pub;
+    CryptoService cr;
+    int retCode;
+
+    if (CKM_CRYPTO_CREATEKEY_SUCCESS != (retCode = cr.createKeyPairECDSA(
+              static_cast<ElipticCurve>(type), prv, pub)))
+    {
+        LogError("CryptoService failed with code: " << retCode);
+        return KEY_MANAGER_API_ERROR_SERVER_ERROR; // TODO error code
+    }
+
+    retCode = saveDataHelper(cred,
+                            toDBDataType(prv.getType()),
+                            aliasPrivate,
+                            prv.getDER(),
+                            policyPrivate);
+
+    if (KEY_MANAGER_API_SUCCESS != retCode)
+        return retCode;
+
+    retCode = saveDataHelper(cred,
+                            toDBDataType(pub.getType()),
+                            aliasPublic,
+                            pub.getDER(),
+                            policyPublic);
+
+    if (KEY_MANAGER_API_SUCCESS != retCode) {
+        handler.database.deleteDBRow(aliasPrivate, cred.smackLabel);
+    }
+
+    return retCode;
+}
+
 RawBuffer CKMLogic::createKeyPairECDSA(
     Credentials &cred,
     int commandId,
@@ -407,17 +455,18 @@ RawBuffer CKMLogic::createKeyPairECDSA(
     const PolicySerializable &policyPrivate,
     const PolicySerializable &policyPublic)
 {
-    (void)cred;
-    (void)type;
-    (void)aliasPrivate;
-    (void)aliasPublic;
-    (void)policyPrivate;
-    (void)policyPublic;
+    int retCode = createKeyPairECDSAHelper(
+                        cred,
+                        type,
+                        aliasPrivate,
+                        aliasPublic,
+                        policyPrivate,
+                        policyPublic);
 
     MessageBuffer response;
     Serialization::Serialize(response, static_cast<int>(LogicCommand::CREATE_KEY_PAIR_RSA));
     Serialization::Serialize(response, commandId);
-    Serialization::Serialize(response, static_cast<int>(KEY_MANAGER_API_SUCCESS));
+    Serialization::Serialize(response, retCode);
  
     return response.Pop();
 }

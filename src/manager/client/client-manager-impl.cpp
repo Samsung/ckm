@@ -19,6 +19,7 @@
  * @brief       Manager implementation.
  */
 #include <dpl/serialization.h>
+#include <dpl/log/log.h>
 
 #include <client-manager-impl.h>
 #include <client-common.h>
@@ -196,10 +197,12 @@ int Manager::ManagerImpl::getKey(const Alias &alias, const std::string &password
     if (retCode != KEY_MANAGER_API_SUCCESS)
         return retCode;
 
-    Key keyParsed(rawData, toKeyType(recvDataType));
+    Key keyParsed(rawData);
 
-    if (keyParsed.empty())
+    if (keyParsed.empty()) {
+        LogDebug("Key empty - failed to parse!");
         return KEY_MANAGER_API_ERROR_BAD_RESPONSE;
+    }
 
     key = keyParsed;
 
