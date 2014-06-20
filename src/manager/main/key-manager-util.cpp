@@ -137,10 +137,13 @@ STACK_OF(X509) *loadSystemCerts( const char * dirpath) {
     FTSENT *ftsent;
     char tmp[10];
     STACK_OF(X509) *systemCerts = sk_X509_new_null();
-
+    const char *dir_path[2];
     X509 *cert;
 
-    if (NULL == (fts = fts_open((char * const *) &dirpath, FTS_LOGICAL, NULL))) {
+    dir_path[0] = dirpath;
+    dir_path[1] = NULL;
+
+    if (NULL == (fts = fts_open((char * const *) dir_path, FTS_LOGICAL, NULL))) {
         printf("Fail to open directories. dir=%s \n", dirpath);
         return NULL;
     }
