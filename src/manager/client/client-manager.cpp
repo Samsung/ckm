@@ -83,7 +83,7 @@ int Manager::createKeyPairRSA(
     const Alias &privateKeyAlias,
     const Alias &publicKeyAlias,
     const Policy &policyPrivateKey,
-    const Policy &policyPublicKey) 
+    const Policy &policyPublicKey)
 {
     return m_impl->createKeyPairRSA(size, privateKeyAlias, publicKeyAlias, policyPrivateKey, policyPublicKey);
 }
@@ -112,6 +112,28 @@ int Manager::getCertificateChain(
     CertificateVector &certificateChainVector)
 {
     return m_impl->getCertificateChain(certificate, untrustedCertificates, certificateChainVector);
+}
+
+int Manager::createSignature(
+    const Alias &privateKeyAlias,
+    const std::string &password,           // password for private_key
+    const RawBuffer &message,
+    const HashAlgorithm hash,
+    const RSAPaddingAlgorithm padding,
+    RawBuffer &signature)
+{
+    return m_impl->createSignature(privateKeyAlias, password, message, hash, padding, signature);
+}
+
+int Manager::verifySignature(
+    const Alias &publicKeyOrCertAlias,
+    const std::string &password,           // password for public_key (optional)
+    const RawBuffer &message,
+    const RawBuffer &signature,
+    const HashAlgorithm hash,
+    const RSAPaddingAlgorithm padding)
+{
+    return m_impl->verifySignature(publicKeyOrCertAlias, password, message, signature, hash, padding);
 }
 
 } // namespace CKM

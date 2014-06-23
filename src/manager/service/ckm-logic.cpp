@@ -21,7 +21,7 @@
  */
 #include <dpl/serialization.h>
 #include <dpl/log/log.h>
-
+#include <ckm/key-manager.h>
 #include <ckm/ckm-error.h>
 #include <ckm/ckm-type.h>
 #include <key-provider.h>
@@ -587,5 +587,107 @@ RawBuffer CKMLogic::getCertificateChain(
     return response.Pop();
 }
 
+RawBuffer CKMLogic::createSignature(
+        Credentials &cred,
+        int commandId,
+        const Alias &privateKeyAlias,
+        const std::string &password,           // password for private_key
+        const RawBuffer &message,
+        const HashAlgorithm hash,
+        const RSAPaddingAlgorithm padding,
+        RawBuffer &signature)
+{
+
+    DBRow row;
+    CryptoService cs;
+
+    int retCode = CKM_API_SUCCESS;
+
+    try {
+        retCode = getDataHelper(cred, DBDataType::KEY_RSA_PUBLIC, privateKeyAlias, password, row);
+    } catch (const KeyProvider::Exception::Base &e) {
+        LogError("KeyProvider failed with error: " << e.GetMessage());
+        retCode = CKM_API_ERROR_SERVER_ERROR;
+    } catch (const DBCryptoModule::Exception::Base &e) {
+        LogError("DBCryptoModule failed with message: " << e.GetMessage());
+        retCode = CKM_API_ERROR_SERVER_ERROR;
+    } catch (const DBCrypto::Exception::Base &e) {
+        LogError("DBCrypto failed with message: " << e.GetMessage());
+        retCode = CKM_API_ERROR_DB_ERROR;
+    }
+
+    if (CKM_API_SUCCESS != retCode) {
+        row.data.clear();
+        row.dataType = DBDataType::KEY_RSA_PUBLIC;
+    }
+    GenericKey keyParsed(row.data, password);
+    if (keyParsed.empty())
+        retCode = CKM_API_ERROR_AUTHENTICATION_FAILED;
+    else
+        retCode = cs.createSignature(keyParsed, message, hash, padding, signature);
+
+    MessageBuffer response;
+    Serialization::Serialize(response, static_cast<int>(LogicCommand::CREATE_SIGNATURE));
+    Serialization::Serialize(response, commandId);
+    Serialization::Serialize(response, retCode);
+    Serialization::Serialize(response, signature);
+    return response.Pop();
+}
+
+RawBuffer CKMLogic::verifySignature(
+        Credentials &cred,
+        int commandId,
+        const Alias &publicKeyOrCertAlias,
+        const std::string &password,           // password for public_key (optional)
+        const RawBuffer &message,
+        const RawBuffer &signature,
+        const HashAlgorithm hash,
+        const RSAPaddingAlgorithm padding)
+{
+
+    DBRow row;
+    CryptoService cs;
+
+    int retCode = CKM_API_SUCCESS;
+    try {
+        retCode = getDataHelper(cred, DBDataType::KEY_RSA_PUBLIC, publicKeyOrCertAlias, password, row);
+    } catch (const KeyProvider::Exception::Base &e) {
+        LogError("KeyProvider failed with error: " << e.GetMessage());
+        retCode = CKM_API_ERROR_SERVER_ERROR;
+    } catch (const DBCryptoModule::Exception::Base &e) {
+        LogError("DBCryptoModule failed with message: " << e.GetMessage());
+        retCode = CKM_API_ERROR_SERVER_ERROR;
+    } catch (const DBCrypto::Exception::Base &e) {
+        LogError("DBCrypto failed with message: " << e.GetMessage());
+        retCode = CKM_API_ERROR_DB_ERROR;
+    }
+
+    if (CKM_API_SUCCESS != retCode) {
+        row.data.clear();
+        row.dataType = DBDataType::KEY_RSA_PUBLIC;
+    }
+    GenericKey keyParsed(row.data, password);
+    if (keyParsed.empty())
+        retCode = CKM_API_ERROR_AUTHENTICATION_FAILED;
+    else
+        try {
+          retCode = cs.verifySignature(keyParsed, message, signature, hash, padding);
+        }
+        catch (const CryptoService::Exception::Crypto_internal &e) {
+          LogError("KeyProvider failed with message: " << e.GetMessage());
+          retCode = CKM_API_ERROR_SERVER_ERROR;
+        }
+        catch (const CryptoService::Exception::opensslError &e) {
+          LogError("KeyProvider failed with message: " << e.GetMessage());
+          retCode = CKM_API_ERROR_SERVER_ERROR;
+        }
+
+    MessageBuffer response;
+    Serialization::Serialize(response, static_cast<int>(LogicCommand::VERIFY_SIGNATURE));
+    Serialization::Serialize(response, commandId);
+    Serialization::Serialize(response, retCode);
+
+    return response.Pop();
+}
 } // namespace CKM
 

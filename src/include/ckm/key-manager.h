@@ -189,25 +189,7 @@ public:
         const Alias &publicKeyAlias,
         const Policy &policyPrivateKey = Policy(),
         const Policy &policyPublicKey = Policy());
-//
-//	int createSignature(
-//			const Alias &privateKeyAlias,
-//			const RawBuffer &password,           // password for private_key
-//			const RawBuffer &message,
-//			HashAlgorith hash,
-//			RSAPaddingAlgorithm padding,
-//			RawBuffer &signature);
-//
-//	int verifySignature(
-//			const Alias &publicKeyOrCertAlias,
-//			const RawBuffer &password,           // password for public_key (optional)
-//			const RawBuffer &message,
-//			const RawBuffer &signature,
-//			HashAlgorithm hash,
-//            RSAPaddingAlgorithm padding);
-//
-//	// this fuction will return chains of certificates and check it with openssl
-//	// status : OK, INCOMPLETE_CHAIN, VERIFICATION_FAILED
+
     int getCertificateChain(
             const Certificate &certificate,
             const CertificateVector &untrustedCertificates,
@@ -217,6 +199,22 @@ public:
             const Certificate &certificate,
             const AliasVector &untrustedCertificates,
             CertificateVector &certificateChainVector);
+
+    int createSignature(
+        const Alias &privateKeyAlias,
+        const std::string &password,           // password for private_key
+        const RawBuffer &message,
+        const HashAlgorithm hash,
+        const RSAPaddingAlgorithm padding,
+        RawBuffer &signature);
+
+    int verifySignature(
+        const Alias &publicKeyOrCertAlias,
+        const std::string &password,           // password for public_key (optional)
+        const RawBuffer &message,
+        const RawBuffer &signature,
+        const HashAlgorithm hash,
+        const RSAPaddingAlgorithm padding);
 
 //	int strictCACheck(const CertificateVector &certificateVector);
 //

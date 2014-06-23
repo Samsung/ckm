@@ -288,8 +288,7 @@ int Manager::ManagerImpl::getBinaryDataAliasVector(DBDataType dataType, AliasVec
         Deserialization::Deserialize(recv, retCode);
         Deserialization::Deserialize(recv, tmpDataType);
         Deserialization::Deserialize(recv, aliasVector);
-
-        if (counter != m_counter) {
+        if ((command != static_cast<int>(LogicCommand::GET_LIST)) || (counter != m_counter)) {
             return CKM_API_ERROR_UNKNOWN;
         }
 
@@ -344,7 +343,6 @@ int Manager::ManagerImpl::createKeyPairRSA(
         Deserialization::Deserialize(recv, command);
         Deserialization::Deserialize(recv, counter);
         Deserialization::Deserialize(recv, retCode);
-
         if (counter != my_counter) {
             return CKM_API_ERROR_UNKNOWN;
         }
@@ -412,7 +410,6 @@ int getCertChain(
         Serialization::Serialize(send, counter);
         Serialization::Serialize(send, certificate.getDER());
         Serialization::Serialize(send, sendData);
-
         int retCode = sendToServer(
             SERVICE_SOCKET_CKM_STORAGE,
             send.Pop(),
@@ -446,6 +443,7 @@ int getCertChain(
     });
 }
 
+
 int Manager::ManagerImpl::getCertificateChain(
     const Certificate &certificate,
     const CertificateVector &untrustedCertificates,
@@ -474,6 +472,96 @@ int Manager::ManagerImpl::getCertificateChain(
     (void) untrustedCertificates;
     (void) certificateChainVector;
     return CKM_API_ERROR_UNKNOWN;
+}
+
+int Manager::ManagerImpl::createSignature(
+    const Alias &privateKeyAlias,
+    const std::string &password,           // password for private_key
+    const RawBuffer &message,
+    const HashAlgorithm hash,
+    const RSAPaddingAlgorithm padding,
+    RawBuffer &signature)
+{
+    m_counter++;
+    int my_counter = m_counter;
+    return try_catch([&] {
+
+        MessageBuffer send, recv;
+        Serialization::Serialize(send, static_cast<int>(LogicCommand::CREATE_SIGNATURE));
+        Serialization::Serialize(send, my_counter);
+        Serialization::Serialize(send, privateKeyAlias);
+        Serialization::Serialize(send, password);
+        Serialization::Serialize(send, message);
+        Serialization::Serialize(send, static_cast<int>(hash));
+        Serialization::Serialize(send, static_cast<int>(padding));
+
+        int retCode = sendToServer(
+            SERVICE_SOCKET_CKM_STORAGE,
+            send.Pop(),
+            recv);
+
+        if (CKM_API_SUCCESS != retCode) {
+            return retCode;
+        }
+
+        int command;
+        int counter;
+
+        Deserialization::Deserialize(recv, command);
+        Deserialization::Deserialize(recv, counter);
+        Deserialization::Deserialize(recv, signature);
+
+        if ((command != static_cast<int>(LogicCommand::CREATE_SIGNATURE)) || (counter != my_counter)) {
+            return CKM_API_ERROR_UNKNOWN;
+        }
+
+        return retCode;
+    });
+}
+
+int Manager::ManagerImpl::verifySignature(
+    const Alias &publicKeyOrCertAlias,
+    const std::string &password,           // password for public_key (optional)
+    const RawBuffer &message,
+    const RawBuffer &signature,
+    const HashAlgorithm hash,
+    const RSAPaddingAlgorithm padding)
+{
+    m_counter++;
+    int my_counter = m_counter;
+    return try_catch([&] {
+
+        MessageBuffer send, recv;
+        Serialization::Serialize(send, static_cast<int>(LogicCommand::VERIFY_SIGNATURE));
+        Serialization::Serialize(send, my_counter);
+        Serialization::Serialize(send, publicKeyOrCertAlias);
+        Serialization::Serialize(send, password);
+        Serialization::Serialize(send, message);
+        Serialization::Serialize(send, signature);
+        Serialization::Serialize(send, static_cast<int>(hash));
+        Serialization::Serialize(send, static_cast<int>(padding));
+
+        int retCode = sendToServer(
+            SERVICE_SOCKET_CKM_STORAGE,
+            send.Pop(),
+            recv);
+
+        if (CKM_API_SUCCESS != retCode) {
+            return retCode;
+        }
+
+        int command;
+        int counter;
+
+        Deserialization::Deserialize(recv, command);
+        Deserialization::Deserialize(recv, counter);
+
+        if ((command != static_cast<int>(LogicCommand::VERIFY_SIGNATURE)) || (counter != my_counter)) {
+            return CKM_API_ERROR_UNKNOWN;
+        }
+
+        return retCode;
+    });
 }
 
 } // namespace CKM

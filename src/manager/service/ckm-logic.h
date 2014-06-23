@@ -121,6 +121,26 @@ public:
         const RawBuffer &certificate,
         const AliasVector &aliasVector);
 
+    RawBuffer  createSignature(
+        Credentials &cred,
+        int commandId,
+        const Alias &privateKeyAlias,
+        const std::string &password,           // password for private_key
+        const RawBuffer &message,
+        const HashAlgorithm hash,
+        const RSAPaddingAlgorithm padding,
+        RawBuffer &signature);
+
+    RawBuffer verifySignature(
+        Credentials &cred,
+        int commandId,
+        const Alias &publicKeyOrCertAlias,
+        const std::string &password,           // password for public_key (optional)
+        const RawBuffer &message,
+        const RawBuffer &signature,
+        const HashAlgorithm hash,
+        const RSAPaddingAlgorithm padding);
+
 private:
 
     int saveDataHelper(
@@ -152,6 +172,12 @@ private:
         const Alias &aliasPublic,
         const PolicySerializable &policyPrivate,
         const PolicySerializable &policyPublic);
+
+    int getKeyHelper(
+        Credentials &cred,
+        const Alias &publicKeyOrCertAlias,
+        const std::string &password,           // password for public_key (optional)
+        const GenericKey &genericKey);
 
     std::map<uid_t, UserData> m_userDataMap;
     CertificateStore m_certStore;

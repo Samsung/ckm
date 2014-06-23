@@ -48,7 +48,9 @@ enum class LogicCommand : int {
     CREATE_KEY_PAIR_RSA,
     CREATE_KEY_PAIR_ECDSA,
     GET_CHAIN_CERT,
-    GET_CHAIN_ALIAS
+    GET_CHAIN_ALIAS,
+    CREATE_SIGNATURE,
+    VERIFY_SIGNATURE
 };
 
 // Do not use DB_KEY_FIRST and DB_KEY_LAST in the code.

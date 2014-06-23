@@ -263,6 +263,58 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer){
                 certificate,
                 aliasVector);
         }
+        case LogicCommand::CREATE_SIGNATURE:
+        {
+            Alias privateKeyAlias;
+            std::string password;        // password for private_key
+            RawBuffer message;
+            //HashAlgorithm hash;
+            //RSAPaddingAlgorithm padding
+            int padding, hash;
+            RawBuffer signature;
+            Deserialization::Deserialize(buffer, privateKeyAlias);
+            Deserialization::Deserialize(buffer, password);
+            Deserialization::Deserialize(buffer, message);
+            Deserialization::Deserialize(buffer, hash);
+            Deserialization::Deserialize(buffer, padding);
+            Deserialization::Deserialize(buffer, signature);
+
+            return m_logic->createSignature(
+                  cred,
+                  commandId,
+                  privateKeyAlias,
+                  password,           // password for private_key
+                  message,
+                  static_cast<HashAlgorithm>(hash),
+                  static_cast<RSAPaddingAlgorithm>(padding),
+                  signature);
+
+        }
+        case LogicCommand::VERIFY_SIGNATURE:
+        {
+            Alias publicKeyOrCertAlias;
+            std::string password;           // password for public_key (optional)
+            RawBuffer message;
+            RawBuffer signature;
+            //HashAlgorithm hash;
+            //RSAPaddingAlgorithm padding;
+            int padding, hash;
+            Deserialization::Deserialize(buffer, publicKeyOrCertAlias);
+            Deserialization::Deserialize(buffer, password);
+            Deserialization::Deserialize(buffer, message);
+            Deserialization::Deserialize(buffer, signature);
+            Deserialization::Deserialize(buffer, hash);
+            Deserialization::Deserialize(buffer, padding);
+            return m_logic->verifySignature(
+                cred,
+                commandId,
+                publicKeyOrCertAlias,
+                password,           // password for public_key (optional)
+                message,
+                signature,
+                static_cast<const HashAlgorithm>(hash),
+                static_cast<const RSAPaddingAlgorithm>(padding));
+        }
         default:
         // TODO
             throw 1; // broken protocol

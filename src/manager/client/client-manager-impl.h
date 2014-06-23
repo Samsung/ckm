@@ -73,6 +73,22 @@ public:
         const AliasVector &untrustedCertificates,
         CertificateVector &certificateChainVector);
 
+    int createSignature(
+        const Alias &privateKeyAlias,
+        const std::string &password,           // password for private_key
+        const RawBuffer &message,
+        const HashAlgorithm hash,
+        const RSAPaddingAlgorithm padding,
+        RawBuffer &signature);
+
+    int verifySignature(
+        const Alias &publicKeyOrCertAlias,
+        const std::string &password,           // password for public_key (optional)
+        const RawBuffer &message,
+        const RawBuffer &signature,
+        const HashAlgorithm hash,
+        const RSAPaddingAlgorithm padding);
+
 protected:
     int saveBinaryData(
         const Alias &alias,
