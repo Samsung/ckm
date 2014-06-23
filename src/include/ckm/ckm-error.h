@@ -90,14 +90,14 @@
 /*! \brief   indicating the database was not unlocked - user did not login */
 #define KEY_MANAGER_API_ERROR_DB_LOCKED -12
 
-/*! \brief   indicating that request give to database returned no result */
-#define KEY_MANAGER_API_ERROR_DB_BAD_REQUEST -13
-
 /*! \brief   indicating an internal error inside the database */
-#define KEY_MANAGER_API_ERROR_DB_ERROR -14
+#define KEY_MANAGER_API_ERROR_DB_ERROR -13
 
 /*! \brief   indicating that provided alias already exists in the database */
-#define KEY_MANAGER_API_ERROR_DB_ALIAS_EXISTS -15
+#define KEY_MANAGER_API_ERROR_DB_ALIAS_EXISTS -14
+
+/*! \brief   indicating that request give to database returned no result */
+#define KEY_MANAGER_API_ERROR_DB_ALIAS_UNKNOWN -15
 
 /*! \brief   indicating the error with unknown reason */
 #define KEY_MANAGER_API_ERROR_UNKNOWN -255

@@ -286,7 +286,7 @@ using namespace DB;
         if(selectCommand->Step()) {
             row = getRow(selectCommand);
         } else {
-            return KEY_MANAGER_API_ERROR_DB_BAD_REQUEST;
+            return KEY_MANAGER_API_ERROR_DB_ALIAS_UNKNOWN;
         }
 
         AssertMsg(!selectCommand->Step(),
@@ -321,7 +321,7 @@ using namespace DB;
             if(selectCommand->Step()){
                 row = getRow(selectCommand);
             } else {
-                return KEY_MANAGER_API_ERROR_DB_BAD_REQUEST;
+                return KEY_MANAGER_API_ERROR_DB_ALIAS_UNKNOWN;
             }
         } Catch (SqlConnection::Exception::InvalidColumn) {
             LogError("Select statement invalid column error");
@@ -470,7 +470,7 @@ using namespace DB;
             if (selectCommand->Step()) {
                 key = selectCommand->GetColumnBlob(0);
             } else {
-                return KEY_MANAGER_API_ERROR_DB_BAD_REQUEST;
+                return KEY_MANAGER_API_ERROR_DB_ALIAS_UNKNOWN;
             }
 
             AssertMsg(!selectCommand->Step(),

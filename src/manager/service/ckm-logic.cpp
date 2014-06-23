@@ -154,7 +154,7 @@ int CKMLogic::saveDataHelper(
     if (!handler.crypto.haveKey(cred.smackLabel)) {
         RawBuffer key;
         int status = handler.database.getKey(cred.smackLabel, key);
-        if (KEY_MANAGER_API_ERROR_DB_BAD_REQUEST == status) {
+        if (KEY_MANAGER_API_ERROR_DB_ALIAS_UNKNOWN == status) {
             LogDebug("No Key in database found. Generating new one for label: " << cred.smackLabel);
             key = handler.keyProvider.generateDEK(cred.smackLabel);
             if (KEY_MANAGER_API_SUCCESS != handler.database.saveKey(cred.smackLabel, key)) {
