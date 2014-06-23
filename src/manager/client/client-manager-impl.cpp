@@ -74,6 +74,8 @@ int Manager::ManagerImpl::saveBinaryData(
 }
 
 int Manager::ManagerImpl::saveKey(const Alias &alias, const Key &key, const Policy &policy) {
+    if (key.empty())
+        return KEY_MANAGER_API_ERROR_INPUT_PARAM;
     return saveBinaryData(alias, toDBDataType(key.getType()), key.getDER(), policy);
 }
 
@@ -86,6 +88,8 @@ int Manager::ManagerImpl::saveCertificate(
 }
 
 int Manager::ManagerImpl::saveData(const Alias &alias, const RawBuffer &rawData, const Policy &policy) {
+    if (!policy.extractable)
+        return KEY_MANAGER_API_ERROR_INPUT_PARAM;
     return saveBinaryData(alias, DBDataType::BINARY_DATA, rawData, policy);
 }
 

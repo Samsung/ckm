@@ -153,6 +153,11 @@ public:
 
     int saveKey(const Alias &alias, const Key &key, const Policy &policy);
     int saveCertificate(const Alias &alias, const Certificate &cert, const Policy &policy);
+
+    /*
+     * Data must be extractable. If you set extractable bit to false funciton will
+     * return ERROR_INPUT_PARAM.
+     */
     int saveData(const Alias &alias, const RawBuffer &data, const Policy &policy);
 
     int removeKey(const Alias &alias);
