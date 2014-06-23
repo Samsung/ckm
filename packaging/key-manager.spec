@@ -14,6 +14,7 @@ BuildRequires: pkgconfig(libsmack)
 BuildRequires: pkgconfig(libsystemd-daemon)
 BuildRequires: pkgconfig(db-util)
 BuildRequires: boost-devel
+Requires: boost-test
 %{?systemd_requires}
 
 %description
@@ -161,4 +162,4 @@ fi
 
 %files -n key-manager-tests
 %defattr(-,root,root,-)
-%{_bindir}/key-manager-tests
+%{_bindir}/ckm-tests-internal-provider
