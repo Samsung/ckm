@@ -1,7 +1,6 @@
 #pragma once
 
 #include <iostream>
-
 #include <generic-key.h>
 #include <certificate-impl.h>
 #include <ckm/ckm-type.h>
@@ -17,8 +16,10 @@
 #include <openssl/rand.h>
 #include <openssl/crypto.h>
 #include <openssl/err.h>
+#include <dpl/exception.h>
 
-#define DEV_RANDOM_FILE	"/dev/random"
+#define DEV_HW_RANDOM_FILE	"/dev/hwrng"
+#define DEV_URANDOM_FILE	"/dev/urandom"
 
 #define EVP_SUCCESS	1	// DO NOTCHANGE THIS VALUE
 #define EVP_FAIL	0	// DO NOTCHANGE THIS VALUE
@@ -44,6 +45,11 @@ class CryptoService {
  public:
      CryptoService();
      virtual ~CryptoService();
+
+     class Exception {
+     	public:
+     	     DECLARE_EXCEPTION_TYPE(CKM::Exception, Base)
+     };
 
      // During initialization, FIPS_MODE and the antropy source are set.
      // And system certificates are loaded in the memory during initialization.

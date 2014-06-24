@@ -19,7 +19,7 @@
 #include <generic-key.h>
 #include <CryptoService.h>
 #include <key-manager-util.h>
-
+#include <assert.h>
 #include <dpl/log/log.h>
 
 #define OPENSSL_SUCCESS 1       // DO NOTCHANGE THIS VALUE
@@ -123,7 +123,9 @@ EVP_PKEY *to_pkey_ec_private_key(const unsigned char *derPrivateKey, int length)
 }
 
 int CryptoService::initialize() {
-	int mode, ret, rc;
+	int mode = 0;
+	int rc = 0;
+	int hw_ret = 0, u_ret = 0;
 
 	// try to initialize using ERR_load_crypto_strings and OpenSSL_add_all_algorithms
 	ERR_load_crypto_strings();
@@ -132,22 +134,24 @@ int CryptoService::initialize() {
 	// turn on FIPS_mode
 	mode = FIPS_mode();
 
-	if(mode == 0)
-	{
+	if(mode == 0) {
 		rc = FIPS_mode_set(1);
 
 		if(rc == 0) {
-			return CKM_CRYPTO_INIT_ERROR;
+			LogError("Error in FIPS_mode_set function");
+			ThrowMsg(Exception::Base, "Error in FIPS_mode_set function");
 		}
-
-		return CKM_CRYPTO_INIT_ERROR;
 	}
 
 	// initialize entropy
-	ret = RAND_load_file(DEV_RANDOM_FILE, 32);
+	hw_ret = RAND_load_file(DEV_HW_RANDOM_FILE, 32);
 
-	if(ret != 32) {
-		return CKM_CRYPTO_INIT_ERROR;
+	if(hw_ret != 32) {
+		u_ret= RAND_load_file(DEV_URANDOM_FILE, 32);
+		if(u_ret != 32) {
+			LogError("Error in RAND_load_file function");
+			ThrowMsg(Exception::Base, "Error in RAND_load_file function");
+		}
 	}
 
 	return CKM_CRYPTO_INIT_SUCCESS;
