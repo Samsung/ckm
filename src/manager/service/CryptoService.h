@@ -57,11 +57,11 @@ class CryptoService {
      //    antropy source - /dev/random,/dev/urandom(Default)
      static int initialize();
 
-     int createKeyPairRSA(const int size,      // size in bits [1024, 2048, 4096]
+     static int createKeyPairRSA(const int size,      // size in bits [1024, 2048, 4096]
                          GenericKey &createdPrivateKey,  // returned value ==> Key &createdPrivateKey,
                          GenericKey &createdPublicKey);  // returned value ==> Key &createdPublicKey
 
-     int createKeyPairECDSA(ElipticCurve type1,
+     static int createKeyPairECDSA(ElipticCurve type1,
     		 	 	 	 GenericKey &createdPrivateKey,  // returned value
     		 	 	 	 GenericKey &createdPublicKey);  // returned value
 
@@ -82,7 +82,7 @@ class CryptoService {
  	                    const CertificateImplVector &userTrustedCertificates,
  	                   CertificateImplVector &certificateChainVector);
 
- private:		
+ private:
      std::vector<X509 *> verifyCertChain(X509 *cert,
 		     std::vector<X509 *> &trustedCerts,
 		     std::vector<X509 *> &userTrustedCerts,

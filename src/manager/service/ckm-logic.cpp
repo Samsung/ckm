@@ -373,14 +373,16 @@ int CKMLogic::createKeyPairRSAHelper(
 
     auto &handler = m_userDataMap[cred.uid];
     GenericKey prv, pub;
-    CryptoService cr;
     int retCode;
 
-    if (CKM_CRYPTO_CREATEKEY_SUCCESS != (retCode = cr.createKeyPairRSA(size, prv, pub))) {
-        LogError("CryptoService failed with code: " << retCode);
+    if (CKM_CRYPTO_CREATEKEY_SUCCESS !=
+        (retCode = CryptoService::createKeyPairRSA(size, prv, pub)))
+    {
+        LogDebug("CryptoService error with code: " << retCode);
         return KEY_MANAGER_API_ERROR_SERVER_ERROR; // TODO error code
     }
 
+    DBCrypto::Transaction transaction(&handler.database);
     retCode = saveDataHelper(cred,
                             toDBDataType(prv.getType()),
                             aliasPrivate,
@@ -396,9 +398,10 @@ int CKMLogic::createKeyPairRSAHelper(
                             pub.getDER(),
                             policyPublic);
 
-    if (KEY_MANAGER_API_SUCCESS != retCode) {
-        handler.database.deleteDBRow(aliasPrivate, cred.smackLabel);
-    }
+    if (KEY_MANAGER_API_SUCCESS != retCode)
+        return retCode;
+
+    transaction.commit();
 
     return retCode;
 }
@@ -412,13 +415,27 @@ RawBuffer CKMLogic::createKeyPairRSA(
     const PolicySerializable &policyPrivate,
     const PolicySerializable &policyPublic)
 {
-    int retCode = createKeyPairRSAHelper(
+    int retCode = KEY_MANAGER_API_SUCCESS;
+
+    try {
+        retCode = createKeyPairRSAHelper(
                         cred,
                         size,
                         aliasPrivate,
                         aliasPublic,
                         policyPrivate,
                         policyPublic);
+
+    } catch (DBCrypto::Exception::AliasExists &e) {
+        LogDebug("DBCrypto error: alias exists: " << e.GetMessage());
+        retCode = CKM_API_ERROR_DB_ALIAS_EXISTS;
+    } catch (DBCrypto::Exception::TransactionError &e) {
+        LogDebug("DBCrypto error: transaction error: " << e.GetMessage());
+        retCode = CKM_API_ERROR_DB_ERROR;
+    } catch (DBCrypto::Exception::InternalError &e) {
+        LogDebug("DBCrypto internal error: " << e.GetMessage());
+        retCode = KEY_MANAGER_API_ERROR_DB_ERROR;
+    }
 
     MessageBuffer response;
     Serialization::Serialize(response, static_cast<int>(LogicCommand::CREATE_KEY_PAIR_RSA));
@@ -441,15 +458,16 @@ int CKMLogic::createKeyPairECDSAHelper(
 
     auto &handler = m_userDataMap[cred.uid];
     GenericKey prv, pub;
-    CryptoService cr;
     int retCode;
 
-    if (CKM_CRYPTO_CREATEKEY_SUCCESS != (retCode = cr.createKeyPairECDSA(
-              static_cast<ElipticCurve>(type), prv, pub)))
+    if (CKM_CRYPTO_CREATEKEY_SUCCESS !=
+        (retCode = CryptoService::createKeyPairECDSA(static_cast<ElipticCurve>(type), prv, pub)))
     {
         LogError("CryptoService failed with code: " << retCode);
         return KEY_MANAGER_API_ERROR_SERVER_ERROR; // TODO error code
     }
+
+    DBCrypto::Transaction transaction(&handler.database);
 
     retCode = saveDataHelper(cred,
                             toDBDataType(prv.getType()),
@@ -466,9 +484,10 @@ int CKMLogic::createKeyPairECDSAHelper(
                             pub.getDER(),
                             policyPublic);
 
-    if (KEY_MANAGER_API_SUCCESS != retCode) {
-        handler.database.deleteDBRow(aliasPrivate, cred.smackLabel);
-    }
+    if (KEY_MANAGER_API_SUCCESS != retCode)
+        return retCode;
+
+    transaction.commit();
 
     return retCode;
 }
@@ -482,13 +501,26 @@ RawBuffer CKMLogic::createKeyPairECDSA(
     const PolicySerializable &policyPrivate,
     const PolicySerializable &policyPublic)
 {
-    int retCode = createKeyPairECDSAHelper(
+    int retCode = KEY_MANAGER_API_SUCCESS;
+    
+    try {
+        retCode = createKeyPairECDSAHelper(
                         cred,
                         type,
                         aliasPrivate,
                         aliasPublic,
                         policyPrivate,
                         policyPublic);
+    } catch (const DBCrypto::Exception::AliasExists &e) {
+        LogDebug("DBCrypto error: alias exists: " << e.GetMessage());
+        retCode = CKM_API_ERROR_DB_ALIAS_EXISTS;
+    } catch (const DBCrypto::Exception::TransactionError &e) {
+        LogDebug("DBCrypto error: transaction error: " << e.GetMessage());
+        retCode = CKM_API_ERROR_DB_ERROR;
+    } catch (const DBCrypto::Exception::InternalError &e) {
+        LogDebug("DBCrypto internal error: " << e.GetMessage());
+        retCode = KEY_MANAGER_API_ERROR_DB_ERROR;
+    }
 
     MessageBuffer response;
     Serialization::Serialize(response, static_cast<int>(LogicCommand::CREATE_KEY_PAIR_RSA));
