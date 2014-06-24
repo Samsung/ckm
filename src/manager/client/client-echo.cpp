@@ -34,7 +34,7 @@ int key_manager_echo(const char *echo, char** oche) {
 
     if(echo == NULL){
         LogDebug("Echo message is null");
-        return KEY_MANAGER_API_ERROR_INPUT_PARAM;
+        return CKM_API_ERROR_INPUT_PARAM;
     }
 
     MessageBuffer send, recv;
@@ -42,7 +42,7 @@ int key_manager_echo(const char *echo, char** oche) {
 
     int retCode = sendToServer(SERVICE_SOCKET_ECHO, send.Pop(), recv);
 
-    if(retCode != KEY_MANAGER_API_SUCCESS)
+    if(retCode != CKM_API_SUCCESS)
         return retCode;
 
     std::string response;
@@ -50,5 +50,5 @@ int key_manager_echo(const char *echo, char** oche) {
 
     *oche = strdup(response.c_str());
 
-    return KEY_MANAGER_API_SUCCESS;
+    return CKM_API_SUCCESS;
 }

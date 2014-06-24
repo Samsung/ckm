@@ -59,7 +59,7 @@ int DBCryptoModule::pushKey(const std::string &smackLabel,
                  << "label already exists.");
     }
     m_keyMap[smackLabel] = applicationKey;
-    return KEY_MANAGER_API_SUCCESS;
+    return CKM_API_SUCCESS;
 }
 
 std::size_t DBCryptoModule::insertDigest(RawBuffer &data, const int dataSize)
@@ -132,7 +132,7 @@ int DBCryptoModule::encryptRow(const std::string &password, DBRow &row)
     crow.algorithmType = DBCMAlgType::AES_CBC_256;
     row = crow;
 
-    return KEY_MANAGER_API_SUCCESS;
+    return CKM_API_SUCCESS;
 }
 
 int DBCryptoModule::decryptRow(const std::string &password, DBRow &row)
@@ -193,7 +193,7 @@ int DBCryptoModule::decryptRow(const std::string &password, DBRow &row)
     }
     row = crow;
 
-    return KEY_MANAGER_API_SUCCESS;
+    return CKM_API_SUCCESS;
 }
 
 RawBuffer DBCryptoModule::generateRandIV(void)

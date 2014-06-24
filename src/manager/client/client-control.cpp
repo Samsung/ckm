@@ -48,7 +48,7 @@ public:
                 send.Pop(),
                 recv);
 
-            if (KEY_MANAGER_API_SUCCESS != retCode) {
+            if (CKM_API_SUCCESS != retCode) {
                 return retCode;
             }
 
@@ -69,7 +69,7 @@ public:
                 send.Pop(),
                 recv);
 
-            if (KEY_MANAGER_API_SUCCESS != retCode) {
+            if (CKM_API_SUCCESS != retCode) {
                 return retCode;
             }
 
@@ -90,7 +90,7 @@ public:
                 send.Pop(),
                 recv);
 
-            if (KEY_MANAGER_API_SUCCESS != retCode) {
+            if (CKM_API_SUCCESS != retCode) {
                 return retCode;
             }
 
@@ -113,7 +113,7 @@ public:
                 send.Pop(),
                 recv);
 
-            if (KEY_MANAGER_API_SUCCESS != retCode) {
+            if (CKM_API_SUCCESS != retCode) {
                 return retCode;
             }
 
@@ -135,7 +135,7 @@ public:
                 send.Pop(),
                 recv);
 
-            if (KEY_MANAGER_API_SUCCESS != retCode) {
+            if (CKM_API_SUCCESS != retCode) {
                 return retCode;
             }
 

@@ -38,7 +38,7 @@ int Manager::ManagerImpl::saveBinaryData(
 
     return try_catch([&] {
         if (alias.empty() || rawData.empty())
-            return KEY_MANAGER_API_ERROR_INPUT_PARAM;
+            return CKM_API_ERROR_INPUT_PARAM;
 
         MessageBuffer send, recv;
         Serialization::Serialize(send, static_cast<int>(LogicCommand::SAVE));
@@ -53,7 +53,7 @@ int Manager::ManagerImpl::saveBinaryData(
             send.Pop(),
             recv);
 
-        if (KEY_MANAGER_API_SUCCESS != retCode) {
+        if (CKM_API_SUCCESS != retCode) {
             return retCode;
         }
 
@@ -66,7 +66,7 @@ int Manager::ManagerImpl::saveBinaryData(
         Deserialization::Deserialize(recv, opType);
 
         if (counter != m_counter) {
-            return KEY_MANAGER_API_ERROR_UNKNOWN;
+            return CKM_API_ERROR_UNKNOWN;
         }
 
         return retCode;
@@ -75,7 +75,7 @@ int Manager::ManagerImpl::saveBinaryData(
 
 int Manager::ManagerImpl::saveKey(const Alias &alias, const Key &key, const Policy &policy) {
     if (key.empty())
-        return KEY_MANAGER_API_ERROR_INPUT_PARAM;
+        return CKM_API_ERROR_INPUT_PARAM;
     return saveBinaryData(alias, toDBDataType(key.getType()), key.getDER(), policy);
 }
 
@@ -89,7 +89,7 @@ int Manager::ManagerImpl::saveCertificate(
 
 int Manager::ManagerImpl::saveData(const Alias &alias, const RawBuffer &rawData, const Policy &policy) {
     if (!policy.extractable)
-        return KEY_MANAGER_API_ERROR_INPUT_PARAM;
+        return CKM_API_ERROR_INPUT_PARAM;
     return saveBinaryData(alias, DBDataType::BINARY_DATA, rawData, policy);
 }
 
@@ -97,7 +97,7 @@ int Manager::ManagerImpl::removeBinaryData(const Alias &alias, DBDataType dataTy
 {
     return try_catch([&] {
         if (alias.empty())
-            return KEY_MANAGER_API_ERROR_INPUT_PARAM;
+            return CKM_API_ERROR_INPUT_PARAM;
 
         MessageBuffer send, recv;
         Serialization::Serialize(send, static_cast<int>(LogicCommand::REMOVE));
@@ -110,7 +110,7 @@ int Manager::ManagerImpl::removeBinaryData(const Alias &alias, DBDataType dataTy
             send.Pop(),
             recv);
 
-        if (KEY_MANAGER_API_SUCCESS != retCode) {
+        if (CKM_API_SUCCESS != retCode) {
             return retCode;
         }
 
@@ -123,7 +123,7 @@ int Manager::ManagerImpl::removeBinaryData(const Alias &alias, DBDataType dataTy
         Deserialization::Deserialize(recv, opType);
 
         if (counter != m_counter) {
-            return KEY_MANAGER_API_ERROR_UNKNOWN;
+            return CKM_API_ERROR_UNKNOWN;
         }
 
         return retCode;
@@ -151,7 +151,7 @@ int Manager::ManagerImpl::getBinaryData(
 {
     return try_catch([&] {
         if (alias.empty())
-            return KEY_MANAGER_API_ERROR_INPUT_PARAM;
+            return CKM_API_ERROR_INPUT_PARAM;
 
         MessageBuffer send, recv;
         Serialization::Serialize(send, static_cast<int>(LogicCommand::GET));
@@ -165,7 +165,7 @@ int Manager::ManagerImpl::getBinaryData(
             send.Pop(),
             recv);
 
-        if (KEY_MANAGER_API_SUCCESS != retCode) {
+        if (CKM_API_SUCCESS != retCode) {
             return retCode;
         }
 
@@ -180,7 +180,7 @@ int Manager::ManagerImpl::getBinaryData(
         recvDataType = static_cast<DBDataType>(tmpDataType);
 
         if (counter != m_counter) {
-            return KEY_MANAGER_API_ERROR_UNKNOWN;
+            return CKM_API_ERROR_UNKNOWN;
         }
 
         return retCode;
@@ -198,19 +198,19 @@ int Manager::ManagerImpl::getKey(const Alias &alias, const std::string &password
         recvDataType,
         rawData);
 
-    if (retCode != KEY_MANAGER_API_SUCCESS)
+    if (retCode != CKM_API_SUCCESS)
         return retCode;
 
     Key keyParsed(rawData);
 
     if (keyParsed.empty()) {
         LogDebug("Key empty - failed to parse!");
-        return KEY_MANAGER_API_ERROR_BAD_RESPONSE;
+        return CKM_API_ERROR_BAD_RESPONSE;
     }
 
     key = keyParsed;
 
-    return KEY_MANAGER_API_SUCCESS;
+    return CKM_API_SUCCESS;
 }
 
 int Manager::ManagerImpl::getCertificate(const Alias &alias, const std::string &password, Certificate &cert)
@@ -225,20 +225,20 @@ int Manager::ManagerImpl::getCertificate(const Alias &alias, const std::string &
         recvDataType,
         rawData);
 
-    if (retCode != KEY_MANAGER_API_SUCCESS)
+    if (retCode != CKM_API_SUCCESS)
         return retCode;
 
     if (recvDataType != DBDataType::CERTIFICATE)
-        return KEY_MANAGER_API_ERROR_BAD_RESPONSE;
+        return CKM_API_ERROR_BAD_RESPONSE;
 
     Certificate certParsed(rawData, DataFormat::FORM_DER);
 
     if (certParsed.empty())
-        return KEY_MANAGER_API_ERROR_BAD_RESPONSE;
+        return CKM_API_ERROR_BAD_RESPONSE;
 
     cert = certParsed;
 
-    return KEY_MANAGER_API_SUCCESS;
+    return CKM_API_SUCCESS;
 }
 
 int Manager::ManagerImpl::getData(const Alias &alias, const std::string &password, RawBuffer &rawData)
@@ -252,13 +252,13 @@ int Manager::ManagerImpl::getData(const Alias &alias, const std::string &passwor
         recvDataType,
         rawData);
 
-    if (retCode != KEY_MANAGER_API_SUCCESS)
+    if (retCode != CKM_API_SUCCESS)
         return retCode;
 
     if (recvDataType != DBDataType::BINARY_DATA)
-        return KEY_MANAGER_API_ERROR_BAD_RESPONSE;
+        return CKM_API_ERROR_BAD_RESPONSE;
 
-    return KEY_MANAGER_API_SUCCESS;
+    return CKM_API_SUCCESS;
 }
 
 int Manager::ManagerImpl::getBinaryDataAliasVector(DBDataType dataType, AliasVector &aliasVector)
@@ -275,7 +275,7 @@ int Manager::ManagerImpl::getBinaryDataAliasVector(DBDataType dataType, AliasVec
             send.Pop(),
             recv);
 
-        if (KEY_MANAGER_API_SUCCESS != retCode) {
+        if (CKM_API_SUCCESS != retCode) {
             return retCode;
         }
 
@@ -290,7 +290,7 @@ int Manager::ManagerImpl::getBinaryDataAliasVector(DBDataType dataType, AliasVec
         Deserialization::Deserialize(recv, aliasVector);
 
         if (counter != m_counter) {
-            return KEY_MANAGER_API_ERROR_UNKNOWN;
+            return CKM_API_ERROR_UNKNOWN;
         }
 
         return retCode;
@@ -336,7 +336,7 @@ int Manager::ManagerImpl::createKeyPairRSA(
             send.Pop(),
             recv);
 
-        if (KEY_MANAGER_API_SUCCESS != retCode) {
+        if (CKM_API_SUCCESS != retCode) {
             return retCode;
         }
 
@@ -349,7 +349,7 @@ int Manager::ManagerImpl::createKeyPairRSA(
         Deserialization::Deserialize(recv, retCode);
         
         if (counter != my_counter) {
-            return KEY_MANAGER_API_ERROR_UNKNOWN;
+            return CKM_API_ERROR_UNKNOWN;
         }
 
         return retCode;
@@ -382,7 +382,7 @@ int Manager::ManagerImpl::createKeyPairECDSA(
             send.Pop(),
             recv);
 
-        if (KEY_MANAGER_API_SUCCESS != retCode) {
+        if (CKM_API_SUCCESS != retCode) {
             return retCode;
         }
 
@@ -394,7 +394,7 @@ int Manager::ManagerImpl::createKeyPairECDSA(
         Deserialization::Deserialize(recv, retCode);
         
         if (counter != my_counter) {
-            return KEY_MANAGER_API_ERROR_UNKNOWN;
+            return CKM_API_ERROR_UNKNOWN;
         }
 
         return retCode;

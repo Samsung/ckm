@@ -89,7 +89,7 @@ public:
         if (m_sock < 0) {
             int err = errno;
             LogError("Error creating socket: " << strerror(err));
-            return KEY_MANAGER_API_ERROR_SOCKET;
+            return CKM_API_ERROR_SOCKET;
         }
 
         if ((flags = fcntl(m_sock, F_GETFL, 0)) < 0 ||
@@ -97,7 +97,7 @@ public:
         {
             int err = errno;
             LogError("Error in fcntl: " << strerror(err));
-            return KEY_MANAGER_API_ERROR_SOCKET;
+            return CKM_API_ERROR_SOCKET;
         }
 
         memset(&clientAddr, 0, sizeof(clientAddr));
@@ -106,7 +106,7 @@ public:
 
         if (strlen(interface) >= sizeof(clientAddr.sun_path)) {
             LogError("Error: interface name " << interface << "is too long. Max len is:" << sizeof(clientAddr.sun_path));
-            return KEY_MANAGER_API_ERROR_SOCKET;
+            return CKM_API_ERROR_SOCKET;
         }
 
         strcpy(clientAddr.sun_path, interface);
@@ -117,7 +117,7 @@ public:
         if ((retval == -1) && (errno == EINPROGRESS)) {
             if (0 >= waitForSocket(m_sock, POLLIN, POLL_TIMEOUT)) {
                 LogError("Error in waitForSocket.");
-                return KEY_MANAGER_API_ERROR_SOCKET;
+                return CKM_API_ERROR_SOCKET;
             }
             int error = 0;
             size_t len = sizeof(error);
@@ -126,31 +126,31 @@ public:
             if (-1 == retval) {
                 int err = errno;
                 LogError("Error in getsockopt: " << strerror(err));
-                return KEY_MANAGER_API_ERROR_SOCKET;
+                return CKM_API_ERROR_SOCKET;
             }
 
             if (error == EACCES) {
                 LogError("Access denied");
-                return KEY_MANAGER_API_ERROR_ACCESS_DENIED;
+                return CKM_API_ERROR_ACCESS_DENIED;
             }
 
             if (error != 0) {
                 LogError("Error in connect: " << strerror(error));
-                return KEY_MANAGER_API_ERROR_SOCKET;
+                return CKM_API_ERROR_SOCKET;
             }
 
-            return KEY_MANAGER_API_SUCCESS;
+            return CKM_API_SUCCESS;
         }
 
         if (-1 == retval) {
             int err = errno;
             LogError("Error connecting socket: " << strerror(err));
             if (err == EACCES)
-                return KEY_MANAGER_API_ERROR_ACCESS_DENIED;
-            return KEY_MANAGER_API_ERROR_SOCKET;
+                return CKM_API_ERROR_ACCESS_DENIED;
+            return CKM_API_ERROR_SOCKET;
         }
 
-        return KEY_MANAGER_API_SUCCESS;
+        return CKM_API_SUCCESS;
     }
 
     int Get() {
@@ -172,7 +172,7 @@ int sendToServer(char const * const interface, const RawBuffer &send, MessageBuf
     ssize_t done = 0;
     char buffer[2048];
 
-    if (KEY_MANAGER_API_SUCCESS != (ret = sock.Connect(interface))) {
+    if (CKM_API_SUCCESS != (ret = sock.Connect(interface))) {
         LogError("Error in SockRAII");
         return ret;
     }
@@ -180,13 +180,13 @@ int sendToServer(char const * const interface, const RawBuffer &send, MessageBuf
     while ((send.size() - done) > 0) {
         if (0 >= waitForSocket(sock.Get(), POLLOUT, POLL_TIMEOUT)) {
             LogError("Error in poll(POLLOUT)");
-            return KEY_MANAGER_API_ERROR_SOCKET;
+            return CKM_API_ERROR_SOCKET;
         }
         ssize_t temp = TEMP_FAILURE_RETRY(write(sock.Get(), &send[done], send.size() - done));
         if (-1 == temp) {
             int err = errno;
             LogError("Error in write: " << strerror(err));
-            return KEY_MANAGER_API_ERROR_SOCKET;
+            return CKM_API_ERROR_SOCKET;
         }
         done += temp;
     }
@@ -194,24 +194,24 @@ int sendToServer(char const * const interface, const RawBuffer &send, MessageBuf
     do {
         if (0 >= waitForSocket(sock.Get(), POLLIN, POLL_TIMEOUT)) {
             LogError("Error in poll(POLLIN)");
-            return KEY_MANAGER_API_ERROR_SOCKET;
+            return CKM_API_ERROR_SOCKET;
         }
         ssize_t temp = TEMP_FAILURE_RETRY(read(sock.Get(), buffer, 2048));
         if (-1 == temp) {
             int err = errno;
             LogError("Error in read: " << strerror(err));
-            return KEY_MANAGER_API_ERROR_SOCKET;
+            return CKM_API_ERROR_SOCKET;
         }
 
         if (0 == temp) {
             LogError("Read return 0/Connection closed by server(?)");
-            return KEY_MANAGER_API_ERROR_SOCKET;
+            return CKM_API_ERROR_SOCKET;
         }
 
         RawBuffer raw(buffer, buffer+temp);
         recv.Push(raw);
     } while(!recv.Ready());
-    return KEY_MANAGER_API_SUCCESS;
+    return CKM_API_SUCCESS;
 }
 
 int try_catch(const std::function<int()>& func)
@@ -225,7 +225,7 @@ int try_catch(const std::function<int()>& func)
     } catch (...) {
         LogError("Unknown exception occured");
     }
-    return KEY_MANAGER_API_ERROR_UNKNOWN;
+    return CKM_API_ERROR_UNKNOWN;
 }
 
 } // namespace CKM

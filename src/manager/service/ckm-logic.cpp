@@ -44,7 +44,7 @@ CKMLogic::~CKMLogic(){}
 
 RawBuffer CKMLogic::unlockUserKey(uid_t user, const std::string &password) {
     // TODO try catch for all errors that should be supported by error code
-    int retCode = KEY_MANAGER_API_SUCCESS;
+    int retCode = CKM_API_SUCCESS;
 
     try {
         if (0 == m_userDataMap.count(user) || !(m_userDataMap[user].keyProvider.isInitialized())) {
@@ -66,7 +66,7 @@ RawBuffer CKMLogic::unlockUserKey(uid_t user, const std::string &password) {
         }
     } catch (const KeyProvider::Exception::Base &e) {
         LogError("Error in KeyProvider " << e.GetMessage());
-        retCode = KEY_MANAGER_API_ERROR_SERVER_ERROR;
+        retCode = CKM_API_ERROR_SERVER_ERROR;
     }
 
     MessageBuffer response;
@@ -75,7 +75,7 @@ RawBuffer CKMLogic::unlockUserKey(uid_t user, const std::string &password) {
 }
 
 RawBuffer CKMLogic::lockUserKey(uid_t user) {
-    int retCode = KEY_MANAGER_API_SUCCESS;
+    int retCode = CKM_API_SUCCESS;
     // TODO try catch for all errors that should be supported by error code
     m_userDataMap.erase(user);
 
@@ -85,7 +85,7 @@ RawBuffer CKMLogic::lockUserKey(uid_t user) {
 }
 
 RawBuffer CKMLogic::removeUserData(uid_t user) {
-    int retCode = KEY_MANAGER_API_SUCCESS;
+    int retCode = CKM_API_SUCCESS;
     // TODO try catch for all errors that should be supported by error code
     m_userDataMap.erase(user);
 
@@ -102,12 +102,12 @@ RawBuffer CKMLogic::changeUserPassword(
     const std::string &oldPassword,
     const std::string &newPassword)
 {
-    int retCode = KEY_MANAGER_API_SUCCESS;
+    int retCode = CKM_API_SUCCESS;
     // TODO try-catch
     FileSystem fs(user);
     auto wrappedDomainKEK = fs.getDomainKEK();
     if (wrappedDomainKEK.empty()) {
-        retCode = KEY_MANAGER_API_ERROR_BAD_REQUEST;
+        retCode = CKM_API_ERROR_BAD_REQUEST;
     } else {
         wrappedDomainKEK = KeyProvider::reencrypt(wrappedDomainKEK, oldPassword, newPassword);
         fs.saveDomainKEK(wrappedDomainKEK);
@@ -121,10 +121,10 @@ RawBuffer CKMLogic::resetUserPassword(
     uid_t user,
     const std::string &newPassword)
 {
-    int retCode = KEY_MANAGER_API_SUCCESS;
+    int retCode = CKM_API_SUCCESS;
     // TODO try-catch
     if (0 == m_userDataMap.count(user)) {
-        retCode = KEY_MANAGER_API_ERROR_BAD_REQUEST;
+        retCode = CKM_API_ERROR_BAD_REQUEST;
     } else {
         auto &handler = m_userDataMap[user];
         FileSystem fs(user);
@@ -144,7 +144,7 @@ int CKMLogic::saveDataHelper(
     const PolicySerializable &policy)
 {
     if (0 == m_userDataMap.count(cred.uid))
-        return KEY_MANAGER_API_ERROR_DB_LOCKED;
+        return CKM_API_ERROR_DB_LOCKED;
 
     DBRow row = { alias, cred.smackLabel, policy.restricted,
          policy.extractable, dataType, DBCMAlgType::NONE,
@@ -170,7 +170,7 @@ int CKMLogic::saveDataHelper(
     handler.crypto.encryptRow(policy.password, row);
     handler.database.saveDBRow(row);
     transaction.commit();
-    return KEY_MANAGER_API_SUCCESS;
+    return CKM_API_SUCCESS;
 }
 
 RawBuffer CKMLogic::saveData(
@@ -181,25 +181,25 @@ RawBuffer CKMLogic::saveData(
     const RawBuffer &key,
     const PolicySerializable &policy)
 {
-    int retCode = KEY_MANAGER_API_SUCCESS;
+    int retCode = CKM_API_SUCCESS;
     try {
         retCode = saveDataHelper(cred, dataType, alias, key, policy);
         LogDebug("SaveDataHelper returned: " << retCode);
     } catch (const KeyProvider::Exception::Base &e) {
         LogError("KeyProvider failed with message: " << e.GetMessage());
-        retCode = KEY_MANAGER_API_ERROR_SERVER_ERROR;
+        retCode = CKM_API_ERROR_SERVER_ERROR;
     } catch (const DBCryptoModule::Exception::Base &e) {
         LogError("DBCryptoModule failed with message: " << e.GetMessage());
-        retCode = KEY_MANAGER_API_ERROR_SERVER_ERROR;
+        retCode = CKM_API_ERROR_SERVER_ERROR;
     } catch (const DBCrypto::Exception::InternalError &e) {
         LogError("DBCrypto failed with message: " << e.GetMessage());
-        retCode = KEY_MANAGER_API_ERROR_DB_ERROR;
+        retCode = CKM_API_ERROR_DB_ERROR;
     } catch (const DBCrypto::Exception::AliasExists &e) {
         LogError("DBCrypto couldn't save duplicate alias");
-        retCode = KEY_MANAGER_API_ERROR_DB_ALIAS_EXISTS;
+        retCode = CKM_API_ERROR_DB_ALIAS_EXISTS;
     } catch (const DBCrypto::Exception::TransactionError &e) {
         LogError("DBCrypto transaction failed with message " << e.GetMessage());
-        retCode = KEY_MANAGER_API_ERROR_DB_ERROR;
+        retCode = CKM_API_ERROR_DB_ERROR;
     }
 
     MessageBuffer response;
@@ -217,17 +217,17 @@ RawBuffer CKMLogic::removeData(
     DBDataType dataType,
     const Alias &alias)
 {
-    int retCode = KEY_MANAGER_API_SUCCESS;
+    int retCode = CKM_API_SUCCESS;
 
     if (0 < m_userDataMap.count(cred.uid)) {
         Try {
             m_userDataMap[cred.uid].database.deleteDBRow(alias, cred.smackLabel);
         } Catch (CKM::Exception) {
             LogError("Error in deleting row!");
-            retCode = KEY_MANAGER_API_ERROR_DB_ERROR;
+            retCode = CKM_API_ERROR_DB_ERROR;
         }
     } else {
-        retCode = KEY_MANAGER_API_ERROR_DB_LOCKED;
+        retCode = CKM_API_ERROR_DB_LOCKED;
     }
 
     MessageBuffer response;
@@ -248,7 +248,7 @@ int CKMLogic::getDataHelper(
 {
 
     if (0 == m_userDataMap.count(cred.uid))
-        return KEY_MANAGER_API_ERROR_DB_LOCKED;
+        return CKM_API_ERROR_DB_LOCKED;
 
     auto &handler = m_userDataMap[cred.uid];
 
@@ -261,11 +261,11 @@ int CKMLogic::getDataHelper(
         row_optional = handler.database.getKeyDBRow(alias, cred.smackLabel);
     } else {
         LogError("Unknown type of requested data" << (int)dataType);
-        return KEY_MANAGER_API_ERROR_BAD_REQUEST;
+        return CKM_API_ERROR_BAD_REQUEST;
     }
     if(!row_optional) {
         LogError("No row for given alias, label and type");
-        return KEY_MANAGER_API_ERROR_DB_ALIAS_UNKNOWN;
+        return CKM_API_ERROR_DB_ALIAS_UNKNOWN;
     } else {
         row = *row_optional;
     }
@@ -275,7 +275,7 @@ int CKMLogic::getDataHelper(
         auto key_optional = handler.database.getKey(row.smackLabel);
         if(!key_optional) {
             LogError("No key for given label in database");
-            return KEY_MANAGER_API_ERROR_DB_ERROR;
+            return CKM_API_ERROR_DB_ERROR;
         }
         key = *key_optional;
         key = handler.keyProvider.getPureDEK(key);
@@ -285,7 +285,7 @@ int CKMLogic::getDataHelper(
 
     LogError("Datatype: " << (int) row.dataType);
 
-    return KEY_MANAGER_API_SUCCESS;
+    return CKM_API_SUCCESS;
 }
 
 RawBuffer CKMLogic::getData(
@@ -295,23 +295,23 @@ RawBuffer CKMLogic::getData(
     const Alias &alias,
     const std::string &password)
 {
-    int retCode = KEY_MANAGER_API_SUCCESS;
+    int retCode = CKM_API_SUCCESS;
     DBRow row;
 
     try {
         retCode = getDataHelper(cred, dataType, alias, password, row);
     } catch (const KeyProvider::Exception::Base &e) {
         LogError("KeyProvider failed with error: " << e.GetMessage());
-        retCode = KEY_MANAGER_API_ERROR_SERVER_ERROR;
+        retCode = CKM_API_ERROR_SERVER_ERROR;
     } catch (const DBCryptoModule::Exception::Base &e) {
         LogError("DBCryptoModule failed with message: " << e.GetMessage());
-        retCode = KEY_MANAGER_API_ERROR_SERVER_ERROR;
+        retCode = CKM_API_ERROR_SERVER_ERROR;
     } catch (const DBCrypto::Exception::Base &e) {
         LogError("DBCrypto failed with message: " << e.GetMessage());
-        retCode = KEY_MANAGER_API_ERROR_DB_ERROR;
+        retCode = CKM_API_ERROR_DB_ERROR;
     }
 
-    if (KEY_MANAGER_API_SUCCESS != retCode) {
+    if (CKM_API_SUCCESS != retCode) {
         row.data.clear();
         row.dataType = dataType;
     }
@@ -332,7 +332,7 @@ RawBuffer CKMLogic::getDataList(
     int commandId,
     DBDataType dataType)
 {
-    int retCode = KEY_MANAGER_API_SUCCESS;
+    int retCode = CKM_API_SUCCESS;
     AliasVector aliasVector;
 
     if (0 < m_userDataMap.count(cred.uid)) {
@@ -345,10 +345,10 @@ RawBuffer CKMLogic::getDataList(
             }
         } Catch (CKM::Exception) {
             LogError("Failed to get aliases");
-            retCode = KEY_MANAGER_API_ERROR_DB_ERROR;
+            retCode = CKM_API_ERROR_DB_ERROR;
         }
     } else {
-        retCode = KEY_MANAGER_API_ERROR_DB_LOCKED;
+        retCode = CKM_API_ERROR_DB_LOCKED;
     }
 
     MessageBuffer response;
@@ -369,7 +369,7 @@ int CKMLogic::createKeyPairRSAHelper(
     const PolicySerializable &policyPublic)
 {
     if (0 >= m_userDataMap.count(cred.uid))
-        return KEY_MANAGER_API_ERROR_DB_LOCKED;
+        return CKM_API_ERROR_DB_LOCKED;
 
     auto &handler = m_userDataMap[cred.uid];
     GenericKey prv, pub;
@@ -379,7 +379,7 @@ int CKMLogic::createKeyPairRSAHelper(
         (retCode = CryptoService::createKeyPairRSA(size, prv, pub)))
     {
         LogDebug("CryptoService error with code: " << retCode);
-        return KEY_MANAGER_API_ERROR_SERVER_ERROR; // TODO error code
+        return CKM_API_ERROR_SERVER_ERROR; // TODO error code
     }
 
     DBCrypto::Transaction transaction(&handler.database);
@@ -389,7 +389,7 @@ int CKMLogic::createKeyPairRSAHelper(
                             prv.getDER(),
                             policyPrivate);
 
-    if (KEY_MANAGER_API_SUCCESS != retCode)
+    if (CKM_API_SUCCESS != retCode)
         return retCode;
 
     retCode = saveDataHelper(cred,
@@ -398,7 +398,7 @@ int CKMLogic::createKeyPairRSAHelper(
                             pub.getDER(),
                             policyPublic);
 
-    if (KEY_MANAGER_API_SUCCESS != retCode)
+    if (CKM_API_SUCCESS != retCode)
         return retCode;
 
     transaction.commit();
@@ -415,7 +415,7 @@ RawBuffer CKMLogic::createKeyPairRSA(
     const PolicySerializable &policyPrivate,
     const PolicySerializable &policyPublic)
 {
-    int retCode = KEY_MANAGER_API_SUCCESS;
+    int retCode = CKM_API_SUCCESS;
 
     try {
         retCode = createKeyPairRSAHelper(
@@ -434,7 +434,7 @@ RawBuffer CKMLogic::createKeyPairRSA(
         retCode = CKM_API_ERROR_DB_ERROR;
     } catch (DBCrypto::Exception::InternalError &e) {
         LogDebug("DBCrypto internal error: " << e.GetMessage());
-        retCode = KEY_MANAGER_API_ERROR_DB_ERROR;
+        retCode = CKM_API_ERROR_DB_ERROR;
     }
 
     MessageBuffer response;
@@ -454,7 +454,7 @@ int CKMLogic::createKeyPairECDSAHelper(
     const PolicySerializable &policyPublic)
 {
     if (0 >= m_userDataMap.count(cred.uid))
-        return KEY_MANAGER_API_ERROR_DB_LOCKED;
+        return CKM_API_ERROR_DB_LOCKED;
 
     auto &handler = m_userDataMap[cred.uid];
     GenericKey prv, pub;
@@ -464,7 +464,7 @@ int CKMLogic::createKeyPairECDSAHelper(
         (retCode = CryptoService::createKeyPairECDSA(static_cast<ElipticCurve>(type), prv, pub)))
     {
         LogError("CryptoService failed with code: " << retCode);
-        return KEY_MANAGER_API_ERROR_SERVER_ERROR; // TODO error code
+        return CKM_API_ERROR_SERVER_ERROR; // TODO error code
     }
 
     DBCrypto::Transaction transaction(&handler.database);
@@ -475,7 +475,7 @@ int CKMLogic::createKeyPairECDSAHelper(
                             prv.getDER(),
                             policyPrivate);
 
-    if (KEY_MANAGER_API_SUCCESS != retCode)
+    if (CKM_API_SUCCESS != retCode)
         return retCode;
 
     retCode = saveDataHelper(cred,
@@ -484,7 +484,7 @@ int CKMLogic::createKeyPairECDSAHelper(
                             pub.getDER(),
                             policyPublic);
 
-    if (KEY_MANAGER_API_SUCCESS != retCode)
+    if (CKM_API_SUCCESS != retCode)
         return retCode;
 
     transaction.commit();
@@ -501,7 +501,7 @@ RawBuffer CKMLogic::createKeyPairECDSA(
     const PolicySerializable &policyPrivate,
     const PolicySerializable &policyPublic)
 {
-    int retCode = KEY_MANAGER_API_SUCCESS;
+    int retCode = CKM_API_SUCCESS;
     
     try {
         retCode = createKeyPairECDSAHelper(
@@ -519,7 +519,7 @@ RawBuffer CKMLogic::createKeyPairECDSA(
         retCode = CKM_API_ERROR_DB_ERROR;
     } catch (const DBCrypto::Exception::InternalError &e) {
         LogDebug("DBCrypto internal error: " << e.GetMessage());
-        retCode = KEY_MANAGER_API_ERROR_DB_ERROR;
+        retCode = CKM_API_ERROR_DB_ERROR;
     }
 
     MessageBuffer response;
