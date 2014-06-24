@@ -49,12 +49,6 @@ OCSPModule::~OCSPModule(){
 	// Do nothing.
 }
 
-// Loads all system certificates into memory.
-int OCSPModule::initialize() {
-	systemCerts = loadSystemCerts(CKM_SYSTEM_CERTS_PATH);
-	return CKM_OCSP_OPER_SUCCESS;
-}
-
 
 int OCSPModule::verify(const CertificateImplVector &certificateChain) {
 	X509 *cert = NULL;
@@ -62,6 +56,8 @@ int OCSPModule::verify(const CertificateImplVector &certificateChain) {
 	char url[CKM_DEF_STRING_LEN];
 	int ocspStatus = -1;
 	int result = -1;
+
+	systemCerts = loadSystemCerts(CKM_SYSTEM_CERTS_PATH);
 
 	for(unsigned int i=0; i < certificateChain.size() -1; i++) {// except root certificate
 		cert = X509_new();
