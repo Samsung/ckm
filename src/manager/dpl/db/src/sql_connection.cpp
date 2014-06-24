@@ -806,7 +806,7 @@ bool SqlConnection::CheckTableExist(const char *tableName)
         return false;
     }
 
-    DataCommandAutoPtr command =
+    DataCommandUniquePtr command =
         PrepareDataCommand("select tbl_name from sqlcipher_master where name=?;");
 
     command->BindString(1, tableName);
@@ -927,13 +927,13 @@ void SqlConnection::ExecCommand(const char *format, ...)
     }
 }
 
-SqlConnection::DataCommandAutoPtr SqlConnection::PrepareDataCommand(
+SqlConnection::DataCommandUniquePtr SqlConnection::PrepareDataCommand(
     const char *format,
     ...)
 {
     if (m_connection == NULL) {
         LogError("Cannot execute data command. Not connected to DB!");
-        return DataCommandAutoPtr();
+        return DataCommandUniquePtr();
     }
 
     char *rawBuffer;
@@ -951,12 +951,12 @@ SqlConnection::DataCommandAutoPtr SqlConnection::PrepareDataCommand(
 
     if (!buffer) {
         LogError("Failed to allocate statement string");
-        return DataCommandAutoPtr();
+        return DataCommandUniquePtr();
     }
 
     LogPedantic("Executing SQL data command: " << buffer.get());
 
-    return DataCommandAutoPtr(new DataCommand(this, buffer.get()));
+    return DataCommandUniquePtr(new DataCommand(this, buffer.get()));
 }
 
 SqlConnection::RowID SqlConnection::GetLastInsertRowID() const

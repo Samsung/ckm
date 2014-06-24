@@ -398,8 +398,8 @@ class SqlConnection
             GetColumnOptionalBlob(ColumnIndex column);
     };
 
-    // Move on copy semantics
-    typedef std::auto_ptr<DataCommand> DataCommandAutoPtr;
+    // Move on copy constructor. No copy semantics
+    typedef std::unique_ptr<DataCommand> DataCommandUniquePtr;
 
     // Open flags
     class Flag
@@ -543,7 +543,7 @@ class SqlConnection
      * @param format SQL statement
      * @return Data command representing stored procedure
      */
-    DataCommandAutoPtr PrepareDataCommand(const char *format, ...);
+    DataCommandUniquePtr PrepareDataCommand(const char *format, ...);
 
     /**
      * Check whether given table exists

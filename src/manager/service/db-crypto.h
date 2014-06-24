@@ -150,7 +150,7 @@ namespace CKM {
             bool m_inUserTransaction;
 
             void initDatabase();
-            DBRow getRow(const DB::SqlConnection::DataCommandAutoPtr &selectCommand);
+            DBRow getRow(const DB::SqlConnection::DataCommandUniquePtr &selectCommand);
             void createTable(
                     const char *create_cmd,
                     const char *table_name);

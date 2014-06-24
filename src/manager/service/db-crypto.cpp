@@ -196,7 +196,7 @@ using namespace DB;
     }
 
     bool DBCrypto::checkGlobalAliasExist(const std::string& alias) {
-        SqlConnection::DataCommandAutoPtr checkCmd =
+        SqlConnection::DataCommandUniquePtr checkCmd =
                 m_connection->PrepareDataCommand(select_check_global_alias_cmd);
         checkCmd->BindString(1, alias.c_str());
         if(checkCmd->Step()) {
@@ -210,7 +210,7 @@ using namespace DB;
     bool DBCrypto::checkAliasExist(
             const std::string& alias,
             const std::string& label) {
-        SqlConnection::DataCommandAutoPtr checkCmd =
+        SqlConnection::DataCommandUniquePtr checkCmd =
                 m_connection->PrepareDataCommand(select_check_alias_cmd);
         checkCmd->BindString(1, alias.c_str());
         checkCmd->BindString(2, label.c_str());
@@ -235,7 +235,7 @@ using namespace DB;
                         << ", label: " << row.smackLabel);
             }
 
-            SqlConnection::DataCommandAutoPtr insertCommand =
+            SqlConnection::DataCommandUniquePtr insertCommand =
                     m_connection->PrepareDataCommand(insert_main_cmd);
             insertCommand->BindString(1, row.alias.c_str());
             insertCommand->BindString(2, row.smackLabel.c_str());
@@ -261,7 +261,7 @@ using namespace DB;
                 "Couldn't save DBRow");
     }
 
-    DBRow DBCrypto::getRow(const SqlConnection::DataCommandAutoPtr &selectCommand) {
+    DBRow DBCrypto::getRow(const SqlConnection::DataCommandUniquePtr &selectCommand) {
         DBRow row;
         row.alias = selectCommand->GetColumnString(0);
         row.smackLabel = selectCommand->GetColumnString(1);
@@ -283,7 +283,7 @@ using namespace DB;
     {
         Try {
             Transaction transaction(this);
-            SqlConnection::DataCommandAutoPtr selectCommand =
+            SqlConnection::DataCommandUniquePtr selectCommand =
                     m_connection->PrepareDataCommand(select_alias_cmd);
             selectCommand->BindString(1, alias.c_str());
             selectCommand->BindInteger(2, static_cast<int>(type));
@@ -315,7 +315,7 @@ using namespace DB;
     {
         Try{
             Transaction transaction(this);
-            SqlConnection::DataCommandAutoPtr selectCommand =
+            SqlConnection::DataCommandUniquePtr selectCommand =
                     m_connection->PrepareDataCommand(select_key_alias_cmd);
             selectCommand->BindString(1, alias.c_str());
             selectCommand->BindInteger(2, static_cast<int>(DBDataType::DB_KEY_FIRST));
@@ -346,7 +346,7 @@ using namespace DB;
             AliasVector& aliases)
     {
         Try{
-            SqlConnection::DataCommandAutoPtr selectCommand =
+            SqlConnection::DataCommandUniquePtr selectCommand =
                             m_connection->PrepareDataCommand(select_type_cmd);
             selectCommand->BindInteger(1, static_cast<int>(type));
             selectCommand->BindInteger(2, static_cast<int>(type));
@@ -385,7 +385,7 @@ using namespace DB;
     {
         Try{
             Transaction transaction(this);
-            SqlConnection::DataCommandAutoPtr selectCommand =
+            SqlConnection::DataCommandUniquePtr selectCommand =
                             m_connection->PrepareDataCommand(select_key_type_cmd);
             selectCommand->BindInteger(1, static_cast<int>(DBDataType::DB_KEY_FIRST));
             selectCommand->BindInteger(2, static_cast<int>(DBDataType::DB_KEY_LAST));
@@ -415,7 +415,7 @@ using namespace DB;
     {
         Try {
             Transaction transaction(this);
-            SqlConnection::DataCommandAutoPtr deleteCommand =
+            SqlConnection::DataCommandUniquePtr deleteCommand =
                     m_connection->PrepareDataCommand(delete_alias_cmd);
             deleteCommand->BindString(1, alias.c_str());
             deleteCommand->BindString(2, label.c_str());
@@ -438,7 +438,7 @@ using namespace DB;
     {
         Try {
             Transaction transaction(this);
-            SqlConnection::DataCommandAutoPtr insertCommand =
+            SqlConnection::DataCommandUniquePtr insertCommand =
                     m_connection->PrepareDataCommand(insert_key_cmd);
             insertCommand->BindString(1, label.c_str());
             insertCommand->BindBlob(2, key);
@@ -459,7 +459,7 @@ using namespace DB;
     {
         Try {
             Transaction transaction(this);
-            SqlConnection::DataCommandAutoPtr selectCommand =
+            SqlConnection::DataCommandUniquePtr selectCommand =
                     m_connection->PrepareDataCommand(select_key_cmd);
             selectCommand->BindString(1, label.c_str());
 
@@ -486,7 +486,7 @@ using namespace DB;
     void DBCrypto::deleteKey(const std::string& label) {
         Try {
             Transaction transaction(this);
-            SqlConnection::DataCommandAutoPtr deleteCommand =
+            SqlConnection::DataCommandUniquePtr deleteCommand =
                     m_connection->PrepareDataCommand(delete_key_cmd);
             deleteCommand->BindString(1, label.c_str());
             deleteCommand->Step();
