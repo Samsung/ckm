@@ -53,7 +53,8 @@ RawBuffer Certificate::getDER() const {
 }
 
 void* Certificate::getX509() {
-    // TODO
+    if (m_impl)
+        return m_impl->getX509();
     return NULL;
 }
 

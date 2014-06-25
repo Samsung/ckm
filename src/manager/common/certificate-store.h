@@ -13,45 +13,41 @@
  *  limitations under the License
  *
  *
- * @file        client-certificate-impl.h
+ * @file        certificate-stack.h
  * @author      Barlomiej Grzelewski (b.grzelewski@samsung.com)
  * @version     1.0
- * @brief       Certificate Implmentation.
+ * @brief       Certificate Stack Implmentation.
  */
-
-#pragma once
-
-#include <memory>
-#include <vector>
-#include <ckm/ckm-type.h>
+#include <certificate-impl.h>
 
 extern "C" {
-struct x509_st;
-typedef struct x509_st X509;
+struct x509_store_st;
+typedef struct x509_store_st X509_STORE;
 }
 
 namespace CKM {
 
-class CertificateImpl {
+class CertificateStore {
 public:
-    CertificateImpl(){}
-    CertificateImpl(X509* x509);
-    CertificateImpl(const RawBuffer &data, DataFormat format);
-    CertificateImpl(const CertificateImpl &);
-    CertificateImpl(CertificateImpl &&);
-    CertificateImpl& operator=(const CertificateImpl &);
-    CertificateImpl& operator=(CertificateImpl &&);
-    RawBuffer getDER() const;
-    bool empty() const;
+    CertificateStore();
+    CertificateStore(const CertificateStore &) = delete;
+    CertificateStore(CertificateStore &&) = delete;
+    CertificateStore& operator=(CertificateStore &&) = delete;
+    CertificateStore& operator=(const CertificateStore &) = delete;
+    virtual ~CertificateStore();
 
-    X509* getX509() const;
+    int loadFile(const std::string &path);
 
-    virtual ~CertificateImpl();
+    int setSystemCertificateDir(const char *path);
+
+    int verifyCertificate(
+        const CertificateImpl &cert,
+        const CertificateImplVector &untrustedVector,
+        CertificateImplVector &chainVector);
+
 protected:
-    X509* m_x509;
+    X509_STORE *m_store;
 };
-
-typedef std::vector<CertificateImpl> CertificateImplVector;
 
 } // namespace CKM
 

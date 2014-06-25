@@ -30,13 +30,22 @@
 #include <ckm-logic.h>
 #include <generic-key.h>
 
+namespace {
+const char * const CERT_SYSTEM_DIR = "/etc/ssl/certs";
+} // anonymous namespace
+
 namespace CKM {
 
-CKMLogic::CKMLogic(){
+CKMLogic::CKMLogic()
+{
     int retCode = FileSystem::init();
     // TODO what can I do when init went wrong? exit(-1) ??
     if (retCode) {
         LogError("Fatal error in FileSystem::init()");
+    }
+
+    if (CKM_API_SUCCESS != m_certStore.setSystemCertificateDir(CERT_SYSTEM_DIR)) {
+        LogError("Fatal error in CertificateStore::setSystemCertificateDir. Chain creation will not work");
     }
 }
 
@@ -527,6 +536,56 @@ RawBuffer CKMLogic::createKeyPairECDSA(
     Serialization::Serialize(response, commandId);
     Serialization::Serialize(response, retCode);
  
+    return response.Pop();
+}
+
+RawBuffer CKMLogic::getCertificateChain(
+    Credentials &cred,
+    int commandId,
+    const RawBuffer &certificate,
+    const RawBufferVector &untrustedRawCertVector)
+{
+    (void)cred;
+
+    CertificateImpl cert(certificate, DataFormat::FORM_DER);
+    CertificateImplVector untrustedCertVector;
+    CertificateImplVector chainVector;
+    RawBufferVector chainRawVector;
+
+    for (auto &e: untrustedRawCertVector)
+        untrustedCertVector.push_back(CertificateImpl(e, DataFormat::FORM_DER));
+
+    int retCode = m_certStore.verifyCertificate(cert, untrustedCertVector, chainVector);
+
+    if (retCode == CKM_API_SUCCESS) {
+        for (auto &e : chainVector)
+            chainRawVector.push_back(e.getDER());
+    }
+
+    MessageBuffer response;
+    Serialization::Serialize(response, static_cast<int>(LogicCommand::GET_CHAIN_CERT));
+    Serialization::Serialize(response, commandId);
+    Serialization::Serialize(response, retCode);
+    Serialization::Serialize(response, chainRawVector);
+    return response.Pop();
+}
+
+RawBuffer CKMLogic::getCertificateChain(
+    Credentials &cred,
+    int commandId,
+    const RawBuffer &certificate,
+    const AliasVector &aliasVector)
+{
+    (void) cred;
+    (void) commandId;
+    (void) certificate;
+    (void) aliasVector;
+
+    MessageBuffer response;
+    Serialization::Serialize(response, static_cast<int>(LogicCommand::GET_CHAIN_ALIAS));
+    Serialization::Serialize(response, commandId);
+    Serialization::Serialize(response, static_cast<int>(CKM_API_SUCCESS));
+    Serialization::Serialize(response, RawBufferVector());
     return response.Pop();
 }
 

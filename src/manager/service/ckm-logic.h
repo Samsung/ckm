@@ -31,6 +31,7 @@
 #include <db-crypto.h>
 #include <key-provider.h>
 #include <DBCryptoModule.h>
+#include <certificate-store.h>
 
 namespace CKM {
 
@@ -108,7 +109,20 @@ public:
         const PolicySerializable &policyPrivate,
         const PolicySerializable &policyPublic);
 
+    RawBuffer getCertificateChain(
+        Credentials &cred,
+        int commandId,
+        const RawBuffer &certificate,
+        const RawBufferVector &untrustedCertificates);
+
+    RawBuffer getCertificateChain(
+        Credentials &cred,
+        int commandId,
+        const RawBuffer &certificate,
+        const AliasVector &aliasVector);
+
 private:
+
     int saveDataHelper(
         Credentials &cred,
         DBDataType dataType,
@@ -140,6 +154,7 @@ private:
         const PolicySerializable &policyPublic);
 
     std::map<uid_t, UserData> m_userDataMap;
+    CertificateStore m_certStore;
 };
 
 } // namespace CKM

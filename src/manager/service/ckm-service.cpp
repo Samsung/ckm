@@ -141,14 +141,11 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer){
     int tmpDataType;
     Alias alias;
     std::string user;
-    LogicCommand sc;
 
     Deserialization::Deserialize(buffer, command);
     Deserialization::Deserialize(buffer, commandId);
 
-    sc = static_cast<LogicCommand>(command);
-
-    switch(sc) {
+    switch(static_cast<LogicCommand>(command)) {
         case LogicCommand::SAVE:
         {
             RawBuffer rawData;
@@ -237,6 +234,30 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer){
                 publicKeyAlias,
                 policyPrivateKey,
                 policyPublicKey);
+        }
+        case LogicCommand::GET_CHAIN_CERT:
+        {
+            RawBuffer certificate;
+            RawBufferVector rawBufferVector;
+            Deserialization::Deserialize(buffer, certificate);
+            Deserialization::Deserialize(buffer, rawBufferVector);
+            return m_logic->getCertificateChain(
+                cred,
+                commandId,
+                certificate,
+                rawBufferVector);
+        }
+        case LogicCommand::GET_CHAIN_ALIAS:
+        {
+            RawBuffer certificate;
+            AliasVector aliasVector;
+            Deserialization::Deserialize(buffer, certificate);
+            Deserialization::Deserialize(buffer, aliasVector);
+            return m_logic->getCertificateChain(
+                cred,
+                commandId,
+                certificate,
+                aliasVector);
         }
         default:
         // TODO

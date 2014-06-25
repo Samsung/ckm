@@ -63,6 +63,16 @@ public:
         const Policy &policyPrivateKey = Policy(),
         const Policy &policyPublicKey = Policy());
 
+    int getCertificateChain(
+        const Certificate &certificate,
+        const CertificateVector &untrustedCertificates,
+        CertificateVector &certificateChainVector);
+
+    int getCertificateChain(
+        const Certificate &certificate,
+        const AliasVector &untrustedCertificates,
+        CertificateVector &certificateChainVector);
+
 protected:
     int saveBinaryData(
         const Alias &alias,
@@ -73,7 +83,7 @@ protected:
     int removeBinaryData(
         const Alias &alias,
         DBDataType dataType);
-        
+
     int getBinaryData(
         const Alias &alias,
         DBDataType sendDataType,

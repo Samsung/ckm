@@ -97,5 +97,22 @@ int Manager::createKeyPairECDSA(
 {
     return m_impl->createKeyPairECDSA(type, privateKeyAlias, publicKeyAlias, policyPrivateKey, policyPublicKey);
 }
+
+int Manager::getCertificateChain(
+    const Certificate &certificate,
+    const CertificateVector &untrustedCertificates,
+    CertificateVector &certificateChainVector)
+{
+    return m_impl->getCertificateChain(certificate, untrustedCertificates, certificateChainVector);
+}
+
+int Manager::getCertificateChain(
+    const Certificate &certificate,
+    const AliasVector &untrustedCertificates,
+    CertificateVector &certificateChainVector)
+{
+    return m_impl->getCertificateChain(certificate, untrustedCertificates, certificateChainVector);
+}
+
 } // namespace CKM
 

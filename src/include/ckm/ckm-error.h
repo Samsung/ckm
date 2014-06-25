@@ -99,6 +99,9 @@
 /*! \brief   indicating that request give to database returned no result */
 #define CKM_API_ERROR_DB_ALIAS_UNKNOWN -15
 
+/*! \brief   indicating that CA certificate(s) were unknown and chain could not be created */
+#define CKM_API_ERROR_VERIFICATION_FAILED -16
+
 /*! \brief   indicating the error with unknown reason */
 #define CKM_API_ERROR_UNKNOWN -255
 /** @}*/

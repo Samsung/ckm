@@ -208,16 +208,16 @@ public:
 //
 //	// this fuction will return chains of certificates and check it with openssl
 //	// status : OK, INCOMPLETE_CHAIN, VERIFICATION_FAILED
-//	int getCertiticateChain(
-//			const Certificate &certificate,
-//			const CertificateVector &untrustedCertificates,
-//			CertificateVector &certificateChainVector);
-//
-//	int getCertificateChain(
-//			const Certificate &certificate,
-//			const AliasVector &untrustedCertificates,
-//			CertificateVector &certificateChainVector);
-//
+    int getCertificateChain(
+            const Certificate &certificate,
+            const CertificateVector &untrustedCertificates,
+            CertificateVector &certificateChainVector);
+
+    int getCertificateChain(
+            const Certificate &certificate,
+            const AliasVector &untrustedCertificates,
+            CertificateVector &certificateChainVector);
+
 //	int strictCACheck(const CertificateVector &certificateVector);
 //
 //	// This function will check all certificates in chain except Root CA.

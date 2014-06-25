@@ -57,22 +57,46 @@ CertificateImpl::CertificateImpl(const RawBuffer &der, DataFormat format)
         LogError("Unknown certificate format");
     }
 
-//    if (!m_x509) {
-//        // TODO
-//        LogError("Internal Openssl error in d2i_X509 function.");
+    if (!m_x509) {
+        // TODO
+        LogError("Error in parsing certificate.");
 //        ThrowMsg(Exception::OpensslInternalError,
 //          "Internal Openssl error in d2i_X509 function.");
-//    }
+    }
 }
+
+CertificateImpl::CertificateImpl(X509 *x509)
+  : m_x509(X509_dup(x509))
+{}
 
 CertificateImpl::CertificateImpl(const CertificateImpl &second){
-   m_x509 = X509_dup(second.m_x509);
+    m_x509 = X509_dup(second.m_x509);
 }
 
+CertificateImpl::CertificateImpl(CertificateImpl &&second) {
+    m_x509 = second.m_x509;
+    second.m_x509 = NULL;
+}
+
+CertificateImpl& CertificateImpl::operator=(CertificateImpl &&second) {
+    if (this == &second)
+        return *this;
+    X509_free(m_x509);
+    m_x509 = second.m_x509;
+    second.m_x509 = NULL;
+    return *this;
+}
 
 CertificateImpl& CertificateImpl::operator=(const CertificateImpl &second) {
-   m_x509 = X509_dup(second.m_x509);
-   return *this;
+    if (this == &second)
+        return *this;
+    X509_free(m_x509);
+    m_x509 = X509_dup(second.m_x509);
+    return *this;
+}
+
+X509* CertificateImpl::getX509() const {
+    return m_x509;
 }
 
 RawBuffer CertificateImpl::getDER(void) const {
@@ -97,7 +121,9 @@ bool CertificateImpl::empty() const {
 }
 
 CertificateImpl::~CertificateImpl() {
+    LogDebug("free cert start ptr: " << (void*)m_x509);
     X509_free(m_x509);
+    LogDebug("free cert end");
 }
 
 } // namespace CKM

@@ -314,7 +314,7 @@ int Manager::ManagerImpl::createKeyPairRSA(
     const Alias &privateKeyAlias,
     const Alias &publicKeyAlias,
     const Policy &policyPrivateKey,
-    const Policy &policyPublicKey) 
+    const Policy &policyPublicKey)
 {
     m_counter++;
     int my_counter = m_counter;
@@ -328,8 +328,6 @@ int Manager::ManagerImpl::createKeyPairRSA(
         Serialization::Serialize(send, PolicySerializable(policyPublicKey));
         Serialization::Serialize(send, privateKeyAlias);
         Serialization::Serialize(send, publicKeyAlias);
-        
-        
 
         int retCode = sendToServer(
             SERVICE_SOCKET_CKM_STORAGE,
@@ -342,12 +340,11 @@ int Manager::ManagerImpl::createKeyPairRSA(
 
         int command;
         int counter;
-       
 
         Deserialization::Deserialize(recv, command);
         Deserialization::Deserialize(recv, counter);
         Deserialization::Deserialize(recv, retCode);
-        
+
         if (counter != my_counter) {
             return CKM_API_ERROR_UNKNOWN;
         }
@@ -361,7 +358,7 @@ int Manager::ManagerImpl::createKeyPairECDSA(
     const Alias &privateKeyAlias,
     const Alias &publicKeyAlias,
     const Policy &policyPrivateKey,
-    const Policy &policyPublicKey) 
+    const Policy &policyPublicKey)
 {
     m_counter++;
     int my_counter = m_counter;
@@ -375,7 +372,6 @@ int Manager::ManagerImpl::createKeyPairECDSA(
         Serialization::Serialize(send, PolicySerializable(policyPublicKey));
         Serialization::Serialize(send, privateKeyAlias);
         Serialization::Serialize(send, publicKeyAlias);
-        
 
         int retCode = sendToServer(
             SERVICE_SOCKET_CKM_STORAGE,
@@ -392,7 +388,7 @@ int Manager::ManagerImpl::createKeyPairECDSA(
         Deserialization::Deserialize(recv, command);
         Deserialization::Deserialize(recv, counter);
         Deserialization::Deserialize(recv, retCode);
-        
+
         if (counter != my_counter) {
             return CKM_API_ERROR_UNKNOWN;
         }
@@ -400,5 +396,85 @@ int Manager::ManagerImpl::createKeyPairECDSA(
         return retCode;
     });
 }
+
+template <class T>
+int getCertChain(
+    LogicCommand command,
+    int counter,
+    const Certificate &certificate,
+    const T &sendData,
+    CertificateVector &certificateChainVector)
+{
+    return try_catch([&] {
+
+        MessageBuffer send, recv;
+        Serialization::Serialize(send, static_cast<int>(command));
+        Serialization::Serialize(send, counter);
+        Serialization::Serialize(send, certificate.getDER());
+        Serialization::Serialize(send, sendData);
+
+        int retCode = sendToServer(
+            SERVICE_SOCKET_CKM_STORAGE,
+            send.Pop(),
+            recv);
+
+        if (CKM_API_SUCCESS != retCode) {
+            return retCode;
+        }
+
+        int retCommand;
+        int retCounter;
+        RawBufferVector rawBufferVector;
+
+        Deserialization::Deserialize(recv, retCommand);
+        Deserialization::Deserialize(recv, retCounter);
+        Deserialization::Deserialize(recv, retCode);
+        Deserialization::Deserialize(recv, rawBufferVector);
+
+        if ((counter != retCounter) || (static_cast<int>(command) != retCommand)) {
+            return CKM_API_ERROR_UNKNOWN;
+        }
+
+        if (retCode != CKM_API_SUCCESS) {
+            return retCode;
+        }
+
+        for (auto &e: rawBufferVector)
+            certificateChainVector.push_back(Certificate(e, DataFormat::FORM_DER));
+
+        return retCode;
+    });
+}
+
+int Manager::ManagerImpl::getCertificateChain(
+    const Certificate &certificate,
+    const CertificateVector &untrustedCertificates,
+    CertificateVector &certificateChainVector)
+{
+    RawBufferVector rawBufferVector;
+
+    for (auto &e: untrustedCertificates) {
+        rawBufferVector.push_back(e.getDER());
+    }
+
+    return getCertChain(
+        LogicCommand::GET_CHAIN_CERT,
+        ++m_counter,
+        certificate,
+        rawBufferVector,
+        certificateChainVector);
+}
+
+int Manager::ManagerImpl::getCertificateChain(
+    const Certificate &certificate,
+    const AliasVector &untrustedCertificates,
+    CertificateVector &certificateChainVector)
+{
+    (void) certificate;
+    (void) untrustedCertificates;
+    (void) certificateChainVector;
+    return CKM_API_ERROR_UNKNOWN;
+}
+
 } // namespace CKM
 
