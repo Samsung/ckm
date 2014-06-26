@@ -4,7 +4,6 @@
 #include <generic-key.h>
 #include <certificate-impl.h>
 #include <ckm/ckm-type.h>
-#include <string.h>
 #include <vector>
 #include <openssl/evp.h>
 #include <openssl/obj_mac.h>
@@ -24,18 +23,12 @@
 #define EVP_SUCCESS	1	// DO NOTCHANGE THIS VALUE
 #define EVP_FAIL	0	// DO NOTCHANGE THIS VALUE
 
-#define CKM_CRYPTO_CTX_ERROR 2
-#define CKM_CRYPTO_PKEYINIT_ERROR 3
-#define CKM_CRYPTO_PKEYSET_ERROR 4
-#define CKM_CRYPTO_PKEYGEN_ERROR 5
-#define CKM_CRYPTO_CREATEKEY_SUCCESS 6
-#define CKM_CRYPTO_KEYGEN_ERROR 7
-#define CKM_SIG_GEN_ERROR 8
-#define CKM_CRYPTO_NOT_SUPPORT_ALGO_ERROR 9
-#define CKM_SIG_VERIFY_OPER_ERROR 10
-#define CKM_CRYPTO_NOT_SUPPORT_KEY_TYPE 11
-#define CKM_CRYPTO_INIT_ERROR 12
-#define CKM_CRYPTO_INIT_SUCCESS 13
+#define CKM_CRYPTO_INIT_SUCCESS 1
+#define CKM_CRYPTO_CREATEKEY_SUCCESS 2
+#define CKM_CREATE_SIGNATURE_SUCCESS 3
+#define CKM_VERIFY_SIGNATURE_SUCCESS 4
+#define CKM_VERIFY_CHAIN_SUCCESS 5
+#define NOT_DEFINED -1
 
 namespace CKM {
 
@@ -49,6 +42,8 @@ class CryptoService {
      class Exception {
      	public:
      	     DECLARE_EXCEPTION_TYPE(CKM::Exception, Base)
+        	 DECLARE_EXCEPTION_TYPE(Base, Crypto_internal);
+     	     DECLARE_EXCEPTION_TYPE(Base, opensslError);
      };
 
      // During initialization, FIPS_MODE and the antropy source are set.

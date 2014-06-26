@@ -1,8 +1,9 @@
 #include <iostream>
 #include <exception>
 #include <vector>
-#include <openssl/x509_vfy.h>
+#include <fstream>
 #include <string.h>
+#include <openssl/x509_vfy.h>
 #include <openssl/evp.h>
 #include <openssl/obj_mac.h>
 #include <openssl/ec.h>
@@ -33,95 +34,6 @@ CryptoService::CryptoService(){
 CryptoService::~CryptoService(){
 }
 
-// The returned (EVP_PKEY *) should be freed like this [if(pkey) EVP_PKEY_free(pkey);] after use.
-//void to_string_rsa_private_key(RSA *pkey, unsigned char **derPrivateKey, int *length) {
-//	unsigned char *ucTmp;
-//	*length = i2d_RSAPrivateKey(pkey, NULL);
-//	*derPrivateKey = (unsigned char *)malloc(*length);
-//	ucTmp = *derPrivateKey;
-//	i2d_RSAPrivateKey(pkey, &ucTmp);
-//}
-
-//void to_string_rsa_public_key(RSA *pkey, unsigned char **derPublicKey, int *length) {
-//	unsigned char *ucTmp;
-//	*length = i2d_RSA_PUBKEY(pkey, NULL);
-//	*derPublicKey = (unsigned char *)malloc(*length);
-//	ucTmp = *derPublicKey;
-//	i2d_RSA_PUBKEY(pkey, &ucTmp);
-//}
-
-//void to_string_ec_private_key(EC_KEY *pkey, unsigned char **derPrivateKey, int *length) {
-//	unsigned char *ucTmp;
-//	*length = i2d_ECPrivateKey(pkey, NULL);
-//	*derPrivateKey = (unsigned char *)malloc(*length);
-//	ucTmp = *derPrivateKey;
-//	i2d_ECPrivateKey(pkey, &ucTmp);
-//}
-//
-//void to_string_ec_public_key(EC_KEY *pkey, unsigned char **derPublicKey, int *length) {
-//	unsigned char *ucTmp;	//RawData test;
-//	*length = i2d_EC_PUBKEY(pkey, NULL);
-//	*derPublicKey = (unsigned char *)malloc(*length);
-//	ucTmp = *derPublicKey;
-//	i2d_EC_PUBKEY(pkey, &ucTmp);
-//}
-
-// The returned (EVP_PKEY *) should be freed like this [if(pkey) EVP_PKEY_free(pkey);] after use.
-//EVP_PKEY *to_pkey_rsa_public_key(const unsigned char *derPublicKey, int length) {
-//	EVP_PKEY *pkey = EVP_PKEY_new();
-//	RSA *rsa;
-//
-//	BIO *bio = BIO_new(BIO_s_mem());
-//    BIO_write(bio, derPublicKey, length);
-//    rsa = d2i_RSA_PUBKEY_bio(bio, NULL);
-//    BIO_free_all(bio);
-//    EVP_PKEY_set1_RSA(pkey,rsa);
-//
-//	return pkey;
-//}
-
-// The returned (EVP_PKEY *) should be freed like this [if(pkey) EVP_PKEY_free(pkey);] after use.
-//EVP_PKEY *to_pkey_rsa_private_key(const unsigned char *derPrivateKey, int length) {
-//	EVP_PKEY *pkey = EVP_PKEY_new();
-//	RSA *rsa;
-//
-//	BIO *bio = BIO_new(BIO_s_mem());
-//    BIO_write(bio, derPrivateKey, length);
-//    rsa = d2i_RSAPrivateKey_bio(bio, NULL);
-//    BIO_free_all(bio);
-//    EVP_PKEY_set1_RSA(pkey,rsa);
-//
-//	return pkey;
-//}
-
-// The returned (EVP_PKEY *) should be freed like this [if(pkey) EVP_PKEY_free(pkey);] after use.
-EVP_PKEY *to_pkey_ec_public_key(const unsigned char *derPublicKey, int length) {
-	EVP_PKEY *pkey = EVP_PKEY_new();
-	EC_KEY *ec;
-
-	BIO *bio = BIO_new(BIO_s_mem());
-    BIO_write(bio, derPublicKey, length);
-    ec = d2i_EC_PUBKEY_bio(bio, NULL);
-    BIO_free_all(bio);
-    EVP_PKEY_set1_EC_KEY(pkey,ec);
-
-	return pkey;
-}
-
-// The returned (EVP_PKEY *) should be freed like this [if(pkey) EVP_PKEY_free(pkey);] after use.
-EVP_PKEY *to_pkey_ec_private_key(const unsigned char *derPrivateKey, int length) {
-	EVP_PKEY *pkey = EVP_PKEY_new();
-	EC_KEY *ec;
-
-	BIO *bio = BIO_new(BIO_s_mem());
-    BIO_write(bio, derPrivateKey, length);
-    ec = d2i_ECPrivateKey_bio(bio, NULL);
-    BIO_free_all(bio);
-    EVP_PKEY_set1_EC_KEY(pkey,ec);
-
-	return pkey;
-}
-
 int CryptoService::initialize() {
 	int mode = 0;
 	int rc = 0;
@@ -144,13 +56,21 @@ int CryptoService::initialize() {
 	}
 
 	// initialize entropy
-	hw_ret = RAND_load_file(DEV_HW_RANDOM_FILE, 32);
+	std::ifstream ifile(DEV_HW_RANDOM_FILE);
+	if(ifile.is_open()) {
+		u_ret= RAND_load_file(DEV_HW_RANDOM_FILE, 32);
 
-	if(hw_ret != 32) {
-		u_ret= RAND_load_file(DEV_URANDOM_FILE, 32);
 		if(u_ret != 32) {
-			LogError("Error in RAND_load_file function");
-			ThrowMsg(Exception::Base, "Error in RAND_load_file function");
+			LogError("Error in HW_RAND file load");
+			ThrowMsg(CryptoService::Exception::Crypto_internal, "Error in HW_RAND file load");
+		}
+	}
+	else {
+		hw_ret = RAND_load_file(DEV_URANDOM_FILE, 32);
+
+		if(hw_ret != 32) {
+			LogError("Error in U_RAND_file_load");
+			ThrowMsg(CryptoService::Exception::Crypto_internal, "Error in U_RAND_file_load");
 		}
 	}
 
@@ -159,158 +79,220 @@ int CryptoService::initialize() {
 
 int CryptoService::createKeyPairRSA(const int size, // size in bits [1024, 2048, 4096]
 		GenericKey &createdPrivateKey,  // returned value
-        GenericKey &createdPublicKey)  // returned value
+		GenericKey &createdPublicKey)  // returned value
 {
 	EVP_PKEY_CTX *ctx = NULL;
 	EVP_PKEY *pkey = NULL;
-
-	RawBuffer priKey_tmp, pubKey_tmp;
-	const std::string null_password;
-
 	EVP_PKEY *pparam = NULL;
 
-	ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL);
-	EVP_PKEY_paramgen_init(ctx);
-	EVP_PKEY_paramgen(ctx,&pparam);
-	EVP_PKEY_CTX_new(pparam, NULL);
-	EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL);
-
-    LogDebug("Generating RSA key pair start.");
-
-    if(!ctx) {
-		return CKM_CRYPTO_CTX_ERROR;
+	// check the parameters of functions
+	if(size != 1024 && size !=2048 && size != 4096) {
+		LogError("Error in RSA input size");
+		ThrowMsg(CryptoService::Exception::Crypto_internal, "Error in RSA input size");
 	}
 
-	if(EVP_PKEY_keygen_init(ctx) <= 0) {
-		if(ctx) EVP_PKEY_CTX_free(ctx);
-		return CKM_CRYPTO_PKEYINIT_ERROR;
+	// check the parameters of functions
+	if(&createdPrivateKey == NULL) {
+		LogError("Error in createdPrivateKey value");
+		ThrowMsg(CryptoService::Exception::Crypto_internal, "Error in createdPrivateKey value");
 	}
 
-	if(EVP_PKEY_CTX_set_rsa_keygen_bits(ctx,size) <= 0) {
-		if(ctx) EVP_PKEY_CTX_free(ctx);
-		return CKM_CRYPTO_PKEYSET_ERROR;
+	// check the parameters of functions
+	if(&createdPublicKey == NULL) {
+		LogError("Error in createdPrivateKey value");
+		ThrowMsg(CryptoService::Exception::Crypto_internal, "Error in createdPublicKey value");
 	}
 
-	if(!EVP_PKEY_keygen(ctx, &pkey)) {
-		if(ctx) EVP_PKEY_CTX_free(ctx);
-		return CKM_CRYPTO_PKEYGEN_ERROR;
+	Try {
+		if(!(ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL))) {
+			LogError("Error in EVP_PKEY_CTX_new_id function !!");
+			ThrowMsg(CryptoService::Exception::opensslError, "Error in EVP_PKEY_CTX_new_id function !!");
+		}
+
+		if(EVP_PKEY_keygen_init(ctx) <= 0) {
+			LogError("Error in EVP_PKEY_keygen_init function !!");
+			ThrowMsg(CryptoService::Exception::opensslError, "Error in EVP_PKEY_keygen_init function !!");
+		}
+
+		if(EVP_PKEY_CTX_set_rsa_keygen_bits(ctx,size) <= 0) {
+			LogError("Error in EVP_PKEY_CTX_set_rsa_keygen_bits function !!");
+			ThrowMsg(CryptoService::Exception::opensslError, "Error in EVP_PKEY_CTX_set_rsa_keygen_bits function !!");
+		}
+
+		if(!EVP_PKEY_keygen(ctx, &pkey)) {
+			LogError("Error in EVP_PKEY_keygen function !!");
+			ThrowMsg(CryptoService::Exception::opensslError, "Error in EVP_PKEY_keygen function !!");
+		}
+	} Catch(CryptoService::Exception::opensslError) {
+		if(pkey) {
+			EVP_PKEY_free(pkey);
+		}
+
+		if(pparam) {
+			EVP_PKEY_free(pparam);
+		}
+
+		if(ctx) {
+			EVP_PKEY_CTX_free(ctx);
+		}
+
+		ReThrowMsg(CryptoService::Exception::opensslError,"Error in opensslError function !!");
 	}
 
-    LogDebug("Generating RSA key pair end.");
+	GenericKey::EvpShPtr ptr(pkey, EVP_PKEY_free); // shared ptr will free pkey
 
-    GenericKey::EvpShPtr ptr(pkey, EVP_PKEY_free); // shared ptr will free pkey
+	createdPrivateKey = GenericKey(ptr, KeyType::KEY_RSA_PRIVATE);
+	createdPublicKey = GenericKey(ptr, KeyType::KEY_RSA_PUBLIC);
 
-    createdPrivateKey = GenericKey(ptr, KeyType::KEY_RSA_PRIVATE);
-    createdPublicKey = GenericKey(ptr, KeyType::KEY_RSA_PUBLIC);
+	if(pparam) {
+		EVP_PKEY_free(pparam);
+	}
 
-	if(ctx)
+	if(ctx) {
 		EVP_PKEY_CTX_free(ctx);
+	}
 
 	return CKM_CRYPTO_CREATEKEY_SUCCESS;
 }
 
 int CryptoService::createKeyPairECDSA(ElipticCurve type,
 		GenericKey &createdPrivateKey,  // returned value
-        GenericKey &createdPublicKey)  // returned value
+		GenericKey &createdPublicKey)  // returned value
 {
-		int ecCurve = -1;
-		EVP_PKEY_CTX *pctx = NULL;
-		EVP_PKEY_CTX *kctx = NULL;
-		EVP_PKEY *pkey = NULL;
-		EVP_PKEY *pparam = NULL;
-		RawBuffer priKey_tmp, pubKey_tmp, null_password;
+	int ecCurve = NOT_DEFINED;
+	EVP_PKEY_CTX *pctx = NULL;
+	EVP_PKEY_CTX *kctx = NULL;
+	EVP_PKEY *pkey = NULL;
+	EVP_PKEY *pparam = NULL;
 
-		switch(type) {
-			case ElipticCurve::prime192v1:
-				ecCurve = NID_X9_62_prime192v1;
-				break;
-			case ElipticCurve::prime256v1:
-				ecCurve = NID_X9_62_prime256v1;
-				break;
-			case ElipticCurve::secp384r1:
-				ecCurve = NID_secp384r1;
-				break;
-		}
+	switch(type) {
+	case ElipticCurve::prime192v1:
+		ecCurve = NID_X9_62_prime192v1;
+		break;
+	case ElipticCurve::prime256v1:
+		ecCurve = NID_X9_62_prime256v1;
+		break;
+	case ElipticCurve::secp384r1:
+		ecCurve = NID_secp384r1;
+		break;
+	default:
+		LogError("Error in EC type");
+		ThrowMsg(CryptoService::Exception::Crypto_internal, "Error in EC type");
+	}
 
+	// check the parameters of functions
+	if(&createdPrivateKey == NULL) {
+		LogError("Error in createdPrivateKey value");
+		ThrowMsg(CryptoService::Exception::Crypto_internal, "Error in createdPrivateKey value");
+	}
+
+	// check the parameters of functions
+	if(&createdPublicKey == NULL) {
+		LogError("Error in createdPrivateKey value");
+		ThrowMsg(CryptoService::Exception::Crypto_internal, "Error in createdPublicKey value");
+	}
+
+	Try {
 		/* Create the context for generating the parameters */
 		if(!(pctx = EVP_PKEY_CTX_new_id(EVP_PKEY_EC, NULL))) {
-			return CKM_CRYPTO_KEYGEN_ERROR;
+			LogError("Error in EVP_PKEY_CTX_new_id function");
+			ThrowMsg(CryptoService::Exception::opensslError, "Error in EVP_PKEY_CTX_new_id function");
 		}
 
-		if(!EVP_PKEY_paramgen_init(pctx)) {
-			if(pctx) EVP_PKEY_CTX_free(pctx);
-			return CKM_CRYPTO_KEYGEN_ERROR;
+		if(EVP_SUCCESS != EVP_PKEY_paramgen_init(pctx)) {
+			LogError("Error in EVP_PKEY_paramgen_init function");
+			ThrowMsg(CryptoService::Exception::opensslError, "Error in EVP_PKEY_paramgen_init function");
 		}
 
-		if(!EVP_PKEY_CTX_set_ec_paramgen_curve_nid(pctx, ecCurve)) {
-			if(pctx) EVP_PKEY_CTX_free(pctx);
-			return CKM_CRYPTO_KEYGEN_ERROR;
+		if(EVP_SUCCESS != EVP_PKEY_CTX_set_ec_paramgen_curve_nid(pctx, ecCurve)) {
+			LogError("Error in EVP_PKEY_CTX_set_ec_paramgen_curve_nid function");
+			ThrowMsg(CryptoService::Exception::opensslError, "Error in EVP_PKEY_CTX_set_ec_paramgen_curve_nid function");
 		}
 
 		/* Generate parameters */
-		if(!EVP_PKEY_paramgen(pctx, &pparam)) {
-			if(pparam) EVP_PKEY_free(pparam);
-			if(pctx) EVP_PKEY_CTX_free(pctx);
-			return CKM_CRYPTO_KEYGEN_ERROR;
+		if(EVP_SUCCESS != EVP_PKEY_paramgen(pctx, &pparam)) {
+			LogError("Error in EVP_PKEY_paramgen function");
+			ThrowMsg(CryptoService::Exception::opensslError, "Error in EVP_PKEY_paramgen function");
 		}
 
 		// Start to generate key
-		if(pparam != NULL) {
-			if(!(kctx = EVP_PKEY_CTX_new(pparam, NULL))) {
-				if(pparam) EVP_PKEY_free(pparam);
-				if(pctx) EVP_PKEY_CTX_free(pctx);
-				return CKM_CRYPTO_KEYGEN_ERROR;
-			}
-		}
-		else {
-			/* Create context for key generation */
-			if(!(kctx = EVP_PKEY_CTX_new_id(EVP_PKEY_EC, NULL))) {
-				if(pparam) EVP_PKEY_free(pparam);
-				if(pctx) EVP_PKEY_CTX_free(pctx);
-				return CKM_CRYPTO_KEYGEN_ERROR;
-			}
+		if(!(kctx = EVP_PKEY_CTX_new(pparam, NULL))) {
+			LogError("Error in EVP_PKEY_CTX_new function");
+			ThrowMsg(CryptoService::Exception::opensslError, "Error in EVP_PKEY_CTX_new function");
 		}
 
-		if(!EVP_PKEY_keygen_init(kctx)) {
-			if(pparam) EVP_PKEY_free(pparam);
-			if(pctx) EVP_PKEY_CTX_free(pctx);
-			if(kctx) EVP_PKEY_CTX_free(kctx);
+		if(EVP_SUCCESS != EVP_PKEY_keygen_init(kctx)) {
+			LogError("Error in EVP_PKEY_keygen_init function");
+			ThrowMsg(CryptoService::Exception::opensslError, "Error in EVP_PKEY_keygen_init function");
 		}
 
 		/* Generate the key */
-		if(!EVP_PKEY_keygen(kctx, &pkey)) {
-			if(pparam) EVP_PKEY_free(pparam);
-			if(pctx) EVP_PKEY_CTX_free(pctx);
-			if(kctx) EVP_PKEY_CTX_free(kctx);
+		if(EVP_SUCCESS != EVP_PKEY_keygen(kctx, &pkey)) {
+			LogError("Error in EVP_PKEY_keygen function");
+			ThrowMsg(CryptoService::Exception::opensslError, "Error in EVP_PKEY_keygen function");
+		}
+	} Catch(CryptoService::Exception::opensslError) {
+		if(pkey) {
+			EVP_PKEY_free(pkey);
 		}
 
-        GenericKey::EvpShPtr ptr(pkey, EVP_PKEY_free); // shared ptr will free pkey
-
-        createdPrivateKey = GenericKey(ptr, KeyType::KEY_ECDSA_PRIVATE);
-        createdPublicKey = GenericKey(ptr, KeyType::KEY_ECDSA_PUBLIC);
-
-		if(pparam)
+		if(pparam) {
 			EVP_PKEY_free(pparam);
-		if(pctx)
-			EVP_PKEY_CTX_free(pctx);
-		if(kctx)
-			EVP_PKEY_CTX_free(kctx);
+		}
 
-		return CKM_CRYPTO_CREATEKEY_SUCCESS;
+		if(pctx) {
+			EVP_PKEY_CTX_free(pctx);
+		}
+
+		if(kctx) {
+			EVP_PKEY_CTX_free(kctx);
+		}
+
+		ReThrowMsg(CryptoService::Exception::opensslError,"Error in openssl function !!");
+	}
+
+	GenericKey::EvpShPtr ptr(pkey, EVP_PKEY_free); // shared ptr will free pkey
+
+	createdPrivateKey = GenericKey(ptr, KeyType::KEY_ECDSA_PRIVATE);
+	createdPublicKey = GenericKey(ptr, KeyType::KEY_ECDSA_PUBLIC);
+
+	if(pparam) {
+		EVP_PKEY_free(pparam);
+	}
+
+	if(pctx) {
+		EVP_PKEY_CTX_free(pctx);
+	}
+
+	if(kctx) {
+		EVP_PKEY_CTX_free(kctx);
+	}
+
+	return CKM_CRYPTO_CREATEKEY_SUCCESS;
 }
 
 int CryptoService::createSignature(const GenericKey &privateKey,
-                         const RawBuffer &message,
-                         const HashAlgorithm hashAlgo,
-                         const RSAPaddingAlgorithm padAlgo,
-                         RawBuffer &signature)
+		const RawBuffer &message,
+		const HashAlgorithm hashAlgo,
+		const RSAPaddingAlgorithm padAlgo,
+		RawBuffer &signature)
 {
 	EVP_MD_CTX *mdctx = NULL;
-	EVP_PKEY_CTX *pctx;
-	int ret = EVP_FAIL;
-	int rsa_padding = -1;
+	EVP_PKEY_CTX *pctx = NULL;
+	int rsa_padding = NOT_DEFINED;
 	RawBuffer data;
-	const EVP_MD *md_algo;
+	const EVP_MD *md_algo = NULL;
+
+	// check the parameters of functions
+	if(&privateKey == NULL) {
+		LogError("Error in privateKey value");
+		ThrowMsg(CryptoService::Exception::Crypto_internal, "Error in privateKey value");
+	}
+
+	if(&message == NULL) {
+		LogError("Error in message value");
+		ThrowMsg(CryptoService::Exception::Crypto_internal, "Error in message value");
+	}
 
 	switch(hashAlgo) {
 	case HashAlgorithm::SHA1:
@@ -326,7 +308,13 @@ int CryptoService::createSignature(const GenericKey &privateKey,
 		md_algo = EVP_sha512();
 		break;
 	default:
-		return CKM_CRYPTO_NOT_SUPPORT_ALGO_ERROR;
+		LogError("Error in hashAlgorithm value");
+		ThrowMsg(CryptoService::Exception::Crypto_internal, "Error in hashAlgorithm value");
+	}
+
+	if((privateKey.getType() != KeyType::KEY_RSA_PRIVATE) && (privateKey.getType() != KeyType::KEY_ECDSA_PRIVATE)) {
+		LogError("Error in private key type");
+		ThrowMsg(CryptoService::Exception::Crypto_internal, "Error in private key type");
 	}
 
 	if(privateKey.getType()==KeyType::KEY_RSA_PRIVATE) {
@@ -338,96 +326,128 @@ int CryptoService::createSignature(const GenericKey &privateKey,
 			rsa_padding = RSA_X931_PADDING;
 			break;
 		default:
-			return CKM_CRYPTO_NOT_SUPPORT_ALGO_ERROR;
-		}
-    } else if (privateKey.getType() != KeyType::KEY_ECDSA_PRIVATE) {
-        return CKM_CRYPTO_NOT_SUPPORT_KEY_TYPE;
-    }
-
-    auto shrPKey = privateKey.getEvpShPtr();
-
-    if (NULL == shrPKey.get())
-        return CKM_CRYPTO_PKEYSET_ERROR;
-
-	// Create the Message Digest Context
-	if(!(mdctx = EVP_MD_CTX_create())) {
-		return CKM_SIG_GEN_ERROR;
-	}
-	if(EVP_SUCCESS != EVP_DigestSignInit(mdctx, &pctx, md_algo, NULL, shrPKey.get())) {
-		if(mdctx) EVP_MD_CTX_destroy(mdctx);
-		return CKM_SIG_GEN_ERROR;
-	}
-
-	/* Set padding algorithm */
-	if(privateKey.getType()==KeyType::KEY_RSA_PRIVATE) {
-		if(EVP_SUCCESS != EVP_PKEY_CTX_set_rsa_padding(pctx, rsa_padding)) {
-			if(mdctx) EVP_MD_CTX_destroy(mdctx);
-			return CKM_SIG_GEN_ERROR;
+			LogError("Error in padding Algorithm value");
+			ThrowMsg(CryptoService::Exception::Crypto_internal, "Error in padding Algorithm value");
 		}
 	}
 
-	/* Call update with the message */
-	char msg[message.size()];
-	memcpy(msg, message.data(),message.size());
-	if(EVP_SUCCESS != EVP_DigestSignUpdate(mdctx, msg, message.size())) {
-		if(mdctx) EVP_MD_CTX_destroy(mdctx);
-		return CKM_SIG_GEN_ERROR;
+	auto shrPKey = privateKey.getEvpShPtr();
+
+	Try {
+		if (NULL == shrPKey.get()) {
+			LogError("Error in EVP_PKEY_keygen function");
+			ThrowMsg(CryptoService::Exception::opensslError, "Error in EVP_PKEY_keygen function");
+		}
+
+		// Create the Message Digest Context
+		if(!(mdctx = EVP_MD_CTX_create())) {
+			LogError("Error in EVP_MD_CTX_create function");
+			ThrowMsg(CryptoService::Exception::opensslError, "Error in EVP_MD_CTX_create function");
+		}
+
+		if(EVP_SUCCESS != EVP_DigestSignInit(mdctx, &pctx, md_algo, NULL, shrPKey.get())) {
+			LogError("Error in EVP_DigestSignInit function");
+			ThrowMsg(CryptoService::Exception::opensslError, "Error in EVP_DigestSignInit function");
+		}
+
+		/* Set padding algorithm */
+		if(privateKey.getType()==KeyType::KEY_RSA_PRIVATE) {
+			if(EVP_SUCCESS != EVP_PKEY_CTX_set_rsa_padding(pctx, rsa_padding)) {
+				LogError("Error in EVP_PKEY_CTX_set_rsa_padding function");
+				ThrowMsg(CryptoService::Exception::opensslError, "Error in EVP_PKEY_CTX_set_rsa_padding function");
+			}
+		}
+
+		/* Call update with the message */
+		char msg[message.size()];
+		memcpy(msg, message.data(),message.size());
+		if(EVP_SUCCESS != EVP_DigestSignUpdate(mdctx, msg, message.size())) {
+			LogError("Error in EVP_DigestSignUpdate function");
+			ThrowMsg(CryptoService::Exception::opensslError, "Error in EVP_DigestSignUpdate function");
+		}
+
+		/* Finalize the DigestSign operation */
+		/* First call EVP_DigestSignFinal with a NULL sig parameter to obtain the length of the
+		 * signature. Length is returned in slen */
+		size_t slen;
+		if(EVP_SUCCESS != EVP_DigestSignFinal(mdctx, NULL, &slen)) {
+			LogError("Error in EVP_DigestSignFinal function");
+			ThrowMsg(CryptoService::Exception::opensslError, "Error in EVP_DigestSignFinal function");
+		}
+		/* Allocate memory for the signature based on size in slen */
+		unsigned char sig[slen];
+
+		/* Obtain the signature */
+		if(EVP_SUCCESS != EVP_DigestSignFinal(mdctx, sig, &slen)) {
+			LogError("Error in EVP_DigestSignFinal function");
+			ThrowMsg(CryptoService::Exception::opensslError, "Error in EVP_DigestSignFinal function");
+		}
+
+		// Set value to return RawData
+		signature.assign(sig, sig+slen);
+	} Catch(CryptoService::Exception::opensslError) {
+		if(mdctx != NULL) {
+			EVP_MD_CTX_destroy(mdctx);
+		}
+
+		ReThrowMsg(CryptoService::Exception::opensslError,"Error in openssl function !!");
 	}
 
-	/* Finalize the DigestSign operation */
-	/* First call EVP_DigestSignFinal with a NULL sig parameter to obtain the length of the
-	 * signature. Length is returned in slen */
-	size_t slen;
-	if(EVP_SUCCESS != EVP_DigestSignFinal(mdctx, NULL, &slen)) {
-		if(mdctx) EVP_MD_CTX_destroy(mdctx);
-		return CKM_SIG_GEN_ERROR;
-	}
-	/* Allocate memory for the signature based on size in slen */
-	unsigned char sig[slen];
-
-	/* Obtain the signature */
-	if(EVP_SUCCESS != EVP_DigestSignFinal(mdctx, sig, &slen)) {
-		if(mdctx) EVP_MD_CTX_destroy(mdctx);
-		return CKM_SIG_GEN_ERROR;
+	if(mdctx != NULL) {
+		EVP_MD_CTX_destroy(mdctx);
 	}
 
-	// Set value to return RawData
-	signature.assign(sig, sig+slen);
-
-	/* Success */
-	ret = EVP_SUCCESS;
-	if(mdctx) EVP_MD_CTX_destroy(mdctx);
-	return ret;
+	return CKM_CREATE_SIGNATURE_SUCCESS;
 }
 
 int CryptoService::verifySignature(const GenericKey &publicKey,
-                    const RawBuffer &message,
-                    const RawBuffer &signature,
-                    const HashAlgorithm hashAlgo,
-                    const RSAPaddingAlgorithm padAlgo){
+		const RawBuffer &message,
+		const RawBuffer &signature,
+		const HashAlgorithm hashAlgo,
+		const RSAPaddingAlgorithm padAlgo){
 
 	EVP_MD_CTX *mdctx = NULL;
 	EVP_PKEY_CTX *pctx;
-	int ret = EVP_FAIL;
-	int rsa_padding = -1;
+	int rsa_padding = NOT_DEFINED;
 	const EVP_MD *md_algo;
 	RawBuffer data;
 
+	if(&publicKey == NULL) {
+		LogError("Error in publicKey value");
+		ThrowMsg(CryptoService::Exception::Crypto_internal, "Error in publicKey value");
+	}
+
+	if(&message == NULL) {
+		LogError("Error in message value");
+		ThrowMsg(CryptoService::Exception::Crypto_internal, "Error in message value");
+	}
+
+	if(&signature == NULL) {
+		LogError("Error in signature value");
+		ThrowMsg(CryptoService::Exception::Crypto_internal, "Error in signature value");
+	}
+
 	switch(hashAlgo) {
-		case HashAlgorithm::SHA1:
-			md_algo = EVP_sha1();
-			break;
-		case HashAlgorithm::SHA256:
-			md_algo = EVP_sha256();
-			break;
-		case HashAlgorithm::SHA384:
-			md_algo = EVP_sha384();
-			break;
-		case HashAlgorithm::SHA512:
-			md_algo = EVP_sha512();
-			break;
-		default:
-			return CKM_CRYPTO_NOT_SUPPORT_ALGO_ERROR;
+	case HashAlgorithm::SHA1:
+		md_algo = EVP_sha1();
+		break;
+	case HashAlgorithm::SHA256:
+		md_algo = EVP_sha256();
+		break;
+	case HashAlgorithm::SHA384:
+		md_algo = EVP_sha384();
+		break;
+	case HashAlgorithm::SHA512:
+		md_algo = EVP_sha512();
+		break;
+	default:
+		LogError("Error in hashAlgorithm value");
+		ThrowMsg(CryptoService::Exception::Crypto_internal, "Error in hashAlgorithm value");
+	}
+
+	if((publicKey.getType() != KeyType::KEY_RSA_PUBLIC) && (publicKey.getType() != KeyType::KEY_ECDSA_PUBLIC)) {
+		LogError("Error in private key type");
+		ThrowMsg(CryptoService::Exception::Crypto_internal, "Error in private key type");
 	}
 
 	if(publicKey.getType()==KeyType::KEY_RSA_PUBLIC) {
@@ -439,127 +459,202 @@ int CryptoService::verifySignature(const GenericKey &publicKey,
 			rsa_padding = RSA_X931_PADDING;
 			break;
 		default:
-			return CKM_CRYPTO_NOT_SUPPORT_ALGO_ERROR;
-		}
-
-	} else if(publicKey.getType() != KeyType::KEY_ECDSA_PUBLIC) {
-		return CKM_CRYPTO_NOT_SUPPORT_KEY_TYPE;
-	}
-
-    auto public_pkey = publicKey.getEvpShPtr();
-
-    if (NULL == public_pkey.get())
-        return CKM_CRYPTO_PKEYSET_ERROR;
-
-	char msg[message.size()];
-	memcpy(msg, message.data(),message.size());
-
-	unsigned char sig[signature.size()];
-	memcpy(sig, signature.data(),signature.size());
-
-	/* Create the Message Digest Context */
-	if(!(mdctx = EVP_MD_CTX_create())) {
-		return CKM_SIG_VERIFY_OPER_ERROR;
-	}
-
-	if(EVP_SUCCESS != EVP_DigestVerifyInit(mdctx, &pctx, md_algo, NULL, public_pkey.get())) {
-		if(mdctx) EVP_MD_CTX_destroy(mdctx);
-		return CKM_SIG_VERIFY_OPER_ERROR;
-	}
-
-	if(publicKey.getType()==KeyType::KEY_RSA_PUBLIC) {
-		if(EVP_SUCCESS != EVP_PKEY_CTX_set_rsa_padding(pctx, rsa_padding))  {
-			if(mdctx) EVP_MD_CTX_destroy(mdctx);
-			return CKM_SIG_VERIFY_OPER_ERROR;
+			LogError("Error in padding Algorithm value");
+			ThrowMsg(CryptoService::Exception::Crypto_internal, "Error in padding Algorithm value");
 		}
 	}
 
-	if(EVP_SUCCESS != EVP_DigestVerifyUpdate(mdctx, msg, message.size()) ) {
-		if(mdctx) EVP_MD_CTX_destroy(mdctx);
-		return CKM_SIG_VERIFY_OPER_ERROR;
-    }
+	Try {
+		auto public_pkey = publicKey.getEvpShPtr();
 
-	if(EVP_SUCCESS != EVP_DigestVerifyFinal(mdctx, sig, signature.size()) ) {
-		if(mdctx) EVP_MD_CTX_destroy(mdctx);
-		return CKM_SIG_VERIFY_OPER_ERROR;
-    }
+		if (NULL == public_pkey.get()) {
+			LogError("Error in getEvpShPtr function");
+			ThrowMsg(CryptoService::Exception::opensslError, "Error in getEvpShPtr function");
+		}
 
-	ret = EVP_SUCCESS;
-	if(mdctx) EVP_MD_CTX_destroy(mdctx);
-	return ret;
+		char msg[message.size()];
+		memcpy(msg, message.data(),message.size());
+
+		unsigned char sig[signature.size()];
+		memcpy(sig, signature.data(),signature.size());
+
+
+		/* Create the Message Digest Context */
+		if(!(mdctx = EVP_MD_CTX_create())) {
+			LogError("Error in EVP_MD_CTX_create function");
+			ThrowMsg(CryptoService::Exception::opensslError, "Error in EVP_MD_CTX_create function");
+		}
+
+		if(EVP_SUCCESS != EVP_DigestVerifyInit(mdctx, &pctx, md_algo, NULL, public_pkey.get())) {
+			LogError("Error in EVP_DigestVerifyInit function");
+			ThrowMsg(CryptoService::Exception::opensslError, "Error in EVP_DigestVerifyInit function");
+		}
+
+		if(publicKey.getType()==KeyType::KEY_RSA_PUBLIC) {
+			if(EVP_SUCCESS != EVP_PKEY_CTX_set_rsa_padding(pctx, rsa_padding))  {
+				LogError("Error in EVP_PKEY_CTX_set_rsa_padding function");
+				ThrowMsg(CryptoService::Exception::opensslError, "Error in EVP_PKEY_CTX_set_rsa_padding function");
+			}
+		}
+
+		if(EVP_SUCCESS != EVP_DigestVerifyUpdate(mdctx, msg, message.size()) ) {
+			LogError("Error in EVP_DigestVerifyUpdate function");
+			ThrowMsg(CryptoService::Exception::opensslError, "Error in EVP_DigestVerifyUpdate function");
+		}
+
+		if(EVP_SUCCESS != EVP_DigestVerifyFinal(mdctx, sig, signature.size()) ) {
+			LogError("Error in EVP_DigestVerifyFinal function");
+			ThrowMsg(CryptoService::Exception::opensslError, "Error in EVP_DigestVerifyFinal function");
+		}
+	} Catch(CryptoService::Exception::opensslError) {
+		if(mdctx != NULL) {
+			EVP_MD_CTX_destroy(mdctx);
+		}
+
+		ReThrowMsg(CryptoService::Exception::opensslError,"Error in openssl function !!");
+	}
+
+	if(mdctx != NULL) {
+		EVP_MD_CTX_destroy(mdctx);
+	}
+
+	return CKM_VERIFY_SIGNATURE_SUCCESS;
 }
 
 
 int CryptoService::verifyCertificateChain(const CertificateImpl &certificate,
-         const CertificateImplVector &untrustedCertificates,
-         const CertificateImplVector &userTrustedCertificates,
-         CertificateImplVector &certificateChainVector) {
+		const CertificateImplVector &untrustedCertificates,
+		const CertificateImplVector &userTrustedCertificates,
+		CertificateImplVector &certificateChainVector) {
+
 	X509 *cert = X509_new();
+	X509 *tempCert;
 	rawBufferToX509(&cert, certificate.getDER());
-	
+
 	std::vector<X509 *> trustedCerts;
 	std::vector<X509 *> userTrustedCerts;
 	std::vector<X509 *> untrustedChain;
 
-	X509 *tempCert;
-
 	STACK_OF(X509) *sysCerts = loadSystemCerts(CKM_SYSTEM_CERTS_PATH);
 
-	while((tempCert = sk_X509_pop(sysCerts)) != NULL) {
-		trustedCerts.push_back(tempCert);
-	}
- 
-	for(unsigned int i=0;i<userTrustedCertificates.size();i++) {
-                tempCert = X509_new();
-                rawBufferToX509(&tempCert, userTrustedCertificates[i].getDER());
-                userTrustedCerts.push_back(tempCert);
-        }
-
-	for(unsigned int i=0;i<untrustedCertificates.size();i++) {
-		tempCert = X509_new();
-		rawBufferToX509(&tempCert, untrustedCertificates[i].getDER());
-		untrustedChain.push_back(tempCert);
+	// check the parameters of functions
+	if(&certificate == NULL) {
+		LogError("Error in certificate value");
+		ThrowMsg(CryptoService::Exception::Crypto_internal, "Error in certificate value");
 	}
 
-	std::vector<X509 *> chain = verifyCertChain(cert, trustedCerts, userTrustedCerts, untrustedChain);
-
-	RawBuffer tmpBuf;
-	for(unsigned int i=0;i<chain.size();i++) {
-		x509ToRawBuffer(tmpBuf, chain[i]);
-		CertificateImpl tmpCertImpl((const RawBuffer)tmpBuf, DataFormat::FORM_DER);
-		certificateChainVector.push_back(tmpCertImpl);
+	// check the parameters of functions
+	if(&untrustedCertificates == NULL) {
+		LogError("Error in untrustedCertificates value");
+		ThrowMsg(CryptoService::Exception::Crypto_internal, "Error in untrustedCertificates value");
 	}
 
-	X509_free(cert);
-	
+	// check the parameters of functions
+	if(&userTrustedCertificates == NULL) {
+		LogError("Error in userTrustedCertificates value");
+		ThrowMsg(CryptoService::Exception::Crypto_internal, "Error in userTrustedCertificates value");
+	}
+
+	// check the parameters of functions
+	if(&certificateChainVector == NULL) {
+		LogError("Error in certificateChainVector value");
+		ThrowMsg(CryptoService::Exception::Crypto_internal, "Error in certificateChainVector value");
+	}
+
+	Try {
+		while((tempCert = sk_X509_pop(sysCerts)) != NULL) {
+			trustedCerts.push_back(tempCert);
+		}
+
+		for(unsigned int i=0;i<userTrustedCertificates.size();i++) {
+			if((tempCert = X509_new()) == NULL) {
+				LogError("Error in X509_new function");
+				ThrowMsg(CryptoService::Exception::opensslError, "Error in X509_new function");
+			}
+			rawBufferToX509(&tempCert, userTrustedCertificates[i].getDER());
+			userTrustedCerts.push_back(tempCert);
+		}
+
+		for(unsigned int i=0;i<untrustedCertificates.size();i++) {
+			if((tempCert = X509_new()) == NULL) {
+				LogError("Error in X509_new function");
+				ThrowMsg(CryptoService::Exception::opensslError, "Error in X509_new function");
+			}
+			rawBufferToX509(&tempCert, untrustedCertificates[i].getDER());
+			untrustedChain.push_back(tempCert);
+		}
+
+		std::vector<X509 *> chain = verifyCertChain(cert, trustedCerts, userTrustedCerts, untrustedChain);
+
+		RawBuffer tmpBuf;
+		for(unsigned int i=0;i<chain.size();i++) {
+			x509ToRawBuffer(tmpBuf, chain[i]);
+			CertificateImpl tmpCertImpl((const RawBuffer)tmpBuf, DataFormat::FORM_DER);
+			certificateChainVector.push_back(tmpCertImpl);
+		}
+	} Catch(CryptoService::Exception::opensslError) {
+		if(cert != NULL) {
+			X509_free(cert);
+		}
+
+		for(unsigned int i=0;i<trustedCerts.size();i++) {
+			if(trustedCerts[i] != NULL) {
+				X509_free(trustedCerts[i]);
+			}
+		}
+
+		for(unsigned int i=0;i<untrustedChain.size();i++) {
+			if(untrustedChain[i] != NULL) {
+				X509_free(untrustedChain[i]);
+			}
+		}
+
+		for(unsigned int i=0;i<userTrustedCerts.size();i++) {
+			if(userTrustedCerts[i] != NULL) {
+				X509_free(userTrustedCerts[i]);
+			}
+		}
+		ReThrowMsg(CryptoService::Exception::opensslError,"Error in openssl function !!");
+	}
+
+	if(cert != NULL) {
+		X509_free(cert);
+	}
+
 	for(unsigned int i=0;i<trustedCerts.size();i++) {
-		X509_free(trustedCerts[i]);
+		if(trustedCerts[i] != NULL) {
+			X509_free(trustedCerts[i]);
+		}
 	}
 
 	for(unsigned int i=0;i<untrustedChain.size();i++) {
-		X509_free(untrustedChain[i]);
+		if(untrustedChain[i] != NULL) {
+			X509_free(untrustedChain[i]);
+		}
 	}
 
 	for(unsigned int i=0;i<userTrustedCerts.size();i++) {
-		X509_free(userTrustedCerts[i]);
+		if(userTrustedCerts[i] != NULL) {
+			X509_free(userTrustedCerts[i]);
+		}
 	}
 
-	return EVP_SUCCESS;
+	return CKM_VERIFY_CHAIN_SUCCESS;
 }
 
 /*
-* truestedCerts means the system certificate list stored in system securely.
-* return : std::vector<X509 *> certChain; the order is user cert, middle ca certs, and root ca cert.
-*/
+ * truestedCerts means the system certificate list stored in system securely.
+ * return : std::vector<X509 *> certChain; the order is user cert, middle ca certs, and root ca cert.
+ */
 
 std::vector<X509 *> CryptoService::verifyCertChain(X509 *cert,
 		std::vector<X509 *> &trustedCerts,
 		std::vector<X509 *> &userTrustedCerts,
 		std::vector<X509 *> &untrustedchain){
+
 	std::vector<X509 *> certChain;
 	X509_STORE *tstore = X509_STORE_new();
 	STACK_OF(X509) *uchain = sk_X509_new_null();
-
 	std::vector<X509 *>::iterator iVec_it;
 
 	for(iVec_it = trustedCerts.begin(); iVec_it != trustedCerts.end(); iVec_it++) {
@@ -568,7 +663,6 @@ std::vector<X509 *> CryptoService::verifyCertChain(X509 *cert,
 	for(iVec_it = userTrustedCerts.begin(); iVec_it != userTrustedCerts.end(); iVec_it++) {
 		X509_STORE_add_cert(tstore, *iVec_it);
 	}
-
 
 	for(iVec_it = untrustedchain.begin(); iVec_it != untrustedchain.end(); iVec_it++) {
 		sk_X509_push(uchain, *iVec_it);
@@ -581,17 +675,13 @@ std::vector<X509 *> CryptoService::verifyCertChain(X509 *cert,
 	X509_STORE_CTX_init(ctx, tstore, cert, uchain);
 
 	int verified = X509_verify_cert(ctx);
-	int errnum;
-	const char *errstr;
+
 	if(verified == OPENSSL_SUCCESS) {
 		STACK_OF(X509) *chain = X509_STORE_CTX_get1_chain(ctx);
 		X509 *cert;
 		while((cert = sk_X509_pop(chain))) {
 			certChain.insert(certChain.begin(),cert);
 		}
-	}else {
-		errnum = X509_STORE_CTX_get_error(ctx);
-		errstr = X509_verify_cert_error_string(errnum);
 	}
 
 	X509_STORE_CTX_cleanup(ctx);
@@ -603,36 +693,35 @@ std::vector<X509 *> CryptoService::verifyCertChain(X509 *cert,
 	uchain = NULL;
 
 	if(verified != OPENSSL_SUCCESS) {
-		throw std::string(errstr);
+		LogError("Error in verifying certification chain");
+		ThrowMsg(CryptoService::Exception::Crypto_internal, "Error in verifying certification chain");
 	}
 
 	return certChain;
 }
 
 bool CryptoService::hasValidCAFlag(std::vector<X509 *> &certChain) {
-        // KeyUsage if present should allow cert signing;
-        // If basicConstraints says not a CA then say so.
+	// KeyUsage if present should allow cert signing;
+	// If basicConstraints says not a CA then say so.
 
-        X509 *cert = NULL;
-        int isCA;
+	X509 *cert = NULL;
+	int isCA;
 
-        if(certChain.size() < 2) // certChain should have more than 2 certs.
-                return false;
+	if(certChain.size() < 2) // certChain should have more than 2 certs.
+		return false;
 
-        std::vector<X509 *>::iterator it;
-        for(it = certChain.begin()+1; it != certChain.end(); it++) { // start from the second cert
-                cert = *it;
-                isCA = X509_check_ca(cert);
-                // For MDPP compliance.
-                // if it returns 1, this means that the cert has the basicConstraints and CAFlag=true.
-                // X509_check_ca can return 0(is not CACert), 1(is CACert), 3, 4, 5(may be CACert).
-                if(isCA != 1) {
-                        return false;
-                }
-        }
+	std::vector<X509 *>::iterator it;
+	for(it = certChain.begin()+1; it != certChain.end(); it++) { // start from the second cert
+		cert = *it;
+		isCA = X509_check_ca(cert);
+		// For MDPP compliance.
+		// if it returns 1, this means that the cert has the basicConstraints and CAFlag=true.
+		// X509_check_ca can return 0(is not CACert), 1(is CACert), 3, 4, 5(may be CACert).
+		if(isCA != 1) {
+			return false;
+		}
+	}
 
-        return true;
+	return true;
 }
-
-
 }
