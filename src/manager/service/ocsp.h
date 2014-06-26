@@ -4,7 +4,7 @@
 #include <openssl/x509v3.h>
 #include <ckm/ckm-type.h>
 #include <certificate-impl.h>
-
+#include <dpl/exception.h>
 
 #define OCSP_STATUS_GOOD				1
 #define OCSP_STATUS_UNKNOWN				2
@@ -23,6 +23,13 @@ class OCSPModule {
 public:
 	OCSPModule();
 	virtual ~OCSPModule();
+
+    class Exception {
+    	public:
+    	    DECLARE_EXCEPTION_TYPE(CKM::Exception, Base)
+    		DECLARE_EXCEPTION_TYPE(Base, OCSP_Internal);
+       		DECLARE_EXCEPTION_TYPE(Base, Openssl_Error);
+    };
 
 	// all error code from project will be defined in public client api
 	// OK, UNKNOWN, REVOKED, NO_NETWORK, TIMEOUT

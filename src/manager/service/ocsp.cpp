@@ -30,6 +30,7 @@
 #include <fts.h>
 #include <unistd.h>
 #include <key-manager-util.h>
+#include <dpl/log/log.h>
 
 /* Maximum leeway in validity period: default 5 minutes */
 #define MAX_VALIDITY_PERIOD     (5 * 60)
@@ -49,7 +50,6 @@ OCSPModule::~OCSPModule(){
 	// Do nothing.
 }
 
-
 int OCSPModule::verify(const CertificateImplVector &certificateChain) {
 	X509 *cert = NULL;
 	X509 *issuer = NULL;
@@ -57,20 +57,64 @@ int OCSPModule::verify(const CertificateImplVector &certificateChain) {
 	int ocspStatus = -1;
 	int result = -1;
 
-	systemCerts = loadSystemCerts(CKM_SYSTEM_CERTS_PATH);
+	if(&certificateChain == NULL) {
+		LogError("Error in certificateChain value");
+		ThrowMsg(OCSPModule::Exception::OCSP_Internal, "Error in certificateChain value");
+	}
 
-	for(unsigned int i=0; i < certificateChain.size() -1; i++) {// except root certificate
-		cert = X509_new();
-		rawBufferToX509(&cert, certificateChain[i].getDER());
-		issuer = X509_new();
-		rawBufferToX509(&issuer, certificateChain[i+1].getDER());
-		extractAIAUrl(cert, url);
-		result = ocsp_verify(cert, issuer, systemCerts, url, &ocspStatus);
-		X509_free(cert);
-		X509_free(issuer);
-		if(result != OCSP_STATUS_GOOD) {
-			return result;
+	if((systemCerts = loadSystemCerts(CKM_SYSTEM_CERTS_PATH)) == NULL) {
+		LogError("Error in loadSystemCerts function");
+		ThrowMsg(OCSPModule::Exception::Openssl_Error, "Error in loadSystemCerts function");
+	}
+
+	Try {
+		if((cert = X509_new()) == NULL) {
+			LogError("Error in X509_new function");
+			ThrowMsg(OCSPModule::Exception::Openssl_Error, "Error in X509_new function");
 		}
+
+		if((issuer = X509_new()) ==NULL) {
+			LogError("Error in X509_new function");
+			ThrowMsg(OCSPModule::Exception::Openssl_Error, "Error in X509_new function");
+		}
+
+		for(unsigned int i=0; i < certificateChain.size() -1; i++) {// except root certificate
+			rawBufferToX509(&cert, certificateChain[i].getDER());
+			rawBufferToX509(&issuer, certificateChain[i+1].getDER());
+			extractAIAUrl(cert, url);
+			result = ocsp_verify(cert, issuer, systemCerts, url, &ocspStatus);
+			if(result != OCSP_STATUS_GOOD) {
+				LogError("Fail to OCSP certification checking");
+				ThrowMsg(OCSPModule::Exception::OCSP_Internal, "Fail to OCSP certification checking");
+			}
+		}
+	} Catch(OCSPModule::Exception::Openssl_Error) {
+		if(cert != NULL) {
+			X509_free(cert);
+		}
+
+		if(issuer != NULL) {
+			X509_free(issuer);
+		}
+		ReThrowMsg(OCSPModule::Exception::Openssl_Error,"Error in openssl function !!");
+	}
+	Catch(OCSPModule::Exception::OCSP_Internal) {
+			if(cert != NULL) {
+				X509_free(cert);
+			}
+
+			if(issuer != NULL) {
+				X509_free(issuer);
+			}
+			ReThrowMsg(OCSPModule::Exception::OCSP_Internal,"Fail to OCSP certification checking !!");
+	}
+
+	if(cert != NULL) {
+		X509_free(cert);
+	}
+
+	if(issuer != NULL) {
+		X509_free(issuer);
 	}
 
 	return OCSP_STATUS_GOOD;
@@ -78,249 +122,263 @@ int OCSPModule::verify(const CertificateImplVector &certificateChain) {
 
 
 int OCSPModule::ocsp_verify(X509 *cert, X509 *issuer, STACK_OF(X509) *systemCerts, char *url, int *ocspStatus) {
-    OCSP_REQUEST *req = NULL;
-    OCSP_RESPONSE *resp = NULL;
-    OCSP_BASICRESP *bs = NULL;
-    OCSP_CERTID *certid = NULL;
-    BIO *cbio = NULL;
-    SSL_CTX *use_ssl_ctx = NULL;
-    char *host = NULL, *port = NULL, *path = NULL;
-    ASN1_GENERALIZEDTIME *rev = NULL;
-    ASN1_GENERALIZEDTIME *thisupd = NULL;
-    ASN1_GENERALIZEDTIME *nextupd = NULL;
-    int use_ssl = 0;
-    int i,tmpIdx;
-    long nsec = MAX_VALIDITY_PERIOD, maxage = -1;
-    int ret = 0;
-    char subj_buf[256];
-    int reason;
-//    const char *reason_str = NULL;
-    X509_STORE *trustedStore=NULL;
+	OCSP_REQUEST *req = NULL;
+	OCSP_RESPONSE *resp = NULL;
+	OCSP_BASICRESP *bs = NULL;
+	OCSP_CERTID *certid = NULL;
+	BIO *cbio = NULL;
+	SSL_CTX *use_ssl_ctx = NULL;
+	char *host = NULL, *port = NULL, *path = NULL;
+	ASN1_GENERALIZEDTIME *rev = NULL;
+	ASN1_GENERALIZEDTIME *thisupd = NULL;
+	ASN1_GENERALIZEDTIME *nextupd = NULL;
+	int use_ssl = 0;
+	int i = 0 ,tmpIdx = 0;
+	long nsec = MAX_VALIDITY_PERIOD, maxage = -1;
+	int ret = 0;
+	char subj_buf[256];
+	int reason = 0;
+	//    const char *reason_str = NULL;0
+	X509_STORE *trustedStore=NULL;
 
-    if (!OCSP_parse_url(url, &host, &port, &path, &use_ssl)) {
-        /* report error */
-        return OCSP_STATUS_INVALID_URL;
-    }
+	if (!OCSP_parse_url(url, &host, &port, &path, &use_ssl)) {
+		/* report error */
+		return OCSP_STATUS_INVALID_URL;
+	}
 
-    cbio = BIO_new_connect(host);
-    if (!cbio) {
-        /*BIO_printf(bio_err, "Error creating connect BIO\n");*/
-        /* report error */
-        return OCSP_STATUS_INTERNAL_ERROR;
-    }
+	cbio = BIO_new_connect(host);
+	if (cbio == NULL) {
+		/*BIO_printf(bio_err, "Error creating connect BIO\n");*/
+		/* report error */
+		return OCSP_STATUS_INTERNAL_ERROR;
+	}
 
-    if (port) {
-        BIO_set_conn_port(cbio, port);
-    }
+	if (port != NULL) {
+		BIO_set_conn_port(cbio, port);
+	}
 
-    if (use_ssl == 1) {
-        BIO *sbio;
-        use_ssl_ctx = SSL_CTX_new(SSLv23_client_method());
-        if (!use_ssl_ctx) {
-            /* report error */
-            return OCSP_STATUS_INTERNAL_ERROR;
-        }
+	if (use_ssl == 1) {
+		BIO *sbio = NULL;
+		use_ssl_ctx = SSL_CTX_new(SSLv23_client_method());
+		if (use_ssl_ctx == NULL) {
+			/* report error */
+			return OCSP_STATUS_INTERNAL_ERROR;
+		}
 
-        SSL_CTX_set_mode(use_ssl_ctx, SSL_MODE_AUTO_RETRY);
-        sbio = BIO_new_ssl(use_ssl_ctx, 1);
-        if (!sbio) {
-            /* report error */
-            return OCSP_STATUS_INTERNAL_ERROR;
-        }
+		SSL_CTX_set_mode(use_ssl_ctx, SSL_MODE_AUTO_RETRY);
+		sbio = BIO_new_ssl(use_ssl_ctx, 1);
+		if (sbio == NULL) {
+			/* report error */
+			return OCSP_STATUS_INTERNAL_ERROR;
+		}
 
-        cbio = BIO_push(sbio, cbio);
-        if (!cbio) {
-            /* report error */
-            return OCSP_STATUS_INTERNAL_ERROR;
-        }
-    }
+		cbio = BIO_push(sbio, cbio);
+		if (cbio == NULL) {
+			/* report error */
+			return OCSP_STATUS_INTERNAL_ERROR;
+		}
+	}
 
-    if (BIO_do_connect(cbio) <= 0) {
-        /*BIO_printf(bio_err, "Error connecting BIO\n");*/
-        /* report error */
+	if (BIO_do_connect(cbio) <= 0) {
+		/*BIO_printf(bio_err, "Error connecting BIO\n");*/
+		/* report error */
 
-        /* free stuff */
-        if (host)
-            OPENSSL_free(host);
-        if (port)
-            OPENSSL_free(port);
-        if (path)
-            OPENSSL_free(path);
-        host = port = path = NULL;
-        if (use_ssl && use_ssl_ctx)
-            SSL_CTX_free(use_ssl_ctx);
-        use_ssl_ctx = NULL;
-        if (cbio)
-            BIO_free_all(cbio);
-        cbio = NULL;
-        return OCSP_STATUS_NET_ERROR;
-    }
+		/* free stuff */
+		if (host != NULL) {
+			OPENSSL_free(host);
+		}
 
-    req = OCSP_REQUEST_new();
+		if (port != NULL) {
+			OPENSSL_free(port);
+		}
 
-    if(!req) {
-        return OCSP_STATUS_INTERNAL_ERROR;
-    }
-    certid = OCSP_cert_to_id(NULL, cert, issuer);
-    if(certid == NULL)  {
-    	return OCSP_STATUS_INTERNAL_ERROR;
-    }
+		if (path != NULL) {
+			OPENSSL_free(path);
+		}
+		host = port = path = NULL;
 
-    if(!OCSP_request_add0_id(req, certid)) {
-        return OCSP_STATUS_INTERNAL_ERROR;
-    }
+		if (use_ssl && use_ssl_ctx) {
+			SSL_CTX_free(use_ssl_ctx);
+		}
+		use_ssl_ctx = NULL;
 
-    resp = OCSP_sendreq_bio(cbio, path, req);
+		if (cbio != NULL) {
+			BIO_free_all(cbio);
+		}
+		cbio = NULL;
 
-    /* free some stuff we no longer need */
-    if (host)
-        OPENSSL_free(host);
-    if (port)
-        OPENSSL_free(port);
-    if (path)
-        OPENSSL_free(path);
-    host = port = path = NULL;
-    if (use_ssl && use_ssl_ctx)
-        SSL_CTX_free(use_ssl_ctx);
-    use_ssl_ctx = NULL;
-    if (cbio)
-        BIO_free_all(cbio);
-    cbio = NULL;
+		return OCSP_STATUS_NET_ERROR;
+	}
 
-    if (!resp) {
-        /*BIO_printf(bio_err, "Error querying OCSP responsder\n");*/
-        /* report error */
-        /* free stuff */
-        OCSP_REQUEST_free(req);
-        return OCSP_STATUS_NET_ERROR;
-    }
+	req = OCSP_REQUEST_new();
 
-    i = OCSP_response_status(resp);
+	if(req == NULL) {
+		return OCSP_STATUS_INTERNAL_ERROR;
+	}
+	certid = OCSP_cert_to_id(NULL, cert, issuer);
+	if(certid == NULL)  {
+		return OCSP_STATUS_INTERNAL_ERROR;
+	}
 
-    if (i != OCSP_RESPONSE_STATUS_SUCCESSFUL) {
-        /*BIO_printf(out, "Responder Error: %s (%ld)\n",
+	if(OCSP_request_add0_id(req, certid) == NULL) {
+		return OCSP_STATUS_INTERNAL_ERROR;
+	}
+
+	resp = OCSP_sendreq_bio(cbio, path, req);
+
+	/* free some stuff we no longer need */
+	if (host != NULL) {
+		OPENSSL_free(host);
+	}
+
+	if (port != NULL) {
+		OPENSSL_free(port);
+	}
+
+	if (path != NULL) {
+		OPENSSL_free(path);
+	}
+	host = port = path = NULL;
+
+	if (use_ssl && use_ssl_ctx) {
+		SSL_CTX_free(use_ssl_ctx);
+	}
+	use_ssl_ctx = NULL;
+
+	if (cbio != NULL) {
+		BIO_free_all(cbio);
+	}
+	cbio = NULL;
+
+	if (!resp) {
+		/*BIO_printf(bio_err, "Error querying OCSP responsder\n");*/
+		/* report error */
+		/* free stuff */
+		OCSP_REQUEST_free(req);
+		return OCSP_STATUS_NET_ERROR;
+	}
+
+	i = OCSP_response_status(resp);
+
+	if (i != OCSP_RESPONSE_STATUS_SUCCESSFUL) {
+		/*BIO_printf(out, "Responder Error: %s (%ld)\n",
                    OCSP_response_status_str(i), i); */
-        /* report error */
-        /* free stuff */
-        OCSP_REQUEST_free(req);
-        OCSP_RESPONSE_free(resp);
-        return OCSP_STATUS_REMOTE_ERROR;
-    }
+		/* report error */
+		/* free stuff */
+		OCSP_REQUEST_free(req);
+		OCSP_RESPONSE_free(resp);
+		return OCSP_STATUS_REMOTE_ERROR;
+	}
 
-    bs = OCSP_response_get1_basic(resp);
-    if (!bs) {
-       /* BIO_printf(bio_err, "Error parsing response\n");*/
-        /* report error */
-        /* free stuff */
-        OCSP_REQUEST_free(req);
-        OCSP_RESPONSE_free(resp);
-        return OCSP_STATUS_INVALID_RESPONSE;
-    }
+	bs = OCSP_response_get1_basic(resp);
+	if (!bs) {
+		/* BIO_printf(bio_err, "Error parsing response\n");*/
+		/* report error */
+		/* free stuff */
+		OCSP_REQUEST_free(req);
+		OCSP_RESPONSE_free(resp);
+		return OCSP_STATUS_INVALID_RESPONSE;
+	}
 
-    if(systemCerts != NULL) {
-        trustedStore = X509_STORE_new();
-        for(tmpIdx=0; tmpIdx<sk_X509_num(systemCerts); tmpIdx++) {
-        	X509_STORE_add_cert(trustedStore, sk_X509_value(systemCerts, tmpIdx));
-        }
-        X509_STORE_add_cert(trustedStore, issuer);
-    }
+	if(systemCerts != NULL) {
+		trustedStore = X509_STORE_new();
+		for(tmpIdx=0; tmpIdx<sk_X509_num(systemCerts); tmpIdx++) {
+			X509_STORE_add_cert(trustedStore, sk_X509_value(systemCerts, tmpIdx));
+		}
+		X509_STORE_add_cert(trustedStore, issuer);
+	}
 
 	int response = OCSP_basic_verify(bs, NULL, trustedStore, 0);
 	if (response <= 0) {
 		OCSP_REQUEST_free(req);
 		OCSP_RESPONSE_free(resp);
 		OCSP_BASICRESP_free(bs);
-        X509_STORE_free(trustedStore);
-        	// 에러 리즌 확인
-        int err = ERR_get_error();
-        char errStr[100];
-        ERR_error_string(err,errStr);
-        printf("OCSP_basic_verify fail.error = %s\n", errStr);
+		X509_STORE_free(trustedStore);
+		// find the reason of error
+		int err = ERR_get_error();
+		char errStr[100];
+		ERR_error_string(err,errStr);
+		// printf("OCSP_basic_verify fail.error = %s\n", errStr);
+		return OCSP_STATUS_INVALID_RESPONSE;
+	}
+
+	if ((i = OCSP_check_nonce(req, bs)) <= 0) {
+		if (i == -1) {
+			/*BIO_printf(bio_err, "WARNING: no nonce in response\n");*/
+		} else {
+			/*BIO_printf(bio_err, "Nonce Verify error\n");*/
+			/* report error */
+			/* free stuff */
+			OCSP_REQUEST_free(req);
+			OCSP_RESPONSE_free(resp);
+			OCSP_BASICRESP_free(bs);
+			X509_STORE_free(trustedStore);
+			return OCSP_STATUS_INVALID_RESPONSE;
+		}
+	}
+
+	(void)X509_NAME_oneline(X509_get_subject_name(cert), subj_buf, 255);
+	if(!OCSP_resp_find_status(bs, certid, ocspStatus, &reason,
+			&rev, &thisupd, &nextupd)) {
+		/* report error */
+
+		/* free stuff */
+		OCSP_RESPONSE_free(resp);
+		OCSP_REQUEST_free(req);
+		OCSP_BASICRESP_free(bs);
+		X509_STORE_free(trustedStore);
+
 		return OCSP_STATUS_INVALID_RESPONSE;
 	}
 
 
-    if ((i = OCSP_check_nonce(req, bs)) <= 0) {
-        if (i == -1) {
-            /*BIO_printf(bio_err, "WARNING: no nonce in response\n");*/
-        } else {
-            /*BIO_printf(bio_err, "Nonce Verify error\n");*/
-            /* report error */
-            /* free stuff */
-            OCSP_REQUEST_free(req);
-            OCSP_RESPONSE_free(resp);
-            OCSP_BASICRESP_free(bs);
-            X509_STORE_free(trustedStore);
-            return OCSP_STATUS_INVALID_RESPONSE;
-        }
-    }
+	/* Check validity: if invalid write to output BIO so we
+	 * know which response this refers to.
+	 */
+	if (!OCSP_check_validity(thisupd, nextupd, nsec, maxage)) {
+		/* ERR_print_errors(out); */
+		/* report error */
 
-    (void)X509_NAME_oneline(X509_get_subject_name(cert), subj_buf, 255);
-    if(!OCSP_resp_find_status(bs, certid, ocspStatus, &reason,
-                              &rev, &thisupd, &nextupd)) {
-        /* report error */
+		/* free stuff */
+		OCSP_REQUEST_free(req);
+		OCSP_RESPONSE_free(resp);
+		OCSP_BASICRESP_free(bs);
+		X509_STORE_free(trustedStore);
 
-        /* free stuff */
-        OCSP_RESPONSE_free(resp);
-        OCSP_REQUEST_free(req);
-        OCSP_BASICRESP_free(bs);
-        X509_STORE_free(trustedStore);
+		return OCSP_STATUS_INVALID_RESPONSE;
+	}
 
-        return OCSP_STATUS_INVALID_RESPONSE;
-    }
+	if (req != NULL) {
+		OCSP_REQUEST_free(req);
+		req = NULL;
+	}
 
+	if (resp != NULL) {
+		OCSP_RESPONSE_free(resp);
+		resp = NULL;
+	}
 
-    /* Check validity: if invalid write to output BIO so we
-     * know which response this refers to.
-     */
-    if (!OCSP_check_validity(thisupd, nextupd, nsec, maxage)) {
-        /* ERR_print_errors(out); */
-        /* report error */
+	if (bs != NULL) {
+		OCSP_BASICRESP_free(bs);
+		bs = NULL;
+	}
 
-        /* free stuff */
-        OCSP_REQUEST_free(req);
-        OCSP_RESPONSE_free(resp);
-        OCSP_BASICRESP_free(bs);
-        X509_STORE_free(trustedStore);
+	if(trustedStore != NULL) {
+		X509_STORE_free(trustedStore);
+		trustedStore = NULL;
+	}
 
-        return OCSP_STATUS_INVALID_RESPONSE;
-    }
+	switch(*ocspStatus) {
+	case V_OCSP_CERTSTATUS_GOOD :
+		ret = OCSP_STATUS_GOOD; break;
+	case V_OCSP_CERTSTATUS_REVOKED :
+		ret = OCSP_STATUS_REVOKED; break;
+	case V_OCSP_CERTSTATUS_UNKNOWN :
+		ret = OCSP_STATUS_UNKNOWN; break;
+	}
 
-    if (req != NULL) {
-        OCSP_REQUEST_free(req);
-        req = NULL;
-    }
-
-    if (resp != NULL) {
-        OCSP_RESPONSE_free(resp);
-        resp = NULL;
-    }
-
-    if (bs != NULL) {
-        OCSP_BASICRESP_free(bs);
-        bs = NULL;
-    }
-
-    if(trustedStore != NULL) {
-    	X509_STORE_free(trustedStore);
-    	trustedStore = NULL;
-    }
-
-//    if (reason != -1) {
-//        reason_str = OCSP_crl_1reason_str(reason);
-//    }
-    switch(*ocspStatus) {
-    case V_OCSP_CERTSTATUS_GOOD :
-    	ret = OCSP_STATUS_GOOD; break;
-    case V_OCSP_CERTSTATUS_REVOKED :
-    	ret = OCSP_STATUS_REVOKED; break;
-    case V_OCSP_CERTSTATUS_UNKNOWN :
-    	ret = OCSP_STATUS_UNKNOWN; break;
-    }
-
-    return ret;
+	return ret;
 }
-
 
 void OCSPModule::extractAIAUrl(X509 *cert, char *url) {
 	STACK_OF(OPENSSL_STRING) *aia = NULL;
@@ -332,7 +390,5 @@ void OCSPModule::extractAIAUrl(X509 *cert, char *url) {
 	X509_email_free(aia);
 	return;
 }
-
-
 
 }
