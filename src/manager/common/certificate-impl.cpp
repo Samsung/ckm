@@ -35,6 +35,8 @@ CertificateImpl::CertificateImpl(const RawBuffer &der, DataFormat format)
     const unsigned char *ptr;
     RawBuffer tmp;
 
+    LogDebug("Certificate to parse. Size: " << der.size());
+
     if (DataFormat::FORM_DER_BASE64 == format) {
         Base64Decoder base64;
         base64.reset();
@@ -52,6 +54,7 @@ CertificateImpl::CertificateImpl(const RawBuffer &der, DataFormat format)
         BIO *buff = BIO_new(BIO_s_mem());
         BIO_write(buff, der.data(), der.size());
         m_x509 = PEM_read_bio_X509(buff, NULL, NULL, NULL);
+        BIO_free_all(buff);
     } else {
         // TODO
         LogError("Unknown certificate format");
@@ -59,7 +62,7 @@ CertificateImpl::CertificateImpl(const RawBuffer &der, DataFormat format)
 
     if (!m_x509) {
         // TODO
-        LogError("Error in parsing certificate.");
+        LogError("Certificate could not be parsed.");
 //        ThrowMsg(Exception::OpensslInternalError,
 //          "Internal Openssl error in d2i_X509 function.");
     }
@@ -76,6 +79,7 @@ CertificateImpl::CertificateImpl(const CertificateImpl &second){
 CertificateImpl::CertificateImpl(CertificateImpl &&second) {
     m_x509 = second.m_x509;
     second.m_x509 = NULL;
+    LogDebug("Certificate moved: " << (void*)m_x509);
 }
 
 CertificateImpl& CertificateImpl::operator=(CertificateImpl &&second) {
@@ -84,6 +88,7 @@ CertificateImpl& CertificateImpl::operator=(CertificateImpl &&second) {
     X509_free(m_x509);
     m_x509 = second.m_x509;
     second.m_x509 = NULL;
+    LogDebug("Certificate moved: " << (void*)m_x509);
     return *this;
 }
 
@@ -104,7 +109,7 @@ RawBuffer CertificateImpl::getDER(void) const {
     int size = i2d_X509(m_x509, &rawDer);
     if (!rawDer || size <= 0) {
         // TODO
-//        LogError("i2d_X509 failed");
+        LogError("i2d_X509 failed");
 //        ThrowMsg(Exception::OpensslInternalError,
 //          "i2d_X509 failed");
     }

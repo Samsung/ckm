@@ -292,8 +292,6 @@ int CKMLogic::getDataHelper(
     }
     handler.crypto.decryptRow(password, row);
 
-    LogError("Datatype: " << (int) row.dataType);
-
     return CKM_API_SUCCESS;
 }
 
@@ -324,8 +322,6 @@ RawBuffer CKMLogic::getData(
         row.data.clear();
         row.dataType = dataType;
     }
-
-    LogError("Sending dataType: " << (int)row.dataType);
 
     MessageBuffer response;
     Serialization::Serialize(response, static_cast<int>(LogicCommand::GET));
@@ -554,6 +550,8 @@ RawBuffer CKMLogic::getCertificateChain(
 
     for (auto &e: untrustedRawCertVector)
         untrustedCertVector.push_back(CertificateImpl(e, DataFormat::FORM_DER));
+
+    LogDebug("Cert is empty: " << cert.empty());
 
     int retCode = m_certStore.verifyCertificate(cert, untrustedCertVector, chainVector);
 

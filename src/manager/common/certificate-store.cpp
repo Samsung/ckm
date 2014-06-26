@@ -79,10 +79,13 @@ int CertificateStore::verifyCertificate(
 {
     STACK_OF(X509) *untrusted = NULL;
 
+    LogDebug("Verfication with " << chainVector.size() << " untrusted certificates");
+
     if (!untrustedVector.empty()) {
         untrusted = sk_X509_new_null();
-        for (auto &e : untrustedVector)
+        for (auto &e : untrustedVector) {
             sk_X509_push(untrusted, e.getX509());
+        }
     }
 
     X509_STORE_CTX *csc = X509_STORE_CTX_new();
@@ -91,6 +94,8 @@ int CertificateStore::verifyCertificate(
         return CKM_API_ERROR_UNKNOWN;
     }
 
+    LogDebug("Certificate for verfication ptr: " << (void*)cert.getX509());
+
     if (0 == X509_STORE_CTX_init(csc, m_store, cert.getX509(), untrusted)) {
         LogError("failed to X509_STORE_CTX_init");
         return CKM_API_ERROR_UNKNOWN;
@@ -98,7 +103,7 @@ int CertificateStore::verifyCertificate(
 
     int result = X509_verify_cert(csc); // 1 == ok; 0 == fail; -1 == error
 
-    LogDebug("Verification result: " << result);
+    LogDebug("Openssl verification result: " << result);
 
     if (result > 0) {
         STACK_OF(X509) *chain = X509_STORE_CTX_get_chain(csc);

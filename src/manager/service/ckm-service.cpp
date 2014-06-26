@@ -112,6 +112,8 @@ RawBuffer CKMService::processControl(MessageBuffer &buffer) {
     Deserialization::Deserialize(buffer, command);
     Deserialization::Deserialize(buffer, user);
 
+    LogDebug("Process control. Command: " << command);
+
     cc = static_cast<ControlCommand>(command);
 
     switch(cc) {
@@ -144,6 +146,8 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer){
 
     Deserialization::Deserialize(buffer, command);
     Deserialization::Deserialize(buffer, commandId);
+
+    LogDebug("Process storage. Command: " << command);
 
     switch(static_cast<LogicCommand>(command)) {
         case LogicCommand::SAVE:
