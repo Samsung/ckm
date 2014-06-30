@@ -216,8 +216,6 @@ public:
         const HashAlgorithm hash,
         const RSAPaddingAlgorithm padding);
 
-//	int strictCACheck(const CertificateVector &certificateVector);
-//
 //	// This function will check all certificates in chain except Root CA.
 //	int ocspCheck(const CertificateVector &certificateChainVector);
 
