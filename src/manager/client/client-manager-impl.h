@@ -29,9 +29,7 @@ namespace CKM {
 
 class Manager::ManagerImpl {
 public:
-    ManagerImpl()
-      : m_counter(0)
-    {}
+    ManagerImpl();
     virtual ~ManagerImpl(){}
 
     int saveKey(const Alias &alias, const Key &key, const Policy &policy);
@@ -48,7 +46,7 @@ public:
     int removeData(const Alias &alias);
     int getData(const Alias &alias, const std::string &password, RawBuffer &cert);
     int getDataAliasVector(AliasVector &aliasVector);
-    
+
     int createKeyPairRSA(
         const int size,              // size in bits [1024, 2048, 4096]
         const Alias &privateKeyAlias,
@@ -112,6 +110,7 @@ protected:
         AliasVector &aliasVector);
 
     int m_counter;
+    static bool s_isInit;
 };
 
 } // namespace CKM

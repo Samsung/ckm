@@ -18,6 +18,8 @@
  * @version     1.0
  * @brief       Manager implementation.
  */
+#include <openssl/evp.h>
+
 #include <dpl/serialization.h>
 #include <dpl/log/log.h>
 
@@ -26,7 +28,32 @@
 #include <message-buffer.h>
 #include <protocols.h>
 
+
+namespace {
+
+void clientInitialize(void) {
+    OpenSSL_add_all_ciphers();
+    OpenSSL_add_all_algorithms();
+    OpenSSL_add_all_digests();
+}
+
+} // namespace anonymous
+
 namespace CKM {
+
+bool Manager::ManagerImpl::s_isInit = false;
+
+Manager::ManagerImpl::ManagerImpl()
+  : m_counter(0)
+{
+    // TODO secure with mutex
+    if (!s_isInit) {
+        s_isInit = true;
+        clientInitialize();
+    }
+
+}
+
 
 int Manager::ManagerImpl::saveBinaryData(
     const Alias &alias,
