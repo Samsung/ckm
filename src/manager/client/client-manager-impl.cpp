@@ -536,9 +536,12 @@ int Manager::ManagerImpl::createSignature(
 
         Deserialization::Deserialize(recv, command);
         Deserialization::Deserialize(recv, counter);
+        Deserialization::Deserialize(recv, retCode);
         Deserialization::Deserialize(recv, signature);
 
-        if ((command != static_cast<int>(LogicCommand::CREATE_SIGNATURE)) || (counter != my_counter)) {
+        if ((command != static_cast<int>(LogicCommand::CREATE_SIGNATURE))
+            || (counter != my_counter))
+        {
             return CKM_API_ERROR_UNKNOWN;
         }
 
@@ -582,8 +585,11 @@ int Manager::ManagerImpl::verifySignature(
 
         Deserialization::Deserialize(recv, command);
         Deserialization::Deserialize(recv, counter);
+        Deserialization::Deserialize(recv, retCode);
 
-        if ((command != static_cast<int>(LogicCommand::VERIFY_SIGNATURE)) || (counter != my_counter)) {
+        if ((command != static_cast<int>(LogicCommand::VERIFY_SIGNATURE))
+            || (counter != my_counter))
+        {
             return CKM_API_ERROR_UNKNOWN;
         }
 

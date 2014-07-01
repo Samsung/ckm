@@ -3,6 +3,8 @@
 #include <vector>
 #include <fstream>
 #include <string.h>
+#include <memory>
+
 #include <openssl/x509_vfy.h>
 #include <openssl/evp.h>
 #include <openssl/obj_mac.h>
@@ -16,6 +18,7 @@
 #include <openssl/err.h>
 #include <openssl/x509v3.h>
 #include <openssl/obj_mac.h>
+#include <ckm/ckm-error.h>
 #include <ckm/ckm-type.h>
 #include <generic-key.h>
 #include <CryptoService.h>
@@ -403,15 +406,15 @@ int CryptoService::verifySignature(const GenericKey &publicKey,
 		const RawBuffer &message,
 		const RawBuffer &signature,
 		const HashAlgorithm hashAlgo,
-		const RSAPaddingAlgorithm padAlgo){
-
-	EVP_MD_CTX *mdctx = NULL;
-	EVP_PKEY_CTX *pctx;
+		const RSAPaddingAlgorithm padAlgo)
+{
+	EVP_PKEY_CTX *pctx = NULL;
 	int rsa_padding = NOT_DEFINED;
 	const EVP_MD *md_algo;
-	RawBuffer data;
+    int retCode = CKM_API_ERROR_VERIFICATION_FAILED;
+    std::unique_ptr<EVP_MD_CTX, std::function<void(EVP_MD_CTX*)>> mdctx(nullptr, EVP_MD_CTX_destroy);
 
-	if(&publicKey == NULL) {
+    if(&publicKey == NULL) {
 		LogError("Error in publicKey value");
 		ThrowMsg(CryptoService::Exception::Crypto_internal, "Error in publicKey value");
 	}
@@ -463,61 +466,45 @@ int CryptoService::verifySignature(const GenericKey &publicKey,
 		}
 	}
 
-	Try {
-		auto public_pkey = publicKey.getEvpShPtr();
+    auto public_pkey = publicKey.getEvpShPtr();
 
-		if (NULL == public_pkey.get()) {
-			LogError("Error in getEvpShPtr function");
-			ThrowMsg(CryptoService::Exception::opensslError, "Error in getEvpShPtr function");
-		}
+    if (NULL == public_pkey.get()) {
+        LogError("Error in getEvpShPtr function");
+        ThrowMsg(CryptoService::Exception::opensslError, "Error in getEvpShPtr function");
+    }
 
-		char msg[message.size()];
-		memcpy(msg, message.data(),message.size());
+    /* Create the Message Digest Context */
+    mdctx.reset(EVP_MD_CTX_create());
 
-		unsigned char sig[signature.size()];
-		memcpy(sig, signature.data(),signature.size());
+    if(!(mdctx.get())) {
+        LogError("Error in EVP_MD_CTX_create function");
+        ThrowMsg(CryptoService::Exception::opensslError, "Error in EVP_MD_CTX_create function");
+    }
 
+    if(EVP_SUCCESS != EVP_DigestVerifyInit(mdctx.get(), &pctx, md_algo, NULL, public_pkey.get())) {
+        LogError("Error in EVP_DigestVerifyInit function");
+        ThrowMsg(CryptoService::Exception::opensslError, "Error in EVP_DigestVerifyInit function");
+    }
 
-		/* Create the Message Digest Context */
-		if(!(mdctx = EVP_MD_CTX_create())) {
-			LogError("Error in EVP_MD_CTX_create function");
-			ThrowMsg(CryptoService::Exception::opensslError, "Error in EVP_MD_CTX_create function");
-		}
+    if(publicKey.getType()==KeyType::KEY_RSA_PUBLIC) {
+        if(EVP_SUCCESS != EVP_PKEY_CTX_set_rsa_padding(pctx, rsa_padding))  {
+            LogError("Error in EVP_PKEY_CTX_set_rsa_padding function");
+            ThrowMsg(CryptoService::Exception::opensslError, "Error in EVP_PKEY_CTX_set_rsa_padding function");
+        }
+    }
 
-		if(EVP_SUCCESS != EVP_DigestVerifyInit(mdctx, &pctx, md_algo, NULL, public_pkey.get())) {
-			LogError("Error in EVP_DigestVerifyInit function");
-			ThrowMsg(CryptoService::Exception::opensslError, "Error in EVP_DigestVerifyInit function");
-		}
+    if(EVP_SUCCESS != EVP_DigestVerifyUpdate(mdctx.get(), message.data(), message.size()) ) {
+        LogError("Error in EVP_DigestVerifyUpdate function");
+        ThrowMsg(CryptoService::Exception::opensslError, "Error in EVP_DigestVerifyUpdate function");
+    }
 
-		if(publicKey.getType()==KeyType::KEY_RSA_PUBLIC) {
-			if(EVP_SUCCESS != EVP_PKEY_CTX_set_rsa_padding(pctx, rsa_padding))  {
-				LogError("Error in EVP_PKEY_CTX_set_rsa_padding function");
-				ThrowMsg(CryptoService::Exception::opensslError, "Error in EVP_PKEY_CTX_set_rsa_padding function");
-			}
-		}
+    if(EVP_SUCCESS == EVP_DigestVerifyFinal(mdctx.get(), const_cast<unsigned char*>(signature.data()), signature.size()) ) {
+        retCode = CKM_API_SUCCESS;
+    } else {
+        LogError("Error in EVP_DigestVerifyFinal function");
+    }
 
-		if(EVP_SUCCESS != EVP_DigestVerifyUpdate(mdctx, msg, message.size()) ) {
-			LogError("Error in EVP_DigestVerifyUpdate function");
-			ThrowMsg(CryptoService::Exception::opensslError, "Error in EVP_DigestVerifyUpdate function");
-		}
-
-		if(EVP_SUCCESS != EVP_DigestVerifyFinal(mdctx, sig, signature.size()) ) {
-			LogError("Error in EVP_DigestVerifyFinal function");
-			ThrowMsg(CryptoService::Exception::opensslError, "Error in EVP_DigestVerifyFinal function");
-		}
-	} Catch(CryptoService::Exception::opensslError) {
-		if(mdctx != NULL) {
-			EVP_MD_CTX_destroy(mdctx);
-		}
-
-		ReThrowMsg(CryptoService::Exception::opensslError,"Error in openssl function !!");
-	}
-
-	if(mdctx != NULL) {
-		EVP_MD_CTX_destroy(mdctx);
-	}
-
-	return CKM_VERIFY_SIGNATURE_SUCCESS;
+	return retCode;
 }
 
 

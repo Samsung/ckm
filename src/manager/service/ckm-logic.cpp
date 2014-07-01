@@ -446,7 +446,7 @@ RawBuffer CKMLogic::createKeyPairRSA(
     Serialization::Serialize(response, static_cast<int>(LogicCommand::CREATE_KEY_PAIR_RSA));
     Serialization::Serialize(response, commandId);
     Serialization::Serialize(response, retCode);
- 
+
     return response.Pop();
 }
 
@@ -507,7 +507,7 @@ RawBuffer CKMLogic::createKeyPairECDSA(
     const PolicySerializable &policyPublic)
 {
     int retCode = CKM_API_SUCCESS;
-    
+
     try {
         retCode = createKeyPairECDSAHelper(
                         cred,
@@ -531,7 +531,7 @@ RawBuffer CKMLogic::createKeyPairECDSA(
     Serialization::Serialize(response, static_cast<int>(LogicCommand::CREATE_KEY_PAIR_RSA));
     Serialization::Serialize(response, commandId);
     Serialization::Serialize(response, retCode);
- 
+
     return response.Pop();
 }
 
@@ -594,17 +594,29 @@ RawBuffer CKMLogic::createSignature(
         const std::string &password,           // password for private_key
         const RawBuffer &message,
         const HashAlgorithm hash,
-        const RSAPaddingAlgorithm padding,
-        RawBuffer &signature)
+        const RSAPaddingAlgorithm padding)
 {
 
     DBRow row;
     CryptoService cs;
+    RawBuffer signature;
 
     int retCode = CKM_API_SUCCESS;
 
     try {
-        retCode = getDataHelper(cred, DBDataType::KEY_RSA_PUBLIC, privateKeyAlias, password, row);
+        do {
+            retCode = getDataHelper(cred, DBDataType::KEY_RSA_PUBLIC, privateKeyAlias, password, row);
+            if (CKM_API_SUCCESS != retCode) {
+                LogError("getDataHelper return error:");
+                break;
+            }
+
+            GenericKey keyParsed(row.data, std::string());
+            if (keyParsed.empty())
+                retCode = CKM_API_ERROR_SERVER_ERROR;
+            else
+                cs.createSignature(keyParsed, message, hash, padding, signature);
+        } while(0);
     } catch (const KeyProvider::Exception::Base &e) {
         LogError("KeyProvider failed with error: " << e.GetMessage());
         retCode = CKM_API_ERROR_SERVER_ERROR;
@@ -615,16 +627,6 @@ RawBuffer CKMLogic::createSignature(
         LogError("DBCrypto failed with message: " << e.GetMessage());
         retCode = CKM_API_ERROR_DB_ERROR;
     }
-
-    if (CKM_API_SUCCESS != retCode) {
-        row.data.clear();
-        row.dataType = DBDataType::KEY_RSA_PUBLIC;
-    }
-    GenericKey keyParsed(row.data, password);
-    if (keyParsed.empty())
-        retCode = CKM_API_ERROR_AUTHENTICATION_FAILED;
-    else
-        retCode = cs.createSignature(keyParsed, message, hash, padding, signature);
 
     MessageBuffer response;
     Serialization::Serialize(response, static_cast<int>(LogicCommand::CREATE_SIGNATURE));
@@ -648,9 +650,29 @@ RawBuffer CKMLogic::verifySignature(
     DBRow row;
     CryptoService cs;
 
-    int retCode = CKM_API_SUCCESS;
+    int retCode = CKM_API_ERROR_VERIFICATION_FAILED;
     try {
-        retCode = getDataHelper(cred, DBDataType::KEY_RSA_PUBLIC, publicKeyOrCertAlias, password, row);
+        do {
+            retCode = getDataHelper(cred, DBDataType::KEY_RSA_PUBLIC, publicKeyOrCertAlias, password, row);
+
+            if (retCode != CKM_API_SUCCESS) {
+                break;
+            }
+
+            GenericKey keyParsed(row.data, std::string());
+            if (keyParsed.empty()) {
+                retCode = CKM_API_ERROR_SERVER_ERROR;
+                break;
+            }
+
+            retCode = cs.verifySignature(keyParsed, message, signature, hash, padding);
+        } while(0);
+    } catch (const CryptoService::Exception::Crypto_internal &e) {
+        LogError("KeyProvider failed with message: " << e.GetMessage());
+        retCode = CKM_API_ERROR_SERVER_ERROR;
+    } catch (const CryptoService::Exception::opensslError &e) {
+        LogError("KeyProvider failed with message: " << e.GetMessage());
+        retCode = CKM_API_ERROR_SERVER_ERROR;
     } catch (const KeyProvider::Exception::Base &e) {
         LogError("KeyProvider failed with error: " << e.GetMessage());
         retCode = CKM_API_ERROR_SERVER_ERROR;
@@ -661,26 +683,6 @@ RawBuffer CKMLogic::verifySignature(
         LogError("DBCrypto failed with message: " << e.GetMessage());
         retCode = CKM_API_ERROR_DB_ERROR;
     }
-
-    if (CKM_API_SUCCESS != retCode) {
-        row.data.clear();
-        row.dataType = DBDataType::KEY_RSA_PUBLIC;
-    }
-    GenericKey keyParsed(row.data, password);
-    if (keyParsed.empty())
-        retCode = CKM_API_ERROR_AUTHENTICATION_FAILED;
-    else
-        try {
-          retCode = cs.verifySignature(keyParsed, message, signature, hash, padding);
-        }
-        catch (const CryptoService::Exception::Crypto_internal &e) {
-          LogError("KeyProvider failed with message: " << e.GetMessage());
-          retCode = CKM_API_ERROR_SERVER_ERROR;
-        }
-        catch (const CryptoService::Exception::opensslError &e) {
-          LogError("KeyProvider failed with message: " << e.GetMessage());
-          retCode = CKM_API_ERROR_SERVER_ERROR;
-        }
 
     MessageBuffer response;
     Serialization::Serialize(response, static_cast<int>(LogicCommand::VERIFY_SIGNATURE));

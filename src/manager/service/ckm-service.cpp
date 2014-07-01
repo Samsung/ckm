@@ -268,16 +268,12 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer){
             Alias privateKeyAlias;
             std::string password;        // password for private_key
             RawBuffer message;
-            //HashAlgorithm hash;
-            //RSAPaddingAlgorithm padding
             int padding, hash;
-            RawBuffer signature;
             Deserialization::Deserialize(buffer, privateKeyAlias);
             Deserialization::Deserialize(buffer, password);
             Deserialization::Deserialize(buffer, message);
             Deserialization::Deserialize(buffer, hash);
             Deserialization::Deserialize(buffer, padding);
-            Deserialization::Deserialize(buffer, signature);
 
             return m_logic->createSignature(
                   cred,
@@ -286,9 +282,7 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer){
                   password,           // password for private_key
                   message,
                   static_cast<HashAlgorithm>(hash),
-                  static_cast<RSAPaddingAlgorithm>(padding),
-                  signature);
-
+                  static_cast<RSAPaddingAlgorithm>(padding));
         }
         case LogicCommand::VERIFY_SIGNATURE:
         {

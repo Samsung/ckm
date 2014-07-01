@@ -128,8 +128,7 @@ public:
         const std::string &password,           // password for private_key
         const RawBuffer &message,
         const HashAlgorithm hash,
-        const RSAPaddingAlgorithm padding,
-        RawBuffer &signature);
+        const RSAPaddingAlgorithm padding);
 
     RawBuffer verifySignature(
         Credentials &cred,
