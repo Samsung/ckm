@@ -25,6 +25,8 @@
 #include <vector>
 #include <ckm/ckm-type.h>
 
+#include <generic-key.h>
+
 extern "C" {
 struct x509_st;
 typedef struct x509_st X509;
@@ -43,6 +45,9 @@ public:
     CertificateImpl& operator=(CertificateImpl &&);
     RawBuffer getDER() const;
     bool empty() const;
+
+    GenericKey::EvpShPtr getEvpShPtr() const;
+    GenericKey getGenericKey() const;
 
     X509* getX509() const;
 

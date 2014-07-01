@@ -23,6 +23,7 @@
 
 #include <dpl/log/log.h>
 
+#include <generic-key.h>
 #include <certificate-impl.h>
 #include <base64.h>
 
@@ -123,6 +124,20 @@ RawBuffer CertificateImpl::getDER(void) const {
 
 bool CertificateImpl::empty() const {
     return m_x509 == NULL;
+}
+
+GenericKey::EvpShPtr CertificateImpl::getEvpShPtr() const {
+    return GenericKey::EvpShPtr(X509_get_pubkey(m_x509), EVP_PKEY_free);
+}
+
+GenericKey CertificateImpl::getGenericKey() const {
+    GenericKey::EvpShPtr evp(X509_get_pubkey(m_x509), EVP_PKEY_free);
+    if (EVP_PKEY_type(evp->type) == EVP_PKEY_RSA)
+        return GenericKey(evp, KeyType::KEY_RSA_PUBLIC);
+    if (EVP_PKEY_type(evp->type) == EVP_PKEY_EC)
+        return GenericKey(evp, KeyType::KEY_ECDSA_PUBLIC);
+    LogError("Unsupported key type in certificate.");
+    return GenericKey();
 }
 
 CertificateImpl::~CertificateImpl() {
