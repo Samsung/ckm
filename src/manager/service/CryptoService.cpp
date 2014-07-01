@@ -34,10 +34,12 @@ CryptoService::CryptoService(){
 CryptoService::~CryptoService(){
 }
 
+
+
 int CryptoService::initialize() {
 	int mode = 0;
 	int rc = 0;
-	int hw_ret = 0, u_ret = 0;
+	int hw_rand_ret = 0, u_rand_ret = 0;
 
 	// try to initialize using ERR_load_crypto_strings and OpenSSL_add_all_algorithms
 	ERR_load_crypto_strings();
@@ -51,24 +53,19 @@ int CryptoService::initialize() {
 
 		if(rc == 0) {
 			LogError("Error in FIPS_mode_set function");
-			ThrowMsg(Exception::Base, "Error in FIPS_mode_set function");
 		}
 	}
 
 	// initialize entropy
 	std::ifstream ifile(DEV_HW_RANDOM_FILE);
 	if(ifile.is_open()) {
-		u_ret= RAND_load_file(DEV_HW_RANDOM_FILE, 32);
-
-		if(u_ret != 32) {
-			LogError("Error in HW_RAND file load");
-			ThrowMsg(CryptoService::Exception::Crypto_internal, "Error in HW_RAND file load");
-		}
+		u_rand_ret= RAND_load_file(DEV_HW_RANDOM_FILE, 32);
 	}
-	else {
-		hw_ret = RAND_load_file(DEV_URANDOM_FILE, 32);
+	if(u_rand_ret != 32 ){
+		LogError("Error in HW_RAND file load");
+		hw_rand_ret = RAND_load_file(DEV_URANDOM_FILE, 32);
 
-		if(hw_ret != 32) {
+		if(hw_rand_ret != 32) {
 			LogError("Error in U_RAND_file_load");
 			ThrowMsg(CryptoService::Exception::Crypto_internal, "Error in U_RAND_file_load");
 		}
@@ -76,6 +73,8 @@ int CryptoService::initialize() {
 
 	return CKM_CRYPTO_INIT_SUCCESS;
 }
+
+
 
 int CryptoService::createKeyPairRSA(const int size, // size in bits [1024, 2048, 4096]
 		GenericKey &createdPrivateKey,  // returned value
