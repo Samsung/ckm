@@ -1,5 +1,5 @@
 /*
- *  key-manager
+ *  ckm-manager
  *
  *  Copyright (c) 2000 - 2013 Samsung Electronics Co., Ltd All Rights Reserved
  *

@@ -14,7 +14,7 @@
  *  limitations under the License
  */
 /*
- * @file        key-manager-main.cpp
+ * @file        ckm-manager-main.cpp
  * @author      Bartlomiej Grzelewski (b.grzelewski@samsung.com)
  * @version     1.0
  * @brief       Implementation of central key manager

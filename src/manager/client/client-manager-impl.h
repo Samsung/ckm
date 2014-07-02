@@ -23,7 +23,7 @@
 #include <protocols.h>
 
 #include <ckm/ckm-type.h>
-#include <ckm/key-manager.h>
+#include <ckm/ckm-manager.h>
 
 namespace CKM {
 

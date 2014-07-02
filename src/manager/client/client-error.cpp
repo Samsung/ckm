@@ -16,7 +16,7 @@
  * @file        client-error.cpp
  * @author      Bartlomiej Grzelewski (b.grzelewski@samsung.com)
  * @version     1.0
- * @brief       This file contains example of key-manager client implementation
+ * @brief       This file contains example of ckm-manager client implementation
  */
 #include <ckm/ckm-error.h>
 

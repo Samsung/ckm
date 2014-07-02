@@ -18,7 +18,7 @@
  * @version     1.0
  * @brief       Client Manager implementation.
  */
-#include <ckm/key-manager.h>
+#include <ckm/ckm-manager.h>
 
 #include <client-manager-impl.h>
 

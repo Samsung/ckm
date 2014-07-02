@@ -1,5 +1,5 @@
 /*
- *  key-manager
+ *  ckm-manager
  *
  *  Copyright (c) 2014 Samsung Electronics Co., Ltd All Rights Reserved
  *
@@ -25,7 +25,7 @@
 #include <sys/types.h>
 
 /**
- * @file    key-manager.h
+ * @file    ckm-manager.h
  * @version 1.0
  * @brief   This file contains APIs of the Central Key Manager
 */
@@ -116,7 +116,7 @@ extern "C" {
 #endif
 
 /*
- * This function was created mainly for testing key-manager client/service
+ * This function was created mainly for testing ckm-manager client/service
  * proper behaviour. It sends a message and returns message from service,
  * which should be a pure echo.
  *

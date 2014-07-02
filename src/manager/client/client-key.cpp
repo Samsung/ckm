@@ -19,7 +19,7 @@
  * @brief       Key - api implementation.
  */
 #include <ckm/ckm-type.h>
-#include <ckm/key-manager.h>
+#include <ckm/ckm-manager.h>
 
 #include <dpl/log/log.h>
 

@@ -136,8 +136,8 @@ INSTALL(TARGETS ${TARGET_KEY_MANAGER} DESTINATION bin)
 
 
 INSTALL(FILES
-    ${KEY_MANAGER_SRC_PATH}/include/ckm/key-manager.h
-    ${KEY_MANAGER_SRC_PATH}/include/ckm/key-manager-control.h
+    ${KEY_MANAGER_SRC_PATH}/include/ckm/ckm-manager.h
+    ${KEY_MANAGER_SRC_PATH}/include/ckm/ckm-control.h
     ${KEY_MANAGER_SRC_PATH}/include/ckm/ckm-error.h
     ${KEY_MANAGER_SRC_PATH}/include/ckm/ckm-type.h
     DESTINATION /usr/include/ckm/ckm

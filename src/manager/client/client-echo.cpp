@@ -16,7 +16,7 @@
  * @file        client-echo.cpp
  * @author      Zofia Abramowska (z.abramowska@samsung.com)
  * @version     1.0
- * @brief       This file contains example of key-manager client implementation
+ * @brief       This file contains example of ckm-manager client implementation
  */
 
 #include <dpl/log/log.h>

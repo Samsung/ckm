@@ -19,7 +19,7 @@
  * @brief       Certificate class implementation.
  */
 
-#include <ckm/key-manager.h>
+#include <ckm/ckm-manager.h>
 
 #include <certificate-impl.h>
 

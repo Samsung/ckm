@@ -24,7 +24,7 @@
 #include <message-buffer.h>
 #include <protocols.h>
 
-#include <ckm/key-manager-control.h>
+#include <ckm/ckm-control.h>
 
 namespace CKM {
 

@@ -14,7 +14,7 @@
  *  limitations under the License
  *
  *
- * @file        key-manager.h
+ * @file        ckm-manager.h
  * @author      Bartlomiej Grzelewski (b.grzelewski@samsung.com)
  * @version     1.0
  * @brief       Main header file for client library.

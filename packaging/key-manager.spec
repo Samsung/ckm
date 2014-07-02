@@ -161,8 +161,8 @@ fi
 %{_libdir}/libkey-manager-client.so
 %{_libdir}/libkey-manager-control-client.so
 %{_libdir}/libkey-manager-commons.so
-%{_includedir}/ckm/ckm/key-manager.h
-%{_includedir}/ckm/ckm/key-manager-control.h
+%{_includedir}/ckm/ckm/ckm-manager.h
+%{_includedir}/ckm/ckm/ckm-control.h
 %{_includedir}/ckm/ckm/ckm-error.h
 %{_includedir}/ckm/ckm/ckm-type.h
 %{_libdir}/pkgconfig/*.pc
