@@ -75,11 +75,11 @@ enum class HashAlgorithm : int {
 
 // Added by Dongsun Lee
 enum class RSAPaddingAlgorithm : int {
-    XRSA_PKCS1_PADDING,
-//  XRSA_SSLV23_PADDING, // not supported
-//  XRSA_NO_PADDING, // not supported
-//  XRSA_PKCS1_OAEP_PADDING, // not supported
-    XRSA_X931_PADDING
+    PKCS1,
+//  SSLV23, // not supported
+//  NONE, // not supported
+//  PKCS1_OAEP, // not supported
+    X931
 };
 
 enum class DBCMAlgType : int {

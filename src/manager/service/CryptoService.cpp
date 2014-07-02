@@ -321,10 +321,10 @@ int CryptoService::createSignature(const GenericKey &privateKey,
 
 	if(privateKey.getType()==KeyType::KEY_RSA_PRIVATE) {
 		switch(padAlgo) {
-		case RSAPaddingAlgorithm::XRSA_PKCS1_PADDING:
+		case RSAPaddingAlgorithm::PKCS1:
 			rsa_padding = RSA_PKCS1_PADDING;
 			break;
-		case RSAPaddingAlgorithm::XRSA_X931_PADDING:
+		case RSAPaddingAlgorithm::X931:
 			rsa_padding = RSA_X931_PADDING;
 			break;
 		default:
@@ -454,10 +454,10 @@ int CryptoService::verifySignature(const GenericKey &publicKey,
 
 	if(publicKey.getType()==KeyType::KEY_RSA_PUBLIC) {
 		switch(padAlgo) {
-		case RSAPaddingAlgorithm::XRSA_PKCS1_PADDING:
+		case RSAPaddingAlgorithm::PKCS1:
 			rsa_padding = RSA_PKCS1_PADDING;
 			break;
-		case RSAPaddingAlgorithm::XRSA_X931_PADDING:
+		case RSAPaddingAlgorithm::X931:
 			rsa_padding = RSA_X931_PADDING;
 			break;
 		default:
