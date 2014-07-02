@@ -71,7 +71,7 @@ int main(void) {
 
     UNHANDLED_EXCEPTION_HANDLER_BEGIN
     {
-        CKM::Singleton<CKM::Log::LogSystem>::Instance().SetTag("CENT_KEY_MNG");
+        CKM::Singleton<CKM::Log::LogSystem>::Instance().SetTag("CKM");
 
         sigset_t mask;
         sigemptyset(&mask);

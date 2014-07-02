@@ -44,7 +44,7 @@ namespace {
 const int POLL_TIMEOUT = 8000;
 
 void centKeyClientEnableLogSystem(void) {
-    CKM::Singleton<CKM::Log::LogSystem>::Instance().SetTag("CENT_KEY_CLIENT");
+    CKM::Singleton<CKM::Log::LogSystem>::Instance().SetTag("CKM_CLIENT");
 }
 
 int waitForSocket(int sock, int event, int timeout) {
