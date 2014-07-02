@@ -44,27 +44,7 @@ const char* BOLD_GOLD_BEGIN = "\033[0;33m";
 const char* BOLD_GOLD_END = "\033[m";
 const char* BOLD_WHITE_BEGIN = "\033[1;37m";
 const char* BOLD_WHITE_END = "\033[m";
+const char* COLOR_END = "\033[m";
 } //namespace Text
-
-namespace Html {
-const char* BOLD_GREEN_BEGIN = "<font color=\"green\"><b>";
-const char* BOLD_GREEN_END = "</b></font>";
-const char* PURPLE_BEGIN = "<font color=\"purple\"><b>";
-const char* PURPLE_END = "</b></font>";
-const char* RED_BEGIN = "<font color=\"red\"><b>";
-const char* RED_END = "</b></font>";
-const char* GREEN_BEGIN = "<font color=\"green\">";
-const char* GREEN_END = "</font>";
-const char* CYAN_BEGIN = "<font color=\"cyan\">";
-const char* CYAN_END = "</font>";
-const char* BOLD_RED_BEGIN = "<font color=\"red\"><b>";
-const char* BOLD_RED_END = "</b></font>";
-const char* BOLD_YELLOW_BEGIN = "<font color=\"yellow\"><b>";
-const char* BOLD_YELLOW_END = "</b></font>";
-const char* BOLD_GOLD_BEGIN = "<font color=\"gold\"><b>";
-const char* BOLD_GOLD_END = "</b></font>";
-const char* BOLD_WHITE_BEGIN = "<font color=\"white\"><b>";
-const char* BOLD_WHITE_END = "</b></font>";
-} //namespace Html
 } //namespace Colors
 } //namespace CKM

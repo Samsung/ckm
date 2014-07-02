@@ -3,13 +3,17 @@
 #include <ckm/ckm-type.h>
 #include <boost/test/unit_test_log.hpp>
 #include <boost/test/results_reporter.hpp>
+#include <colour_log_formatter.h>
 
 struct TestConfig {
     TestConfig() {
         boost::unit_test::unit_test_log.set_threshold_level( boost::unit_test::log_test_units);
         boost::unit_test::results_reporter::set_level(boost::unit_test::SHORT_REPORT);
+        boost::unit_test::unit_test_log.set_formatter(new CKM::colour_log_formatter);
     }
-    ~TestConfig(){}
+    ~TestConfig(){
+    }
+private:
 };
 
 CKM::RawBuffer createDefaultPass();
