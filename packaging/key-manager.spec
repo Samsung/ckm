@@ -78,6 +78,7 @@ rm -rf %{buildroot}
 mkdir -p %{buildroot}/usr/share/license
 cp LICENSE %{buildroot}/usr/share/license/%{name}
 cp LICENSE %{buildroot}/usr/share/license/libkey-manager-client
+cp LICENSE %{buildroot}/usr/share/license/libkey-manager-control-client
 mkdir -p %{buildroot}/etc/security/
 
 %make_install
@@ -147,16 +148,21 @@ fi
 
 %files -n libkey-manager-client
 %manifest %{_datadir}/libkey-manager-client.manifest
+%manifest %{_datadir}/libkey-manager-control-client.manifest
 %defattr(-,root,root,-)
 %{_libdir}/libkey-manager-client.so.*
+%{_libdir}/libkey-manager-control-client.so.*
 %{_datadir}/license/libkey-manager-client
+%{_datadir}/license/libkey-manager-control-client
 
 
 %files -n libkey-manager-client-devel
 %defattr(-,root,root,-)
 %{_libdir}/libkey-manager-client.so
+%{_libdir}/libkey-manager-control-client.so
 %{_libdir}/libkey-manager-commons.so
 %{_includedir}/ckm/ckm/key-manager.h
+%{_includedir}/ckm/ckm/key-manager-control.h
 %{_includedir}/ckm/ckm/ckm-error.h
 %{_includedir}/ckm/ckm/ckm-type.h
 %{_libdir}/pkgconfig/*.pc

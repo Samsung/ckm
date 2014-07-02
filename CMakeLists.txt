@@ -60,6 +60,7 @@ ENDIF (CMAKE_BUILD_TYPE MATCHES "DEBUG")
 
 SET(TARGET_KEY_MANAGER "key-manager")
 SET(TARGET_KEY_MANAGER_CLIENT "key-manager-client")
+SET(TARGET_KEY_MANAGER_CONTROL_CLIENT "key-manager-control-client")
 SET(TARGET_KEY_MANAGER_COMMON "key-manager-commons")
 SET(TARGET_KEY_MANAGER_KEY_PROVIDER "key-manager-key-provider")
 
@@ -67,6 +68,7 @@ SET(TARGET_TEST_MERGED "ckm-tests-internal")
 
 INSTALL(FILES
     ${CMAKE_SOURCE_DIR}/packaging/libkey-manager-client.manifest
+    ${CMAKE_SOURCE_DIR}/packaging/libkey-manager-control-client.manifest
     ${CMAKE_SOURCE_DIR}/packaging/key-manager.manifest
     DESTINATION
     /usr/share

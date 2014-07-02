@@ -22,6 +22,7 @@
 #include <dpl/serialization.h>
 #include <dpl/log/log.h>
 #include <ckm/key-manager.h>
+#include <ckm/key-manager-control.h>
 #include <ckm/ckm-error.h>
 #include <ckm/ckm-type.h>
 #include <key-provider.h>
