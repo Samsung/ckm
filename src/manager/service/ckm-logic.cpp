@@ -647,26 +647,34 @@ RawBuffer CKMLogic::verifySignature(
         const HashAlgorithm hash,
         const RSAPaddingAlgorithm padding)
 {
-
-    DBRow row;
-    CryptoService cs;
-
     int retCode = CKM_API_ERROR_VERIFICATION_FAILED;
+
     try {
         do {
-            retCode = getDataHelper(cred, DBDataType::KEY_RSA_PUBLIC, publicKeyOrCertAlias, password, row);
+            CryptoService cs;
+            DBRow row;
+            GenericKey key;
 
-            if (retCode != CKM_API_SUCCESS) {
+            retCode = getDataHelper(cred, DBDataType::DB_KEY_FIRST, publicKeyOrCertAlias, password, row);
+
+            if (retCode == CKM_API_SUCCESS) {
+                key = GenericKey(row.data);
+            } else if (retCode == CKM_API_ERROR_DB_ALIAS_UNKNOWN) {
+                retCode = getDataHelper(cred, DBDataType::CERTIFICATE, publicKeyOrCertAlias, password, row);
+                if (retCode != CKM_API_SUCCESS)
+                    break;
+                CertificateImpl cert(row.data, DataFormat::FORM_DER);
+                key = cert.getGenericKey();
+            } else {
                 break;
             }
 
-            GenericKey keyParsed(row.data, std::string());
-            if (keyParsed.empty()) {
+            if (key.empty()) {
                 retCode = CKM_API_ERROR_SERVER_ERROR;
                 break;
             }
 
-            retCode = cs.verifySignature(keyParsed, message, signature, hash, padding);
+            retCode = cs.verifySignature(key, message, signature, hash, padding);
         } while(0);
     } catch (const CryptoService::Exception::Crypto_internal &e) {
         LogError("KeyProvider failed with message: " << e.GetMessage());

@@ -33,7 +33,7 @@ public:
 
     GenericKey();
     GenericKey(const GenericKey &second);
-    GenericKey(const RawBuffer& buffer, const std::string &pass);
+    GenericKey(const RawBuffer& buffer, const std::string &pass = std::string());
     GenericKey(EvpShPtr pkey, KeyType type);
 
     virtual KeyType getType() const;
