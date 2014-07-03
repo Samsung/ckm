@@ -495,10 +495,12 @@ int Manager::ManagerImpl::getCertificateChain(
     const AliasVector &untrustedCertificates,
     CertificateVector &certificateChainVector)
 {
-    (void) certificate;
-    (void) untrustedCertificates;
-    (void) certificateChainVector;
-    return CKM_API_ERROR_UNKNOWN;
+    return getCertChain(
+        LogicCommand::GET_CHAIN_ALIAS,
+        ++m_counter,
+        certificate,
+        untrustedCertificates,
+        certificateChainVector);
 }
 
 int Manager::ManagerImpl::createSignature(

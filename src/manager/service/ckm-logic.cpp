@@ -575,16 +575,52 @@ RawBuffer CKMLogic::getCertificateChain(
     const RawBuffer &certificate,
     const AliasVector &aliasVector)
 {
-    (void) cred;
-    (void) commandId;
-    (void) certificate;
-    (void) aliasVector;
+    int retCode = CKM_API_SUCCESS;
+    RawBufferVector chainRawVector;
+    try {
+        CertificateImpl cert(certificate, DataFormat::FORM_DER);
+        CertificateImplVector untrustedCertVector;
+        CertificateImplVector chainVector;
+        DBRow row;
 
+        if (cert.empty()) {
+            retCode = CKM_API_ERROR_SERVER_ERROR;
+            goto senderror;
+        }
+
+        for (auto &i: aliasVector) {
+            retCode = getDataHelper(cred, DBDataType::CERTIFICATE, i, std::string(), row);
+
+            if (retCode != CKM_API_SUCCESS)
+                goto senderror;
+
+            untrustedCertVector.push_back(CertificateImpl(row.data, DataFormat::FORM_DER));
+        }
+
+        retCode = m_certStore.verifyCertificate(cert, untrustedCertVector, chainVector);
+
+        if (retCode != CKM_API_SUCCESS)
+            goto senderror;
+
+        for (auto &i: chainVector)
+            chainRawVector.push_back(i.getDER());
+
+    } catch (const DBCryptoModule::Exception::Base &e) {
+        LogError("DBCyptorModule failed with message: " << e.GetMessage());
+        retCode = CKM_API_ERROR_SERVER_ERROR;
+    } catch (const DBCrypto::Exception::Base &e) {
+        LogError("DBCrypto failed with message: " << e.GetMessage());
+        retCode = CKM_API_ERROR_DB_ERROR;
+    } catch (...) {
+        LogError("Unknown error.");
+    }
+
+senderror:
     MessageBuffer response;
     Serialization::Serialize(response, static_cast<int>(LogicCommand::GET_CHAIN_ALIAS));
     Serialization::Serialize(response, commandId);
-    Serialization::Serialize(response, static_cast<int>(CKM_API_SUCCESS));
-    Serialization::Serialize(response, RawBufferVector());
+    Serialization::Serialize(response, retCode);
+    Serialization::Serialize(response, chainRawVector);
     return response.Pop();
 }
 
@@ -597,7 +633,6 @@ RawBuffer CKMLogic::createSignature(
         const HashAlgorithm hash,
         const RSAPaddingAlgorithm padding)
 {
-
     DBRow row;
     CryptoService cs;
     RawBuffer signature;
@@ -608,7 +643,7 @@ RawBuffer CKMLogic::createSignature(
         do {
             retCode = getDataHelper(cred, DBDataType::KEY_RSA_PUBLIC, privateKeyAlias, password, row);
             if (CKM_API_SUCCESS != retCode) {
-                LogError("getDataHelper return error:");
+                LogError("getDataHelper return error");
                 break;
             }
 
@@ -619,7 +654,7 @@ RawBuffer CKMLogic::createSignature(
                 cs.createSignature(keyParsed, message, hash, padding, signature);
         } while(0);
     } catch (const KeyProvider::Exception::Base &e) {
-        LogError("KeyProvider failed with error: " << e.GetMessage());
+        LogError("KeyProvider failed with message: " << e.GetMessage());
         retCode = CKM_API_ERROR_SERVER_ERROR;
     } catch (const DBCryptoModule::Exception::Base &e) {
         LogError("DBCryptoModule failed with message: " << e.GetMessage());
