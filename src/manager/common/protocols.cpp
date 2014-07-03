@@ -51,6 +51,7 @@ KeyType toKeyType(DBDataType dbtype) {
     case DBDataType::KEY_RSA_PRIVATE: return KeyType::KEY_RSA_PRIVATE;
     case DBDataType::KEY_ECDSA_PRIVATE: return KeyType::KEY_ECDSA_PRIVATE;
     case DBDataType::KEY_ECDSA_PUBLIC: return KeyType::KEY_ECDSA_PUBLIC;
+    case DBDataType::KEY_AES: return KeyType::KEY_AES;
     default:
         // TODO
         throw 1;
