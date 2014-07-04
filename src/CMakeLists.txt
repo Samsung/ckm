@@ -19,7 +19,7 @@ SET(KEY_MANAGER_SOURCES
     ${KEY_MANAGER_PATH}/service/ckm-logic.cpp
     ${KEY_MANAGER_PATH}/service/key-provider.cpp
     ${KEY_MANAGER_PATH}/service/ocsp.cpp
-    ${KEY_MANAGER_PATH}/service/DBCryptoModule.cpp
+    ${KEY_MANAGER_PATH}/service/crypto-logic.cpp
     ${KEY_MANAGER_PATH}/service/CryptoService.cpp
     ${KEY_MANAGER_PATH}/service/file-system.cpp
     ${KEY_MANAGER_PATH}/service/db-crypto.cpp

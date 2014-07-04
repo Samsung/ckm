@@ -12,19 +12,23 @@
  *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
+ *
+ * @file        crypto-logic.h
+ * @author      Sebastian Grabowski (s.grabowski@samsung.com)
+ * @author      Bartlomiej Grzelewski (b.grzelewski@samsung.com)
+ * @version     1.0
+ * @brief       Crypto module implementation.
  */
-
 #pragma once
 
 #include <map>
 #include <ckm/ckm-type.h>
 #include <db-crypto.h>
 #include <dpl/exception.h>
-#include <aesCrypt.h>
 
 namespace CKM {
 
-class DBCryptoModule {
+class CryptoLogic {
 public:
     class Exception
     {
@@ -36,39 +40,47 @@ public:
             DECLARE_EXCEPTION_TYPE(Base, EncryptDBRowError)
             DECLARE_EXCEPTION_TYPE(Base, DecryptDBRowError)
     };
-    DBCryptoModule();
-    DBCryptoModule(const DBCryptoModule &second) = delete;
-    DBCryptoModule(DBCryptoModule &&second);
-    DBCryptoModule& operator=(DBCryptoModule &&second);
-    DBCryptoModule& operator=(const DBCryptoModule &second) = delete;
+    CryptoLogic();
+    CryptoLogic(const CryptoLogic &second) = delete;
+    CryptoLogic(CryptoLogic &&second);
+    CryptoLogic& operator=(CryptoLogic &&second);
+    CryptoLogic& operator=(const CryptoLogic &second) = delete;
 
-    virtual ~DBCryptoModule(){}
+    virtual ~CryptoLogic(){}
 
-    int decryptRow(const std::string &password, DBRow &row);
-    int encryptRow(const std::string &password, DBRow &row);
+    void decryptRow(const std::string &password, DBRow &row);
+    void encryptRow(const std::string &password, DBRow &row);
 
     bool haveKey(const std::string &smackLabel);
-    int pushKey(const std::string &smackLabel,
-                const RawBuffer &applicationKey);
+    void pushKey(const std::string &smackLabel,
+                 const RawBuffer &applicationKey);
 
 private:
 	static const int ENCR_BASE64 =   1 << 0;
 	static const int ENCR_APPKEY =   1 << 1;
 	static const int ENCR_PASSWORD = 1 << 2;
-	
+
 	std::map<std::string, RawBuffer> m_keyMap;
 
-    /* TODO: Move it to private/protected after tests (or remove if not needed) */
-    CryptoAlgConf cryptAES(RawBuffer &data, const RawBuffer &key,
-                           const RawBuffer &iv, std::string password);
-    void decryptAES(RawBuffer &data, const RawBuffer &key, const RawBuffer &iv,
-                    std::string password);
+    RawBuffer generateRandIV() const;
+    RawBuffer passwordToKey(const std::string &password,
+                            const RawBuffer &salt,
+                            size_t keySize) const;
+
+    RawBuffer encryptData(
+        const RawBuffer &data,
+        const RawBuffer &key,
+        const RawBuffer &iv) const;
+
+    RawBuffer decryptData(
+        const RawBuffer &data,
+        const RawBuffer &key,
+        const RawBuffer &iv) const;
+
     void decBase64(RawBuffer &data);
     void encBase64(RawBuffer &data);
     bool equalDigests(RawBuffer &dig1, RawBuffer &dig2);
     std::size_t insertDigest(RawBuffer &data, const int dataSize);
-    void generateKeysFromPassword(const std::string &password,
-                                  RawBuffer &key, RawBuffer &iv);
     void removeDigest(RawBuffer &data, RawBuffer &digest);
 };
 

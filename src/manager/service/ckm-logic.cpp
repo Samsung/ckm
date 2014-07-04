@@ -71,11 +71,17 @@ RawBuffer CKMLogic::unlockUserKey(uid_t user, const std::string &password) {
 
             RawBuffer key = handle.keyProvider.getPureDomainKEK();
             handle.database = DBCrypto(fs.getDBPath(), key);
-            handle.crypto = DBCryptoModule();
+            handle.crypto = CryptoLogic();
             // TODO wipe key
         }
     } catch (const KeyProvider::Exception::Base &e) {
         LogError("Error in KeyProvider " << e.GetMessage());
+        retCode = CKM_API_ERROR_SERVER_ERROR;
+    } catch (const CryptoLogic::Exception::Base &e) {
+        LogError("CryptoLogic error: " << e.GetMessage());
+        retCode = CKM_API_ERROR_SERVER_ERROR;
+    } catch (const CKM::Exception &e) {
+        LogError("CKM::Exception: " << e.GetMessage());
         retCode = CKM_API_ERROR_SERVER_ERROR;
     }
 
@@ -158,7 +164,7 @@ int CKMLogic::saveDataHelper(
 
     DBRow row = { alias, cred.smackLabel, policy.restricted,
          policy.extractable, dataType, DBCMAlgType::NONE,
-         0, RawBuffer(10, 'c'), static_cast<int>(key.size()), key };
+         0, RawBuffer(), static_cast<int>(key.size()), key };
 
     auto &handler = m_userDataMap[cred.uid];
     DBCrypto::Transaction transaction(&handler.database);
@@ -199,8 +205,8 @@ RawBuffer CKMLogic::saveData(
     } catch (const KeyProvider::Exception::Base &e) {
         LogError("KeyProvider failed with message: " << e.GetMessage());
         retCode = CKM_API_ERROR_SERVER_ERROR;
-    } catch (const DBCryptoModule::Exception::Base &e) {
-        LogError("DBCryptoModule failed with message: " << e.GetMessage());
+    } catch (const CryptoLogic::Exception::Base &e) {
+        LogError("CryptoLogic failed with message: " << e.GetMessage());
         retCode = CKM_API_ERROR_SERVER_ERROR;
     } catch (const DBCrypto::Exception::InternalError &e) {
         LogError("DBCrypto failed with message: " << e.GetMessage());
@@ -312,8 +318,8 @@ RawBuffer CKMLogic::getData(
     } catch (const KeyProvider::Exception::Base &e) {
         LogError("KeyProvider failed with error: " << e.GetMessage());
         retCode = CKM_API_ERROR_SERVER_ERROR;
-    } catch (const DBCryptoModule::Exception::Base &e) {
-        LogError("DBCryptoModule failed with message: " << e.GetMessage());
+    } catch (const CryptoLogic::Exception::Base &e) {
+        LogError("CryptoLogic failed with message: " << e.GetMessage());
         retCode = CKM_API_ERROR_SERVER_ERROR;
     } catch (const DBCrypto::Exception::Base &e) {
         LogError("DBCrypto failed with message: " << e.GetMessage());
@@ -439,6 +445,9 @@ RawBuffer CKMLogic::createKeyPairRSA(
     } catch (DBCrypto::Exception::TransactionError &e) {
         LogDebug("DBCrypto error: transaction error: " << e.GetMessage());
         retCode = CKM_API_ERROR_DB_ERROR;
+    } catch (CKM::CryptoLogic::Exception::Base &e) {
+        LogDebug("CryptoLogic error: " << e.GetMessage());
+        retCode = CKM_API_ERROR_SERVER_ERROR;
     } catch (DBCrypto::Exception::InternalError &e) {
         LogDebug("DBCrypto internal error: " << e.GetMessage());
         retCode = CKM_API_ERROR_DB_ERROR;
@@ -524,6 +533,9 @@ RawBuffer CKMLogic::createKeyPairECDSA(
     } catch (const DBCrypto::Exception::TransactionError &e) {
         LogDebug("DBCrypto error: transaction error: " << e.GetMessage());
         retCode = CKM_API_ERROR_DB_ERROR;
+    } catch (const CKM::CryptoLogic::Exception::Base &e) {
+        LogDebug("CryptoLogic error: " << e.GetMessage());
+        retCode = CKM_API_ERROR_SERVER_ERROR;
     } catch (const DBCrypto::Exception::InternalError &e) {
         LogDebug("DBCrypto internal error: " << e.GetMessage());
         retCode = CKM_API_ERROR_DB_ERROR;
@@ -606,7 +618,7 @@ RawBuffer CKMLogic::getCertificateChain(
         for (auto &i: chainVector)
             chainRawVector.push_back(i.getDER());
 
-    } catch (const DBCryptoModule::Exception::Base &e) {
+    } catch (const CryptoLogic::Exception::Base &e) {
         LogError("DBCyptorModule failed with message: " << e.GetMessage());
         retCode = CKM_API_ERROR_SERVER_ERROR;
     } catch (const DBCrypto::Exception::Base &e) {
@@ -657,12 +669,15 @@ RawBuffer CKMLogic::createSignature(
     } catch (const KeyProvider::Exception::Base &e) {
         LogError("KeyProvider failed with message: " << e.GetMessage());
         retCode = CKM_API_ERROR_SERVER_ERROR;
-    } catch (const DBCryptoModule::Exception::Base &e) {
-        LogError("DBCryptoModule failed with message: " << e.GetMessage());
+    } catch (const CryptoLogic::Exception::Base &e) {
+        LogError("CryptoLogic failed with message: " << e.GetMessage());
         retCode = CKM_API_ERROR_SERVER_ERROR;
     } catch (const DBCrypto::Exception::Base &e) {
         LogError("DBCrypto failed with message: " << e.GetMessage());
         retCode = CKM_API_ERROR_DB_ERROR;
+    } catch (const CKM::Exception &e) {
+        LogError("Unknown CKM::Exception: " << e.GetMessage());
+        retCode = CKM_API_ERROR_SERVER_ERROR;
     }
 
     MessageBuffer response;
@@ -721,12 +736,15 @@ RawBuffer CKMLogic::verifySignature(
     } catch (const KeyProvider::Exception::Base &e) {
         LogError("KeyProvider failed with error: " << e.GetMessage());
         retCode = CKM_API_ERROR_SERVER_ERROR;
-    } catch (const DBCryptoModule::Exception::Base &e) {
-        LogError("DBCryptoModule failed with message: " << e.GetMessage());
+    } catch (const CryptoLogic::Exception::Base &e) {
+        LogError("CryptoLogic failed with message: " << e.GetMessage());
         retCode = CKM_API_ERROR_SERVER_ERROR;
     } catch (const DBCrypto::Exception::Base &e) {
         LogError("DBCrypto failed with message: " << e.GetMessage());
         retCode = CKM_API_ERROR_DB_ERROR;
+    } catch (const CKM::Exception &e) {
+        LogError("Unknown CKM::Exception: " << e.GetMessage());
+        retCode = CKM_API_ERROR_SERVER_ERROR;
     }
 
     MessageBuffer response;

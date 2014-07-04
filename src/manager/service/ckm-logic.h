@@ -30,7 +30,7 @@
 #include <connection-info.h>
 #include <db-crypto.h>
 #include <key-provider.h>
-#include <DBCryptoModule.h>
+#include <crypto-logic.h>
 #include <certificate-store.h>
 
 namespace CKM {
@@ -38,7 +38,7 @@ namespace CKM {
 struct UserData {
     KeyProvider    keyProvider;
     DBCrypto       database;
-    DBCryptoModule crypto;
+    CryptoLogic    crypto;
 };
 
 class CKMLogic {
