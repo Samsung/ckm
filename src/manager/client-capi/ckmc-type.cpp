@@ -137,7 +137,7 @@ int ckm_load_cert_from_file(const char *file_path, ckm_cert **cert)
 
 	FILE *fp = fopen(file_path, "r");
 	if(fp == NULL)
-		return KEY_MANAGER_API_ERROR_FILE_ACCESS_DENIED;
+		return CKM_API_ERROR_FILE_ACCESS_DENIED;
 	X509 *pcert = NULL;
 	if(!(pcert = d2i_X509_fp(fp, NULL))) {
 		fseek(fp, 0, SEEK_SET);
@@ -145,11 +145,11 @@ int ckm_load_cert_from_file(const char *file_path, ckm_cert **cert)
 	}
 	fclose(fp);
 	if(pcert == NULL) {
-		return KEY_MANAGER_API_ERROR_INVALID_FORMAT;
+		return CKM_API_ERROR_INVALID_FORMAT;
 	}
 
 	int ret = _ckm_load_cert_from_x509(pcert, cert);
-	if(ret != KEY_MANAGER_API_SUCCESS) {
+	if(ret != CKM_API_SUCCESS) {
 		X509_free(pcert);
 	}
 	return ret;
@@ -178,7 +178,7 @@ int ckm_load_from_pkcs12_file(const char *file_path, const char *passphrase, ckm
 			pkey = NULL;
 			x509Cert = NULL;
 			ca = NULL;
-			ret = KEY_MANAGER_API_SUCCESS;
+			ret = CKM_API_SUCCESS;
 			retPrivateKey = NULL;
 			retCkmCert = NULL;
 			retCaCertList = NULL;
@@ -196,7 +196,7 @@ int ckm_load_from_pkcs12_file(const char *file_path, const char *passphrase, ckm
 				sk_X509_pop_free(ca, X509_free);
 			EVP_cleanup();
 
-			if(ret != KEY_MANAGER_API_SUCCESS) {
+			if(ret != CKM_API_SUCCESS) {
 				if(retPrivateKey != NULL)
 					ckm_key_free(retPrivateKey);
 				if(retCkmCert != NULL)
@@ -209,36 +209,36 @@ int ckm_load_from_pkcs12_file(const char *file_path, const char *passphrase, ckm
 		int parsePkcs12(const char *filePath, const char *pass) {
 			fp_in = NULL;
 			if(!(fp_in = fopen(filePath, "rb"))) {
-				return KEY_MANAGER_API_ERROR_FILE_ACCESS_DENIED;
+				return CKM_API_ERROR_FILE_ACCESS_DENIED;
 			}
 
 			if(!(p12 = d2i_PKCS12_fp(fp_in, NULL))) {
-				return KEY_MANAGER_API_ERROR_INVALID_FORMAT;
+				return CKM_API_ERROR_INVALID_FORMAT;
 			}
 
 			/* parse PKCS#12 certificate */
 			if((ret = PKCS12_parse(p12, pass, &pkey, &x509Cert, &ca)) != 1) {
-				return KEY_MANAGER_API_ERROR_INVALID_FORMAT;
+				return CKM_API_ERROR_INVALID_FORMAT;
 			}
-			return KEY_MANAGER_API_SUCCESS;
+			return CKM_API_SUCCESS;
 		}
 
 		int toCkmCert() {
-			if( (ret =_ckm_load_cert_from_x509(x509Cert,&retCkmCert)) != KEY_MANAGER_API_SUCCESS) {
+			if( (ret =_ckm_load_cert_from_x509(x509Cert,&retCkmCert)) != CKM_API_SUCCESS) {
 				return ret;
 			}
-			return KEY_MANAGER_API_SUCCESS;
+			return CKM_API_SUCCESS;
 		}
 
 		int toCkmKey() {
 			int prikeyLen = 0;
 			if((prikeyLen = i2d_PrivateKey(pkey, NULL)) < 0) {
-				return KEY_MANAGER_API_ERROR_OUT_OF_MEMORY;
+				return CKM_API_ERROR_OUT_OF_MEMORY;
 			}
 			unsigned char arrayPrikey[sizeof(unsigned char) * prikeyLen];
 			unsigned char *pPrikey = arrayPrikey;
 			if((prikeyLen = i2d_PrivateKey(pkey, &pPrikey)) < 0) {
-				return KEY_MANAGER_API_ERROR_OUT_OF_MEMORY;
+				return CKM_API_ERROR_OUT_OF_MEMORY;
 			}
 
 			int type = EVP_PKEY_type(pkey->type);
@@ -252,13 +252,13 @@ int ckm_load_from_pkcs12_file(const char *file_path, const char *passphrase, ckm
 				break;
 			}
 			if(key_type == CKM_KEY_NONE) {
-				return KEY_MANAGER_API_ERROR_INVALID_FORMAT;
+				return CKM_API_ERROR_INVALID_FORMAT;
 			}
 
 			char *nullPassword = NULL;
 			retPrivateKey = ckm_key_new(pPrikey, sizeof(unsigned char) * prikeyLen, key_type, nullPassword);
 
-			return KEY_MANAGER_API_SUCCESS;
+			return CKM_API_SUCCESS;
 		}
 
 		int toCaCkmCertList() {
@@ -267,36 +267,36 @@ int ckm_load_from_pkcs12_file(const char *file_path, const char *passphrase, ckm
 			ckm_cert_list *tmpCertList = NULL;
 			retCaCertList = tmpCertList;
 			while((popedCert = sk_X509_pop(ca)) != NULL) {
-				if( (ret =_ckm_load_cert_from_x509(popedCert, &popedCkmCert)) != KEY_MANAGER_API_SUCCESS) {
-					return KEY_MANAGER_API_ERROR_OUT_OF_MEMORY;
+				if( (ret =_ckm_load_cert_from_x509(popedCert, &popedCkmCert)) != CKM_API_SUCCESS) {
+					return CKM_API_ERROR_OUT_OF_MEMORY;
 				}
 				tmpCertList = ckm_cert_list_add(tmpCertList, popedCkmCert);
 			}
-			return KEY_MANAGER_API_SUCCESS;
+			return CKM_API_SUCCESS;
 		}
 
 	};
 
-	int ret = KEY_MANAGER_API_SUCCESS;
+	int ret = CKM_API_SUCCESS;
 
 	Pkcs12Converter converter;
-	if((ret = converter.parsePkcs12(file_path, passphrase)) != KEY_MANAGER_API_SUCCESS) {
+	if((ret = converter.parsePkcs12(file_path, passphrase)) != CKM_API_SUCCESS) {
 		return ret;
 	}
-	if((ret = converter.toCkmCert()) != KEY_MANAGER_API_SUCCESS) {
+	if((ret = converter.toCkmCert()) != CKM_API_SUCCESS) {
 		return ret;
 	}
-	if((ret = converter.toCkmKey()) != KEY_MANAGER_API_SUCCESS) {
+	if((ret = converter.toCkmKey()) != CKM_API_SUCCESS) {
 		return ret;
 	}
-	if((ret = converter.toCaCkmCertList()) != KEY_MANAGER_API_SUCCESS) {
+	if((ret = converter.toCaCkmCertList()) != CKM_API_SUCCESS) {
 		return ret;
 	}
 	*private_key = converter.retPrivateKey;
 	*ckmcert = converter.retCkmCert;
 	*ca_cert_list = converter.retCaCertList;
 
-	return KEY_MANAGER_API_SUCCESS;
+	return CKM_API_SUCCESS;
 }
 
 KEY_MANAGER_CAPI
@@ -424,12 +424,12 @@ int _ckm_load_cert_from_x509(X509 *xCert, ckm_cert **cert)
 	unsigned char* bufCert = NULL;
 
 	if(xCert == NULL) {
-		return KEY_MANAGER_API_ERROR_INVALID_FORMAT;
+		return CKM_API_ERROR_INVALID_FORMAT;
 	}
 
 	/* load certificate into buffer */
 	if((certLen = i2d_X509(xCert, NULL)) < 0) {
-		return KEY_MANAGER_API_ERROR_INVALID_FORMAT;
+		return CKM_API_ERROR_INVALID_FORMAT;
 	}
 	unsigned char arrayCert[sizeof(unsigned char) * certLen];
 	bufCert = arrayCert;
@@ -437,5 +437,5 @@ int _ckm_load_cert_from_x509(X509 *xCert, ckm_cert **cert)
 
 	*cert = ckm_cert_new(bufCert, certLen, CKM_CERT_FORM_DER);
 
-	return KEY_MANAGER_API_SUCCESS;
+	return CKM_API_SUCCESS;
 }

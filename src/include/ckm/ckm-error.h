@@ -81,6 +81,12 @@ extern "C" {
 /*! \brief   indicating that CA certificate(s) were unknown and chain could not be created */
 #define CKM_API_ERROR_VERIFICATION_FAILED -16
 
+/*! \brief   indicating that a provided file or binary has not a valid format */
+#define CKM_API_ERROR_INVALID_FORMAT -17
+
+/*! \brief   indicating that provided file doesn't exists or cannot be accessed in the file system */
+#define CKM_API_ERROR_FILE_ACCESS_DENIED -18
+
 /*! \brief   indicating the error with unknown reason */
 #define CKM_API_ERROR_UNKNOWN -255
 /** @}*/

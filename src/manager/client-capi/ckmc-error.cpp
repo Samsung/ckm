@@ -21,7 +21,7 @@
  */
 
 #include <ckmc/ckmc-error.h>
-#include <ckm/ckm-error.h>
+#include <ckm/ckm-type.h>
 
 const char * ckm_error_to_string(int error) {
 	return CKM::ErrorToString(error);
