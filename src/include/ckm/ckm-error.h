@@ -1,9 +1,5 @@
 /*
- *  ckm-manager
- *
  *  Copyright (c) 2014 Samsung Electronics Co., Ltd All Rights Reserved
- *
- *  Contact: Bumjin Im <bj.im@samsung.com>
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -17,33 +13,16 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License
  *
- */
-
-#ifndef KEY_MANAGER_H
-#define KEY_MANAGER_H
-
-#include <sys/types.h>
-
-/**
  * @file    ckm-manager.h
  * @version 1.0
  * @brief   This file contains APIs of the Central Key Manager
 */
+#ifndef _CKM_ERROR_H_
+#define _CKM_ERROR_H_
 
-/**
- * @defgroup SecurityFW
- * @{
- *
- * @defgroup KEY_MANAGER Central Key Manager
- * @version  1.0
- * @brief    Central Key Manager client library functions
- *
-*/
-
-/**
- * @addtogroup KEY_MANAGER
- * @{
-*/
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * \name Return Codes
@@ -106,40 +85,8 @@
 #define CKM_API_ERROR_UNKNOWN -255
 /** @}*/
 
-namespace CKM {
-const char * ErrorToString(int error);
-} // namespace CKM
-
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/*
- * This function was created mainly for testing ckm-manager client/service
- * proper behaviour. It sends a message and returns message from service,
- * which should be a pure echo.
- *
- * \param[in] Message for service
- * \param[out] Response from service
- *
- * \return CKM_API_ERROR_INPUT_PARAM when trying to pass NULL message
- * \return CKM_API_SUCCESS on success
- */
-
-int key_manager_echo(const char* echo, char** oche);
-
-
 #ifdef __cplusplus
 }
 #endif
-
-/**
- * @}
-*/
-
-/**
- * @}
-*/
 
 #endif

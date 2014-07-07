@@ -27,6 +27,7 @@
 #include <protocols.h>
 
 #include <ckm/ckm-error.h>
+#include <ckm/ckm-echo.h>
 
 KEY_MANAGER_API
 int key_manager_echo(const char *echo, char** oche) {

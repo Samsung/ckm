@@ -164,6 +164,7 @@ fi
 %{_includedir}/ckm/ckm/ckm-manager.h
 %{_includedir}/ckm/ckm/ckm-control.h
 %{_includedir}/ckm/ckm/ckm-error.h
+%{_includedir}/ckm/ckm/ckm-echo.h
 %{_includedir}/ckm/ckm/ckm-type.h
 %{_includedir}/ckm/ckmc/ckmc-manager.h
 %{_includedir}/ckm/ckmc/ckmc-control.h

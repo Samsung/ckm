@@ -19,6 +19,7 @@
  * @brief       This file contains example of ckm-manager client implementation
  */
 #include <ckm/ckm-error.h>
+#include <ckm/ckm-type.h>
 
 #define ERRORDESCRIBE(name) case name: return #name
 

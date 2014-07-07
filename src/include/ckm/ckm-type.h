@@ -92,5 +92,7 @@ enum class DBCMAlgType : int {
 class GenericKey;
 class CertificateImpl;
 
+const char * ErrorToString(int error);
+
 } // namespace CKM
 
