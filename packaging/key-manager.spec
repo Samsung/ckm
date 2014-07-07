@@ -165,6 +165,10 @@ fi
 %{_includedir}/ckm/ckm/ckm-control.h
 %{_includedir}/ckm/ckm/ckm-error.h
 %{_includedir}/ckm/ckm/ckm-type.h
+%{_includedir}/ckm/ckmc/ckmc-manager.h
+%{_includedir}/ckm/ckmc/ckmc-control.h
+%{_includedir}/ckm/ckmc/ckmc-error.h
+%{_includedir}/ckm/ckmc/ckmc-type.h
 %{_libdir}/pkgconfig/*.pc
 
 %files -n key-manager-tests
