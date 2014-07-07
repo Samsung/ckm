@@ -169,13 +169,14 @@ int CKMLogic::saveDataHelper(
             LogDebug("No Key in database found. Generating new one for label: "
                     << cred.smackLabel);
             key = handler.keyProvider.generateDEK(cred.smackLabel);
+            handler.database.saveKey(cred.smackLabel, key);
         } else {
+            LogDebug("Key from DB");
             key = *key_optional;
         }
 
         key = handler.keyProvider.getPureDEK(key);
         handler.crypto.pushKey(cred.smackLabel, key);
-        handler.database.saveKey(cred.smackLabel, key);
     }
     handler.crypto.encryptRow(policy.password, row);
     handler.database.saveDBRow(row);

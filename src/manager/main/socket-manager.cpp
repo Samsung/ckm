@@ -169,7 +169,8 @@ SocketManager::CreateDefaultReadSocketDescription(int sock, bool timeout)
 }
 
 SocketManager::SocketManager()
-  : m_counter(0)
+  : m_maxDesc(0)
+  , m_counter(0)
 {
     FD_ZERO(&m_readSet);
     FD_ZERO(&m_writeSet);

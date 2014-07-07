@@ -115,7 +115,7 @@ public:
 
         int retval = TEMP_FAILURE_RETRY(connect(m_sock, (struct sockaddr*)&clientAddr, SUN_LEN(&clientAddr)));
         if ((retval == -1) && (errno == EINPROGRESS)) {
-            if (0 >= waitForSocket(m_sock, POLLIN, POLL_TIMEOUT)) {
+            if (0 >= waitForSocket(m_sock, POLLOUT, POLL_TIMEOUT)) {
                 LogError("Error in waitForSocket.");
                 return CKM_API_ERROR_SOCKET;
             }
