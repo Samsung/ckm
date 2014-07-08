@@ -321,7 +321,6 @@ int ckm_create_key_pair_rsa(const int size,
 							const ckm_policy policy_private_key,
 							const ckm_policy policy_public_key)
 {
-	int ret;
 	CKM::Manager mgr;
 
 	CKM::Alias ckmPrivakeKeyAlias(private_key_alias);
@@ -329,12 +328,7 @@ int ckm_create_key_pair_rsa(const int size,
 	CKM::Policy ckmPrivateKeyPolicy(policy_private_key.password, _toBool(policy_private_key.extractable), _toBool(policy_private_key.restricted));
 	CKM::Policy ckmPublicKeyPolicy(policy_public_key.password, _toBool(policy_public_key.extractable), _toBool(policy_public_key.restricted));
 
-	if( (mgr.createKeyPairRSA(size, ckmPrivakeKeyAlias, ckmPublicKeyAlias, ckmPrivateKeyPolicy, ckmPublicKeyPolicy))
-			!= CKM_API_SUCCESS) {
-		return ret;
-	}
-
-	return CKM_API_SUCCESS;
+    return mgr.createKeyPairRSA(size, ckmPrivakeKeyAlias, ckmPublicKeyAlias, ckmPrivateKeyPolicy, ckmPublicKeyPolicy);
 }
 
 KEY_MANAGER_CAPI
@@ -344,7 +338,6 @@ int ckm_create_key_pair_ecdsa(const ckm_ec_type type,
 							const ckm_policy policy_private_key,
 							const ckm_policy policy_public_key)
 {
-	int ret;
 	CKM::Manager mgr;
 
 	CKM::ElipticCurve ckmType = static_cast<CKM::ElipticCurve>(static_cast<int>(type));
@@ -353,12 +346,7 @@ int ckm_create_key_pair_ecdsa(const ckm_ec_type type,
 	CKM::Policy ckmPrivateKeyPolicy(policy_private_key.password, _toBool(policy_private_key.extractable), _toBool(policy_private_key.restricted));
 	CKM::Policy ckmPublicKeyPolicy(policy_public_key.password, _toBool(policy_public_key.extractable), _toBool(policy_public_key.restricted));
 
-	if( (mgr.createKeyPairECDSA(ckmType, ckmPrivakeKeyAlias, ckmPublicKeyAlias, ckmPrivateKeyPolicy, ckmPublicKeyPolicy))
-			!= CKM_API_SUCCESS) {
-		return ret;
-	}
-
-	return CKM_API_SUCCESS;
+	return mgr.createKeyPairECDSA(ckmType, ckmPrivakeKeyAlias, ckmPublicKeyAlias, ckmPrivateKeyPolicy, ckmPublicKeyPolicy);
 }
 
 KEY_MANAGER_CAPI
