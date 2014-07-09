@@ -31,6 +31,7 @@ SET(TEST_MERGED_SOURCES
     ${KEY_MANAGER_TEST_MERGED_SRC}/test_db_crypto.cpp
     ${KEY_MANAGER_TEST_MERGED_SRC}/test_sql.cpp
     ${KEY_MANAGER_TEST_MERGED_SRC}/test-key-provider.cpp
+    ${KEY_MANAGER_TEST_MERGED_SRC}/test_safe-buffer.cpp
     ${KEY_MANAGER_PATH}/service/db-crypto.cpp
     ${KEY_MANAGER_PATH}/service/key-provider.cpp
 
