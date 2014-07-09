@@ -103,7 +103,6 @@ SET(KEY_MANAGER_CLIENT_SOURCES
     ${KEY_MANAGER_PATH}/dpl/core/src/serialization.cpp
     ${KEY_MANAGER_PATH}/dpl/core/src/singleton.cpp
     ${KEY_MANAGER_PATH}/dpl/core/src/string.cpp
-    ${KEY_MANAGER_PATH}/dpl/core/src/TransitoryString.cpp
     ${KEY_MANAGER_PATH}/dpl/core/src/errno_string.cpp
     )
 
@@ -161,7 +160,6 @@ SET(KEY_MANAGER_CONTROL_CLIENT_SOURCES
     ${KEY_MANAGER_PATH}/dpl/core/src/serialization.cpp
     ${KEY_MANAGER_PATH}/dpl/core/src/singleton.cpp
     ${KEY_MANAGER_PATH}/dpl/core/src/string.cpp
-    ${KEY_MANAGER_PATH}/dpl/core/src/TransitoryString.cpp
     ${KEY_MANAGER_PATH}/dpl/core/src/errno_string.cpp
     )
 
