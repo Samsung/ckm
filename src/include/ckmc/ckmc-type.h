@@ -23,6 +23,7 @@
 #ifndef CKMC_TYPE_H
 #define CKMC_TYPE_H
 
+#include <stddef.h>
 
 #define KEY_MANAGER_CAPI __attribute__((visibility("default")))
 
@@ -65,18 +66,13 @@ typedef enum ckm_hash_algo_t {
 } ckm_hash_algo;
 
 typedef enum ckm_rsa_padding_algo_t {
-    CKM_XRSA_PKCS1_PADDING,
-    CKM_XRSA_X931_PADDING
+    CKM_PKCS1_PADDING,
+    CKM_X931_PADDING
 } ckm_rsa_padding_algo;
-
-typedef enum ckm_cert_form_t {
-    CKM_CERT_FORM_DER,
-    CKM_CERT_FORM_DER_BASE64
-} ckm_cert_form;
 
 typedef struct ckm_raw_buff_t{
 	unsigned char* data;
-	unsigned int   size;
+	size_t         size;
 } ckm_raw_buffer;
 
 typedef struct ckm_policy_t {
@@ -87,15 +83,15 @@ typedef struct ckm_policy_t {
 
 typedef struct ckm_key_t {
 	unsigned char* raw_key;
-	unsigned int   key_size;
+	size_t         key_size;
 	ckm_key_type   key_type;
 	char*          password;  // byte array used to encrypt data inside CKM
 } ckm_key;
 
 typedef struct ckm_cert_t {
-	unsigned char* raw_cert;
-	unsigned int   cert_size;
-	ckm_cert_form  data_format;
+	unsigned char*  raw_cert;
+	size_t          cert_size;
+	ckm_data_format data_format;
 } ckm_cert;
 
 typedef struct ckm_alias_list_t {
@@ -109,13 +105,13 @@ typedef struct ckm_cert_list_t {
 } ckm_cert_list;
 
 
-ckm_key *ckm_key_new(unsigned char *raw_key, unsigned int key_size, ckm_key_type key_type, char *password);
+ckm_key *ckm_key_new(unsigned char *raw_key, size_t key_size, ckm_key_type key_type, char *password);
 void ckm_key_free(ckm_key *key);
 
-ckm_raw_buffer * ckm_buffer_new(unsigned char *data, unsigned int size);
+ckm_raw_buffer * ckm_buffer_new(unsigned char *data, size_t size);
 void ckm_buffer_free(ckm_raw_buffer *buffer);
 
-ckm_cert *ckm_cert_new(unsigned char *raw_cert, unsigned int cert_size, ckm_cert_form data_format);
+ckm_cert *ckm_cert_new(unsigned char *raw_cert, size_t cert_size, ckm_data_format data_format);
 
 void ckm_cert_free(ckm_cert *cert);
 

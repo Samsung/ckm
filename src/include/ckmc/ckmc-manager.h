@@ -24,6 +24,7 @@
 #ifndef CKMC_MANAGER_H
 #define CKMC_MANAGER_H
 
+#include <stddef.h>
 #include <sys/types.h>
 #include <ckmc/ckmc-type.h>
 
@@ -35,21 +36,21 @@ extern "C" {
 int ckm_save_key(const char *alias, const ckm_key key, const ckm_policy policy);
 int ckm_remove_key(const char *alias);
 int ckm_get_key(const char *alias, const char *password, ckm_key **key);
-int ckm_get_key_alias_list(const ckm_alias_list** alias_list);
+int ckm_get_key_alias_list(ckm_alias_list** alias_list);
 
 int ckm_save_cert(const char *alias, const ckm_cert cert, const ckm_policy policy);
 int ckm_remove_cert(const char *alias);
 int ckm_get_cert(const char *alias, const char *password, const ckm_cert **cert);
-int ckm_get_cert_alias_list(const ckm_alias_list** alias_list);
+int ckm_get_cert_alias_list(ckm_alias_list** alias_list);
 
 int ckm_save_data(const char *alias, ckm_raw_buffer data, const ckm_policy policy);
 int ckm_remove_data(const char *alias);
 int ckm_get_data(const char *alias, const char *password, ckm_raw_buffer **data);
-int ckm_get_data_alias_list(const ckm_alias_list** alias_list);
+int ckm_get_data_alias_list(ckm_alias_list** alias_list);
 
 
 // crypto functions
-int ckm_create_key_pair_rsa(const int size, const char *private_key_alias, const char *public_key_alias, const ckm_policy policy_private_key, const ckm_policy policy_public_key);
+int ckm_create_key_pair_rsa(const size_t size, const char *private_key_alias, const char *public_key_alias, const ckm_policy policy_private_key, const ckm_policy policy_public_key);
 int ckm_create_key_pair_ecdsa(const ckm_ec_type type, const char *private_key_alias, const char *public_key_alias, const ckm_policy policy_private_key, const ckm_policy policy_public_key);
 int ckm_create_signature(const char *private_key_alias, const char *password, const ckm_raw_buffer message, const ckm_hash_algo hash, const ckm_rsa_padding_algo padding, ckm_raw_buffer **signature);
 int ckm_verify_signature(const char *public_key_alias, const char *password, const ckm_raw_buffer message, const ckm_raw_buffer signature, const ckm_hash_algo hash, const ckm_rsa_padding_algo padding);

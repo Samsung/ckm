@@ -22,7 +22,9 @@
 
 
 #include <string.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <ckm/ckm-type.h>
 #include <ckmc/ckmc-type.h>
 #include <ckmc/ckmc-error.h>
 #include <openssl/x509v3.h>
@@ -34,7 +36,7 @@ int _ckm_load_cert_from_x509(X509 *xCert, ckm_cert **cert);
 
 
 KEY_MANAGER_CAPI
-ckm_key *ckm_key_new(unsigned char *raw_key, unsigned int key_size, ckm_key_type key_type, char *password)
+ckm_key *ckm_key_new(unsigned char *raw_key, size_t key_size, ckm_key_type key_type, char *password)
 {
 	ckm_key *pkey = new ckm_key;
 	if(pkey == NULL)
@@ -74,14 +76,16 @@ void ckm_key_free(ckm_key *key)
 
 	if(key->password != NULL)
 		free(key->password);
-	if(key->raw_key != NULL)
+	if(key->raw_key != NULL) {
+		memset(key->raw_key, 0, key->key_size);
 		free(key->raw_key);
+	}
 
 	free(key);
 }
 
 KEY_MANAGER_CAPI
-ckm_raw_buffer * ckm_buffer_new(unsigned char *data, unsigned int size)
+ckm_raw_buffer * ckm_buffer_new(unsigned char *data, size_t size)
 {
 	ckm_raw_buffer *pbuff = new ckm_raw_buffer;
 	if(pbuff == NULL)
@@ -105,13 +109,15 @@ void ckm_buffer_free(ckm_raw_buffer *buffer)
 	if(buffer == NULL)
 		return;
 
-	if(buffer->data != NULL)
+	if(buffer->data != NULL) {
+		memset(buffer->data, 0, buffer->size);
 		free(buffer->data);
+	}
 	free(buffer);
 }
 
 KEY_MANAGER_CAPI
-ckm_cert *ckm_cert_new(unsigned char *raw_cert, unsigned int cert_size, ckm_cert_form data_format)
+ckm_cert *ckm_cert_new(unsigned char *raw_cert, size_t cert_size, ckm_data_format data_format)
 {
 	ckm_cert *pcert = new ckm_cert;
 	if(pcert == NULL)
@@ -166,8 +172,8 @@ int ckm_load_from_pkcs12_file(const char *file_path, const char *passphrase, ckm
 		X509* x509Cert;
 		STACK_OF(X509)* ca;
 
-	public:
 		int ret;
+	public:
 		ckm_key *retPrivateKey;
 		ckm_cert *retCkmCert;
 		ckm_cert_list *retCaCertList;
@@ -202,7 +208,7 @@ int ckm_load_from_pkcs12_file(const char *file_path, const char *passphrase, ckm
 				if(retCkmCert != NULL)
 					ckm_cert_free(retCkmCert);
 				if(retCaCertList != NULL)
-					ckm_cert_list_free(retCaCertList);
+					ckm_cert_list_all_free(retCaCertList);
 			}
 		};
 
@@ -231,15 +237,17 @@ int ckm_load_from_pkcs12_file(const char *file_path, const char *passphrase, ckm
 		}
 
 		int toCkmKey() {
-			int prikeyLen = 0;
-			if((prikeyLen = i2d_PrivateKey(pkey, NULL)) < 0) {
-				return CKM_API_ERROR_OUT_OF_MEMORY;
-			}
-			unsigned char arrayPrikey[sizeof(unsigned char) * prikeyLen];
-			unsigned char *pPrikey = arrayPrikey;
-			if((prikeyLen = i2d_PrivateKey(pkey, &pPrikey)) < 0) {
-				return CKM_API_ERROR_OUT_OF_MEMORY;
-			}
+			BIO *bkey = BIO_new(BIO_s_mem());
+
+			i2d_PrivateKey_bio(bkey, pkey);
+
+		    CKM::RawBuffer output(8196);
+		    int size = BIO_read(bkey, output.data(), output.size());
+			BIO_free_all(bkey);
+		    if (size <= 0) {
+		        return CKM_API_ERROR_INVALID_FORMAT;
+		    }
+		    output.resize(size);
 
 			int type = EVP_PKEY_type(pkey->type);
 			ckm_key_type key_type = CKM_KEY_NONE;
@@ -256,7 +264,8 @@ int ckm_load_from_pkcs12_file(const char *file_path, const char *passphrase, ckm
 			}
 
 			char *nullPassword = NULL;
-			retPrivateKey = ckm_key_new(pPrikey, sizeof(unsigned char) * prikeyLen, key_type, nullPassword);
+
+			retPrivateKey = ckm_key_new(output.data(), size, key_type, nullPassword);
 
 			return CKM_API_SUCCESS;
 		}
@@ -265,12 +274,16 @@ int ckm_load_from_pkcs12_file(const char *file_path, const char *passphrase, ckm
 			X509* popedCert = NULL;
 			ckm_cert *popedCkmCert = NULL;
 			ckm_cert_list *tmpCertList = NULL;
-			retCaCertList = tmpCertList;
 			while((popedCert = sk_X509_pop(ca)) != NULL) {
 				if( (ret =_ckm_load_cert_from_x509(popedCert, &popedCkmCert)) != CKM_API_SUCCESS) {
 					return CKM_API_ERROR_OUT_OF_MEMORY;
 				}
-				tmpCertList = ckm_cert_list_add(tmpCertList, popedCkmCert);
+				if(tmpCertList == NULL) { // first
+					tmpCertList = ckm_cert_list_new(popedCkmCert);
+					retCaCertList = tmpCertList;
+				}else {
+					tmpCertList = ckm_cert_list_add(tmpCertList, popedCkmCert);
+				}
 			}
 			return CKM_API_SUCCESS;
 		}
@@ -292,6 +305,7 @@ int ckm_load_from_pkcs12_file(const char *file_path, const char *passphrase, ckm
 	if((ret = converter.toCaCkmCertList()) != CKM_API_SUCCESS) {
 		return ret;
 	}
+
 	*private_key = converter.retPrivateKey;
 	*ckmcert = converter.retCkmCert;
 	*ca_cert_list = converter.retCaCertList;
@@ -305,8 +319,10 @@ void ckm_cert_free(ckm_cert *cert)
 	if(cert == NULL)
 		return;
 
-	if(cert->raw_cert != NULL)
+	if(cert->raw_cert != NULL) {
+		memset(cert->raw_cert, 0, cert->cert_size);
 		free(cert->raw_cert);
+	}
 	free(cert);
 }
 
@@ -420,22 +436,23 @@ void ckm_cert_list_all_free(ckm_cert_list *first)
 
 int _ckm_load_cert_from_x509(X509 *xCert, ckm_cert **cert)
 {
-	int certLen;
-	unsigned char* bufCert = NULL;
-
 	if(xCert == NULL) {
 		return CKM_API_ERROR_INVALID_FORMAT;
 	}
 
-	/* load certificate into buffer */
-	if((certLen = i2d_X509(xCert, NULL)) < 0) {
-		return CKM_API_ERROR_INVALID_FORMAT;
-	}
-	unsigned char arrayCert[sizeof(unsigned char) * certLen];
-	bufCert = arrayCert;
-	i2d_X509(xCert, &bufCert);
+	BIO *bcert = BIO_new(BIO_s_mem());
 
-	*cert = ckm_cert_new(bufCert, certLen, CKM_CERT_FORM_DER);
+	i2d_X509_bio(bcert, xCert);
+
+    CKM::RawBuffer output(8196);
+    int size = BIO_read(bcert, output.data(), output.size());
+	BIO_free_all(bcert);
+    if (size <= 0) {
+        return CKM_API_ERROR_INVALID_FORMAT;
+    }
+    output.resize(size);
+
+	*cert = ckm_cert_new(output.data(), output.size(), CKM_FORM_DER);
 
 	return CKM_API_SUCCESS;
 }
