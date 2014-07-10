@@ -472,7 +472,7 @@ int SocketManager::GetSocketFromSystemD(
             return fd;
         }
     }
-    LogInfo("No useable sockets were passed by systemd.");
+    LogError("No useable sockets were passed by systemd.");
     return -1;
 }
 

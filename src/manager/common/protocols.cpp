@@ -28,9 +28,9 @@
 
 namespace CKM {
 
-char const * const SERVICE_SOCKET_ECHO = "/tmp/.central-ckm-manager-echo.sock";
-char const * const SERVICE_SOCKET_CKM_CONTROL = "/tmp/.central-ckm-manager-api-control.sock";
-char const * const SERVICE_SOCKET_CKM_STORAGE = "/tmp/.central-ckm-manager-api-storage.sock";
+char const * const SERVICE_SOCKET_ECHO = "/tmp/.central-key-manager-echo.sock";
+char const * const SERVICE_SOCKET_CKM_CONTROL = "/tmp/.central-key-manager-api-control.sock";
+char const * const SERVICE_SOCKET_CKM_STORAGE = "/tmp/.central-key-manager-api-storage.sock";
 
 DBDataType toDBDataType(KeyType key) {
     switch(key) {
