@@ -360,7 +360,7 @@ int ckm_create_key_pair_ecdsa(const ckm_ec_type type,
 	CKM::Policy ckmPrivateKeyPolicy(_tostring(policy_private_key.password), _toBool(policy_private_key.extractable), _toBool(policy_private_key.restricted));
 	CKM::Policy ckmPublicKeyPolicy(_tostring(policy_public_key.password), _toBool(policy_public_key.extractable), _toBool(policy_public_key.restricted));
 
-	if( (ret - mgr.createKeyPairECDSA(ckmType, ckmPrivakeKeyAlias, ckmPublicKeyAlias, ckmPrivateKeyPolicy, ckmPublicKeyPolicy))
+	if( (ret = mgr.createKeyPairECDSA(ckmType, ckmPrivakeKeyAlias, ckmPublicKeyAlias, ckmPrivateKeyPolicy, ckmPublicKeyPolicy))
 			!= CKM_API_SUCCESS) {
 		return ret;
 	}
