@@ -31,6 +31,7 @@ namespace CKM {
 extern char const * const SERVICE_SOCKET_ECHO;
 extern char const * const SERVICE_SOCKET_CKM_CONTROL;
 extern char const * const SERVICE_SOCKET_CKM_STORAGE;
+extern char const * const SERVICE_SOCKET_OCSP;
 
 enum class ControlCommand : int {
     UNLOCK_USER_KEY,

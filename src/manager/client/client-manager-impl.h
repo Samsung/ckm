@@ -87,6 +87,8 @@ public:
         const HashAlgorithm hash,
         const RSAPaddingAlgorithm padding);
 
+    int ocspCheck(const CertificateVector &certificateChain, int &ocspCheck);
+
 protected:
     int saveBinaryData(
         const Alias &alias,

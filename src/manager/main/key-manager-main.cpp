@@ -35,6 +35,7 @@
 
 #include <echo.h>
 #include <ckm-service.h>
+#include <ocsp-service.h>
 
 #include <key-provider.h>
 #include <CryptoService.h>
@@ -97,6 +98,7 @@ int main(void) {
 
             REGISTER_SOCKET_SERVICE(manager, CKM::EchoService);
             REGISTER_SOCKET_SERVICE(manager, CKM::CKMService);
+            REGISTER_SOCKET_SERVICE(manager, CKM::OCSPService);
 
             manager.MainLoop();
         }

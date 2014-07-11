@@ -136,5 +136,10 @@ int Manager::verifySignature(
     return m_impl->verifySignature(publicKeyOrCertAlias, password, message, signature, hash, padding);
 }
 
+int Manager::ocspCheck(const CertificateVector &certificateChainVector, int &ocspStatus)
+{
+    return m_impl->ocspCheck(certificateChainVector, ocspStatus);
+}
+
 } // namespace CKM
 

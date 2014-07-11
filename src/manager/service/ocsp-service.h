@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2000 - 2014 Samsung Electronics Co., Ltd All Rights Reserved
+ *  Copyright (c) 2014 Samsung Electronics Co.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -14,10 +14,10 @@
  *  limitations under the License
  *
  *
- * @file        ckm-service.h
+ * @file        ocsp-service.h
  * @author      Bartlomiej Grzelewski (b.grzelewski@samsung.com)
  * @version     1.0
- * @brief       CKM service implementation.
+ * @brief       OCSP service implementation.
  */
 #pragma once
 
@@ -28,19 +28,19 @@
 
 namespace CKM {
 
-class CKMLogic;
+class OCSPLogic;
 
-class CKMService
+class OCSPService
   : public CKM::GenericSocketService
-  , public CKM::ServiceThread<CKMService>
+  , public CKM::ServiceThread<OCSPService>
 {
 public:
-    CKMService();
-    CKMService(const CKMService &) = delete;
-    CKMService(CKMService &&) = delete;
-    CKMService& operator=(const CKMService &) = delete;
-    CKMService& operator=(CKMService &&) = delete;
-    virtual ~CKMService();
+    OCSPService();
+    OCSPService(const OCSPService &) = delete;
+    OCSPService(OCSPService &&) = delete;
+    OCSPService& operator=(const OCSPService &) = delete;
+    OCSPService& operator=(OCSPService &&) = delete;
+    virtual ~OCSPService();
 
     ServiceDescriptionVector GetServiceDescription();
 
@@ -58,15 +58,8 @@ private:
         const ConnectionID &conn,
         ConnectionInfo &info);
 
-    RawBuffer processControl(
-        MessageBuffer &buffer);
-
-    RawBuffer processStorage(
-        Credentials &cred,
-        MessageBuffer &buffer);
-
     ConnectionInfoMap m_connectionInfoMap;
-    CKMLogic *m_logic;
+    OCSPLogic *m_logic;
 };
 
 } // namespace CKM

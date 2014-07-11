@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2000 - 2014 Samsung Electronics Co., Ltd All Rights Reserved
+ *  Copyright (c) 2014 Samsung Electronics Co.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -32,11 +32,10 @@
 #include <key-manager-util.h>
 #include <dpl/log/log.h>
 
+#include <ckm/ckm-error.h>
+
 /* Maximum leeway in validity period: default 5 minutes */
 #define MAX_VALIDITY_PERIOD     (5 * 60)
-
-#define CKM_OCSP_OPER_SUCCESS	1
-#define CKM_OCSP_OPER_FAIL		0
 
 #define CKM_DEF_STRING_LEN		256
 
@@ -51,77 +50,34 @@ OCSPModule::~OCSPModule(){
 }
 
 int OCSPModule::verify(const CertificateImplVector &certificateChain) {
-	X509 *cert = NULL;
-	X509 *issuer = NULL;
-	char url[CKM_DEF_STRING_LEN];
-	int ocspStatus = -1;
-	int result = -1;
+    char url[CKM_DEF_STRING_LEN];
+    int result = -1;
 
-	if(&certificateChain == NULL) {
-		LogError("Error in certificateChain value");
-		ThrowMsg(OCSPModule::Exception::OCSP_Internal, "Error in certificateChain value");
-	}
+    if((systemCerts = loadSystemCerts(CKM_SYSTEM_CERTS_PATH)) == NULL) {
+        LogDebug("Error in loadSystemCerts function");
+        return CKM_API_OCSP_STATUS_INTERNAL_ERROR;
+    }
 
-	if((systemCerts = loadSystemCerts(CKM_SYSTEM_CERTS_PATH)) == NULL) {
-		LogError("Error in loadSystemCerts function");
-		ThrowMsg(OCSPModule::Exception::Openssl_Error, "Error in loadSystemCerts function");
-	}
+    for(unsigned int i=0; i < certificateChain.size() -1; i++) {// except root certificate
+        if (certificateChain[i].empty() || certificateChain[i+1].empty()) {
+            LogDebug("Error. Broken certificate chain.");
+            return CKM_API_OCSP_STATUS_INTERNAL_ERROR;
+        }
+        X509 *cert   = certificateChain[i].getX509();
+        X509 *issuer = certificateChain[i+1].getX509();
+        extractAIAUrl(cert, url);
+        result = ocsp_verify(cert, issuer, systemCerts, url);
+        if(result != CKM_API_OCSP_STATUS_GOOD) {
+            LogDebug("Fail to OCSP certification checking: " << result);
+            return result;
+        }
+    }
 
-	Try {
-		if((cert = X509_new()) == NULL) {
-			LogError("Error in X509_new function");
-			ThrowMsg(OCSPModule::Exception::Openssl_Error, "Error in X509_new function");
-		}
-
-		if((issuer = X509_new()) ==NULL) {
-			LogError("Error in X509_new function");
-			ThrowMsg(OCSPModule::Exception::Openssl_Error, "Error in X509_new function");
-		}
-
-		for(unsigned int i=0; i < certificateChain.size() -1; i++) {// except root certificate
-			rawBufferToX509(&cert, certificateChain[i].getDER());
-			rawBufferToX509(&issuer, certificateChain[i+1].getDER());
-			extractAIAUrl(cert, url);
-			result = ocsp_verify(cert, issuer, systemCerts, url, &ocspStatus);
-			if(result != OCSP_STATUS_GOOD) {
-				LogError("Fail to OCSP certification checking");
-				ThrowMsg(OCSPModule::Exception::OCSP_Internal, "Fail to OCSP certification checking");
-			}
-		}
-	} Catch(OCSPModule::Exception::Openssl_Error) {
-		if(cert != NULL) {
-			X509_free(cert);
-		}
-
-		if(issuer != NULL) {
-			X509_free(issuer);
-		}
-		ReThrowMsg(OCSPModule::Exception::Openssl_Error,"Error in openssl function !!");
-	}
-	Catch(OCSPModule::Exception::OCSP_Internal) {
-			if(cert != NULL) {
-				X509_free(cert);
-			}
-
-			if(issuer != NULL) {
-				X509_free(issuer);
-			}
-			ReThrowMsg(OCSPModule::Exception::OCSP_Internal,"Fail to OCSP certification checking !!");
-	}
-
-	if(cert != NULL) {
-		X509_free(cert);
-	}
-
-	if(issuer != NULL) {
-		X509_free(issuer);
-	}
-
-	return OCSP_STATUS_GOOD;
+    return CKM_API_OCSP_STATUS_GOOD;
 }
 
 
-int OCSPModule::ocsp_verify(X509 *cert, X509 *issuer, STACK_OF(X509) *systemCerts, char *url, int *ocspStatus) {
+int OCSPModule::ocsp_verify(X509 *cert, X509 *issuer, STACK_OF(X509) *systemCerts, char *url) {
 	OCSP_REQUEST *req = NULL;
 	OCSP_RESPONSE *resp = NULL;
 	OCSP_BASICRESP *bs = NULL;
@@ -133,9 +89,9 @@ int OCSPModule::ocsp_verify(X509 *cert, X509 *issuer, STACK_OF(X509) *systemCert
 	ASN1_GENERALIZEDTIME *thisupd = NULL;
 	ASN1_GENERALIZEDTIME *nextupd = NULL;
 	int use_ssl = 0;
+    int ocspStatus = -1;
 	int i = 0 ,tmpIdx = 0;
 	long nsec = MAX_VALIDITY_PERIOD, maxage = -1;
-	int ret = 0;
 	char subj_buf[256];
 	int reason = 0;
 	//    const char *reason_str = NULL;0
@@ -143,14 +99,14 @@ int OCSPModule::ocsp_verify(X509 *cert, X509 *issuer, STACK_OF(X509) *systemCert
 
 	if (!OCSP_parse_url(url, &host, &port, &path, &use_ssl)) {
 		/* report error */
-		return OCSP_STATUS_INVALID_URL;
+		return CKM_API_OCSP_STATUS_INVALID_URL;
 	}
 
 	cbio = BIO_new_connect(host);
 	if (cbio == NULL) {
 		/*BIO_printf(bio_err, "Error creating connect BIO\n");*/
 		/* report error */
-		return OCSP_STATUS_INTERNAL_ERROR;
+		return CKM_API_OCSP_STATUS_INTERNAL_ERROR;
 	}
 
 	if (port != NULL) {
@@ -162,20 +118,20 @@ int OCSPModule::ocsp_verify(X509 *cert, X509 *issuer, STACK_OF(X509) *systemCert
 		use_ssl_ctx = SSL_CTX_new(SSLv23_client_method());
 		if (use_ssl_ctx == NULL) {
 			/* report error */
-			return OCSP_STATUS_INTERNAL_ERROR;
+			return CKM_API_OCSP_STATUS_INTERNAL_ERROR;
 		}
 
 		SSL_CTX_set_mode(use_ssl_ctx, SSL_MODE_AUTO_RETRY);
 		sbio = BIO_new_ssl(use_ssl_ctx, 1);
 		if (sbio == NULL) {
 			/* report error */
-			return OCSP_STATUS_INTERNAL_ERROR;
+			return CKM_API_OCSP_STATUS_INTERNAL_ERROR;
 		}
 
 		cbio = BIO_push(sbio, cbio);
 		if (cbio == NULL) {
 			/* report error */
-			return OCSP_STATUS_INTERNAL_ERROR;
+			return CKM_API_OCSP_STATUS_INTERNAL_ERROR;
 		}
 	}
 
@@ -207,21 +163,24 @@ int OCSPModule::ocsp_verify(X509 *cert, X509 *issuer, STACK_OF(X509) *systemCert
 		}
 		cbio = NULL;
 
-		return OCSP_STATUS_NET_ERROR;
+		return CKM_API_OCSP_STATUS_NET_ERROR;
 	}
 
 	req = OCSP_REQUEST_new();
 
 	if(req == NULL) {
-		return OCSP_STATUS_INTERNAL_ERROR;
+        LogDebug("Error in OCPS_REQUEST_new");
+		return CKM_API_OCSP_STATUS_INTERNAL_ERROR;
 	}
 	certid = OCSP_cert_to_id(NULL, cert, issuer);
 	if(certid == NULL)  {
-		return OCSP_STATUS_INTERNAL_ERROR;
+        LogDebug("Error in OCSP_cert_to_id");
+		return CKM_API_OCSP_STATUS_INTERNAL_ERROR;
 	}
 
 	if(OCSP_request_add0_id(req, certid) == NULL) {
-		return OCSP_STATUS_INTERNAL_ERROR;
+        LogDebug("Error in OCSP_request_add0_id");
+		return CKM_API_OCSP_STATUS_INTERNAL_ERROR;
 	}
 
 	resp = OCSP_sendreq_bio(cbio, path, req);
@@ -255,7 +214,7 @@ int OCSPModule::ocsp_verify(X509 *cert, X509 *issuer, STACK_OF(X509) *systemCert
 		/* report error */
 		/* free stuff */
 		OCSP_REQUEST_free(req);
-		return OCSP_STATUS_NET_ERROR;
+		return CKM_API_OCSP_STATUS_NET_ERROR;
 	}
 
 	i = OCSP_response_status(resp);
@@ -267,7 +226,7 @@ int OCSPModule::ocsp_verify(X509 *cert, X509 *issuer, STACK_OF(X509) *systemCert
 		/* free stuff */
 		OCSP_REQUEST_free(req);
 		OCSP_RESPONSE_free(resp);
-		return OCSP_STATUS_REMOTE_ERROR;
+		return CKM_API_OCSP_STATUS_REMOTE_ERROR;
 	}
 
 	bs = OCSP_response_get1_basic(resp);
@@ -277,7 +236,7 @@ int OCSPModule::ocsp_verify(X509 *cert, X509 *issuer, STACK_OF(X509) *systemCert
 		/* free stuff */
 		OCSP_REQUEST_free(req);
 		OCSP_RESPONSE_free(resp);
-		return OCSP_STATUS_INVALID_RESPONSE;
+		return CKM_API_OCSP_STATUS_INVALID_RESPONSE;
 	}
 
 	if(systemCerts != NULL) {
@@ -299,7 +258,7 @@ int OCSPModule::ocsp_verify(X509 *cert, X509 *issuer, STACK_OF(X509) *systemCert
 		char errStr[100];
 		ERR_error_string(err,errStr);
 		// printf("OCSP_basic_verify fail.error = %s\n", errStr);
-		return OCSP_STATUS_INVALID_RESPONSE;
+		return CKM_API_OCSP_STATUS_INVALID_RESPONSE;
 	}
 
 	if ((i = OCSP_check_nonce(req, bs)) <= 0) {
@@ -313,12 +272,12 @@ int OCSPModule::ocsp_verify(X509 *cert, X509 *issuer, STACK_OF(X509) *systemCert
 			OCSP_RESPONSE_free(resp);
 			OCSP_BASICRESP_free(bs);
 			X509_STORE_free(trustedStore);
-			return OCSP_STATUS_INVALID_RESPONSE;
+			return CKM_API_OCSP_STATUS_INVALID_RESPONSE;
 		}
 	}
 
 	(void)X509_NAME_oneline(X509_get_subject_name(cert), subj_buf, 255);
-	if(!OCSP_resp_find_status(bs, certid, ocspStatus, &reason,
+	if(!OCSP_resp_find_status(bs, certid, &ocspStatus, &reason,
 			&rev, &thisupd, &nextupd)) {
 		/* report error */
 
@@ -328,7 +287,7 @@ int OCSPModule::ocsp_verify(X509 *cert, X509 *issuer, STACK_OF(X509) *systemCert
 		OCSP_BASICRESP_free(bs);
 		X509_STORE_free(trustedStore);
 
-		return OCSP_STATUS_INVALID_RESPONSE;
+		return CKM_API_OCSP_STATUS_INVALID_RESPONSE;
 	}
 
 
@@ -345,7 +304,7 @@ int OCSPModule::ocsp_verify(X509 *cert, X509 *issuer, STACK_OF(X509) *systemCert
 		OCSP_BASICRESP_free(bs);
 		X509_STORE_free(trustedStore);
 
-		return OCSP_STATUS_INVALID_RESPONSE;
+		return CKM_API_OCSP_STATUS_INVALID_RESPONSE;
 	}
 
 	if (req != NULL) {
@@ -368,16 +327,17 @@ int OCSPModule::ocsp_verify(X509 *cert, X509 *issuer, STACK_OF(X509) *systemCert
 		trustedStore = NULL;
 	}
 
-	switch(*ocspStatus) {
-	case V_OCSP_CERTSTATUS_GOOD :
-		ret = OCSP_STATUS_GOOD; break;
-	case V_OCSP_CERTSTATUS_REVOKED :
-		ret = OCSP_STATUS_REVOKED; break;
-	case V_OCSP_CERTSTATUS_UNKNOWN :
-		ret = OCSP_STATUS_UNKNOWN; break;
-	}
-
-	return ret;
+    switch(ocspStatus) {
+        case V_OCSP_CERTSTATUS_GOOD:
+            return CKM_API_OCSP_STATUS_GOOD;
+        case V_OCSP_CERTSTATUS_REVOKED:
+            return CKM_API_OCSP_STATUS_REVOKED;
+        case V_OCSP_CERTSTATUS_UNKNOWN:
+            return CKM_API_OCSP_STATUS_UNKNOWN;
+        default:
+            LogError("Internal openssl error: Certificate status have value is out of bound.");
+            return CKM_API_OCSP_STATUS_INTERNAL_ERROR;
+    }
 }
 
 void OCSPModule::extractAIAUrl(X509 *cert, char *url) {
@@ -391,4 +351,5 @@ void OCSPModule::extractAIAUrl(X509 *cert, char *url) {
 	return;
 }
 
-}
+} // namespace CKM
+

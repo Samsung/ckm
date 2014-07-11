@@ -599,5 +599,42 @@ int Manager::ManagerImpl::verifySignature(
     });
 }
 
+int Manager::ManagerImpl::ocspCheck(const CertificateVector &certChain, int &ocspStatus)
+{
+    return try_catch([&] {
+        int my_counter = ++m_counter;
+        MessageBuffer send, recv;
+
+        RawBufferVector rawCertChain;
+        for (auto &e: certChain) {
+            rawCertChain.push_back(e.getDER());
+        }
+
+        Serialization::Serialize(send, my_counter);
+        Serialization::Serialize(send, rawCertChain);
+
+        int retCode = sendToServer(
+            SERVICE_SOCKET_OCSP,
+            send.Pop(),
+            recv);
+
+        if (CKM_API_SUCCESS != retCode) {
+            return retCode;
+        }
+
+        int counter;
+
+        Deserialization::Deserialize(recv, counter);
+        Deserialization::Deserialize(recv, retCode);
+        Deserialization::Deserialize(recv, ocspStatus);
+
+        if (my_counter != counter) {
+            return CKM_API_ERROR_UNKNOWN;
+        }
+
+        return retCode;
+    });
+}
+
 } // namespace CKM
 

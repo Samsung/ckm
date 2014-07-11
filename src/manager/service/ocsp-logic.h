@@ -14,34 +14,30 @@
  *  limitations under the License
  *
  *
- * @file        ocsp.h
- * @author      Dongsun Lee (ds73.lee@samsung.com)
+ * @file        ocsp-logic.h
+ * @author      Bartlomiej Grzelewski (b.grzelewski@samsung.com)
  * @version     1.0
- * @brief       OCSP implementation.
+ * @brief       OCSP logic implementation.
  */
 #pragma once
 
-#include <openssl/x509v3.h>
 #include <ckm/ckm-type.h>
-#include <certificate-impl.h>
-#include <dpl/exception.h>
 
 namespace CKM {
 
-
-class OCSPModule {
+class OCSPLogic {
 public:
-	OCSPModule();
-	virtual ~OCSPModule();
+    OCSPLogic(){}
+    OCSPLogic(const OCSPLogic &) = delete;
+    OCSPLogic(OCSPLogic &&) = delete;
+    OCSPLogic& operator=(const OCSPLogic &) = delete;
+    OCSPLogic& operator=(OCSPLogic &&) = delete;
 
-	// all error code from project will be defined in public client api
-	// OK, UNKNOWN, REVOKED, NO_NETWORK, TIMEOUT
-    int verify(const CertificateImplVector &certificateChain);
-private:
-    int ocsp_verify(X509 *cert, X509 *issuer, STACK_OF(X509) *systemCerts, char *url);
-    void extractAIAUrl(X509 *cert, char *url);
-    STACK_OF(X509) *systemCerts;
-
+    RawBuffer ocspCheck(int commandId, const RawBufferVector &rawChain);
+    virtual ~OCSPLogic(){}
 };
 
+
+
 } // namespace CKM
+

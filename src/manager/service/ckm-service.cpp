@@ -14,10 +14,10 @@
  *  limitations under the License
  *
  *
- * @file        ckm-service.h
+ * @file        ckm-service.cpp
  * @author      Bartlomiej Grzelewski (b.grzelewski@samsung.com)
  * @version     1.0
- * @brief       Sample service implementation.
+ * @brief       CKM service implementation.
  */
 #include <service-thread.h>
 #include <generic-socket-manager.h>

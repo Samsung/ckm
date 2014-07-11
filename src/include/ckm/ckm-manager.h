@@ -70,12 +70,13 @@ public:
 //  Key getKey() const;
 
     // This function  will return openssl struct X509*.
+    // You should not free the memory.
+    // Memory will be freed in ~Certificate.
     void *getX509();
     RawBuffer getDER() const;
     CertificateImpl* getImpl();
 
 //    // *** standard certificate operation begin ***
-//    RawBuffer getDER() const;
 //    bool isSignedBy(const Certificate &parent) const;
 //    RawBuffer getFingerprint(FingerprintType type) const;
 //    bool isCA() const;
@@ -187,8 +188,10 @@ public:
         const HashAlgorithm hash,
         const RSAPaddingAlgorithm padding);
 
-//	// This function will check all certificates in chain except Root CA.
-//	int ocspCheck(const CertificateVector &certificateChainVector);
+    // This function will check all certificates in chain except Root CA.
+    // This function will delegate task to service. You may use this even
+    // if application does not have permission to use network.
+    int ocspCheck(const CertificateVector &certificateChainVector, int &ocspStatus);
 
 private:
     class ManagerImpl;
