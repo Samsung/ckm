@@ -37,8 +37,6 @@
 /* Maximum leeway in validity period: default 5 minutes */
 #define MAX_VALIDITY_PERIOD     (5 * 60)
 
-#define CKM_DEF_STRING_LEN		256
-
 namespace CKM {
 
 OCSPModule::OCSPModule() {
@@ -50,8 +48,7 @@ OCSPModule::~OCSPModule(){
 }
 
 int OCSPModule::verify(const CertificateImplVector &certificateChain) {
-    char url[CKM_DEF_STRING_LEN];
-    int result = -1;
+    bool unsupported = false; // ocsp is unsupported in certificate in chain (except root CA)
 
     if((systemCerts = loadSystemCerts(CKM_SYSTEM_CERTS_PATH)) == NULL) {
         LogDebug("Error in loadSystemCerts function");
@@ -63,21 +60,31 @@ int OCSPModule::verify(const CertificateImplVector &certificateChain) {
             LogDebug("Error. Broken certificate chain.");
             return CKM_API_OCSP_STATUS_INTERNAL_ERROR;
         }
+
         X509 *cert   = certificateChain[i].getX509();
         X509 *issuer = certificateChain[i+1].getX509();
-        extractAIAUrl(cert, url);
-        result = ocsp_verify(cert, issuer, systemCerts, url);
+        std::string url = certificateChain[i].getOCSPURL();
+
+        if (url.empty()) {
+            LogDebug("Certificate does not provide OCSP extension.");
+            unsupported = true;
+            continue;
+        }
+
+        int result = ocsp_verify(cert, issuer, systemCerts, url);
+
         if(result != CKM_API_OCSP_STATUS_GOOD) {
             LogDebug("Fail to OCSP certification checking: " << result);
             return result;
         }
     }
 
+    if (unsupported)
+        return CKM_API_OCSP_STATUS_UNSUPPORTED;
     return CKM_API_OCSP_STATUS_GOOD;
 }
 
-
-int OCSPModule::ocsp_verify(X509 *cert, X509 *issuer, STACK_OF(X509) *systemCerts, char *url) {
+int OCSPModule::ocsp_verify(X509 *cert, X509 *issuer, STACK_OF(X509) *systemCerts, const std::string &constUrl) {
 	OCSP_REQUEST *req = NULL;
 	OCSP_RESPONSE *resp = NULL;
 	OCSP_BASICRESP *bs = NULL;
@@ -97,12 +104,14 @@ int OCSPModule::ocsp_verify(X509 *cert, X509 *issuer, STACK_OF(X509) *systemCert
 	//    const char *reason_str = NULL;0
 	X509_STORE *trustedStore=NULL;
 
-	if (!OCSP_parse_url(url, &host, &port, &path, &use_ssl)) {
+    std::vector<char> url(constUrl.begin(), constUrl.end());
+
+    if (!OCSP_parse_url(url.data(), &host, &port, &path, &use_ssl)) {
 		/* report error */
 		return CKM_API_OCSP_STATUS_INVALID_URL;
 	}
 
-	cbio = BIO_new_connect(host);
+    cbio = BIO_new_connect(host);
 	if (cbio == NULL) {
 		/*BIO_printf(bio_err, "Error creating connect BIO\n");*/
 		/* report error */
@@ -338,17 +347,6 @@ int OCSPModule::ocsp_verify(X509 *cert, X509 *issuer, STACK_OF(X509) *systemCert
             LogError("Internal openssl error: Certificate status have value is out of bound.");
             return CKM_API_OCSP_STATUS_INTERNAL_ERROR;
     }
-}
-
-void OCSPModule::extractAIAUrl(X509 *cert, char *url) {
-	STACK_OF(OPENSSL_STRING) *aia = NULL;
-	aia = X509_get1_ocsp(cert);
-	if(aia == NULL) {
-		return;
-	}
-	strcpy(url, sk_OPENSSL_STRING_value(aia, 0));
-	X509_email_free(aia);
-	return;
 }
 
 } // namespace CKM

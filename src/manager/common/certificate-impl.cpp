@@ -19,6 +19,7 @@
  * @brief       Key implementation.
  */
 #include <openssl/x509.h>
+#include <openssl/x509v3.h>
 #include <openssl/pem.h>
 
 #include <dpl/log/log.h>
@@ -109,10 +110,8 @@ RawBuffer CertificateImpl::getDER(void) const {
     unsigned char *rawDer = NULL;
     int size = i2d_X509(m_x509, &rawDer);
     if (!rawDer || size <= 0) {
-        // TODO
         LogError("i2d_X509 failed");
-//        ThrowMsg(Exception::OpensslInternalError,
-//          "i2d_X509 failed");
+        return RawBuffer();
     }
 
     RawBuffer output(
@@ -138,6 +137,113 @@ GenericKey CertificateImpl::getGenericKey() const {
         return GenericKey(evp, KeyType::KEY_ECDSA_PUBLIC);
     LogError("Unsupported key type in certificate.");
     return GenericKey();
+}
+
+X509_NAME *getX509Name(X509 *x509, CertificateFieldId type) {
+    if (!x509)
+        return NULL;
+
+    if (type == CertificateFieldId::ISSUER)
+        return X509_get_issuer_name(x509);
+    else if (type == CertificateFieldId::SUBJECT)
+        return X509_get_subject_name(x509);
+
+    LogError("Invalid param. Unknown CertificateFieldId");
+    return NULL;
+}
+
+std::string CertificateImpl::getOneLine(CertificateFieldId type) const
+{
+    X509_NAME *name = getX509Name(m_x509, type);
+    if (!name)
+        return std::string();
+    static const int MAXB = 1024;
+    char buffer[MAXB];
+    X509_NAME_oneline(name, buffer, MAXB);
+    return std::string(buffer);
+}
+
+std::string CertificateImpl::getField(CertificateFieldId type, int fieldNid) const {
+    X509_NAME *subjectName = getX509Name(m_x509, type);
+    X509_NAME_ENTRY *subjectEntry = NULL;
+
+    if (!subjectName)
+        return std::string();
+
+    int entryCount = X509_NAME_entry_count(subjectName);
+
+    for (int i = 0; i < entryCount; ++i) {
+        subjectEntry = X509_NAME_get_entry(subjectName, i);
+
+        if (!subjectEntry) {
+            continue;
+        }
+
+        int nid = OBJ_obj2nid(
+            static_cast<ASN1_OBJECT*>(
+                    X509_NAME_ENTRY_get_object(subjectEntry)));
+
+        if (nid != fieldNid) {
+            continue;
+        }
+
+        ASN1_STRING* pASN1Str = subjectEntry->value;
+
+        unsigned char* pData = NULL;
+        int nLength = ASN1_STRING_to_UTF8(&pData, pASN1Str);
+
+        if (nLength < 0) {
+            LogError("Reading field error.");
+            return std::string();
+        }
+
+        std::string output(reinterpret_cast<char*>(pData), nLength);
+        OPENSSL_free(pData);
+        return output;
+    }
+    return std::string();
+}
+
+std::string CertificateImpl::getCommonName(CertificateFieldId type) const {
+    return getField(type, NID_commonName);
+}
+
+std::string CertificateImpl::getCountryName(CertificateFieldId type) const {
+    return getField(type, NID_countryName);
+}
+
+std::string CertificateImpl::getStateOrProvinceName(CertificateFieldId type) const {
+    return getField(type, NID_stateOrProvinceName);
+}
+
+std::string CertificateImpl::getLocalityName(CertificateFieldId type) const {
+    return getField(type, NID_localityName);
+}
+
+std::string CertificateImpl::getOrganizationName(CertificateFieldId type) const {
+    return getField(type, NID_organizationName);
+}
+
+std::string CertificateImpl::getOrganizationalUnitName(CertificateFieldId type) const {
+    return getField(type, NID_organizationalUnitName);
+}
+
+std::string CertificateImpl::getEmailAddres(CertificateFieldId type) const {
+    return getField(type, NID_pkcs9_emailAddress);
+}
+
+std::string CertificateImpl::getOCSPURL() const {
+    if (!m_x509)
+        return std::string();
+
+    STACK_OF(OPENSSL_STRING) *aia = X509_get1_ocsp(m_x509);
+
+    if (NULL == aia)
+        return std::string();
+
+    std::string result(sk_OPENSSL_STRING_value(aia, 0));
+    X509_email_free(aia);   // TODO is it correct?
+    return result;
 }
 
 CertificateImpl::~CertificateImpl() {

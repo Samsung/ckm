@@ -49,6 +49,17 @@ public:
     GenericKey::EvpShPtr getEvpShPtr() const;
     GenericKey getGenericKey() const;
 
+    std::string getOneLine(CertificateFieldId type) const;
+    std::string getField(CertificateFieldId type, int fieldNid) const;
+    std::string getCommonName(CertificateFieldId type) const;
+    std::string getCountryName(CertificateFieldId type) const;
+    std::string getStateOrProvinceName(CertificateFieldId type) const;
+    std::string getLocalityName(CertificateFieldId type) const;
+    std::string getOrganizationName(CertificateFieldId type) const;
+    std::string getOrganizationalUnitName(CertificateFieldId type) const;
+    std::string getEmailAddres(CertificateFieldId type) const;
+    std::string getOCSPURL() const;
+
     X509* getX509() const;
 
     virtual ~CertificateImpl();

@@ -28,7 +28,6 @@
 
 namespace CKM {
 
-
 class OCSPModule {
 public:
 	OCSPModule();
@@ -38,10 +37,8 @@ public:
 	// OK, UNKNOWN, REVOKED, NO_NETWORK, TIMEOUT
     int verify(const CertificateImplVector &certificateChain);
 private:
-    int ocsp_verify(X509 *cert, X509 *issuer, STACK_OF(X509) *systemCerts, char *url);
-    void extractAIAUrl(X509 *cert, char *url);
+    int ocsp_verify(X509 *cert, X509 *issuer, STACK_OF(X509) *systemCerts, const std::string &url);
     STACK_OF(X509) *systemCerts;
-
 };
 
 } // namespace CKM

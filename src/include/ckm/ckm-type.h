@@ -53,6 +53,11 @@ enum class ElipticCurve : int {
     secp384r1
 };
 
+enum class CertificateFieldId : int {
+    ISSUER,
+    SUBJECT
+};
+
 struct Policy {
     Policy(const std::string &pass = std::string(), bool extract = true, bool rest = false)
       : password(pass)

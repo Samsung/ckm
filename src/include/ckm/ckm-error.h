@@ -87,14 +87,15 @@ extern "C" {
 /*! \brief   indicating that provided file doesn't exists or cannot be accessed in the file system */
 #define CKM_API_ERROR_FILE_ACCESS_DENIED -18
 
-#define CKM_API_OCSP_STATUS_GOOD                0
-#define CKM_API_OCSP_STATUS_UNKNOWN             -21
-#define CKM_API_OCSP_STATUS_REVOKED             -22
-#define CKM_API_OCSP_STATUS_NET_ERROR           -23
-#define CKM_API_OCSP_STATUS_INVALID_URL         -24
-#define CKM_API_OCSP_STATUS_INVALID_RESPONSE    -25
-#define CKM_API_OCSP_STATUS_REMOTE_ERROR        -26
-#define CKM_API_OCSP_STATUS_INTERNAL_ERROR      -27
+#define CKM_API_OCSP_STATUS_GOOD                (1<<0)
+#define CKM_API_OCSP_STATUS_UNSUPPORTED         (1<<1)
+#define CKM_API_OCSP_STATUS_UNKNOWN             (1<<2)
+#define CKM_API_OCSP_STATUS_REVOKED             (1<<3)
+#define CKM_API_OCSP_STATUS_NET_ERROR           (1<<4)
+#define CKM_API_OCSP_STATUS_INVALID_URL         (1<<5)
+#define CKM_API_OCSP_STATUS_INVALID_RESPONSE    (1<<6)
+#define CKM_API_OCSP_STATUS_REMOTE_ERROR        (1<<7)
+#define CKM_API_OCSP_STATUS_INTERNAL_ERROR      (1<<8)
 
 /*! \brief   indicating the error with unknown reason */
 #define CKM_API_ERROR_UNKNOWN -255
