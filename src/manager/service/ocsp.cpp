@@ -31,6 +31,7 @@
 #include <unistd.h>
 #include <key-manager-util.h>
 #include <dpl/log/log.h>
+#include <certificate-impl.h>
 
 #include <ckm/ckm-error.h>
 
@@ -111,6 +112,11 @@ int OCSPModule::ocsp_verify(X509 *cert, X509 *issuer, STACK_OF(X509) *systemCert
 		return CKM_API_OCSP_STATUS_INVALID_URL;
 	}
 
+    LogDebug("Host: " << host);
+    LogDebug("Port: " << port);
+    LogDebug("Path: " << path);
+    LogDebug("Use_ssl: " << use_ssl);
+
     cbio = BIO_new_connect(host);
 	if (cbio == NULL) {
 		/*BIO_printf(bio_err, "Error creating connect BIO\n");*/
@@ -127,7 +133,7 @@ int OCSPModule::ocsp_verify(X509 *cert, X509 *issuer, STACK_OF(X509) *systemCert
 		use_ssl_ctx = SSL_CTX_new(SSLv23_client_method());
 		if (use_ssl_ctx == NULL) {
 			/* report error */
-			return CKM_API_OCSP_STATUS_INTERNAL_ERROR;
+            return CKM_API_OCSP_STATUS_INTERNAL_ERROR;
 		}
 
 		SSL_CTX_set_mode(use_ssl_ctx, SSL_MODE_AUTO_RETRY);
@@ -145,6 +151,8 @@ int OCSPModule::ocsp_verify(X509 *cert, X509 *issuer, STACK_OF(X509) *systemCert
 	}
 
 	if (BIO_do_connect(cbio) <= 0) {
+        LogDebug("Error in BIO_do_connect.");
+        ERR_print_errors_fp(stderr);
 		/*BIO_printf(bio_err, "Error connecting BIO\n");*/
 		/* report error */
 
