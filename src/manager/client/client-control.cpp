@@ -42,8 +42,14 @@ public:
             Serialization::Serialize(send, static_cast<int>(ControlCommand::UNLOCK_USER_KEY));
             Serialization::Serialize(send, user);
             Serialization::Serialize(send, password);
+            int retCode;
 
-            int retCode = sendToServer(
+            if((int)user < 0) {
+                retCode = CKM_API_ERROR_INPUT_PARAM;
+                return retCode;
+            }
+
+            retCode = sendToServer(
                 SERVICE_SOCKET_CKM_CONTROL,
                 send.Pop(),
                 recv);
@@ -63,8 +69,14 @@ public:
             MessageBuffer send, recv;
             Serialization::Serialize(send, static_cast<int>(ControlCommand::LOCK_USER_KEY));
             Serialization::Serialize(send, user);
+            int retCode;
 
-            int retCode = sendToServer(
+            if((int)user < 0) {
+                retCode = CKM_API_ERROR_INPUT_PARAM;
+                return retCode;
+            }
+
+            retCode = sendToServer(
                 SERVICE_SOCKET_CKM_CONTROL,
                 send.Pop(),
                 recv);
@@ -84,8 +96,14 @@ public:
             MessageBuffer send, recv;
             Serialization::Serialize(send, static_cast<int>(ControlCommand::REMOVE_USER_DATA));
             Serialization::Serialize(send, user);
+            int retCode;
 
-            int retCode = sendToServer(
+            if((int)user < 0) {
+                retCode = CKM_API_ERROR_INPUT_PARAM;
+                return retCode;
+            }
+
+            retCode = sendToServer(
                 SERVICE_SOCKET_CKM_CONTROL,
                 send.Pop(),
                 recv);
@@ -107,8 +125,14 @@ public:
             Serialization::Serialize(send, user);
             Serialization::Serialize(send, oldPassword);
             Serialization::Serialize(send, newPassword);
+            int retCode;
 
-            int retCode = sendToServer(
+            if((int)user < 0) {
+                retCode = CKM_API_ERROR_INPUT_PARAM;
+                return retCode;
+            }
+
+            retCode = sendToServer(
                 SERVICE_SOCKET_CKM_CONTROL,
                 send.Pop(),
                 recv);
@@ -129,8 +153,14 @@ public:
             Serialization::Serialize(send, static_cast<int>(ControlCommand::RESET_USER_PASSWORD));
             Serialization::Serialize(send, user);
             Serialization::Serialize(send, newPassword);
+            int retCode;
 
-            int retCode = sendToServer(
+            if((int)user < 0) {
+                retCode = CKM_API_ERROR_INPUT_PARAM;
+                return retCode;
+            }
+
+            retCode = sendToServer(
                 SERVICE_SOCKET_CKM_CONTROL,
                 send.Pop(),
                 recv);

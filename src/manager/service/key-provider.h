@@ -42,6 +42,7 @@ public:
 		DECLARE_EXCEPTION_TYPE(Base, GenFailed)
 		DECLARE_EXCEPTION_TYPE(Base, WrapFailed)
 		DECLARE_EXCEPTION_TYPE(Base, UnwrapFailed)
+		DECLARE_EXCEPTION_TYPE(Base, PassWordError)
 		DECLARE_EXCEPTION_TYPE(Base, InputParamError)
 	};
 

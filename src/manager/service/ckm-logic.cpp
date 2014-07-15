@@ -72,6 +72,9 @@ RawBuffer CKMLogic::unlockUserKey(uid_t user, const std::string &password) {
             handle.crypto = CryptoLogic();
             // TODO wipe key
         }
+    } catch (const KeyProvider::Exception::PassWordError &e) {
+        LogError("Incorrect Password " << e.GetMessage());
+        retCode = CKM_API_ERROR_AUTHENTICATION_FAILED;
     } catch (const KeyProvider::Exception::Base &e) {
         LogError("Error in KeyProvider " << e.GetMessage());
         retCode = CKM_API_ERROR_SERVER_ERROR;
@@ -117,15 +120,26 @@ RawBuffer CKMLogic::changeUserPassword(
     const std::string &newPassword)
 {
     int retCode = CKM_API_SUCCESS;
-    // TODO try-catch
-    FileSystem fs(user);
-    auto wrappedDomainKEK = fs.getDomainKEK();
-    if (wrappedDomainKEK.empty()) {
-        retCode = CKM_API_ERROR_BAD_REQUEST;
-    } else {
-        wrappedDomainKEK = KeyProvider::reencrypt(wrappedDomainKEK, oldPassword, newPassword);
-        fs.saveDomainKEK(wrappedDomainKEK);
+    try {
+        FileSystem fs(user);
+        auto wrappedDomainKEK = fs.getDomainKEK();
+        if (wrappedDomainKEK.empty()) {
+            retCode = CKM_API_ERROR_BAD_REQUEST;
+        } else {
+            wrappedDomainKEK = KeyProvider::reencrypt(wrappedDomainKEK, oldPassword, newPassword);
+            fs.saveDomainKEK(wrappedDomainKEK);
+        }
+    } catch (const KeyProvider::Exception::PassWordError &e) {
+        LogError("Incorrect Password " << e.GetMessage());
+        retCode = CKM_API_ERROR_AUTHENTICATION_FAILED;
+    } catch (const KeyProvider::Exception::Base &e) {
+        LogError("Error in KeyProvider " << e.GetMessage());
+        retCode = CKM_API_ERROR_SERVER_ERROR;
+    } catch (const CKM::Exception &e) {
+        LogError("CKM::Exception: " << e.GetMessage());
+        retCode = CKM_API_ERROR_SERVER_ERROR;
     }
+
     MessageBuffer response;
     Serialization::Serialize(response, retCode);
     return response.Pop();
