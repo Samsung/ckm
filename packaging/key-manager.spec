@@ -88,7 +88,7 @@ ln -s ../central-key-manager.service %{buildroot}/usr/lib/systemd/system/multi-u
 ln -s ../central-key-manager-echo.socket %{buildroot}/usr/lib/systemd/system/sockets.target.wants/central-key-manager-echo.socket
 ln -s ../central-key-manager-api-control.socket %{buildroot}/usr/lib/systemd/system/sockets.target.wants/central-key-manager-api-control.socket
 ln -s ../central-key-manager-api-storage.socket %{buildroot}/usr/lib/systemd/system/sockets.target.wants/central-key-manager-api-storage.socket
-
+ln -s ../central-key-manager-api-ocsp.socket %{buildroot}/usr/lib/systemd/system/sockets.target.wants/central-key-manager-api-ocsp.socket
 
 %clean
 rm -rf %{buildroot}
@@ -140,6 +140,8 @@ fi
 %attr(-,root,root) /usr/lib/systemd/system/central-key-manager-api-control.socket
 %attr(-,root,root) /usr/lib/systemd/system/sockets.target.wants/central-key-manager-api-storage.socket
 %attr(-,root,root) /usr/lib/systemd/system/central-key-manager-api-storage.socket
+%attr(-,root,root) /usr/lib/systemd/system/sockets.target.wants/central-key-manager-api-ocsp.socket
+%attr(-,root,root) /usr/lib/systemd/system/central-key-manager-api-ocsp.socket
 %{_datadir}/license/%{name}
 
 %files -n key-manager-devel
