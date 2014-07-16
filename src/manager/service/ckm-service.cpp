@@ -49,8 +49,8 @@ CKMService::~CKMService() {
 GenericSocketService::ServiceDescriptionVector CKMService::GetServiceDescription()
 {
     return ServiceDescriptionVector {
-        {SERVICE_SOCKET_CKM_CONTROL, "ckm::api-control", SOCKET_ID_CONTROL},
-        {SERVICE_SOCKET_CKM_STORAGE, "ckm::api-storage", SOCKET_ID_STORAGE}
+        {SERVICE_SOCKET_CKM_CONTROL, "key-manager::api-control", SOCKET_ID_CONTROL},
+        {SERVICE_SOCKET_CKM_STORAGE, "key-manager::api-storage", SOCKET_ID_STORAGE}
     };
 }
 

@@ -48,7 +48,7 @@ OCSPService::~OCSPService() {
 GenericSocketService::ServiceDescriptionVector OCSPService::GetServiceDescription()
 {
     return ServiceDescriptionVector {
-        {SERVICE_SOCKET_OCSP, "ckm::api-ocsp", SOCKET_ID_OCSP}
+        {SERVICE_SOCKET_OCSP, "key-manager::api-ocsp", SOCKET_ID_OCSP}
     };
 }
 
