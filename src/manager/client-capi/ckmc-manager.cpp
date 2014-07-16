@@ -385,7 +385,6 @@ int ckmc_create_key_pair_ecdsa(const ckmc_ec_type type,
 							const ckmc_policy policy_private_key,
 							const ckmc_policy policy_public_key)
 {
-	int ret;
 	CKM::Manager mgr;
 
 	if(private_key_alias == NULL || public_key_alias == NULL) {
@@ -398,12 +397,7 @@ int ckmc_create_key_pair_ecdsa(const ckmc_ec_type type,
 	CKM::Policy ckmPrivateKeyPolicy(_tostring(policy_private_key.password), _toBool(policy_private_key.extractable), _toBool(policy_private_key.restricted));
 	CKM::Policy ckmPublicKeyPolicy(_tostring(policy_public_key.password), _toBool(policy_public_key.extractable), _toBool(policy_public_key.restricted));
 
-	if( (ret - mgr.createKeyPairECDSA(ckmType, ckmPrivakeKeyAlias, ckmPublicKeyAlias, ckmPrivateKeyPolicy, ckmPublicKeyPolicy))
-			!= CKMC_API_SUCCESS) {
-		return ret;
-	}
-
-	return CKMC_API_SUCCESS;
+	return mgr.createKeyPairECDSA(ckmType, ckmPrivakeKeyAlias, ckmPublicKeyAlias, ckmPrivateKeyPolicy, ckmPublicKeyPolicy);
 }
 
 KEY_MANAGER_CAPI
