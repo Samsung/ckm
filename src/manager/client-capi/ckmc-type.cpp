@@ -367,7 +367,6 @@ void ckmc_alias_list_all_free(ckmc_alias_list *first)
 {
 	if(first == NULL)
 		return;
-
 	ckmc_alias_list *current = NULL;
 	ckmc_alias_list *next = first;
 	do {
