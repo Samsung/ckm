@@ -32,13 +32,13 @@
 #include <openssl/evp.h>
 #include <openssl/pem.h>
 
-int _ckm_load_cert_from_x509(X509 *xCert, ckm_cert **cert);
+int _ckmc_load_cert_from_x509(X509 *xCert, ckmc_cert **cert);
 
 
 KEY_MANAGER_CAPI
-ckm_key *ckm_key_new(unsigned char *raw_key, size_t key_size, ckm_key_type key_type, char *password)
+ckmc_key *ckmc_key_new(unsigned char *raw_key, size_t key_size, ckmc_key_type key_type, char *password)
 {
-	ckm_key *pkey = new ckm_key;
+	ckmc_key *pkey = new ckmc_key;
 	if(pkey == NULL)
 		return NULL;
 
@@ -69,7 +69,7 @@ ckm_key *ckm_key_new(unsigned char *raw_key, size_t key_size, ckm_key_type key_t
 }
 
 KEY_MANAGER_CAPI
-void ckm_key_free(ckm_key *key)
+void ckmc_key_free(ckmc_key *key)
 {
 	if(key == NULL)
 		return;
@@ -85,9 +85,9 @@ void ckm_key_free(ckm_key *key)
 }
 
 KEY_MANAGER_CAPI
-ckm_raw_buffer * ckm_buffer_new(unsigned char *data, size_t size)
+ckmc_raw_buffer * ckmc_buffer_new(unsigned char *data, size_t size)
 {
-	ckm_raw_buffer *pbuff = new ckm_raw_buffer;
+	ckmc_raw_buffer *pbuff = new ckmc_raw_buffer;
 	if(pbuff == NULL)
 			return NULL;
 
@@ -104,7 +104,7 @@ ckm_raw_buffer * ckm_buffer_new(unsigned char *data, size_t size)
 }
 
 KEY_MANAGER_CAPI
-void ckm_buffer_free(ckm_raw_buffer *buffer)
+void ckmc_buffer_free(ckmc_raw_buffer *buffer)
 {
 	if(buffer == NULL)
 		return;
@@ -117,9 +117,9 @@ void ckm_buffer_free(ckm_raw_buffer *buffer)
 }
 
 KEY_MANAGER_CAPI
-ckm_cert *ckm_cert_new(unsigned char *raw_cert, size_t cert_size, ckm_data_format data_format)
+ckmc_cert *ckmc_cert_new(unsigned char *raw_cert, size_t cert_size, ckmc_data_format data_format)
 {
-	ckm_cert *pcert = new ckm_cert;
+	ckmc_cert *pcert = new ckmc_cert;
 	if(pcert == NULL)
 		return NULL;
 
@@ -137,13 +137,13 @@ ckm_cert *ckm_cert_new(unsigned char *raw_cert, size_t cert_size, ckm_data_forma
 }
 
 KEY_MANAGER_CAPI
-int ckm_load_cert_from_file(const char *file_path, ckm_cert **cert)
+int ckmc_load_cert_from_file(const char *file_path, ckmc_cert **cert)
 {
 	OpenSSL_add_all_algorithms();
 
 	FILE *fp = fopen(file_path, "r");
 	if(fp == NULL)
-		return CKM_API_ERROR_FILE_ACCESS_DENIED;
+		return CKMC_API_ERROR_FILE_ACCESS_DENIED;
 	X509 *pcert = NULL;
 	if(!(pcert = d2i_X509_fp(fp, NULL))) {
 		fseek(fp, 0, SEEK_SET);
@@ -151,18 +151,18 @@ int ckm_load_cert_from_file(const char *file_path, ckm_cert **cert)
 	}
 	fclose(fp);
 	if(pcert == NULL) {
-		return CKM_API_ERROR_INVALID_FORMAT;
+		return CKMC_API_ERROR_INVALID_FORMAT;
 	}
 
-	int ret = _ckm_load_cert_from_x509(pcert, cert);
-	if(ret != CKM_API_SUCCESS) {
+	int ret = _ckmc_load_cert_from_x509(pcert, cert);
+	if(ret != CKMC_API_SUCCESS) {
 		X509_free(pcert);
 	}
 	return ret;
 }
 
 KEY_MANAGER_CAPI
-int ckm_load_from_pkcs12_file(const char *file_path, const char *passphrase, ckm_key **private_key, ckm_cert **ckmcert, ckm_cert_list **ca_cert_list)
+int ckmc_load_from_pkcs12_file(const char *file_path, const char *passphrase, ckmc_key **private_key, ckmc_cert **ckmcert, ckmc_cert_list **ca_cert_list)
 {
 	class Pkcs12Converter {
 	private:
@@ -174,9 +174,9 @@ int ckm_load_from_pkcs12_file(const char *file_path, const char *passphrase, ckm
 
 		int ret;
 	public:
-		ckm_key *retPrivateKey;
-		ckm_cert *retCkmCert;
-		ckm_cert_list *retCaCertList;
+		ckmc_key *retPrivateKey;
+		ckmc_cert *retCkmCert;
+		ckmc_cert_list *retCaCertList;
 
 		Pkcs12Converter(){
 			fp_in = NULL;
@@ -184,7 +184,7 @@ int ckm_load_from_pkcs12_file(const char *file_path, const char *passphrase, ckm
 			pkey = NULL;
 			x509Cert = NULL;
 			ca = NULL;
-			ret = CKM_API_SUCCESS;
+			ret = CKMC_API_SUCCESS;
 			retPrivateKey = NULL;
 			retCkmCert = NULL;
 			retCaCertList = NULL;
@@ -202,38 +202,38 @@ int ckm_load_from_pkcs12_file(const char *file_path, const char *passphrase, ckm
 				sk_X509_pop_free(ca, X509_free);
 			EVP_cleanup();
 
-			if(ret != CKM_API_SUCCESS) {
+			if(ret != CKMC_API_SUCCESS) {
 				if(retPrivateKey != NULL)
-					ckm_key_free(retPrivateKey);
+					ckmc_key_free(retPrivateKey);
 				if(retCkmCert != NULL)
-					ckm_cert_free(retCkmCert);
+					ckmc_cert_free(retCkmCert);
 				if(retCaCertList != NULL)
-					ckm_cert_list_all_free(retCaCertList);
+					ckmc_cert_list_all_free(retCaCertList);
 			}
 		};
 
 		int parsePkcs12(const char *filePath, const char *pass) {
 			fp_in = NULL;
 			if(!(fp_in = fopen(filePath, "rb"))) {
-				return CKM_API_ERROR_FILE_ACCESS_DENIED;
+				return CKMC_API_ERROR_FILE_ACCESS_DENIED;
 			}
 
 			if(!(p12 = d2i_PKCS12_fp(fp_in, NULL))) {
-				return CKM_API_ERROR_INVALID_FORMAT;
+				return CKMC_API_ERROR_INVALID_FORMAT;
 			}
 
 			/* parse PKCS#12 certificate */
 			if((ret = PKCS12_parse(p12, pass, &pkey, &x509Cert, &ca)) != 1) {
-				return CKM_API_ERROR_INVALID_FORMAT;
+				return CKMC_API_ERROR_INVALID_FORMAT;
 			}
-			return CKM_API_SUCCESS;
+			return CKMC_API_SUCCESS;
 		}
 
 		int toCkmCert() {
-			if( (ret =_ckm_load_cert_from_x509(x509Cert,&retCkmCert)) != CKM_API_SUCCESS) {
+			if( (ret =_ckmc_load_cert_from_x509(x509Cert,&retCkmCert)) != CKMC_API_SUCCESS) {
 				return ret;
 			}
-			return CKM_API_SUCCESS;
+			return CKMC_API_SUCCESS;
 		}
 
 		int toCkmKey() {
@@ -245,64 +245,64 @@ int ckm_load_from_pkcs12_file(const char *file_path, const char *passphrase, ckm
 		    int size = BIO_read(bkey, output.data(), output.size());
 			BIO_free_all(bkey);
 		    if (size <= 0) {
-		        return CKM_API_ERROR_INVALID_FORMAT;
+		        return CKMC_API_ERROR_INVALID_FORMAT;
 		    }
 		    output.resize(size);
 
 			int type = EVP_PKEY_type(pkey->type);
-			ckm_key_type key_type = CKM_KEY_NONE;
+			ckmc_key_type key_type = CKMC_KEY_NONE;
 			switch(type) {
 			case EVP_PKEY_RSA :
-				key_type = CKM_KEY_RSA_PRIVATE;
+				key_type = CKMC_KEY_RSA_PRIVATE;
 				break;
 			case EVP_PKEY_EC :
-				key_type = CKM_KEY_ECDSA_PRIVATE;
+				key_type = CKMC_KEY_ECDSA_PRIVATE;
 				break;
 			}
-			if(key_type == CKM_KEY_NONE) {
-				return CKM_API_ERROR_INVALID_FORMAT;
+			if(key_type == CKMC_KEY_NONE) {
+				return CKMC_API_ERROR_INVALID_FORMAT;
 			}
 
 			char *nullPassword = NULL;
 
-			retPrivateKey = ckm_key_new(output.data(), size, key_type, nullPassword);
+			retPrivateKey = ckmc_key_new(output.data(), size, key_type, nullPassword);
 
-			return CKM_API_SUCCESS;
+			return CKMC_API_SUCCESS;
 		}
 
 		int toCaCkmCertList() {
 			X509* popedCert = NULL;
-			ckm_cert *popedCkmCert = NULL;
-			ckm_cert_list *tmpCertList = NULL;
+			ckmc_cert *popedCkmCert = NULL;
+			ckmc_cert_list *tmpCertList = NULL;
 			while((popedCert = sk_X509_pop(ca)) != NULL) {
-				if( (ret =_ckm_load_cert_from_x509(popedCert, &popedCkmCert)) != CKM_API_SUCCESS) {
-					return CKM_API_ERROR_OUT_OF_MEMORY;
+				if( (ret =_ckmc_load_cert_from_x509(popedCert, &popedCkmCert)) != CKMC_API_SUCCESS) {
+					return CKMC_API_ERROR_OUT_OF_MEMORY;
 				}
 				if(tmpCertList == NULL) { // first
-					tmpCertList = ckm_cert_list_new(popedCkmCert);
+					tmpCertList = ckmc_cert_list_new(popedCkmCert);
 					retCaCertList = tmpCertList;
 				}else {
-					tmpCertList = ckm_cert_list_add(tmpCertList, popedCkmCert);
+					tmpCertList = ckmc_cert_list_add(tmpCertList, popedCkmCert);
 				}
 			}
-			return CKM_API_SUCCESS;
+			return CKMC_API_SUCCESS;
 		}
 
 	};
 
-	int ret = CKM_API_SUCCESS;
+	int ret = CKMC_API_SUCCESS;
 
 	Pkcs12Converter converter;
-	if((ret = converter.parsePkcs12(file_path, passphrase)) != CKM_API_SUCCESS) {
+	if((ret = converter.parsePkcs12(file_path, passphrase)) != CKMC_API_SUCCESS) {
 		return ret;
 	}
-	if((ret = converter.toCkmCert()) != CKM_API_SUCCESS) {
+	if((ret = converter.toCkmCert()) != CKMC_API_SUCCESS) {
 		return ret;
 	}
-	if((ret = converter.toCkmKey()) != CKM_API_SUCCESS) {
+	if((ret = converter.toCkmKey()) != CKMC_API_SUCCESS) {
 		return ret;
 	}
-	if((ret = converter.toCaCkmCertList()) != CKM_API_SUCCESS) {
+	if((ret = converter.toCaCkmCertList()) != CKMC_API_SUCCESS) {
 		return ret;
 	}
 
@@ -310,11 +310,11 @@ int ckm_load_from_pkcs12_file(const char *file_path, const char *passphrase, ckm
 	*ckmcert = converter.retCkmCert;
 	*ca_cert_list = converter.retCaCertList;
 
-	return CKM_API_SUCCESS;
+	return CKMC_API_SUCCESS;
 }
 
 KEY_MANAGER_CAPI
-void ckm_cert_free(ckm_cert *cert)
+void ckmc_cert_free(ckmc_cert *cert)
 {
 	if(cert == NULL)
 		return;
@@ -327,16 +327,16 @@ void ckm_cert_free(ckm_cert *cert)
 }
 
 KEY_MANAGER_CAPI
-ckm_alias_list *ckm_alias_list_new(char *alias)
+ckmc_alias_list *ckmc_alias_list_new(char *alias)
 {
-	ckm_alias_list *previous = NULL;
-	return ckm_alias_list_add(previous, alias);
+	ckmc_alias_list *previous = NULL;
+	return ckmc_alias_list_add(previous, alias);
 }
 
 KEY_MANAGER_CAPI
-ckm_alias_list *ckm_alias_list_add(ckm_alias_list *previous, char *alias)
+ckmc_alias_list *ckmc_alias_list_add(ckmc_alias_list *previous, char *alias)
 {
-	ckm_alias_list *plist = new ckm_alias_list;
+	ckmc_alias_list *plist = new ckmc_alias_list;
 
 	plist->alias = alias;
 	plist->next = NULL;
@@ -348,13 +348,13 @@ ckm_alias_list *ckm_alias_list_add(ckm_alias_list *previous, char *alias)
 }
 
 KEY_MANAGER_CAPI
-void ckm_alias_list_free(ckm_alias_list *first)
+void ckmc_alias_list_free(ckmc_alias_list *first)
 {
 	if(first == NULL)
 		return;
 
-	ckm_alias_list *current = NULL;
-	ckm_alias_list *next = first;
+	ckmc_alias_list *current = NULL;
+	ckmc_alias_list *next = first;
 	do {
 		current = next;
 		next = current->next;
@@ -363,13 +363,13 @@ void ckm_alias_list_free(ckm_alias_list *first)
 }
 
 KEY_MANAGER_CAPI
-void ckm_alias_list_all_free(ckm_alias_list *first)
+void ckmc_alias_list_all_free(ckmc_alias_list *first)
 {
 	if(first == NULL)
 		return;
 
-	ckm_alias_list *current = NULL;
-	ckm_alias_list *next = first;
+	ckmc_alias_list *current = NULL;
+	ckmc_alias_list *next = first;
 	do {
 		current = next;
 		next = current->next;
@@ -381,16 +381,16 @@ void ckm_alias_list_all_free(ckm_alias_list *first)
 }
 
 KEY_MANAGER_CAPI
-ckm_cert_list *ckm_cert_list_new(ckm_cert *cert)
+ckmc_cert_list *ckmc_cert_list_new(ckmc_cert *cert)
 {
-	ckm_cert_list *previous = NULL;
-	return ckm_cert_list_add(previous, cert);
+	ckmc_cert_list *previous = NULL;
+	return ckmc_cert_list_add(previous, cert);
 }
 
 KEY_MANAGER_CAPI
-ckm_cert_list *ckm_cert_list_add(ckm_cert_list *previous, ckm_cert *cert)
+ckmc_cert_list *ckmc_cert_list_add(ckmc_cert_list *previous, ckmc_cert *cert)
 {
-	ckm_cert_list *plist = new ckm_cert_list;
+	ckmc_cert_list *plist = new ckmc_cert_list;
 
 	plist->cert = cert;
 	plist->next = NULL;
@@ -402,13 +402,13 @@ ckm_cert_list *ckm_cert_list_add(ckm_cert_list *previous, ckm_cert *cert)
 }
 
 KEY_MANAGER_CAPI
-void ckm_cert_list_free(ckm_cert_list *first)
+void ckmc_cert_list_free(ckmc_cert_list *first)
 {
 	if(first == NULL)
 		return;
 
-	ckm_cert_list *current = NULL;
-	ckm_cert_list *next = first;
+	ckmc_cert_list *current = NULL;
+	ckmc_cert_list *next = first;
 	do {
 		current = next;
 		next = current->next;
@@ -417,27 +417,27 @@ void ckm_cert_list_free(ckm_cert_list *first)
 }
 
 KEY_MANAGER_CAPI
-void ckm_cert_list_all_free(ckm_cert_list *first)
+void ckmc_cert_list_all_free(ckmc_cert_list *first)
 {
 	if(first == NULL)
 		return;
 
-	ckm_cert_list *current = NULL;
-	ckm_cert_list *next = first;
+	ckmc_cert_list *current = NULL;
+	ckmc_cert_list *next = first;
 	do {
 		current = next;
 		next = current->next;
 		if((current->cert)!=NULL) {
-			ckm_cert_free(current->cert);
+			ckmc_cert_free(current->cert);
 		}
 		free(current);
 	}while(next != NULL);
 }
 
-int _ckm_load_cert_from_x509(X509 *xCert, ckm_cert **cert)
+int _ckmc_load_cert_from_x509(X509 *xCert, ckmc_cert **cert)
 {
 	if(xCert == NULL) {
-		return CKM_API_ERROR_INVALID_FORMAT;
+		return CKMC_API_ERROR_INVALID_FORMAT;
 	}
 
 	BIO *bcert = BIO_new(BIO_s_mem());
@@ -448,11 +448,11 @@ int _ckm_load_cert_from_x509(X509 *xCert, ckm_cert **cert)
     int size = BIO_read(bcert, output.data(), output.size());
 	BIO_free_all(bcert);
     if (size <= 0) {
-        return CKM_API_ERROR_INVALID_FORMAT;
+        return CKMC_API_ERROR_INVALID_FORMAT;
     }
     output.resize(size);
 
-	*cert = ckm_cert_new(output.data(), output.size(), CKM_FORM_DER);
+	*cert = ckmc_cert_new(output.data(), output.size(), CKMC_FORM_DER);
 
-	return CKM_API_SUCCESS;
+	return CKMC_API_SUCCESS;
 }

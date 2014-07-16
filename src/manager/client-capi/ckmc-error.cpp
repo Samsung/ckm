@@ -23,6 +23,6 @@
 #include <ckmc/ckmc-error.h>
 #include <ckm/ckm-type.h>
 
-const char * ckm_error_to_string(int error) {
+const char * ckmc_error_to_string(int error) {
 	return CKM::ErrorToString(error);
 }

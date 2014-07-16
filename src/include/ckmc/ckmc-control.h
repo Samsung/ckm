@@ -39,24 +39,27 @@ extern "C" {
 
 /**
  * @brief Decrypts a user key with password. A decrypted user key exists only on memory. If this API is called for the first time, a user key will be generated internally.
- *
  * @remarks The user key is a randomly generated key used in encrypting user data. And the user key is protected by a user's password.
  *
  * @param[in] user is a uid of a user whose key is decrypted.
  * @param[in] password is used in decrypting a user key.
  *
  * @return 0 on success, otherwise a negative error value
- * @retval #CKM_API_SUCCESS Successful
- * @retval #CKM_API_ERROR_SERVER_ERROR failed to unlock user key
- * @retval #CKM_API_ERROR_INPUT_PARAM invalid input parameter
- * @retval #CKM_API_ERROR_AUTHENTICATION_FAILED not correct password
+ * @exception #CKMC_API_SUCCESS Successful
+ * @exception #CKMC_API_ERROR_SERVER_ERROR failed to unlock user key
+ * @exception #CKMC_API_ERROR_INPUT_PARAM invalid input parameter
+ * @exception #CKMC_API_ERROR_AUTHENTICATION_FAILED not correct password
  *
- * @see ckm_lock_user_key()
- * @see ckm_remove_user_data()
- * @see ckm_change_user_password()
- * @see ckm_reset_user_password()
+ * @see ckmc_lock_user_key()
+ * @see ckmc_remove_user_data()
+ * @see ckmc_change_user_password()
+ * @see ckmc_reset_user_password()
+ *
+ * @since 2.3
+ * @privlevel platform
+ * @privilege %http://tizen.org/privilege/keymanager.admin *
  */
-int ckm_unlock_user_key(uid_t user, const char *password);
+int ckmc_unlock_user_key(uid_t user, const char *password);
 
 /**
  * @brief remove a decrypted user key from memory
@@ -64,15 +67,19 @@ int ckm_unlock_user_key(uid_t user, const char *password);
  * @param[in] user is a uid of a user whose key is removed from memory.
  *
  * @return 0 on success, otherwise a negative error value
- * @retval #CKM_API_SUCCESS Successful
- * @retval #CKM_API_ERROR_INPUT_PARAM invalid input parameter
+ * @exception #CKMC_API_SUCCESS Successful
+ * @exception #CKMC_API_ERROR_INPUT_PARAM invalid input parameter
  *
- * @see ckm_unlock_user_key()
- * @see ckm_remove_user_data()
- * @see ckm_change_user_password()
- * @see ckm_reset_user_password()
+ * @see ckmc_unlock_user_key()
+ * @see ckmc_remove_user_data()
+ * @see ckmc_change_user_password()
+ * @see ckmc_reset_user_password()
+ *
+ * @since 2.3
+ * @privlevel platform
+ * @privilege %http://tizen.org/privilege/keymanager.admin *
  */
-int ckm_lock_user_key(uid_t user);
+int ckmc_lock_user_key(uid_t user);
 
 /**
  * @brief remove user data from Store and erase a user key used for encryption
@@ -80,15 +87,19 @@ int ckm_lock_user_key(uid_t user);
  * @param[in] user is a uid of a user whose data and key are removed
  *
  * @return 0 on success, otherwise a negative error value
- * @retval #CKM_API_SUCCESS Successful
- * @retval #CKM_API_ERROR_INPUT_PARAM invalid input parameter
+ * @exception #CKMC_API_SUCCESS Successful
+ * @exception #CKMC_API_ERROR_INPUT_PARAM invalid input parameter
  *
- * @see ckm_unlock_user_key()
- * @see ckm_lock_user_key()
- * @see ckm_change_user_password()
- * @see ckm_reset_user_password()
+ * @see ckmc_unlock_user_key()
+ * @see ckmc_lock_user_key()
+ * @see ckmc_change_user_password()
+ * @see ckmc_reset_user_password()
+ *
+ * @since 2.3
+ * @privlevel platform
+ * @privilege %http://tizen.org/privilege/keymanager.admin *
  */
-int ckm_remove_user_data(uid_t user);
+int ckmc_remove_user_data(uid_t user);
 
 /**
  * @brief change a password for a user. key manager decrypts a user key with old password and re-encrypts a user key with new password.
@@ -98,17 +109,21 @@ int ckm_remove_user_data(uid_t user);
  * @param[in] new_password is used in re-encrypting a user key.
  *
  * @return 0 on success, otherwise a negative error value
- * @retval #CKM_API_SUCCESS Successful
- * @retval #CKM_API_ERROR_INPUT_PARAM invalid input parameter
- * @retval #CKM_API_ERROR_AUTHENTICATION_FAILED not correct password
- * @retval #CKM_API_ERROR_BAD_REQUEST no information about old password
+ * @exception #CKMC_API_SUCCESS Successful
+ * @exception #CKMC_API_ERROR_INPUT_PARAM invalid input parameter
+ * @exception #CKMC_API_ERROR_AUTHENTICATION_FAILED not correct password
+ * @exception #CKMC_API_ERROR_BAD_REQUEST no information about old password
  *
- * @see ckm_unlock_user_key()
- * @see ckm_lock_user_key()
- * @see ckm_remove_user_data()
- * @see ckm_reset_user_password()
+ * @see ckmc_unlock_user_key()
+ * @see ckmc_lock_user_key()
+ * @see ckmc_remove_user_data()
+ * @see ckmc_reset_user_password()
+ *
+ * @since 2.3
+ * @privlevel platform
+ * @privilege %http://tizen.org/privilege/keymanager.admin *
  */
-int ckm_change_user_password(uid_t user, const char *old_password, const char *new_password);
+int ckmc_change_user_password(uid_t user, const char *old_password, const char *new_password);
 
 /**
  * @brief change a password for a user without old password.
@@ -117,18 +132,22 @@ int ckm_change_user_password(uid_t user, const char *old_password, const char *n
  * @param[in] new_password is used in re-encrypting a user key.
  *
  * @return 0 on success, otherwise a negative error value
- * @retval #CKM_API_SUCCESS Successful
- * @retval #CKM_API_ERROR_INPUT_PARAM invalid input parameter
- * @retval #CKM_API_ERROR_BAD_REQUEST a user key is not unlocked.
+ * @exception #CKMC_API_SUCCESS Successful
+ * @exception #CKMC_API_ERROR_INPUT_PARAM invalid input parameter
+ * @exception #CKMC_API_ERROR_BAD_REQUEST a user key is not unlocked.
  *
  * @pre User must be already logged in and his user key is already loaded into memory in plain text form.
  *
- * @see ckm_unlock_user_key()
- * @see ckm_lock_user_key()
- * @see ckm_remove_user_data()
- * @see ckm_change_user_password()
+ * @see ckmc_unlock_user_key()
+ * @see ckmc_lock_user_key()
+ * @see ckmc_remove_user_data()
+ * @see ckmc_change_user_password()
+ *
+ * @since 2.3
+ * @privlevel platform
+ * @privilege %http://tizen.org/privilege/keymanager.admin *
  */
-int ckm_reset_user_password(uid_t user, const char *newPassword);
+int ckmc_reset_user_password(uid_t user, const char *newPassword);
 
 
 /**

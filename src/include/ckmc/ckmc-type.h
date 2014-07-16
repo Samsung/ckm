@@ -39,57 +39,57 @@ extern "C" {
 /**
  * @brief Enumeration for key types of key manager.
  */
-typedef enum ckm_key_type_t {
-    CKM_KEY_NONE =0,         /**< key type not specified */
-    CKM_KEY_RSA_PUBLIC,      /**< RSA public key */
-    CKM_KEY_RSA_PRIVATE,     /**< RSA private key */
-    CKM_KEY_ECDSA_PUBLIC,    /**< ECDSA public key */
-    CKM_KEY_ECDSA_PRIVATE,   /**< ECDSA private key */
-} ckm_key_type;
+typedef enum ckmc_key_type_t {
+    CKMC_KEY_NONE =0,         /**< key type not specified */
+    CKMC_KEY_RSA_PUBLIC,      /**< RSA public key */
+    CKMC_KEY_RSA_PRIVATE,     /**< RSA private key */
+    CKMC_KEY_ECDSA_PUBLIC,    /**< ECDSA public key */
+    CKMC_KEY_ECDSA_PRIVATE,   /**< ECDSA private key */
+} ckmc_key_type;
 
 /**
  * @brief Enumeration for data format.
  */
-typedef enum ckm_data_format_t {
-	CKM_FORM_DER_BASE64 =0, /**< DER format base64 encoded data */
-	CKM_FORM_DER,           /**< DER encoded data */
-	CKM_FORM_PEM            /**< PEM encoded data. It consists of the DER format base64 encoded with additional header and footer lines */
-} ckm_data_format;
+typedef enum ckmc_data_format_t {
+	CKMC_FORM_DER_BASE64 =0, /**< DER format base64 encoded data */
+	CKMC_FORM_DER,           /**< DER encoded data */
+	CKMC_FORM_PEM            /**< PEM encoded data. It consists of the DER format base64 encoded with additional header and footer lines */
+} ckmc_data_format;
 
 /**
  * @brief Enumeration for eliptic curve.
  */
-typedef enum ckm_ec_type_t {
-	CKM_EC_PRIME192V1 =0,  /**< Elliptic curve domain "secp192r1" listed in "SEC 2" recommended elliptic curve domain  */
-	CKM_EC_PRIME256V1,     /**< "SEC 2" recommended elliptic curve domain - secp256r1 */
-	CKM_EC_SECP384R1       /**< NIST curve P-384 (covers "secp384r1", the elliptic curve domain listed in See SEC 2 */
-} ckm_ec_type;
+typedef enum ckmc_ec_type_t {
+	CKMC_EC_PRIME192V1 =0,  /**< Elliptic curve domain "secp192r1" listed in "SEC 2" recommended elliptic curve domain  */
+	CKMC_EC_PRIME256V1,     /**< "SEC 2" recommended elliptic curve domain - secp256r1 */
+	CKMC_EC_SECP384R1       /**< NIST curve P-384 (covers "secp384r1", the elliptic curve domain listed in See SEC 2 */
+} ckmc_ec_type;
 
 /**
  * @brief Enumeration for bool type used within key manager CAPI.
  */
-typedef enum ckm_bool_t {
-	CKM_FALSE =0,        /**< false  */
-	CKM_TRUE             /**< true  */
-} ckm_bool;
+typedef enum ckmc_bool_t {
+	CKMC_FALSE =0,        /**< false  */
+	CKMC_TRUE             /**< true  */
+} ckmc_bool;
 
 /**
  * @brief Enumeration for hash algorithm.
  */
-typedef enum ckm_hash_algo_t {
-	CKM_HASH_SHA1 =0,   /**< Hash Algorithm SHA1  */
-	CKM_HASH_SHA256,    /**< Hash Algorithm SHA256  */
-	CKM_HASH_SHA384,    /**< Hash Algorithm SHA384  */
-	CKM_HASH_SHA512     /**< Hash Algorithm SHA512  */
-} ckm_hash_algo;
+typedef enum ckmc_hash_algo_t {
+	CKMC_HASH_SHA1 =0,   /**< Hash Algorithm SHA1  */
+	CKMC_HASH_SHA256,    /**< Hash Algorithm SHA256  */
+	CKMC_HASH_SHA384,    /**< Hash Algorithm SHA384  */
+	CKMC_HASH_SHA512     /**< Hash Algorithm SHA512  */
+} ckmc_hash_algo;
 
 /**
  * @brief Enumeration for RSA padding algorithm.
  */
-typedef enum ckm_rsa_padding_algo_t {
-    CKM_PKCS1_PADDING =0, /**< PKCS#1 Padding */
-    CKM_X931_PADDING      /**< X9.31 padding */
-} ckm_rsa_padding_algo;
+typedef enum ckmc_rsa_padding_algo_t {
+    CKMC_PKCS1_PADDING =0, /**< PKCS#1 Padding */
+    CKMC_X931_PADDING      /**< X9.31 padding */
+} ckmc_rsa_padding_algo;
 
 
 
@@ -99,10 +99,10 @@ typedef enum ckm_rsa_padding_algo_t {
  * @details @a data is byte array containing some binary data
  *          @a size is the size of the binary data
  */
-typedef struct ckm_raw_buff_t{
+typedef struct ckmc_raw_buff_t{
 	unsigned char* data;
 	size_t         size;
-} ckm_raw_buffer;
+} ckmc_raw_buffer;
 
 /**
  * @brief a policy for storing key/certificate/binary data
@@ -110,11 +110,11 @@ typedef struct ckm_raw_buff_t{
  *          if @a extractable true, key may be extracted from storage
  *          if @a restricted true, only key owner can see data
  */
-typedef struct ckm_policy_t {
+typedef struct ckmc_policy_t {
 	char*          password;  // byte array used to encrypt data inside CKM
-	ckm_bool       extractable;  // if true key may be extracted from storage
-	ckm_bool       restricted;   // if true only key owner may see data
-} ckm_policy;
+	ckmc_bool       extractable;  // if true key may be extracted from storage
+	ckmc_bool       restricted;   // if true only key owner may see data
+} ckmc_policy;
 
 /**
  * @brief key structure used in key manager CAPI
@@ -123,12 +123,12 @@ typedef struct ckm_policy_t {
  *          @a key_type is the raw_key's type
  *          if @a password is byte array used to decrypt raw_key inside key manager.
  */
-typedef struct ckm_key_t {
+typedef struct ckmc_key_t {
 	unsigned char* raw_key;
 	size_t         key_size;
-	ckm_key_type   key_type;
+	ckmc_key_type   key_type;
 	char*          password;  // byte array used to decrypt data raw_key inside key manager
-} ckm_key;
+} ckmc_key;
 
 /**
  * @brief certificate structure used in key manager CAPI
@@ -136,275 +136,335 @@ typedef struct ckm_key_t {
  *          @a cert_size is the byte size of raw_cert
  *          @a data_format is the raw_cert's encoding format
  */
-typedef struct ckm_cert_t {
+typedef struct ckmc_cert_t {
 	unsigned char*  raw_cert;
 	size_t          cert_size;
-	ckm_data_format data_format;
-} ckm_cert;
+	ckmc_data_format data_format;
+} ckmc_cert;
 
 /**
  * @brief linked list structure of alias
  * @details @a alias is a name of key, certificate or data stored in key manager.
- *          @a next is a pointer pointing to the next ckm_alias_list
+ *          @a next is a pointer pointing to the next ckmc_alias_list
  */
-typedef struct ckm_alias_list_t {
+typedef struct ckmc_alias_list_t {
 	char *alias;
-	struct ckm_alias_list_t *next;
-} ckm_alias_list;
+	struct ckmc_alias_list_t *next;
+} ckmc_alias_list;
 
 /**
- * @brief linked list structure of ckm_cert
- * @details @a cert is a pointer of ckm_cert.
- *          @a next is a pointer pointing to the next ckm_cert_list
+ * @brief linked list structure of ckmc_cert
+ * @details @a cert is a pointer of ckmc_cert.
+ *          @a next is a pointer pointing to the next ckmc_cert_list
  */
-typedef struct ckm_cert_list_t {
-	ckm_cert *cert;
-	struct ckm_cert_list_t *next;
-} ckm_cert_list;
+typedef struct ckmc_cert_list_t {
+	ckmc_cert *cert;
+	struct ckmc_cert_list_t *next;
+} ckmc_cert_list;
 
 
 
 
 /**
- * @brief Creates a new ckm_key handle and returns it.
+ * @brief Creates a new ckmc_key handle and returns it.
  *
- * @remarks A newly created ckm_key should be destroyed by calling ckm_key_free() if it is no longer needed.
+ * @remarks A newly created ckmc_key should be destroyed by calling ckmc_key_free() if it is no longer needed.
  *
  * @param[in] raw_key is byte array of key. raw_key may be encrypted with password
  * @param[in] key_size is the byte size of raw_key
  * @param[in] key_type is the raw_key's type
  * @param[in] password is byte array used to decrypt raw_key inside key manager. If raw_key is not encrypted, password can be null.
- * @return a newly created ckm_key handle
- * @retval If successful, a newly created ckm_key handle will be returned
- * @retval If out of memory, returns a null value.
- * @see ckm_key_free()
- * @see #ckm_key
- */
-ckm_key *ckm_key_new(unsigned char *raw_key, size_t key_size, ckm_key_type key_type, char *password);
-
-/**
- * @brief Destroys the ckm_key handle and releases all its resources.
- * @param[in] key a ckm_key handle to destroy
- * @see ckm_key_new()
- */
-void ckm_key_free(ckm_key *key);
-
-
-
-
-/**
- * @brief Creates a new ckm_raw_buffer handle and returns it.
+ * @return a newly created ckmc_key handle
+ * @exception If successful, a newly created ckmc_key handle will be returned
+ * @exception If out of memory, returns a null value.
+ * @see ckmc_key_free()
+ * @see #ckmc_key
  *
- * @remarks A newly created ckm_raw_buffer should be destroyed by calling ckm_buffer_free() if it is no longer needed.
+ * @since 2.3
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/keymanager *
+ */
+ckmc_key *ckmc_key_new(unsigned char *raw_key, size_t key_size, ckmc_key_type key_type, char *password);
+
+/**
+ * @brief Destroys the ckmc_key handle and releases all its resources.
+ * @param[in] key a ckmc_key handle to destroy
+ * @see ckmc_key_new()
+ *
+ * @since 2.3
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/keymanager *
+ */
+void ckmc_key_free(ckmc_key *key);
+
+
+
+
+/**
+ * @brief Creates a new ckmc_raw_buffer handle and returns it.
+ *
+ * @remarks A newly created ckmc_raw_buffer should be destroyed by calling ckmc_buffer_free() if it is no longer needed.
  *
  * @param[in] data is byte array of buffer.
  * @param[in] size is the byte size of buffer
- * @return a newly created ckm_raw_buffer handle
- * @retval If successful, a newly created ckm_raw_buffer handle will be returned
- * @retval If out of memory, returns a null value.
- * @see ckm_buffer_free()
- * @see #ckm_raw_buffer
+ * @return a newly created ckmc_raw_buffer handle
+ * @exception If successful, a newly created ckmc_raw_buffer handle will be returned
+ * @exception If out of memory, returns a null value.
+ * @see ckmc_buffer_free()
+ * @see #ckmc_raw_buffer
  */
-ckm_raw_buffer * ckm_buffer_new(unsigned char *data, size_t size);
+ckmc_raw_buffer * ckmc_buffer_new(unsigned char *data, size_t size);
 
 /**
- * @brief Destroys the ckm_raw_buffer handle and releases all its resources.
- * @param[in] buffer a ckm_raw_buffer handle to destroy
- * @see ckm_buffer_new()
- */
-void ckm_buffer_free(ckm_raw_buffer *buffer);
-
-
-
-
-/**
- * @brief Creates a new ckm_cert handle and returns it.
+ * @brief Destroys the ckmc_raw_buffer handle and releases all its resources.
+ * @param[in] buffer a ckmc_raw_buffer handle to destroy
+ * @see ckmc_buffer_new()
  *
- * @remarks A newly created ckm_cert should be destroyed by calling ckm_cert_free() if it is no longer needed.
+ * @since 2.3
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/keymanager *
+ */
+void ckmc_buffer_free(ckmc_raw_buffer *buffer);
+
+
+
+
+/**
+ * @brief Creates a new ckmc_cert handle and returns it.
+ *
+ * @remarks A newly created ckmc_cert should be destroyed by calling ckmc_cert_free() if it is no longer needed.
  *
  * @param[in] raw_cert is byte array of certificate.
  * @param[in] cert_size is the byte size of raw_cert.
  * @param[in] data_format is the encoding format of raw_cert
- * @return a newly created ckm_cert handle
- * @retval If successful, a newly created ckm_cert handle will be returned
- * @retval If out of memory, returns a null value.
- * @see ckm_cert_free()
- * @see ckm_load_cert_from_file()
- * @see ckm_load_from_pkcs12_file
- * @see #ckm_cert
- */
-ckm_cert *ckm_cert_new(unsigned char *raw_cert, size_t cert_size, ckm_data_format data_format);
-
-/**
- * @brief Destroys the ckm_cert handle and releases all its resources.
- * @param[in] buffer a ckm_cert handle to destroy
- * @see ckm_cert_new()
- * @see ckm_load_cert_from_file()
- * @see ckm_load_from_pkcs12_file
- */
-void ckm_cert_free(ckm_cert *cert);
-
-/**
- * @brief Create a new ckm_cert handle from a given file and returns it.
+ * @return a newly created ckmc_cert handle
+ * @exception If successful, a newly created ckmc_cert handle will be returned
+ * @exception If out of memory, returns a null value.
+ * @see ckmc_cert_free()
+ * @see ckmc_load_cert_from_file()
+ * @see ckmc_load_from_pkcs12_file
+ * @see #ckmc_cert
  *
- * @remarks A newly created ckm_cert should be destroyed by calling ckm_cert_free() if it is no longer needed.
+ * @since 2.3
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/keymanager *
+ */
+ckmc_cert *ckmc_cert_new(unsigned char *raw_cert, size_t cert_size, ckmc_data_format data_format);
+
+/**
+ * @brief Destroys the ckmc_cert handle and releases all its resources.
+ * @param[in] buffer a ckmc_cert handle to destroy
+ * @see ckmc_cert_new()
+ * @see ckmc_load_cert_from_file()
+ * @see ckmc_load_from_pkcs12_file
+ *
+ * @since 2.3
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/keymanager *
+ */
+void ckmc_cert_free(ckmc_cert *cert);
+
+/**
+ * @brief Create a new ckmc_cert handle from a given file and returns it.
+ *
+ * @remarks A newly created ckmc_cert should be destroyed by calling ckmc_cert_free() if it is no longer needed.
  *
  * @param[in] file_path is a path of certificate file to be loaded. The  only DER or PEM encoded certificate file is supported.
- * @param[out] cert is the pointer of newly created ckm_cert handle
- * @return #CKM_API_SUCCESS on success, otherwise a negative error value
- * @retval #CKM_API_SUCCESS Successful
- * @retval #CKM_API_ERROR_OUT_OF_MEMORY not enough memory space
- * @retval #CKM_API_ERROR_INVALID_FORMAT invalid certificate file format
- * @retval #CKM_API_ERROR_FILE_ACCESS_DENIED provided file doesn't exists or cannot be accessed
- * @see ckm_cert_free()
- * @see ckm_cert_new()
- * @see ckm_load_from_pkcs12_file()
- * @see #ckm_cert
+ * @param[out] cert is the pointer of newly created ckmc_cert handle
+ * @return #CKMC_API_SUCCESS on success, otherwise a negative error value
+ * @exception #CKMC_API_SUCCESS Successful
+ * @exception #CKMC_API_ERROR_OUT_OF_MEMORY not enough memory space
+ * @exception #CKMC_API_ERROR_INVALID_FORMAT invalid certificate file format
+ * @exception #CKMC_API_ERROR_FILE_ACCESS_DENIED provided file doesn't exists or cannot be accessed
+ * @see ckmc_cert_free()
+ * @see ckmc_cert_new()
+ * @see ckmc_load_from_pkcs12_file()
+ * @see #ckmc_cert
+ *
+ * @since 2.3
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/keymanager *
  */
-int ckm_load_cert_from_file(const char *file_path, ckm_cert **cert);
+int ckmc_load_cert_from_file(const char *file_path, ckmc_cert **cert);
 
 /**
- * @brief Create a new ckm_key(private key), ckm_cert(certificate), and ckm_cert_list(CA certificates) handle from a given PKCS#12 file and returns them.
+ * @brief Create a new ckmc_key(private key), ckmc_cert(certificate), and ckmc_cert_list(CA certificates) handle from a given PKCS#12 file and returns them.
  *
- * @remarks A newly created ckm_key, ckm_cert, and ckm_cert_list should be destroyed by calling ckm_key_free(), ckm_cert_free(), and ckm_cert_list_all_free() if they are no longer needed.
+ * @remarks A newly created ckmc_key, ckmc_cert, and ckmc_cert_list should be destroyed by calling ckmc_key_free(), ckmc_cert_free(), and ckmc_cert_list_all_free() if they are no longer needed.
  *
  * @param[in] file_path is a path of PKCS12 file to be loaded.
  * @param[in] passphrase is used to decrypt the PCKS12 file. If PKCS12 file is not encrypted, passphrase can be null.
- * @param[out] private_key is the pointer of newly created ckm_key handle for a private key
- * @param[out] cert is the pointer of newly created ckm_cert handle for a certificate. It is null if the PKCS12 file doesn't contain a certificate.
- * @param[out] ca_cert_list is the pointer of newly created ckm_cert_list handle for CA certificates. It is null if the PKCS12 file doesn't contain CA certificates.
- * @return #CKM_API_SUCCESS on success, otherwise a negative error value
- * @retval #CKM_API_SUCCESS Successful
- * @retval #CKM_API_ERROR_OUT_OF_MEMORY not enough memory space
- * @retval #CKM_API_ERROR_INVALID_FORMAT invalid PKCS12 file format
- * @retval #CKM_API_ERROR_FILE_ACCESS_DENIED provided file doesn't exists or cannot be accessed
- * @see ckm_key_free()
- * @see ckm_cert_free()
- * @see ckm_cert_list_all_free()
- * @see #ckm_key
- * @see #ckm_cert
- * @see #ckm_cert_list
+ * @param[out] private_key is the pointer of newly created ckmc_key handle for a private key
+ * @param[out] cert is the pointer of newly created ckmc_cert handle for a certificate. It is null if the PKCS12 file doesn't contain a certificate.
+ * @param[out] ca_cert_list is the pointer of newly created ckmc_cert_list handle for CA certificates. It is null if the PKCS12 file doesn't contain CA certificates.
+ * @return #CKMC_API_SUCCESS on success, otherwise a negative error value
+ * @exception #CKMC_API_SUCCESS Successful
+ * @exception #CKMC_API_ERROR_OUT_OF_MEMORY not enough memory space
+ * @exception #CKMC_API_ERROR_INVALID_FORMAT invalid PKCS12 file format
+ * @exception #CKMC_API_ERROR_FILE_ACCESS_DENIED provided file doesn't exists or cannot be accessed
+ * @see ckmc_key_free()
+ * @see ckmc_cert_free()
+ * @see ckmc_cert_list_all_free()
+ * @see #ckmc_key
+ * @see #ckmc_cert
+ * @see #ckmc_cert_list
+ *
+ * @since 2.3
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/keymanager *
  */
-int ckm_load_from_pkcs12_file(const char *file_path, const char *passphrase, ckm_key **private_key, ckm_cert **cert, ckm_cert_list **ca_cert_list);
+int ckmc_load_from_pkcs12_file(const char *file_path, const char *passphrase, ckmc_key **private_key, ckmc_cert **cert, ckmc_cert_list **ca_cert_list);
 
 
 
 /**
- * @brief Creates a new ckm_alias_list handle and returns it. The alias pointer in the returned ckm_alias_list handle points to the provided characters and the next is null.
+ * @brief Creates a new ckmc_alias_list handle and returns it. The alias pointer in the returned ckmc_alias_list handle points to the provided characters and the next is null.
  *
- * @remarks A newly created ckm_alias_list should be destroyed by calling ckm_alias_list_free() or ckm_alias_list_all_free() if it is no longer needed.
+ * @remarks A newly created ckmc_alias_list should be destroyed by calling ckmc_alias_list_free() or ckmc_alias_list_all_free() if it is no longer needed.
  *
- * @param[in] alias is the first item to be set in the newly created ckm_alias_list.
- * @return a newly created ckm_alias_list handle
- * @retval If successful, a newly created ckm_alias_list handle will be returned
- * @retval If out of memory, returns a null value.
- * @see ckm_alias_list_add()
- * @see ckm_alias_list_free()
- * @see ckm_alias_list_all_free()
- * @see #ckm_alias_list
+ * @param[in] alias is the first item to be set in the newly created ckmc_alias_list.
+ * @return a newly created ckmc_alias_list handle
+ * @exception If successful, a newly created ckmc_alias_list handle will be returned
+ * @exception If out of memory, returns a null value.
+ * @see ckmc_alias_list_add()
+ * @see ckmc_alias_list_free()
+ * @see ckmc_alias_list_all_free()
+ * @see #ckmc_alias_list
+ *
+ * @since 2.3
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/keymanager *
  */
-ckm_alias_list *ckm_alias_list_new(char *alias);
+ckmc_alias_list *ckmc_alias_list_new(char *alias);
 
 /**
- * @brief Creates a new ckm_alias_list handle, add it to a previous ckm_alias_list and returns it. The alias pointer in the returned ckm_alias_list handle points to the provided characters and the next is null.
+ * @brief Creates a new ckmc_alias_list handle, add it to a previous ckmc_alias_list and returns it. The alias pointer in the returned ckmc_alias_list handle points to the provided characters and the next is null.
  *
- * @param[in] previous the last ckm_alias_list handle to which a newly created ckm_alias_list is added
- * @param[in] alias is an item to be set in the newly created ckm_alias_list.
- * @return a newly added ckm_alias_list handle. It should be given as previous when ckm_cert_list_add() is called again.
- * @retval If successful, a newly created ckm_alias_list handle will be returned
- * @retval If out of memory, returns a null value.
- * @see ckm_alias_list_add()
- * @see ckm_alias_list_free()
- * @see ckm_alias_list_all_free()
- * @see #ckm_alias_list
+ * @param[in] previous the last ckmc_alias_list handle to which a newly created ckmc_alias_list is added
+ * @param[in] alias is an item to be set in the newly created ckmc_alias_list.
+ * @return a newly added ckmc_alias_list handle. It should be given as previous when ckmc_cert_list_add() is called again.
+ * @exception If successful, a newly created ckmc_alias_list handle will be returned
+ * @exception If out of memory, returns a null value.
+ * @see ckmc_alias_list_add()
+ * @see ckmc_alias_list_free()
+ * @see ckmc_alias_list_all_free()
+ * @see #ckmc_alias_list
+ *
+ * @since 2.3
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/keymanager *
  */
-ckm_alias_list *ckm_alias_list_add(ckm_alias_list *previous, char *alias);
+ckmc_alias_list *ckmc_alias_list_add(ckmc_alias_list *previous, char *alias);
 
 /**
- * @brief Destroys the ckm_alias_list handle and releases resources of ckm_alias_list from the provided first handle cascadingly.
+ * @brief Destroys the ckmc_alias_list handle and releases resources of ckmc_alias_list from the provided first handle cascadingly.
  *
- * @remarks It does not destroy an alias itself in ckm_alias_list.
+ * @remarks It does not destroy an alias itself in ckmc_alias_list.
  *
- * @param[in] buffer the first ckm_alias_list handle to destroy
- * @see ckm_alias_list_new()
- * @see ckm_alias_list_add()
- * @see ckm_alias_list_all_free()
- * @see #ckm_alias_list
+ * @param[in] buffer the first ckmc_alias_list handle to destroy
+ * @see ckmc_alias_list_new()
+ * @see ckmc_alias_list_add()
+ * @see ckmc_alias_list_all_free()
+ * @see #ckmc_alias_list
+ *
+ * @since 2.3
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/keymanager *
  */
-void ckm_alias_list_free(ckm_alias_list *first);
+void ckmc_alias_list_free(ckmc_alias_list *first);
 
 /**
- * @brief Destroys the ckm_alias_list handle and releases all its resources from the provided first handle cascadingly.
+ * @brief Destroys the ckmc_alias_list handle and releases all its resources from the provided first handle cascadingly.
  *
- * @remarks It also destroy an alias in ckm_alias_list.
+ * @remarks It also destroy an alias in ckmc_alias_list.
  *
- * @param[in] buffer the first ckm_alias_list handle to destroy
- * @see ckm_alias_list_new()
- * @see ckm_alias_list_add()
- * @see ckm_alias_list_free()
- * @see #ckm_alias_list
+ * @param[in] buffer the first ckmc_alias_list handle to destroy
+ * @see ckmc_alias_list_new()
+ * @see ckmc_alias_list_add()
+ * @see ckmc_alias_list_free()
+ * @see #ckmc_alias_list
+ *
+ * @since 2.3
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/keymanager *
  */
-void ckm_alias_list_all_free(ckm_alias_list *cert_list);
+void ckmc_alias_list_all_free(ckmc_alias_list *cert_list);
 
 
 
 
 /**
- * @brief Creates a new ckm_cert_list handle and returns it. The cert pointer in the returned ckm_cert_list handle points to the provided ckm_cert and the next is null.
+ * @brief Creates a new ckmc_cert_list handle and returns it. The cert pointer in the returned ckmc_cert_list handle points to the provided ckmc_cert and the next is null.
  *
- * @remarks A newly created ckm_cert_list should be destroyed by calling ckm_cert_list_free() or ckm_cert_list_all_free() if it is no longer needed.
+ * @remarks A newly created ckmc_cert_list should be destroyed by calling ckmc_cert_list_free() or ckmc_cert_list_all_free() if it is no longer needed.
  *
- * @param[in] cert is the first item to be set in the newly created ckm_cert_list.
- * @return a newly created ckm_cert_list handle
- * @retval If successful, a newly created ckm_cert_list handle will be returned
- * @retval If out of memory, returns a null value.
- * @see ckm_cert_list_add()
- * @see ckm_cert_list_free()
- * @see ckm_cert_list_all_free()
- * @see #ckm_cert_list
+ * @param[in] cert is the first item to be set in the newly created ckmc_cert_list.
+ * @return a newly created ckmc_cert_list handle
+ * @exception If successful, a newly created ckmc_cert_list handle will be returned
+ * @exception If out of memory, returns a null value.
+ * @see ckmc_cert_list_add()
+ * @see ckmc_cert_list_free()
+ * @see ckmc_cert_list_all_free()
+ * @see #ckmc_cert_list
+ *
+ * @since 2.3
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/keymanager *
  */
-ckm_cert_list *ckm_cert_list_new(ckm_cert *cert);
+ckmc_cert_list *ckmc_cert_list_new(ckmc_cert *cert);
 
 /**
- * @brief Creates a new ckm_cert_list handle, add it to a previous ckm_cert_list and returns it. The cert pointer in the returned ckm_alias_list handle points to the provided ckm_cert and the next is null.
+ * @brief Creates a new ckmc_cert_list handle, add it to a previous ckmc_cert_list and returns it. The cert pointer in the returned ckmc_alias_list handle points to the provided ckmc_cert and the next is null.
  *
- * @param[in] previous the last ckm_cert_list handle to which a newly created ckm_cert_list is added
- * @param[in] cert is an item to be set in the newly created ckm_cert_list.
- * @return a newly added ckm_cert_list handle. It should be given as previous when ckm_cert_list_add() is called again.
- * @retval If successful, a newly created ckm_cert_list handle will be returned
- * @retval If out of memory, returns a null value.
- * @see ckm_cert_list_add()
- * @see ckm_cert_list_free()
- * @see ckm_cert_list_all_free()
- * @see #ckm_cert_list
+ * @param[in] previous the last ckmc_cert_list handle to which a newly created ckmc_cert_list is added
+ * @param[in] cert is an item to be set in the newly created ckmc_cert_list.
+ * @return a newly added ckmc_cert_list handle. It should be given as previous when ckmc_cert_list_add() is called again.
+ * @exception If successful, a newly created ckmc_cert_list handle will be returned
+ * @exception If out of memory, returns a null value.
+ * @see ckmc_cert_list_add()
+ * @see ckmc_cert_list_free()
+ * @see ckmc_cert_list_all_free()
+ * @see #ckmc_cert_list
+ *
+ * @since 2.3
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/keymanager *
  */
-ckm_cert_list *ckm_cert_list_add(ckm_cert_list *previous, ckm_cert *cert);
+ckmc_cert_list *ckmc_cert_list_add(ckmc_cert_list *previous, ckmc_cert *cert);
 
 /**
- * @brief Destroys the ckm_cert_list handle and releases resources of ckm_cert_list from the provided first handle cascadingly.
+ * @brief Destroys the ckmc_cert_list handle and releases resources of ckmc_cert_list from the provided first handle cascadingly.
  *
- * @remarks It does not destroy an ckm_cert itself in ckm_cert_list.
+ * @remarks It does not destroy an ckmc_cert itself in ckmc_cert_list.
  *
- * @param[in] buffer the first ckm_cert_list handle to destroy
- * @see ckm_cert_list_new()
- * @see ckm_cert_list_add()
- * @see ckm_cert_list_all_free()
- * @see #ckm_cert_list
+ * @param[in] buffer the first ckmc_cert_list handle to destroy
+ * @see ckmc_cert_list_new()
+ * @see ckmc_cert_list_add()
+ * @see ckmc_cert_list_all_free()
+ * @see #ckmc_cert_list
+ *
+ * @since 2.3
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/keymanager *
  */
-void ckm_cert_list_free(ckm_cert_list *first);
+void ckmc_cert_list_free(ckmc_cert_list *first);
 
 /**
- * @brief Destroys the ckm_cert_list handle and releases all its resources from the provided first handle cascadingly.
+ * @brief Destroys the ckmc_cert_list handle and releases all its resources from the provided first handle cascadingly.
  *
- * @remarks It also destroy an ckm_cert in ckm_cert_list.
+ * @remarks It also destroy an ckmc_cert in ckmc_cert_list.
  *
- * @param[in] buffer the first ckm_cert_list handle to destroy
- * @see ckm_cert_list_new()
- * @see ckm_cert_list_add()
- * @see ckm_cert_list_free()
- * @see #ckm_cert_list
+ * @param[in] buffer the first ckmc_cert_list handle to destroy
+ * @see ckmc_cert_list_new()
+ * @see ckmc_cert_list_add()
+ * @see ckmc_cert_list_free()
+ * @see #ckmc_cert_list
+ *
+ * @since 2.3
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/keymanager *
  */
-void ckm_cert_list_all_free(ckm_cert_list *cert_list);
+void ckmc_cert_list_all_free(ckmc_cert_list *cert_list);
 
 
 /**
