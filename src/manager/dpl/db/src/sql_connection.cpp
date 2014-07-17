@@ -713,7 +713,6 @@ TransitoryString createHexPass(const std::vector<unsigned char> &rawPass){
     for(std::size_t i = 0; i < SQLCIPHER_RAW_PREFIX.size(); i++)
         pass[i] = SQLCIPHER_RAW_PREFIX[i];
     rawToHexString(pass, SQLCIPHER_RAW_PREFIX.size(), rawPass);
-    for(std::size_t i = 0; i < SQLCIPHER_RAW_PREFIX.size(); i++)
     for(std::size_t i = 0; i < SQLCIPHER_RAW_SUFIX.size(); i++)
         pass[i + SQLCIPHER_RAW_PREFIX.size() + rawPass.size() * 2]
             = SQLCIPHER_RAW_SUFIX[i];
