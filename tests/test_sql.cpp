@@ -25,7 +25,7 @@ const char *insert_table = "INSERT INTO t1(a,b) VALUES ("
                                        " 'two for the show');";
 const char *select_table = "SELECT * FROM t1";
 
-CKM::RawBuffer raw_password = createDefaultPass();
+CKM::SafeBuffer raw_password = createDefaultPass();
 
 BOOST_AUTO_TEST_SUITE(SQL_TEST)
 BOOST_AUTO_TEST_CASE(sqlTestConversion){
@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE(sqlTestSetKeyTooShort) {
     BOOST_CHECK(unlink(encrypt_me_not) == 0 || errno == ENOENT);
     SqlConnection connection(encrypt_me_not,
                                SqlConnection::Flag::CRW);
-    CKM::RawBuffer wrong_key(RAW_PASS_SIZE - 1, 1);
+    CKM::SafeBuffer wrong_key(RAW_PASS_SIZE - 1, 1);
     BOOST_REQUIRE_THROW(connection.SetKey(wrong_key),
             SqlConnection::Exception::InvalidArguments);
 }
@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(sqlTestSetKeyTooLong) {
     BOOST_CHECK(unlink(encrypt_me_not) == 0 || errno == ENOENT);
     SqlConnection connection(encrypt_me_not,
                                SqlConnection::Flag::CRW);
-    CKM::RawBuffer wrong_key(RAW_PASS_SIZE + 1, 1);
+    CKM::SafeBuffer wrong_key(RAW_PASS_SIZE + 1, 1);
     BOOST_REQUIRE_THROW(connection.SetKey(wrong_key),
             SqlConnection::Exception::InvalidArguments);
 }
@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(sqlTestConnectionEncryptedNegative) {
     {
         SqlConnection encrypting_you(encrypt_me,
                                      SqlConnection::Flag::RW);
-        CKM::RawBuffer wrong_password;
+        CKM::SafeBuffer wrong_password;
         for(std::size_t i = 0; i < RAW_PASS_SIZE; i++) {
             wrong_password.push_back(raw_password[i] + 1);
         }

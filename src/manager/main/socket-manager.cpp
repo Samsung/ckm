@@ -582,7 +582,7 @@ void SocketManager::Close(ConnectionID connectionID) {
     NotifyMe();
 }
 
-void SocketManager::Write(ConnectionID connectionID, const RawBuffer &rawBuffer) {
+void SocketManager::Write(ConnectionID connectionID, const SafeBuffer &rawBuffer) {
     WriteBuffer buffer;
     buffer.connectionID = connectionID;
     buffer.rawBuffer = rawBuffer;

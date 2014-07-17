@@ -26,15 +26,13 @@
 #ifndef _CENT_KEY_MNG_SOCKET_BUFFER_
 #define _CENT_KEY_MNG_SOCKET_BUFFER_
 
-#include <vector>
+#include <safe-buffer.h>
 
 #include <dpl/binary_queue.h>
 #include <dpl/exception.h>
 #include <dpl/serialization.h>
 
 namespace CKM {
-
-typedef std::vector<unsigned char> RawBuffer;
 
 class MessageBuffer : public CKM::IStream {
 public:
@@ -49,9 +47,9 @@ public:
       : m_bytesLeft(0)
     {}
 
-    void Push(const RawBuffer &data);
+    void Push(const SafeBuffer &data);
 
-    RawBuffer Pop();
+    SafeBuffer Pop();
 
     bool Ready();
 

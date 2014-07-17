@@ -24,6 +24,7 @@
 
 #include <dpl/log/log.h>
 
+#include <buffer-conversion.h>
 #include <generic-key.h>
 #include <certificate-impl.h>
 #include <base64.h>
@@ -35,7 +36,47 @@ CertificateImpl::CertificateImpl(const RawBuffer &der, DataFormat format)
 {
     int size;
     const unsigned char *ptr;
-    RawBuffer tmp;
+    SafeBuffer tmp;
+
+    LogDebug("Certificate to parse. Size: " << der.size());
+
+    if (DataFormat::FORM_DER_BASE64 == format) {
+        Base64Decoder base64;
+        base64.reset();
+        base64.append(toSafeBuffer(der));
+        base64.finalize();
+        tmp = base64.get();
+        ptr = reinterpret_cast<const unsigned char*>(tmp.data());
+        size = static_cast<int>(tmp.size());
+        m_x509 = d2i_X509(NULL, &ptr, size);
+    } else if (DataFormat::FORM_DER == format) {
+        ptr = reinterpret_cast<const unsigned char*>(der.data());
+        size = static_cast<int>(der.size());
+        m_x509 = d2i_X509(NULL, &ptr, size);
+    } else if (DataFormat::FORM_PEM == format) {
+        BIO *buff = BIO_new(BIO_s_mem());
+        BIO_write(buff, der.data(), der.size());
+        m_x509 = PEM_read_bio_X509(buff, NULL, NULL, NULL);
+        BIO_free_all(buff);
+    } else {
+        // TODO
+        LogError("Unknown certificate format");
+    }
+
+    if (!m_x509) {
+        // TODO
+        LogError("Certificate could not be parsed.");
+//        ThrowMsg(Exception::OpensslInternalError,
+//          "Internal Openssl error in d2i_X509 function.");
+    }
+}
+
+CertificateImpl::CertificateImpl(const SafeBuffer &der, DataFormat format)
+  : m_x509(NULL)
+{
+    int size;
+    const unsigned char *ptr;
+    SafeBuffer tmp;
 
     LogDebug("Certificate to parse. Size: " << der.size());
 
@@ -115,6 +156,21 @@ RawBuffer CertificateImpl::getDER(void) const {
     }
 
     RawBuffer output(
+        reinterpret_cast<char*>(rawDer),
+        reinterpret_cast<char*>(rawDer) + size);
+    OPENSSL_free(rawDer);
+    return output;
+}
+
+SafeBuffer CertificateImpl::getDERSB(void) const {
+    unsigned char *rawDer = NULL;
+    int size = i2d_X509(m_x509, &rawDer);
+    if (!rawDer || size <= 0) {
+        LogError("i2d_X509 failed");
+        return SafeBuffer();
+    }
+
+    SafeBuffer output(
         reinterpret_cast<char*>(rawDer),
         reinterpret_cast<char*>(rawDer) + size);
     OPENSSL_free(rawDer);

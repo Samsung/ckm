@@ -31,7 +31,7 @@
 
 namespace CKM {
 
-RawBuffer OCSPLogic::ocspCheck(int commandId, const RawBufferVector &rawChain) {
+SafeBuffer OCSPLogic::ocspCheck(int commandId, const SafeBufferVector &rawChain) {
     CertificateImplVector certChain;
     OCSPModule ocsp;
     int retCode = CKM_API_SUCCESS;

@@ -39,7 +39,7 @@ extern "C" {
 
 namespace CKM {
 
-int sendToServer(char const * const interface, const RawBuffer &send, MessageBuffer &recv);
+int sendToServer(char const * const interface, const SafeBuffer &send, MessageBuffer &recv);
 
 /*
  * Decorator function that performs frequently repeated exception handling in

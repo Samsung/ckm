@@ -25,6 +25,8 @@
 #include <dpl/log/log.h>
 #include <ckm/ckm-error.h>
 
+#include <buffer-conversion.h>
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic warning "-Wdeprecated-declarations"
 
@@ -125,7 +127,7 @@ namespace {
 namespace CKM {
 using namespace DB;
     DBCrypto::DBCrypto(const std::string& path,
-                         const RawBuffer &rawPass) {
+                         const SafeBuffer &rawPass) {
         m_connection = NULL;
         m_inUserTransaction = false;
         Try {
@@ -434,7 +436,7 @@ using namespace DB;
 
     void DBCrypto::saveKey(
             const std::string& label,
-            const RawBuffer &key)
+            const SafeBuffer &key)
     {
         Try {
             Transaction transaction(this);
@@ -454,7 +456,7 @@ using namespace DB;
                 "Couldn't save key for label " << label);
     }
 
-    DBCrypto::RawBufferOptional DBCrypto::getKey(
+    DBCrypto::SafeBufferOptional DBCrypto::getKey(
             const std::string& label)
     {
         Try {
@@ -465,11 +467,11 @@ using namespace DB;
 
             if (selectCommand->Step()) {
                 transaction.commit();
-                return RawBufferOptional(
+                return SafeBufferOptional(
                         selectCommand->GetColumnBlob(0));
             } else {
                 transaction.commit();
-                return RawBufferOptional();
+                return SafeBufferOptional();
             }
 
         } Catch (SqlConnection::Exception::InvalidColumn) {

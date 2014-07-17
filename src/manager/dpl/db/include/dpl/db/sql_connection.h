@@ -35,6 +35,8 @@
 #include <stdint.h>
 #include <vector>
 
+#include <safe-buffer.h>
+
 namespace CKM {
 namespace DB {
 /**
@@ -165,8 +167,7 @@ class SqlConnection
          * @param position Index of argument to bind value to
          * @param value Value to bind
          */
-        void BindBlob(ArgumentIndex position,
-                const std::vector<unsigned char> &value);
+        void BindBlob(ArgumentIndex position, const SafeBuffer &value);
 
         /**
          * Bind optional int to the prepared statement argument.
@@ -248,7 +249,7 @@ class SqlConnection
          * @param value Value to bind
          */
         void BindBlob(ArgumentIndex position,
-                const boost::optional<std::vector<unsigned char>> &value);
+                const boost::optional<SafeBuffer> &value);
 
         /**
          * Execute the prepared statement and/or move
@@ -331,7 +332,7 @@ class SqlConnection
          *
          * @throw Exception::InvalidColumn
          */
-        std::vector<unsigned char> GetColumnBlob(ColumnIndex column);
+        SafeBuffer GetColumnBlob(ColumnIndex column);
 
         /**
          * Get optional integer value from column in current row.
@@ -394,8 +395,7 @@ class SqlConnection
          *
          * @throw Exception::InvalidColumn
          */
-        boost::optional<std::vector<unsigned char>>
-            GetColumnOptionalBlob(ColumnIndex column);
+        boost::optional<SafeBuffer> GetColumnOptionalBlob(ColumnIndex column);
     };
 
     // Move on copy constructor. No copy semantics
@@ -492,7 +492,7 @@ class SqlConnection
      *
      * @param rawPass password given in raw binary format
      */
-    void SetKey(const std::vector<unsigned char> &rawPass);
+    void SetKey(const SafeBuffer &rawPass);
 
     /**
      * ResetKey is used for changing key used for database encryption.
@@ -506,8 +506,8 @@ class SqlConnection
      * @param rawPassNew new password for encryption in raw binary format
      *
      */
-    void ResetKey(const std::vector<unsigned char> &rawPassOld,
-                  const std::vector<unsigned char> &rawPassNew);
+    void ResetKey(const SafeBuffer &rawPassOld,
+                  const SafeBuffer &rawPassNew);
 
     /**
      * Execute SQL command without result

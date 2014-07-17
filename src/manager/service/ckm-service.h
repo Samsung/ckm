@@ -58,10 +58,10 @@ private:
         const ConnectionID &conn,
         ConnectionInfo &info);
 
-    RawBuffer processControl(
+    SafeBuffer processControl(
         MessageBuffer &buffer);
 
-    RawBuffer processStorage(
+    SafeBuffer processStorage(
         Credentials &cred,
         MessageBuffer &buffer);
 

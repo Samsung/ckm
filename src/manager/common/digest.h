@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <safe-buffer.h>
 #include <dpl/noncopyable.h>
 #include <dpl/exception.h>
 #include <ckm/ckm-type.h>
@@ -41,16 +42,16 @@ class Digest : public CKM::Noncopyable
         };
         Digest();
         ~Digest();
-        void append(const RawBuffer &data, std::size_t len = 0);
-        RawBuffer finalize(void);
-        RawBuffer get(void);
+        void append(const SafeBuffer &data, std::size_t len = 0);
+        SafeBuffer finalize(void);
+        SafeBuffer get(void);
         void reset(void);
         unsigned int length(void);
 
     private:
         EVP_MD_CTX *m_ctx;
         const EVP_MD *m_md;
-        RawBuffer m_digest;
+        SafeBuffer m_digest;
         bool m_initialized;
         bool m_finalized;
 };

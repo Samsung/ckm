@@ -117,14 +117,14 @@ char *read_exe_path_from_proc(pid_t pid)
     return exe;
 }
 
-void rawBufferToX509(X509 **ppCert, RawBuffer rawCert) {
+void rawBufferToX509(X509 **ppCert, SafeBuffer rawCert) {
   BIO *bio = BIO_new(BIO_s_mem());
   BIO_write(bio, rawCert.data(), rawCert.size());
   d2i_X509_bio(bio, ppCert);
   BIO_free_all(bio);
 }
 
-void x509ToRawBuffer(RawBuffer &buf, X509 *cert) {
+void x509ToSafeBuffer(SafeBuffer &buf, X509 *cert) {
   int len = i2d_X509(cert, NULL);
   unsigned char tmpBuff[len];
   unsigned char *p = tmpBuff;

@@ -34,6 +34,7 @@ class CertificateImpl : public Certificate {
 public:
     CertificateImpl(){}
     CertificateImpl(X509* x509);
+    CertificateImpl(const SafeBuffer &data, DataFormat format);
     CertificateImpl(const RawBuffer &data, DataFormat format);
     CertificateImpl(const CertificateImpl &);
     CertificateImpl(CertificateImpl &&);
@@ -43,6 +44,8 @@ public:
     virtual RawBuffer getDER() const;
     virtual bool empty() const;
     virtual X509* getX509() const;
+
+    SafeBuffer getDERSB() const;
 
     GenericKey::EvpShPtr getEvpShPtr() const;
     GenericKey getGenericKey() const;

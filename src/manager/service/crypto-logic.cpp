@@ -60,7 +60,7 @@ bool CryptoLogic::haveKey(const std::string &smackLabel)
 }
 
 void CryptoLogic::pushKey(const std::string &smackLabel,
-                            const RawBuffer &applicationKey)
+                            const SafeBuffer &applicationKey)
 {
     if (smackLabel.length() == 0) {
         ThrowMsg(Exception::InternalError, "Empty smack label.");
@@ -75,9 +75,9 @@ void CryptoLogic::pushKey(const std::string &smackLabel,
     m_keyMap[smackLabel] = applicationKey;
 }
 
-std::size_t CryptoLogic::insertDigest(RawBuffer &data, const int dataSize)
+std::size_t CryptoLogic::insertDigest(SafeBuffer &data, const int dataSize)
 {
-    RawBuffer digest;
+    SafeBuffer digest;
 
     try {
         Digest dig;
@@ -92,7 +92,7 @@ std::size_t CryptoLogic::insertDigest(RawBuffer &data, const int dataSize)
     return digest.size();
 }
 
-void CryptoLogic::removeDigest(RawBuffer &data, RawBuffer &digest)
+void CryptoLogic::removeDigest(SafeBuffer &data, SafeBuffer &digest)
 {
     unsigned int dlen = Digest().length();
 
@@ -105,36 +105,36 @@ void CryptoLogic::removeDigest(RawBuffer &data, RawBuffer &digest)
     data.erase(data.begin(), data.begin() + dlen);
 }
 
-RawBuffer CryptoLogic::encryptData(
-    const RawBuffer &data,
-    const RawBuffer &key,
-    const RawBuffer &iv) const
+SafeBuffer CryptoLogic::encryptData(
+    const SafeBuffer &data,
+    const SafeBuffer &key,
+    const SafeBuffer &iv) const
 {
     Crypto::Cipher::AesCbcEncryption enc(key, iv);
-    RawBuffer result = enc.Append(data);
-    RawBuffer tmp = enc.Finalize();
+    SafeBuffer result = enc.Append(data);
+    SafeBuffer tmp = enc.Finalize();
     std::copy(tmp.begin(), tmp.end(), std::back_inserter(result));
     return result;
 }
 
-RawBuffer CryptoLogic::decryptData(
-    const RawBuffer &data,
-    const RawBuffer &key,
-    const RawBuffer &iv) const
+SafeBuffer CryptoLogic::decryptData(
+    const SafeBuffer &data,
+    const SafeBuffer &key,
+    const SafeBuffer &iv) const
 {
     Crypto::Cipher::AesCbcDecryption dec(key, iv);
-    RawBuffer result = dec.Append(data);
-    RawBuffer tmp = dec.Finalize();
+    SafeBuffer result = dec.Append(data);
+    SafeBuffer tmp = dec.Finalize();
     std::copy(tmp.begin(), tmp.end(), std::back_inserter(result));
     return result;
 }
 
-RawBuffer CryptoLogic::passwordToKey(
+SafeBuffer CryptoLogic::passwordToKey(
     const std::string &password,
-    const RawBuffer &salt,
+    const SafeBuffer &salt,
     size_t keySize) const
 {
-    RawBuffer result(keySize);
+    SafeBuffer result(keySize);
 
     if (1 != PKCS5_PBKDF2_HMAC_SHA1(
                 password.c_str(),
@@ -150,8 +150,8 @@ RawBuffer CryptoLogic::passwordToKey(
     return result;
 }
 
-RawBuffer CryptoLogic::generateRandIV() const {
-    RawBuffer civ(EVP_MAX_IV_LENGTH);
+SafeBuffer CryptoLogic::generateRandIV() const {
+    SafeBuffer civ(EVP_MAX_IV_LENGTH);
 
     if (1 != RAND_bytes(civ.data(), civ.size())) {
         ThrowMsg(Exception::InternalError,
@@ -165,9 +165,9 @@ void CryptoLogic::encryptRow(const std::string &password, DBRow &row)
 {
     try {
         DBRow crow = row;
-        RawBuffer key;
-        RawBuffer result1;
-        RawBuffer result2;
+        SafeBuffer key;
+        SafeBuffer result1;
+        SafeBuffer result2;
 
         crow.algorithmType = DBCMAlgType::AES_CBC_256;
 
@@ -217,8 +217,8 @@ void CryptoLogic::decryptRow(const std::string &password, DBRow &row)
 {
     try {
         DBRow crow = row;
-        RawBuffer key;
-        RawBuffer digest, dataDigest;
+        SafeBuffer key;
+        SafeBuffer digest, dataDigest;
 
         if (row.algorithmType != DBCMAlgType::AES_CBC_256) {
             ThrowMsg(Exception::DecryptDBRowError, "Invalid algorithm type.");
@@ -278,10 +278,10 @@ void CryptoLogic::decryptRow(const std::string &password, DBRow &row)
     }
 }
 
-void CryptoLogic::encBase64(RawBuffer &data)
+void CryptoLogic::encBase64(SafeBuffer &data)
 {
     Base64Encoder benc;
-    RawBuffer encdata;
+    SafeBuffer encdata;
 
     benc.append(data);
     benc.finalize();
@@ -294,10 +294,10 @@ void CryptoLogic::encBase64(RawBuffer &data)
     data = std::move(encdata);
 }
 
-void CryptoLogic::decBase64(RawBuffer &data)
+void CryptoLogic::decBase64(SafeBuffer &data)
 {
     Base64Decoder bdec;
-    RawBuffer decdata;
+    SafeBuffer decdata;
 
     bdec.reset();
     bdec.append(data);
@@ -315,7 +315,7 @@ void CryptoLogic::decBase64(RawBuffer &data)
     data = std::move(decdata);
 }
 
-bool CryptoLogic::equalDigests(RawBuffer &dig1, RawBuffer &dig2)
+bool CryptoLogic::equalDigests(SafeBuffer &dig1, SafeBuffer &dig2)
 {
     unsigned int dlen = Digest().length();
 

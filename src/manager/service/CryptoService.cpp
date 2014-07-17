@@ -274,15 +274,15 @@ int CryptoService::createKeyPairECDSA(ElipticCurve type,
 }
 
 int CryptoService::createSignature(const GenericKey &privateKey,
-		const RawBuffer &message,
+		const SafeBuffer &message,
 		const HashAlgorithm hashAlgo,
 		const RSAPaddingAlgorithm padAlgo,
-		RawBuffer &signature)
+		SafeBuffer &signature)
 {
 	EVP_MD_CTX *mdctx = NULL;
 	EVP_PKEY_CTX *pctx = NULL;
 	int rsa_padding = NOT_DEFINED;
-	RawBuffer data;
+	SafeBuffer data;
 	const EVP_MD *md_algo = NULL;
 
 	// check the parameters of functions
@@ -403,8 +403,8 @@ int CryptoService::createSignature(const GenericKey &privateKey,
 }
 
 int CryptoService::verifySignature(const GenericKey &publicKey,
-		const RawBuffer &message,
-		const RawBuffer &signature,
+		const SafeBuffer &message,
+		const SafeBuffer &signature,
 		const HashAlgorithm hashAlgo,
 		const RSAPaddingAlgorithm padAlgo)
 {
@@ -515,7 +515,7 @@ int CryptoService::verifyCertificateChain(const CertificateImpl &certificate,
 
 	X509 *cert = X509_new();
 	X509 *tempCert;
-	rawBufferToX509(&cert, certificate.getDER());
+	rawBufferToX509(&cert, certificate.getDERSB());
 
 	std::vector<X509 *> trustedCerts;
 	std::vector<X509 *> userTrustedCerts;
@@ -557,7 +557,7 @@ int CryptoService::verifyCertificateChain(const CertificateImpl &certificate,
 				LogError("Error in X509_new function");
 				ThrowMsg(CryptoService::Exception::opensslError, "Error in X509_new function");
 			}
-			rawBufferToX509(&tempCert, userTrustedCertificates[i].getDER());
+			rawBufferToX509(&tempCert, userTrustedCertificates[i].getDERSB());
 			userTrustedCerts.push_back(tempCert);
 		}
 
@@ -566,16 +566,16 @@ int CryptoService::verifyCertificateChain(const CertificateImpl &certificate,
 				LogError("Error in X509_new function");
 				ThrowMsg(CryptoService::Exception::opensslError, "Error in X509_new function");
 			}
-			rawBufferToX509(&tempCert, untrustedCertificates[i].getDER());
+			rawBufferToX509(&tempCert, untrustedCertificates[i].getDERSB());
 			untrustedChain.push_back(tempCert);
 		}
 
 		std::vector<X509 *> chain = verifyCertChain(cert, trustedCerts, userTrustedCerts, untrustedChain);
 
-		RawBuffer tmpBuf;
+		SafeBuffer tmpBuf;
 		for(unsigned int i=0;i<chain.size();i++) {
-			x509ToRawBuffer(tmpBuf, chain[i]);
-			CertificateImpl tmpCertImpl((const RawBuffer)tmpBuf, DataFormat::FORM_DER);
+			x509ToSafeBuffer(tmpBuf, chain[i]);
+			CertificateImpl tmpCertImpl((const SafeBuffer)tmpBuf, DataFormat::FORM_DER);
 			certificateChainVector.push_back(tmpCertImpl);
 		}
 	} Catch(CryptoService::Exception::opensslError) {

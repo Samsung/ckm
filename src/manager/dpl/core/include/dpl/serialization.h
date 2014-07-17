@@ -28,6 +28,8 @@
 #include <map>
 #include <memory>
 
+#include <safe-buffer.h>
+
 namespace CKM {
 // Abstract data stream buffer
 class IStream
@@ -212,6 +214,19 @@ struct Serialization {
     {
         Serialize(stream, *p);
     }
+
+    static void Serialize(IStream& stream, const SafeBuffer& vec)
+    {
+        int length = vec.size();
+        stream.Write(sizeof(length), &length);
+        stream.Write(length, vec.data());
+    }
+
+    static void Serialize(IStream& stream, const SafeBuffer* const vec)
+    {
+        Serialize(stream, *vec);
+    }
+
 }; // struct Serialization
 
 struct Deserialization {
@@ -393,6 +408,21 @@ struct Deserialization {
         map = new std::map<K, T>;
         Deserialize(stream, *map);
     }
+
+    static void Deserialize(IStream& stream, SafeBuffer& vec)
+    {
+        int length;
+        stream.Read(sizeof(length), &length);
+        vec.resize(length);
+        stream.Read(length, vec.data());
+    }
+
+    static void Deserialize(IStream& stream, SafeBuffer*& vec)
+    {
+        vec = new SafeBuffer;
+        Deserialize(stream, *vec);
+    }
+
 }; // struct Deserialization
 } // namespace CKM
 

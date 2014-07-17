@@ -77,7 +77,7 @@ bool CKMService::processOne(
     ConnectionInfo &info)
 {
     LogDebug ("process One");
-    RawBuffer response;
+    SafeBuffer response;
 
     Try {
         if (!info.buffer.Ready())
@@ -103,7 +103,7 @@ bool CKMService::processOne(
     return false;
 }
 
-RawBuffer CKMService::processControl(MessageBuffer &buffer) {
+SafeBuffer CKMService::processControl(MessageBuffer &buffer) {
     int command;
     uid_t user;
     ControlCommand cc;
@@ -137,7 +137,7 @@ RawBuffer CKMService::processControl(MessageBuffer &buffer) {
     }
 }
 
-RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer){
+SafeBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer){
     int command;
     int commandId;
     int tmpDataType;
@@ -152,7 +152,7 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer){
     switch(static_cast<LogicCommand>(command)) {
         case LogicCommand::SAVE:
         {
-            RawBuffer rawData;
+            SafeBuffer rawData;
             PolicySerializable policy;
             Deserialization::Deserialize(buffer, tmpDataType);
             Deserialization::Deserialize(buffer, alias);
@@ -241,8 +241,8 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer){
         }
         case LogicCommand::GET_CHAIN_CERT:
         {
-            RawBuffer certificate;
-            RawBufferVector rawBufferVector;
+            SafeBuffer certificate;
+            SafeBufferVector rawBufferVector;
             Deserialization::Deserialize(buffer, certificate);
             Deserialization::Deserialize(buffer, rawBufferVector);
             return m_logic->getCertificateChain(
@@ -253,7 +253,7 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer){
         }
         case LogicCommand::GET_CHAIN_ALIAS:
         {
-            RawBuffer certificate;
+            SafeBuffer certificate;
             AliasVector aliasVector;
             Deserialization::Deserialize(buffer, certificate);
             Deserialization::Deserialize(buffer, aliasVector);
@@ -267,7 +267,7 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer){
         {
             Alias privateKeyAlias;
             std::string password;        // password for private_key
-            RawBuffer message;
+            SafeBuffer message;
             int padding, hash;
             Deserialization::Deserialize(buffer, privateKeyAlias);
             Deserialization::Deserialize(buffer, password);
@@ -288,8 +288,8 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer){
         {
             Alias publicKeyOrCertAlias;
             std::string password;           // password for public_key (optional)
-            RawBuffer message;
-            RawBuffer signature;
+            SafeBuffer message;
+            SafeBuffer signature;
             //HashAlgorithm hash;
             //RSAPaddingAlgorithm padding;
             int padding, hash;

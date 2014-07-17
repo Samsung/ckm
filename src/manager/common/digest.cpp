@@ -61,7 +61,7 @@ void Digest::reset()
     m_initialized = true;
 }
 
-void Digest::append(const RawBuffer &data, std::size_t len)
+void Digest::append(const SafeBuffer &data, std::size_t len)
 {
     int ret = -1;
 
@@ -82,7 +82,7 @@ void Digest::append(const RawBuffer &data, std::size_t len)
     }
 }
 
-RawBuffer Digest::finalize()
+SafeBuffer Digest::finalize()
 {
     int ret = -1;
     unsigned int dlen;
@@ -104,12 +104,12 @@ RawBuffer Digest::finalize()
     return m_digest;
 }
 
-RawBuffer Digest::get()
+SafeBuffer Digest::get()
 {
     if (m_finalized)
         return m_digest;
     else
-        return RawBuffer();
+        return SafeBuffer();
 }
 
 unsigned int Digest::length()

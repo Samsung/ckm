@@ -166,7 +166,7 @@ private:
 namespace CKM {
 
 
-int sendToServer(char const * const interface, const RawBuffer &send, MessageBuffer &recv) {
+int sendToServer(char const * const interface, const SafeBuffer &send, MessageBuffer &recv) {
     int ret;
     SockRAII sock;
     ssize_t done = 0;
@@ -208,7 +208,7 @@ int sendToServer(char const * const interface, const RawBuffer &send, MessageBuf
             return CKM_API_ERROR_SOCKET;
         }
 
-        RawBuffer raw(buffer, buffer+temp);
+        SafeBuffer raw(buffer, buffer+temp);
         recv.Push(raw);
     } while(!recv.Ready());
     return CKM_API_SUCCESS;

@@ -22,6 +22,8 @@
 
 #include <memory>
 
+#include <safe-buffer.h>
+
 #include <ckm/ckm-type.h>
 #include <ckm/ckm-key.h>
 #include <openssl/evp.h>
@@ -34,14 +36,17 @@ public:
 
     GenericKey();
     GenericKey(const GenericKey &second);
-    GenericKey(const RawBuffer& buffer, const std::string &pass = std::string());
+    GenericKey(const SafeBuffer& buffer, const std::string &pass = std::string());
     GenericKey(EvpShPtr pkey, KeyType type);
 
     virtual KeyType getType() const;
     virtual RawBuffer getDER() const;
-    virtual RawBuffer getDERPUB() const;
-    virtual RawBuffer getDERPRV() const;
-    virtual EvpShPtr getEvpShPtr() const;
+
+    SafeBuffer getDERSB() const;
+    SafeBuffer getDERPUB() const;
+    SafeBuffer getDERPRV() const;
+    EvpShPtr getEvpShPtr() const;
+
     virtual ElipticCurve getCurve() const {
         // TODO
         return ElipticCurve::prime192v1;

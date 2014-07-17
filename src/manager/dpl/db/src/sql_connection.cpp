@@ -35,6 +35,8 @@
 #include <cstdarg>
 #include <memory>
 
+#include <safe-buffer.h>
+
 namespace CKM {
 namespace DB {
 namespace // anonymous
@@ -231,7 +233,7 @@ void SqlConnection::DataCommand::BindString(
 
 void SqlConnection::DataCommand::BindBlob(
     SqlConnection::ArgumentIndex position,
-    const std::vector<unsigned char> &raw)
+    const SafeBuffer &raw)
 {
     if (raw.size() == 0) {
         BindNull(position);
@@ -343,7 +345,7 @@ void SqlConnection::DataCommand::BindString(
 
 void SqlConnection::DataCommand::BindBlob(
     SqlConnection::ArgumentIndex position,
-    const boost::optional<std::vector<unsigned char>> &value)
+    const boost::optional<SafeBuffer> &value)
 {
     if (!!value) {
         BindBlob(position, *value);
@@ -512,7 +514,7 @@ std::string SqlConnection::DataCommand::GetColumnString(
     return std::string(value);
 }
 
-std::vector<unsigned char> SqlConnection::DataCommand::GetColumnBlob(
+SafeBuffer SqlConnection::DataCommand::GetColumnBlob(
     SqlConnection::ColumnIndex column)
 {
     LogPedantic("SQL data command get column blog: [" << column << "]");
@@ -522,13 +524,13 @@ std::vector<unsigned char> SqlConnection::DataCommand::GetColumnBlob(
             sqlcipher3_column_blob(m_stmt, column));
 
     if (value == NULL) {
-        return std::vector<unsigned char>();
+        return SafeBuffer();
     }
 
     int length = sqlcipher3_column_bytes(m_stmt, column);
     LogPedantic("Got blob of length: " << length);
 
-    return std::vector<unsigned char>(value, value + length);
+    return SafeBuffer(value, value + length);
 }
 
 boost::optional<int> SqlConnection::DataCommand::GetColumnOptionalInteger(
@@ -645,14 +647,14 @@ boost::optional<String> SqlConnection::DataCommand::GetColumnOptionalString(
     return boost::optional<String>(s);
 }
 
-boost::optional<std::vector<unsigned char>> SqlConnection::DataCommand::GetColumnOptionalBlob(
+boost::optional<SafeBuffer> SqlConnection::DataCommand::GetColumnOptionalBlob(
     SqlConnection::ColumnIndex column)
 {
     LogPedantic("SQL data command get column blog: [" << column << "]");
     CheckColumnIndex(column);
 
     if (sqlcipher3_column_type(m_stmt, column) == SQLCIPHER_NULL) {
-        return boost::optional<std::vector<unsigned char>>();
+        return boost::optional<SafeBuffer>();
     }
     const unsigned char *value = reinterpret_cast<const unsigned char*>(
             sqlcipher3_column_blob(m_stmt, column));
@@ -660,8 +662,8 @@ boost::optional<std::vector<unsigned char>> SqlConnection::DataCommand::GetColum
     int length = sqlcipher3_column_bytes(m_stmt, column);
     LogPedantic("Got blob of length: " << length);
 
-    std::vector<unsigned char> temp(value, value + length);
-    return boost::optional<std::vector<unsigned char>>(temp);
+    SafeBuffer temp(value, value + length);
+    return boost::optional<SafeBuffer>(temp);
 }
 
 void SqlConnection::Connect(const std::string &address,
@@ -698,12 +700,12 @@ const std::size_t SQLCIPHER_RAW_DATA_SIZE = 32;
 
 void rawToHexString(TransitoryString& str,
                     std::size_t offset,
-                    const std::vector<unsigned char> &raw) {
+                    const SafeBuffer &raw) {
     for (std::size_t i = 0; i < raw.size(); i++)
         sprintf(&str[offset + i*2], "%02X", raw[i]);
 }
 
-TransitoryString createHexPass(const std::vector<unsigned char> &rawPass){
+TransitoryString createHexPass(const SafeBuffer &rawPass){
     TransitoryString pass = TransitoryString('0', SQLCIPHER_RAW_PREFIX.length() +
                                              //We are required to pass 64byte
                                              //long hex password made out of
@@ -720,7 +722,7 @@ TransitoryString createHexPass(const std::vector<unsigned char> &rawPass){
 
 }
 
-void SqlConnection::SetKey(const std::vector<unsigned char> &rawPass){
+void SqlConnection::SetKey(const SafeBuffer &rawPass){
     if (m_connection == NULL) {
         LogPedantic("Cannot set key. No connection to DB!");
         return;
@@ -742,8 +744,9 @@ void SqlConnection::SetKey(const std::vector<unsigned char> &rawPass){
     m_isKeySet = true;
 };
 
-void SqlConnection::ResetKey(const std::vector<unsigned char> &rawPassOld,
-                             const std::vector<unsigned char> &rawPassNew) {
+void SqlConnection::ResetKey(const SafeBuffer &rawPassOld,
+                             const SafeBuffer &rawPassNew)
+{
     if (m_connection == NULL) {
         LogPedantic("Cannot reset key. No connection to DB!");
         return;

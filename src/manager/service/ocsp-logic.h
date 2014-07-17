@@ -33,7 +33,7 @@ public:
     OCSPLogic& operator=(const OCSPLogic &) = delete;
     OCSPLogic& operator=(OCSPLogic &&) = delete;
 
-    RawBuffer ocspCheck(int commandId, const RawBufferVector &rawChain);
+    SafeBuffer ocspCheck(int commandId, const SafeBufferVector &rawChain);
     virtual ~OCSPLogic(){}
 };
 

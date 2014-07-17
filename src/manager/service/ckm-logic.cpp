@@ -50,7 +50,7 @@ CKMLogic::CKMLogic()
 
 CKMLogic::~CKMLogic(){}
 
-RawBuffer CKMLogic::unlockUserKey(uid_t user, const std::string &password) {
+SafeBuffer CKMLogic::unlockUserKey(uid_t user, const std::string &password) {
     // TODO try catch for all errors that should be supported by error code
     int retCode = CKM_API_SUCCESS;
 
@@ -67,7 +67,7 @@ RawBuffer CKMLogic::unlockUserKey(uid_t user, const std::string &password) {
 
             handle.keyProvider = KeyProvider(wrappedDomainKEK, password);
 
-            RawBuffer key = handle.keyProvider.getPureDomainKEK();
+            SafeBuffer key = handle.keyProvider.getPureDomainKEK();
             handle.database = DBCrypto(fs.getDBPath(), key);
             handle.crypto = CryptoLogic();
             // TODO wipe key
@@ -91,7 +91,7 @@ RawBuffer CKMLogic::unlockUserKey(uid_t user, const std::string &password) {
     return response.Pop();
 }
 
-RawBuffer CKMLogic::lockUserKey(uid_t user) {
+SafeBuffer CKMLogic::lockUserKey(uid_t user) {
     int retCode = CKM_API_SUCCESS;
     // TODO try catch for all errors that should be supported by error code
     m_userDataMap.erase(user);
@@ -101,7 +101,7 @@ RawBuffer CKMLogic::lockUserKey(uid_t user) {
     return response.Pop();
 }
 
-RawBuffer CKMLogic::removeUserData(uid_t user) {
+SafeBuffer CKMLogic::removeUserData(uid_t user) {
     int retCode = CKM_API_SUCCESS;
     // TODO try catch for all errors that should be supported by error code
     m_userDataMap.erase(user);
@@ -114,7 +114,7 @@ RawBuffer CKMLogic::removeUserData(uid_t user) {
     return response.Pop();
 }
 
-RawBuffer CKMLogic::changeUserPassword(
+SafeBuffer CKMLogic::changeUserPassword(
     uid_t user,
     const std::string &oldPassword,
     const std::string &newPassword)
@@ -145,7 +145,7 @@ RawBuffer CKMLogic::changeUserPassword(
     return response.Pop();
 }
 
-RawBuffer CKMLogic::resetUserPassword(
+SafeBuffer CKMLogic::resetUserPassword(
     uid_t user,
     const std::string &newPassword)
 {
@@ -168,7 +168,7 @@ int CKMLogic::saveDataHelper(
     Credentials &cred,
     DBDataType dataType,
     const Alias &alias,
-    const RawBuffer &key,
+    const SafeBuffer &key,
     const PolicySerializable &policy)
 {
     if (0 == m_userDataMap.count(cred.uid))
@@ -176,12 +176,12 @@ int CKMLogic::saveDataHelper(
 
     DBRow row = { alias, cred.smackLabel, policy.restricted,
          policy.extractable, dataType, DBCMAlgType::NONE,
-         0, RawBuffer(), static_cast<int>(key.size()), key };
+         0, SafeBuffer(), static_cast<int>(key.size()), key };
 
     auto &handler = m_userDataMap[cred.uid];
     DBCrypto::Transaction transaction(&handler.database);
     if (!handler.crypto.haveKey(cred.smackLabel)) {
-        RawBuffer key;
+        SafeBuffer key;
         auto key_optional = handler.database.getKey(cred.smackLabel);
         if(!key_optional) {
             LogDebug("No Key in database found. Generating new one for label: "
@@ -202,12 +202,12 @@ int CKMLogic::saveDataHelper(
     return CKM_API_SUCCESS;
 }
 
-RawBuffer CKMLogic::saveData(
+SafeBuffer CKMLogic::saveData(
     Credentials &cred,
     int commandId,
     DBDataType dataType,
     const Alias &alias,
-    const RawBuffer &key,
+    const SafeBuffer &key,
     const PolicySerializable &policy)
 {
     int retCode = CKM_API_SUCCESS;
@@ -240,7 +240,7 @@ RawBuffer CKMLogic::saveData(
     return response.Pop();
 }
 
-RawBuffer CKMLogic::removeData(
+SafeBuffer CKMLogic::removeData(
     Credentials &cred,
     int commandId,
     DBDataType dataType,
@@ -320,7 +320,7 @@ int CKMLogic::getDataHelper(
     }
 
     if (!handler.crypto.haveKey(row.smackLabel)) {
-        RawBuffer key;
+        SafeBuffer key;
         auto key_optional = handler.database.getKey(row.smackLabel);
         if(!key_optional) {
             LogError("No key for given label in database");
@@ -335,7 +335,7 @@ int CKMLogic::getDataHelper(
     return CKM_API_SUCCESS;
 }
 
-RawBuffer CKMLogic::getData(
+SafeBuffer CKMLogic::getData(
     Credentials &cred,
     int commandId,
     DBDataType dataType,
@@ -372,7 +372,7 @@ RawBuffer CKMLogic::getData(
     return response.Pop();
 }
 
-RawBuffer CKMLogic::getDataList(
+SafeBuffer CKMLogic::getDataList(
     Credentials &cred,
     int commandId,
     DBDataType dataType)
@@ -431,7 +431,7 @@ int CKMLogic::createKeyPairRSAHelper(
     retCode = saveDataHelper(cred,
                             toDBDataType(prv.getType()),
                             aliasPrivate,
-                            prv.getDER(),
+                            prv.getDERSB(),
                             policyPrivate);
 
     if (CKM_API_SUCCESS != retCode)
@@ -440,7 +440,7 @@ int CKMLogic::createKeyPairRSAHelper(
     retCode = saveDataHelper(cred,
                             toDBDataType(pub.getType()),
                             aliasPublic,
-                            pub.getDER(),
+                            pub.getDERSB(),
                             policyPublic);
 
     if (CKM_API_SUCCESS != retCode)
@@ -451,7 +451,7 @@ int CKMLogic::createKeyPairRSAHelper(
     return retCode;
 }
 
-RawBuffer CKMLogic::createKeyPairRSA(
+SafeBuffer CKMLogic::createKeyPairRSA(
     Credentials &cred,
     int commandId,
     int size,
@@ -520,7 +520,7 @@ int CKMLogic::createKeyPairECDSAHelper(
     retCode = saveDataHelper(cred,
                             toDBDataType(prv.getType()),
                             aliasPrivate,
-                            prv.getDER(),
+                            prv.getDERSB(),
                             policyPrivate);
 
     if (CKM_API_SUCCESS != retCode)
@@ -529,7 +529,7 @@ int CKMLogic::createKeyPairECDSAHelper(
     retCode = saveDataHelper(cred,
                             toDBDataType(pub.getType()),
                             aliasPublic,
-                            pub.getDER(),
+                            pub.getDERSB(),
                             policyPublic);
 
     if (CKM_API_SUCCESS != retCode)
@@ -540,7 +540,7 @@ int CKMLogic::createKeyPairECDSAHelper(
     return retCode;
 }
 
-RawBuffer CKMLogic::createKeyPairECDSA(
+SafeBuffer CKMLogic::createKeyPairECDSA(
     Credentials &cred,
     int commandId,
     int type,
@@ -581,18 +581,18 @@ RawBuffer CKMLogic::createKeyPairECDSA(
     return response.Pop();
 }
 
-RawBuffer CKMLogic::getCertificateChain(
+SafeBuffer CKMLogic::getCertificateChain(
     Credentials &cred,
     int commandId,
-    const RawBuffer &certificate,
-    const RawBufferVector &untrustedRawCertVector)
+    const SafeBuffer &certificate,
+    const SafeBufferVector &untrustedRawCertVector)
 {
     (void)cred;
 
     CertificateImpl cert(certificate, DataFormat::FORM_DER);
     CertificateImplVector untrustedCertVector;
     CertificateImplVector chainVector;
-    RawBufferVector chainRawVector;
+    SafeBufferVector chainRawVector;
 
     for (auto &e: untrustedRawCertVector)
         untrustedCertVector.push_back(CertificateImpl(e, DataFormat::FORM_DER));
@@ -603,7 +603,7 @@ RawBuffer CKMLogic::getCertificateChain(
 
     if (retCode == CKM_API_SUCCESS) {
         for (auto &e : chainVector)
-            chainRawVector.push_back(e.getDER());
+            chainRawVector.push_back(e.getDERSB());
     }
 
     MessageBuffer response;
@@ -614,14 +614,14 @@ RawBuffer CKMLogic::getCertificateChain(
     return response.Pop();
 }
 
-RawBuffer CKMLogic::getCertificateChain(
+SafeBuffer CKMLogic::getCertificateChain(
     Credentials &cred,
     int commandId,
-    const RawBuffer &certificate,
+    const SafeBuffer &certificate,
     const AliasVector &aliasVector)
 {
     int retCode = CKM_API_SUCCESS;
-    RawBufferVector chainRawVector;
+    SafeBufferVector chainRawVector;
     try {
         CertificateImpl cert(certificate, DataFormat::FORM_DER);
         CertificateImplVector untrustedCertVector;
@@ -648,7 +648,7 @@ RawBuffer CKMLogic::getCertificateChain(
             goto senderror;
 
         for (auto &i: chainVector)
-            chainRawVector.push_back(i.getDER());
+            chainRawVector.push_back(i.getDERSB());
 
     } catch (const CryptoLogic::Exception::Base &e) {
         LogError("DBCyptorModule failed with message: " << e.GetMessage());
@@ -669,18 +669,18 @@ senderror:
     return response.Pop();
 }
 
-RawBuffer CKMLogic::createSignature(
+SafeBuffer CKMLogic::createSignature(
         Credentials &cred,
         int commandId,
         const Alias &privateKeyAlias,
         const std::string &password,           // password for private_key
-        const RawBuffer &message,
+        const SafeBuffer &message,
         const HashAlgorithm hash,
         const RSAPaddingAlgorithm padding)
 {
     DBRow row;
     CryptoService cs;
-    RawBuffer signature;
+    SafeBuffer signature;
 
     int retCode = CKM_API_SUCCESS;
 
@@ -720,13 +720,13 @@ RawBuffer CKMLogic::createSignature(
     return response.Pop();
 }
 
-RawBuffer CKMLogic::verifySignature(
+SafeBuffer CKMLogic::verifySignature(
         Credentials &cred,
         int commandId,
         const Alias &publicKeyOrCertAlias,
         const std::string &password,           // password for public_key (optional)
-        const RawBuffer &message,
-        const RawBuffer &signature,
+        const SafeBuffer &message,
+        const SafeBuffer &signature,
         const HashAlgorithm hash,
         const RSAPaddingAlgorithm padding)
 {

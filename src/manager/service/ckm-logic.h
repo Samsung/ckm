@@ -50,48 +50,48 @@ public:
     CKMLogic& operator=(CKMLogic &&) = delete;
     virtual ~CKMLogic();
 
-    RawBuffer unlockUserKey(uid_t user, const std::string &password);
+    SafeBuffer unlockUserKey(uid_t user, const std::string &password);
 
-    RawBuffer lockUserKey(uid_t user);
+    SafeBuffer lockUserKey(uid_t user);
 
-    RawBuffer removeUserData(uid_t user);
+    SafeBuffer removeUserData(uid_t user);
 
-    RawBuffer changeUserPassword(
+    SafeBuffer changeUserPassword(
         uid_t user,
         const std::string &oldPassword,
         const std::string &newPassword);
 
-    RawBuffer resetUserPassword(
+    SafeBuffer resetUserPassword(
         uid_t user,
         const std::string &newPassword);
 
-    RawBuffer saveData(
+    SafeBuffer saveData(
         Credentials &cred,
         int commandId,
         DBDataType dataType,
         const Alias &alias,
-        const RawBuffer &key,
+        const SafeBuffer &key,
         const PolicySerializable &policy);
 
-    RawBuffer removeData(
+    SafeBuffer removeData(
         Credentials &cred,
         int commandId,
         DBDataType dataType,
         const Alias &alias);
 
-    RawBuffer getData(
+    SafeBuffer getData(
         Credentials &cred,
         int commandId,
         DBDataType dataType,
         const Alias &alias,
         const std::string &password);
 
-    RawBuffer getDataList(
+    SafeBuffer getDataList(
         Credentials &cred,
         int commandId,
         DBDataType dataType);
 
-    RawBuffer createKeyPairRSA(
+    SafeBuffer createKeyPairRSA(
         Credentials &cred,
         int commandId,
         int size,
@@ -100,7 +100,7 @@ public:
         const PolicySerializable &policyPrivate,
         const PolicySerializable &policyPublic);
 
-    RawBuffer createKeyPairECDSA(
+    SafeBuffer createKeyPairECDSA(
         Credentials &cred,
         int commandId,
         int type,
@@ -109,34 +109,34 @@ public:
         const PolicySerializable &policyPrivate,
         const PolicySerializable &policyPublic);
 
-    RawBuffer getCertificateChain(
+    SafeBuffer getCertificateChain(
         Credentials &cred,
         int commandId,
-        const RawBuffer &certificate,
-        const RawBufferVector &untrustedCertificates);
+        const SafeBuffer &certificate,
+        const SafeBufferVector &untrustedCertificates);
 
-    RawBuffer getCertificateChain(
+    SafeBuffer getCertificateChain(
         Credentials &cred,
         int commandId,
-        const RawBuffer &certificate,
+        const SafeBuffer &certificate,
         const AliasVector &aliasVector);
 
-    RawBuffer  createSignature(
+    SafeBuffer  createSignature(
         Credentials &cred,
         int commandId,
         const Alias &privateKeyAlias,
         const std::string &password,           // password for private_key
-        const RawBuffer &message,
+        const SafeBuffer &message,
         const HashAlgorithm hash,
         const RSAPaddingAlgorithm padding);
 
-    RawBuffer verifySignature(
+    SafeBuffer verifySignature(
         Credentials &cred,
         int commandId,
         const Alias &publicKeyOrCertAlias,
         const std::string &password,           // password for public_key (optional)
-        const RawBuffer &message,
-        const RawBuffer &signature,
+        const SafeBuffer &message,
+        const SafeBuffer &signature,
         const HashAlgorithm hash,
         const RSAPaddingAlgorithm padding);
 
@@ -146,7 +146,7 @@ private:
         Credentials &cred,
         DBDataType dataType,
         const Alias &alias,
-        const RawBuffer &key,
+        const SafeBuffer &key,
         const PolicySerializable &policy);
 
     int getDataHelper(

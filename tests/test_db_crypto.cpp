@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(DBtestSimple) {
     BOOST_REQUIRE_NO_THROW(db = DBCrypto(crypto_db, defaultPass));
 
     DBRow rowPattern = createDefaultRow();
-    rowPattern.data = RawBuffer(32, 1);
+    rowPattern.data = SafeBuffer(32, 1);
     rowPattern.dataSize = rowPattern.data.size();
 
     checkDBIntegrity(rowPattern, db);
@@ -112,7 +112,7 @@ BOOST_AUTO_TEST_CASE(DBtestGlobal) {
     BOOST_REQUIRE_NO_THROW(db = DBCrypto(crypto_db, defaultPass));
 
     DBRow rowPattern = createDefaultRow(restricted_global);
-    rowPattern.data = RawBuffer(1024, 2);
+    rowPattern.data = SafeBuffer(1024, 2);
     rowPattern.dataSize = rowPattern.data.size();
 
     BOOST_REQUIRE_NO_THROW(db.saveDBRow(rowPattern));
@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(DBtestTransaction) {
     BOOST_REQUIRE_NO_THROW(db = DBCrypto(crypto_db, defaultPass));
 
     DBRow rowPattern = createDefaultRow(0);
-    rowPattern.data = RawBuffer(100, 20);
+    rowPattern.data = SafeBuffer(100, 20);
     rowPattern.dataSize = rowPattern.data.size();
     DBCrypto::Transaction transaction(&db);
 
