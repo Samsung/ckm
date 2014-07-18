@@ -252,5 +252,12 @@ CertificateImpl::~CertificateImpl() {
     LogDebug("free cert end");
 }
 
+CertificateShPtr Certificate::create(const RawBuffer &rawBuffer, DataFormat format) {
+    CertificateShPtr output(new CertificateImpl(rawBuffer, format));
+    if (output.get() == NULL)
+        output.reset();
+    return output;
+}
+
 } // namespace CKM
 

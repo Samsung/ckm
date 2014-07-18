@@ -164,9 +164,11 @@ fi
 %{_libdir}/libkey-manager-control-client.so
 %{_libdir}/libkey-manager-commons.so
 %{_includedir}/ckm/ckm/ckm-manager.h
+%{_includedir}/ckm/ckm/ckm-certificate.h
 %{_includedir}/ckm/ckm/ckm-control.h
 %{_includedir}/ckm/ckm/ckm-error.h
 %{_includedir}/ckm/ckm/ckm-echo.h
+%{_includedir}/ckm/ckm/ckm-key.h
 %{_includedir}/ckm/ckm/ckm-type.h
 %{_includedir}/ckm/ckmc/ckmc-manager.h
 %{_includedir}/ckm/ckmc/ckmc-control.h

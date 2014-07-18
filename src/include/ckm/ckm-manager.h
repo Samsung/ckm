@@ -25,67 +25,13 @@
 #include <vector>
 #include <memory>
 
+#include <ckm/ckm-certificate.h>
 #include <ckm/ckm-error.h>
+#include <ckm/ckm-key.h>
 #include <ckm/ckm-type.h>
 
 // Central Key Manager namespace
 namespace CKM {
-
-class Key {
-public:
-    Key();
-    Key(const RawBuffer &rawData,
-        const std::string &password = std::string(),
-        KeyType type = KeyType::KEY_NONE); // Import key
-    Key(const Key &key);
-    Key& operator=(const Key &key);
-    virtual ~Key();
-
-    bool empty() const;
-    KeyType getType() const;
-    int getSize() const;
-	ElipticCurve getCurve() const;
-    RawBuffer getDER() const;
-    GenericKey* getImpl() const;
-
-private:
-    std::shared_ptr<GenericKey> m_impl;
-};
-
-class Certificate {
-public:
-//    enum class FingerprintType : unsigned int {
-//        FINGERPRINT_MD5,
-//        FINGERPRINT_SHA1,
-//        FINGERPRINT_SHA256
-//    };
-
-    Certificate();
-    Certificate(const RawBuffer &rawData, DataFormat format);
-	Certificate(const Certificate &certificate);
-	Certificate& operator=(const Certificate &certificate);
-
-	bool empty() const;
-
-//  Key getKey() const;
-
-    // This function  will return openssl struct X509*.
-    // You should not free the memory.
-    // Memory will be freed in ~Certificate.
-    void *getX509();
-    RawBuffer getDER() const;
-    CertificateImpl* getImpl();
-
-//    // *** standard certificate operation begin ***
-//    bool isSignedBy(const Certificate &parent) const;
-//    RawBuffer getFingerprint(FingerprintType type) const;
-//    bool isCA() const;
-//    // *** standard certificate operation end ***
-private:
-    std::shared_ptr<CertificateImpl> m_impl;
-};
-
-typedef std::vector<Certificate> CertificateVector;
 
 /*
 class Pkcs12 {
@@ -103,7 +49,7 @@ public:
 
 	// check the API in openssl and translate it 1 to 1.
 
-	CertificateVector getCertificateVector();
+	CertificateShPtrVector getCertificateShPtrVector();
 
 	bool empty();
 	virtual ~Pkcs12();
@@ -113,89 +59,85 @@ private:
 };
 */
 
+class Manager;
+typedef std::shared_ptr<Manager> ManagerShPtr;
+
 class Manager {
 public:
-    Manager();
-//	Manager(int uid);   // connect to database related with uid
-    Manager(const Manager &connection) = delete;
-    Manager(Manager &&connection) = delete;
-    Manager operator=(const Manager &connection) = delete;
-    Manager operator=(Manager && connection) = delete;
-    virtual ~Manager();
+    virtual ~Manager(){}
 
-    int saveKey(const Alias &alias, const Key &key, const Policy &policy);
-    int saveCertificate(const Alias &alias, const Certificate &cert, const Policy &policy);
+    virtual int saveKey(const Alias &alias, const KeyShPtr &key, const Policy &policy) = 0;
+    virtual int saveCertificate(const Alias &alias, const CertificateShPtr &cert, const Policy &policy) = 0;
 
     /*
      * Data must be extractable. If you set extractable bit to false funciton will
      * return ERROR_INPUT_PARAM.
      */
-    int saveData(const Alias &alias, const RawBuffer &data, const Policy &policy);
+    virtual int saveData(const Alias &alias, const RawBuffer &data, const Policy &policy) = 0;
 
-    int removeKey(const Alias &alias);
-    int removeCertificate(const Alias &alias);
-    int removeData(const Alias &alias);
+    virtual int removeKey(const Alias &alias) = 0;
+    virtual int removeCertificate(const Alias &alias) = 0;
+    virtual int removeData(const Alias &alias) = 0;
 
-    int getKey(const Alias &alias, const std::string &password, Key &key);
-    int getCertificate(
-            const Alias &alias,
-            const std::string &password,
-            Certificate &certificate);
-    int getData(const Alias &alias, const std::string &password, RawBuffer &data);
+    virtual int getKey(const Alias &alias, const std::string &password, KeyShPtr &key) = 0;
+    virtual int getCertificate(
+        const Alias &alias,
+        const std::string &password,
+        CertificateShPtr &certificate) = 0;
+    virtual int getData(const Alias &alias, const std::string &password, RawBuffer &data) = 0;
 
     // send request for list of all keys/certificates/data that application/user may use
-    int getKeyAliasVector(AliasVector &aliasVector);
-    int getCertificateAliasVector(AliasVector &aliasVector);
-    int getDataAliasVector(AliasVector &aliasVector);
+    virtual int getKeyAliasVector(AliasVector &aliasVector) = 0;
+    virtual int getCertificateAliasVector(AliasVector &aliasVector) = 0;
+    virtual int getDataAliasVector(AliasVector &aliasVector) = 0;
 
-    int createKeyPairRSA(
+    virtual int createKeyPairRSA(
         const int size,              // size in bits [1024, 2048, 4096]
         const Alias &privateKeyAlias,
         const Alias &publicKeyAlias,
         const Policy &policyPrivateKey = Policy(),
-        const Policy &policyPublicKey = Policy());
+        const Policy &policyPublicKey = Policy()) = 0;
 
-    int createKeyPairECDSA(
+    virtual int createKeyPairECDSA(
         const ElipticCurve type,
         const Alias &privateKeyAlias,
         const Alias &publicKeyAlias,
         const Policy &policyPrivateKey = Policy(),
-        const Policy &policyPublicKey = Policy());
+        const Policy &policyPublicKey = Policy()) = 0;
 
-    int getCertificateChain(
-            const Certificate &certificate,
-            const CertificateVector &untrustedCertificates,
-            CertificateVector &certificateChainVector);
+    virtual int getCertificateChain(
+        const CertificateShPtr &certificate,
+        const CertificateShPtrVector &untrustedCertificates,
+        CertificateShPtrVector &certificateChainVector) = 0;
 
-    int getCertificateChain(
-            const Certificate &certificate,
-            const AliasVector &untrustedCertificates,
-            CertificateVector &certificateChainVector);
+    virtual int getCertificateChain(
+        const CertificateShPtr &certificate,
+        const AliasVector &untrustedCertificates,
+        CertificateShPtrVector &certificateChainVector) = 0;
 
-    int createSignature(
+    virtual int createSignature(
         const Alias &privateKeyAlias,
         const std::string &password,           // password for private_key
         const RawBuffer &message,
         const HashAlgorithm hash,
         const RSAPaddingAlgorithm padding,
-        RawBuffer &signature);
+        RawBuffer &signature) = 0;
 
-    int verifySignature(
+    virtual int verifySignature(
         const Alias &publicKeyOrCertAlias,
         const std::string &password,           // password for public_key (optional)
         const RawBuffer &message,
         const RawBuffer &signature,
         const HashAlgorithm hash,
-        const RSAPaddingAlgorithm padding);
+        const RSAPaddingAlgorithm padding) = 0;
 
     // This function will check all certificates in chain except Root CA.
     // This function will delegate task to service. You may use this even
     // if application does not have permission to use network.
-    int ocspCheck(const CertificateVector &certificateChainVector, int &ocspStatus);
+    virtual int ocspCheck(const CertificateShPtrVector &certificateChainVector, int &ocspStatus) = 0;
 
-private:
-    class ManagerImpl;
-    std::shared_ptr<ManagerImpl> m_impl;
+    static ManagerShPtr create();
+//    static ManagerShPtr getManager(int uid); // TODO
 };
 
 /*
@@ -243,7 +185,7 @@ public:
         // Do we need some chain of the certificate?
         virtual void ReceivedVerifyCertificate() {}
 
-		virtual void ReceivedGetCertiticateChain(CertificateVector &&certificateVector) {}
+		virtual void ReceivedGetCertiticateChain(CertificateShPtrVector &&certificateVector) {}
 		virtual void ReceivedStrictCACheck();
 		virtual void ReceivedOCSPCheck();
 
@@ -283,7 +225,7 @@ public:
 
     // Should we use also certificates stored by user in Certral Key Manager?
     // Sometimes we may want to verify certificate without OCSP (for example we are installing side-loaded app and network is not working).
-    void verifyCertificate(Observer *observer, const Certificate &certificate, const CertificateVector &untrusted, const bool ocspCheck, const bool strictCaFlagCheck);
+    void verifyCertificate(Observer *observer, const Certificate &certificate, const CertificateShPtrVector &untrusted, const bool ocspCheck, const bool strictCaFlagCheck);
 
 	void createKeyPairRSA(
 			Observer *observer,
@@ -305,16 +247,16 @@ public:
 	// status : OK, INCOMPLETE_CHAIN, VERIFICATION_FAILED
 	void getCertiticateChain(
 			const Certificate &certificate,
-			const CertificateVector &untrustedCertificates);
+			const CertificateShPtrVector &untrustedCertificates);
 
 	void getCertificateChain(
 			const Certificate &certificate,
 			const AliasVector &untrustedCertificates);
 
-	void strictCACheck(const CertificateVector &certificateVector);
+	void strictCACheck(const CertificateShPtrVector &certificateVector);
 
 	// This function will check all certificates in chain except Root CA.
-	void ocspCheck(const CertificateVector &certificateChainVector);
+	void ocspCheck(const CertificateShPtrVector &certificateChainVector);
 
 private:
     ConnectionAsyncImpl *m_impl;

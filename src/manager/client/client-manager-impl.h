@@ -23,23 +23,24 @@
 #include <protocols.h>
 
 #include <ckm/ckm-type.h>
+#include <ckm/ckm-key.h>
 #include <ckm/ckm-manager.h>
 
 namespace CKM {
 
-class Manager::ManagerImpl {
+class ManagerImpl : public Manager {
 public:
     ManagerImpl();
     virtual ~ManagerImpl(){}
 
-    int saveKey(const Alias &alias, const Key &key, const Policy &policy);
+    int saveKey(const Alias &alias, const KeyShPtr &key, const Policy &policy);
     int removeKey(const Alias &alias);
-    int getKey(const Alias &alias, const std::string &password, Key &key);
+    int getKey(const Alias &alias, const std::string &password, KeyShPtr &key);
     int getKeyAliasVector(AliasVector &aliasVector);
 
-    int saveCertificate(const Alias &alias, const Certificate &cert, const Policy &policy);
+    int saveCertificate(const Alias &alias, const CertificateShPtr &cert, const Policy &policy);
     int removeCertificate(const Alias &alias);
-    int getCertificate(const Alias &alias, const std::string &password, Certificate &cert);
+    int getCertificate(const Alias &alias, const std::string &password, CertificateShPtr &cert);
     int getCertificateAliasVector(AliasVector &aliasVector);
 
     int saveData(const Alias &alias, const RawBuffer &rawData, const Policy &policy);
@@ -62,14 +63,14 @@ public:
         const Policy &policyPublicKey = Policy());
 
     int getCertificateChain(
-        const Certificate &certificate,
-        const CertificateVector &untrustedCertificates,
-        CertificateVector &certificateChainVector);
+        const CertificateShPtr &certificate,
+        const CertificateShPtrVector &untrustedCertificates,
+        CertificateShPtrVector &certificateChainVector);
 
     int getCertificateChain(
-        const Certificate &certificate,
+        const CertificateShPtr &certificate,
         const AliasVector &untrustedCertificates,
-        CertificateVector &certificateChainVector);
+        CertificateShPtrVector &certificateChainVector);
 
     int createSignature(
         const Alias &privateKeyAlias,
@@ -87,7 +88,7 @@ public:
         const HashAlgorithm hash,
         const RSAPaddingAlgorithm padding);
 
-    int ocspCheck(const CertificateVector &certificateChain, int &ocspCheck);
+    int ocspCheck(const CertificateShPtrVector &certificateChain, int &ocspCheck);
 
 protected:
     int saveBinaryData(

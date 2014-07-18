@@ -23,11 +23,12 @@
 #include <memory>
 
 #include <ckm/ckm-type.h>
+#include <ckm/ckm-key.h>
 #include <openssl/evp.h>
 
 namespace CKM {
 
-class GenericKey {
+class GenericKey : public Key {
 public:
     typedef std::shared_ptr<EVP_PKEY> EvpShPtr;
 
@@ -41,6 +42,14 @@ public:
     virtual RawBuffer getDERPUB() const;
     virtual RawBuffer getDERPRV() const;
     virtual EvpShPtr getEvpShPtr() const;
+    virtual ElipticCurve getCurve() const {
+        // TODO
+        return ElipticCurve::prime192v1;
+    }
+    virtual int getSize() const {
+        // TODO
+        return 0;
+    }
 
     virtual bool empty() const;
     virtual ~GenericKey(){}

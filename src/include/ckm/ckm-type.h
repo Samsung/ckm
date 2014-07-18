@@ -93,10 +93,6 @@ enum class DBCMAlgType : int {
     COUNT
 };
 
-// Internal types
-class GenericKey;
-class CertificateImpl;
-
 const char * ErrorToString(int error);
 
 } // namespace CKM

@@ -223,5 +223,12 @@ RawBuffer GenericKey::getDER() const {
 //    return output;
 }
 
+KeyShPtr Key::create(const RawBuffer &raw, const std::string &password) {
+    KeyShPtr output(new GenericKey(raw, password));
+    if (output->empty())
+        output.reset();
+    return output;
+}
+
 } // namespace CKM
 

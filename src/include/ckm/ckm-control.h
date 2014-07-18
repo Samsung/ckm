@@ -26,38 +26,38 @@
 #include <memory>
 
 #include <ckm/ckm-error.h>
-#include <ckm/ckm-type.h>
 
 // Central Key Manager namespace
 namespace CKM {
+
+class Control;
+typedef std::shared_ptr<Control> ControlShPtr;
 
 // used by login manager to unlock user data with global password
 class Control
 {
 public:
-    Control();
     // decrypt user key with password
-    int unlockUserKey(uid_t user, const std::string &password) const;
+    virtual int unlockUserKey(uid_t user, const std::string &password) const = 0;
 
     // remove user key from memory
-    int lockUserKey(uid_t user) const;
+    virtual int lockUserKey(uid_t user) const = 0;
 
     // remove user data from Store and erase key used for encryption
-    int removeUserData(uid_t user) const;
+    virtual int removeUserData(uid_t user) const = 0;
 
     // change password for user
-    int changeUserPassword(uid_t user, const std::string &oldPassword, const std::string &newPassword) const;
+    virtual int changeUserPassword(uid_t user, const std::string &oldPassword, const std::string &newPassword) const = 0;
 
     // This is work around for security-server api - resetPassword that may be called without passing oldPassword.
     // This api should not be supported on tizen 3.0
     // User must be already logged in and his DKEK is already loaded into memory in plain text form.
     // The service will use DKEK in plain text and encrypt it in encrypted form (using new password).
-    int resetUserPassword(uid_t user, const std::string &newPassword) const;
+    virtual int resetUserPassword(uid_t user, const std::string &newPassword) const = 0;
 
-    virtual ~Control();
-private:
-    class ControlImpl;
-    std::shared_ptr<ControlImpl> m_impl;
+    virtual ~Control(){}
+
+    static ControlShPtr create();
 };
 
 } // namespace CKM

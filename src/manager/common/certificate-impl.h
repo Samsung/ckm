@@ -24,17 +24,13 @@
 #include <memory>
 #include <vector>
 #include <ckm/ckm-type.h>
+#include <ckm/ckm-certificate.h>
 
 #include <generic-key.h>
 
-extern "C" {
-struct x509_st;
-typedef struct x509_st X509;
-}
-
 namespace CKM {
 
-class CertificateImpl {
+class CertificateImpl : public Certificate {
 public:
     CertificateImpl(){}
     CertificateImpl(X509* x509);
@@ -43,8 +39,10 @@ public:
     CertificateImpl(CertificateImpl &&);
     CertificateImpl& operator=(const CertificateImpl &);
     CertificateImpl& operator=(CertificateImpl &&);
-    RawBuffer getDER() const;
-    bool empty() const;
+
+    virtual RawBuffer getDER() const;
+    virtual bool empty() const;
+    virtual X509* getX509() const;
 
     GenericKey::EvpShPtr getEvpShPtr() const;
     GenericKey getGenericKey() const;
@@ -59,8 +57,6 @@ public:
     std::string getOrganizationalUnitName(CertificateFieldId type) const;
     std::string getEmailAddres(CertificateFieldId type) const;
     std::string getOCSPURL() const;
-
-    X509* getX509() const;
 
     virtual ~CertificateImpl();
 protected:

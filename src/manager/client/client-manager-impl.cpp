@@ -27,7 +27,8 @@
 #include <client-common.h>
 #include <message-buffer.h>
 #include <protocols.h>
-
+#include <generic-key.h>
+#include <certificate-impl.h>
 
 namespace {
 
@@ -41,9 +42,9 @@ void clientInitialize(void) {
 
 namespace CKM {
 
-bool Manager::ManagerImpl::s_isInit = false;
+bool ManagerImpl::s_isInit = false;
 
-Manager::ManagerImpl::ManagerImpl()
+ManagerImpl::ManagerImpl()
   : m_counter(0)
 {
     // TODO secure with mutex
@@ -55,7 +56,7 @@ Manager::ManagerImpl::ManagerImpl()
 }
 
 
-int Manager::ManagerImpl::saveBinaryData(
+int ManagerImpl::saveBinaryData(
     const Alias &alias,
     DBDataType dataType,
     const RawBuffer &rawData,
@@ -100,27 +101,29 @@ int Manager::ManagerImpl::saveBinaryData(
     });
 }
 
-int Manager::ManagerImpl::saveKey(const Alias &alias, const Key &key, const Policy &policy) {
-    if (key.empty())
+int ManagerImpl::saveKey(const Alias &alias, const KeyShPtr &key, const Policy &policy) {
+    if (key.get() == NULL)
         return CKM_API_ERROR_INPUT_PARAM;
-    return saveBinaryData(alias, toDBDataType(key.getType()), key.getDER(), policy);
+    return saveBinaryData(alias, toDBDataType(key->getType()), key->getDER(), policy);
 }
 
-int Manager::ManagerImpl::saveCertificate(
+int ManagerImpl::saveCertificate(
     const Alias &alias,
-    const Certificate &cert,
+    const CertificateShPtr &cert,
     const Policy &policy)
 {
-    return saveBinaryData(alias, DBDataType::CERTIFICATE, cert.getDER(), policy);
+    if (cert.get() == NULL)
+        return CKM_API_ERROR_INPUT_PARAM;
+    return saveBinaryData(alias, DBDataType::CERTIFICATE, cert->getDER(), policy);
 }
 
-int Manager::ManagerImpl::saveData(const Alias &alias, const RawBuffer &rawData, const Policy &policy) {
+int ManagerImpl::saveData(const Alias &alias, const RawBuffer &rawData, const Policy &policy) {
     if (!policy.extractable)
         return CKM_API_ERROR_INPUT_PARAM;
     return saveBinaryData(alias, DBDataType::BINARY_DATA, rawData, policy);
 }
 
-int Manager::ManagerImpl::removeBinaryData(const Alias &alias, DBDataType dataType)
+int ManagerImpl::removeBinaryData(const Alias &alias, DBDataType dataType)
 {
     return try_catch([&] {
         if (alias.empty())
@@ -157,19 +160,19 @@ int Manager::ManagerImpl::removeBinaryData(const Alias &alias, DBDataType dataTy
     });
 }
 
-int Manager::ManagerImpl::removeKey(const Alias &alias) {
+int ManagerImpl::removeKey(const Alias &alias) {
     return removeBinaryData(alias, DBDataType::KEY_RSA_PUBLIC);
 }
 
-int Manager::ManagerImpl::removeCertificate(const Alias &alias) {
+int ManagerImpl::removeCertificate(const Alias &alias) {
     return removeBinaryData(alias, DBDataType::CERTIFICATE);
 }
 
-int Manager::ManagerImpl::removeData(const Alias &alias) {
+int ManagerImpl::removeData(const Alias &alias) {
     return removeBinaryData(alias, DBDataType::BINARY_DATA);
 }
 
-int Manager::ManagerImpl::getBinaryData(
+int ManagerImpl::getBinaryData(
     const Alias &alias,
     DBDataType sendDataType,
     const std::string &password,
@@ -214,7 +217,7 @@ int Manager::ManagerImpl::getBinaryData(
     });
 }
 
-int Manager::ManagerImpl::getKey(const Alias &alias, const std::string &password, Key &key) {
+int ManagerImpl::getKey(const Alias &alias, const std::string &password, KeyShPtr &key) {
     DBDataType recvDataType;
     RawBuffer rawData;
 
@@ -228,9 +231,9 @@ int Manager::ManagerImpl::getKey(const Alias &alias, const std::string &password
     if (retCode != CKM_API_SUCCESS)
         return retCode;
 
-    Key keyParsed(rawData);
+    KeyShPtr keyParsed(new GenericKey(rawData));
 
-    if (keyParsed.empty()) {
+    if (keyParsed->empty()) {
         LogDebug("Key empty - failed to parse!");
         return CKM_API_ERROR_BAD_RESPONSE;
     }
@@ -240,7 +243,7 @@ int Manager::ManagerImpl::getKey(const Alias &alias, const std::string &password
     return CKM_API_SUCCESS;
 }
 
-int Manager::ManagerImpl::getCertificate(const Alias &alias, const std::string &password, Certificate &cert)
+int ManagerImpl::getCertificate(const Alias &alias, const std::string &password, CertificateShPtr &cert)
 {
     DBDataType recvDataType;
     RawBuffer rawData;
@@ -258,9 +261,9 @@ int Manager::ManagerImpl::getCertificate(const Alias &alias, const std::string &
     if (recvDataType != DBDataType::CERTIFICATE)
         return CKM_API_ERROR_BAD_RESPONSE;
 
-    Certificate certParsed(rawData, DataFormat::FORM_DER);
+    CertificateShPtr certParsed(new CertificateImpl(rawData, DataFormat::FORM_DER));
 
-    if (certParsed.empty())
+    if (certParsed->empty())
         return CKM_API_ERROR_BAD_RESPONSE;
 
     cert = certParsed;
@@ -268,7 +271,7 @@ int Manager::ManagerImpl::getCertificate(const Alias &alias, const std::string &
     return CKM_API_SUCCESS;
 }
 
-int Manager::ManagerImpl::getData(const Alias &alias, const std::string &password, RawBuffer &rawData)
+int ManagerImpl::getData(const Alias &alias, const std::string &password, RawBuffer &rawData)
 {
     DBDataType recvDataType;
 
@@ -288,7 +291,7 @@ int Manager::ManagerImpl::getData(const Alias &alias, const std::string &passwor
     return CKM_API_SUCCESS;
 }
 
-int Manager::ManagerImpl::getBinaryDataAliasVector(DBDataType dataType, AliasVector &aliasVector)
+int ManagerImpl::getBinaryDataAliasVector(DBDataType dataType, AliasVector &aliasVector)
 {
     return try_catch([&] {
 
@@ -323,19 +326,19 @@ int Manager::ManagerImpl::getBinaryDataAliasVector(DBDataType dataType, AliasVec
     });
 }
 
-int Manager::ManagerImpl::getKeyAliasVector(AliasVector &aliasVector) {
+int ManagerImpl::getKeyAliasVector(AliasVector &aliasVector) {
     return getBinaryDataAliasVector(DBDataType::KEY_RSA_PUBLIC, aliasVector);
 }
 
-int Manager::ManagerImpl::getCertificateAliasVector(AliasVector &aliasVector) {
+int ManagerImpl::getCertificateAliasVector(AliasVector &aliasVector) {
     return getBinaryDataAliasVector(DBDataType::CERTIFICATE, aliasVector);
 }
 
-int Manager::ManagerImpl::getDataAliasVector(AliasVector &aliasVector) {
+int ManagerImpl::getDataAliasVector(AliasVector &aliasVector) {
     return getBinaryDataAliasVector(DBDataType::BINARY_DATA, aliasVector);
 }
 
-int Manager::ManagerImpl::createKeyPairRSA(
+int ManagerImpl::createKeyPairRSA(
     const int size,              // size in bits [1024, 2048, 4096]
     const Alias &privateKeyAlias,
     const Alias &publicKeyAlias,
@@ -378,7 +381,7 @@ int Manager::ManagerImpl::createKeyPairRSA(
     });
 }
 
-int Manager::ManagerImpl::createKeyPairECDSA(
+int ManagerImpl::createKeyPairECDSA(
     ElipticCurve type,
     const Alias &privateKeyAlias,
     const Alias &publicKeyAlias,
@@ -426,16 +429,16 @@ template <class T>
 int getCertChain(
     LogicCommand command,
     int counter,
-    const Certificate &certificate,
+    const CertificateShPtr &certificate,
     const T &sendData,
-    CertificateVector &certificateChainVector)
+    CertificateShPtrVector &certificateChainVector)
 {
     return try_catch([&] {
 
         MessageBuffer send, recv;
         Serialization::Serialize(send, static_cast<int>(command));
         Serialization::Serialize(send, counter);
-        Serialization::Serialize(send, certificate.getDER());
+        Serialization::Serialize(send, certificate->getDER());
         Serialization::Serialize(send, sendData);
         int retCode = sendToServer(
             SERVICE_SOCKET_CKM_STORAGE,
@@ -463,23 +466,27 @@ int getCertChain(
             return retCode;
         }
 
-        for (auto &e: rawBufferVector)
-            certificateChainVector.push_back(Certificate(e, DataFormat::FORM_DER));
+        for (auto &e: rawBufferVector) {
+            CertificateShPtr cert(new CertificateImpl(e, DataFormat::FORM_DER));
+            if (cert->empty())
+                return CKM_API_ERROR_BAD_RESPONSE;
+            certificateChainVector.push_back(cert);
+        }
 
         return retCode;
     });
 }
 
 
-int Manager::ManagerImpl::getCertificateChain(
-    const Certificate &certificate,
-    const CertificateVector &untrustedCertificates,
-    CertificateVector &certificateChainVector)
+int ManagerImpl::getCertificateChain(
+    const CertificateShPtr &certificate,
+    const CertificateShPtrVector &untrustedCertificates,
+    CertificateShPtrVector &certificateChainVector)
 {
     RawBufferVector rawBufferVector;
 
     for (auto &e: untrustedCertificates) {
-        rawBufferVector.push_back(e.getDER());
+        rawBufferVector.push_back(e->getDER());
     }
 
     return getCertChain(
@@ -490,10 +497,10 @@ int Manager::ManagerImpl::getCertificateChain(
         certificateChainVector);
 }
 
-int Manager::ManagerImpl::getCertificateChain(
-    const Certificate &certificate,
+int ManagerImpl::getCertificateChain(
+    const CertificateShPtr &certificate,
     const AliasVector &untrustedCertificates,
-    CertificateVector &certificateChainVector)
+    CertificateShPtrVector &certificateChainVector)
 {
     return getCertChain(
         LogicCommand::GET_CHAIN_ALIAS,
@@ -503,7 +510,7 @@ int Manager::ManagerImpl::getCertificateChain(
         certificateChainVector);
 }
 
-int Manager::ManagerImpl::createSignature(
+int ManagerImpl::createSignature(
     const Alias &privateKeyAlias,
     const std::string &password,           // password for private_key
     const RawBuffer &message,
@@ -551,7 +558,7 @@ int Manager::ManagerImpl::createSignature(
     });
 }
 
-int Manager::ManagerImpl::verifySignature(
+int ManagerImpl::verifySignature(
     const Alias &publicKeyOrCertAlias,
     const std::string &password,           // password for public_key (optional)
     const RawBuffer &message,
@@ -599,7 +606,7 @@ int Manager::ManagerImpl::verifySignature(
     });
 }
 
-int Manager::ManagerImpl::ocspCheck(const CertificateVector &certChain, int &ocspStatus)
+int ManagerImpl::ocspCheck(const CertificateShPtrVector &certChain, int &ocspStatus)
 {
     return try_catch([&] {
         int my_counter = ++m_counter;
@@ -607,7 +614,7 @@ int Manager::ManagerImpl::ocspCheck(const CertificateVector &certChain, int &ocs
 
         RawBufferVector rawCertChain;
         for (auto &e: certChain) {
-            rawCertChain.push_back(e.getDER());
+            rawCertChain.push_back(e->getDER());
         }
 
         Serialization::Serialize(send, my_counter);
@@ -634,6 +641,10 @@ int Manager::ManagerImpl::ocspCheck(const CertificateVector &certChain, int &ocs
 
         return retCode;
     });
+}
+
+ManagerShPtr Manager::create() {
+    return ManagerShPtr(new ManagerImpl());
 }
 
 } // namespace CKM

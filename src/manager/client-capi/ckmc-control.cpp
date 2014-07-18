@@ -27,36 +27,36 @@
 KEY_MANAGER_CAPI
 int ckmc_unlock_user_key(uid_t user, const char *password)
 {
-	CKM::Control control;
-	return control.unlockUserKey(user, std::string(password));
+	auto control = CKM::Control::create();
+	return control->unlockUserKey(user, std::string(password));
 }
 
 KEY_MANAGER_CAPI
 int ckmc_lock_user_key(uid_t user)
 {
-	CKM::Control control;
-	return control.lockUserKey(user);
+	auto control = CKM::Control::create();
+	return control->lockUserKey(user);
 }
 
 KEY_MANAGER_CAPI
 int ckmc_remove_user_data(uid_t user)
 {
-	CKM::Control control;
-	return control.removeUserData(user);
+	auto control = CKM::Control::create();
+	return control->removeUserData(user);
 }
 
 KEY_MANAGER_CAPI
 int ckmc_change_user_password(uid_t user, const char *oldPassword, const char *newPassword)
 {
-	CKM::Control control;
-	return control.changeUserPassword(user, std::string(oldPassword), std::string(newPassword));
+	auto control = CKM::Control::create();
+	return control->changeUserPassword(user, std::string(oldPassword), std::string(newPassword));
 }
 
 KEY_MANAGER_CAPI
 int ckmc_reset_user_password(uid_t user, const char *newPassword)
 {
-	CKM::Control control;
-	return control.resetUserPassword(user, std::string(newPassword));
+	auto control = CKM::Control::create();
+	return control->resetUserPassword(user, std::string(newPassword));
 }
 
 

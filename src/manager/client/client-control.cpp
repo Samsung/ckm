@@ -28,7 +28,7 @@
 
 namespace CKM {
 
-class Control::ControlImpl {
+class ControlImpl : public Control {
 public:
     ControlImpl(){}
     ControlImpl(const ControlImpl &) = delete;
@@ -36,7 +36,7 @@ public:
     ControlImpl& operator=(const ControlImpl &) = delete;
     ControlImpl& operator=(ControlImpl &&) = delete;
 
-    static int unlockUserKey(uid_t user, const std::string &password) {
+    virtual int unlockUserKey(uid_t user, const std::string &password) const {
         return try_catch([&] {
             MessageBuffer send, recv;
             Serialization::Serialize(send, static_cast<int>(ControlCommand::UNLOCK_USER_KEY));
@@ -64,7 +64,7 @@ public:
         });
     }
 
-    static int lockUserKey(uid_t user) {
+    virtual int lockUserKey(uid_t user) const {
         return try_catch([&] {
             MessageBuffer send, recv;
             Serialization::Serialize(send, static_cast<int>(ControlCommand::LOCK_USER_KEY));
@@ -91,7 +91,7 @@ public:
         });
     }
 
-    static int removeUserData(uid_t user) {
+    virtual int removeUserData(uid_t user) const {
         return try_catch([&] {
             MessageBuffer send, recv;
             Serialization::Serialize(send, static_cast<int>(ControlCommand::REMOVE_USER_DATA));
@@ -118,7 +118,7 @@ public:
         });
     }
 
-    static int changeUserPassword(uid_t user, const std::string &oldPassword, const std::string &newPassword) {
+    virtual int changeUserPassword(uid_t user, const std::string &oldPassword, const std::string &newPassword) const {
         return try_catch([&] {
             MessageBuffer send, recv;
             Serialization::Serialize(send, static_cast<int>(ControlCommand::CHANGE_USER_PASSWORD));
@@ -147,7 +147,7 @@ public:
         });
     }
 
-    static int resetUserPassword(uid_t user, const std::string &newPassword) {
+    virtual int resetUserPassword(uid_t user, const std::string &newPassword) const {
         return try_catch([&] {
             MessageBuffer send, recv;
             Serialization::Serialize(send, static_cast<int>(ControlCommand::RESET_USER_PASSWORD));
@@ -176,32 +176,11 @@ public:
     }
 
     virtual ~ControlImpl(){}
+
 };
 
-Control::Control()
-  : m_impl(new ControlImpl)
-{}
-
-Control::~Control(){}
-
-int Control::unlockUserKey(uid_t user, const std::string &password) const {
-    return m_impl->unlockUserKey(user, password);
-}
-
-int Control::lockUserKey(uid_t user) const {
-    return m_impl->lockUserKey(user);
-}
-
-int Control::removeUserData(uid_t user) const {
-    return m_impl->removeUserData(user);
-}
-
-int Control::changeUserPassword(uid_t user, const std::string &oldPassword, const std::string &newPassword) const {
-    return m_impl->changeUserPassword(user, oldPassword, newPassword);
-}
-
-int Control::resetUserPassword(uid_t user, const std::string &newPassword) const {
-    return m_impl->resetUserPassword(user, newPassword);
+ControlShPtr Control::create() {
+    return ControlShPtr(new ControlImpl());
 }
 
 } // namespace CKM
