@@ -41,7 +41,7 @@ extern "C" {
  * @brief Stores a key inside key manager based on the provided policy.
  *
  * @remarks Currently only four types of keys are supported for this API. These are RSA public/private key and ECDSA /private key.
- * @remarks key_type in key may be set to #CKM_KEY_NONE as an input. key_type is determined inside key manager during storing keys.
+ * @remarks key_type in key may be set to #CKMC_KEY_NONE as an input. key_type is determined inside key manager during storing keys.
  * @remarks Some private key files are protected by a password. if raw_key in key read from those encrypted files is encrypted with a password, the password should be provided in the #ckmc_key structure.
  * @remarks if password in policy is provided, the key is additionally encrypted with the password in policy.
  *

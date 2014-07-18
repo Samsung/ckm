@@ -33,6 +33,7 @@ extern "C" {
 #endif
 
 /**
+ * @internal // control APIs are platform level APIs.
  * @addtogroup CAPI_KEY_MANAGER_MODULE
  * @{
  */
@@ -147,7 +148,7 @@ int ckmc_change_user_password(uid_t user, const char *old_password, const char *
  * @privlevel platform
  * @privilege %http://tizen.org/privilege/keymanager.admin *
  */
-int ckmc_reset_user_password(uid_t user, const char *newPassword);
+int ckmc_reset_user_password(uid_t user, const char *new_password);
 
 
 /**
