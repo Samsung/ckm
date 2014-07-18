@@ -249,11 +249,31 @@ RawBuffer CKMLogic::removeData(
     int retCode = CKM_API_SUCCESS;
 
     if (0 < m_userDataMap.count(cred.uid)) {
-        Try {
-            m_userDataMap[cred.uid].database.deleteDBRow(alias, cred.smackLabel);
-        } Catch (CKM::Exception) {
-            LogError("Error in deleting row!");
-            retCode = CKM_API_ERROR_DB_ERROR;
+    	// check if the data exists or not
+        DBCrypto::DBRowOptional row_optional;
+        if (dataType == DBDataType::CERTIFICATE || dataType == DBDataType::BINARY_DATA) {
+            row_optional = m_userDataMap[cred.uid].database.getDBRow(alias, cred.smackLabel, dataType);
+        } else if ((static_cast<int>(dataType) >= static_cast<int>(DBDataType::DB_KEY_FIRST))
+                && (static_cast<int>(dataType) <= static_cast<int>(DBDataType::DB_KEY_LAST)))
+        {
+            row_optional = m_userDataMap[cred.uid].database.getKeyDBRow(alias, cred.smackLabel);
+        } else {
+            LogError("Unknown type of requested data" << (int)dataType);
+            retCode = CKM_API_ERROR_BAD_REQUEST;
+        }
+        if(!row_optional) {
+            LogError("No row for given alias, label and type");
+            retCode = CKM_API_ERROR_DB_ALIAS_UNKNOWN;
+        }
+
+        // remove if the data exists
+        if(retCode == CKM_API_SUCCESS) {
+            Try {
+                m_userDataMap[cred.uid].database.deleteDBRow(alias, cred.smackLabel);
+            } Catch (CKM::Exception) {
+                LogError("Error in deleting row!");
+                retCode = CKM_API_ERROR_DB_ERROR;
+            }
         }
     } else {
         retCode = CKM_API_ERROR_DB_LOCKED;
