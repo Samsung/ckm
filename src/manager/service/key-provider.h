@@ -2,7 +2,6 @@
 
 #include <ckm-key-provider.h>
 #include <ckm/ckm-type.h>
-#include <key-aes.h>
 #include <dpl/exception.h>
 
 namespace CKM {
