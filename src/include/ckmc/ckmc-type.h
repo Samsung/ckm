@@ -23,6 +23,7 @@
 #define __TIZEN_CORE_CKMC_TYPE_H
 
 #include <stddef.h>
+#include <ckmc/ckmc-error.h>
 
 #define KEY_MANAGER_CAPI __attribute__((visibility("default")))
 
@@ -32,7 +33,7 @@ extern "C" {
 #endif
 
 /**
- * @addtogroup CAPI_KEY_MANAGER_MODULE
+ * @addtogroup CAPI_KEY_MANAGER_TYPES_MODULE
  * @{
  */
 
@@ -168,6 +169,10 @@ typedef struct ckmc_cert_list_t {
 /**
  * @brief Creates a new ckmc_key handle and returns it.
  *
+ * @since_tizen 2.3
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/keymanager
+ *
  * @remarks A newly created ckmc_key should be destroyed by calling ckmc_key_free() if it is no longer needed.
  *
  * @param[in] raw_key is byte array of key. raw_key may be encrypted with password
@@ -179,21 +184,18 @@ typedef struct ckmc_cert_list_t {
  * @exception If out of memory, returns a null value.
  * @see ckmc_key_free()
  * @see #ckmc_key
- *
- * @since 2.3
- * @privlevel public
- * @privilege %http://tizen.org/privilege/keymanager *
  */
 ckmc_key *ckmc_key_new(unsigned char *raw_key, size_t key_size, ckmc_key_type key_type, char *password);
 
 /**
  * @brief Destroys the ckmc_key handle and releases all its resources.
+ *
+ * @since_tizen 2.3
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/keymanager
+ *
  * @param[in] key a ckmc_key handle to destroy
  * @see ckmc_key_new()
- *
- * @since 2.3
- * @privlevel public
- * @privilege %http://tizen.org/privilege/keymanager *
  */
 void ckmc_key_free(ckmc_key *key);
 
@@ -202,6 +204,10 @@ void ckmc_key_free(ckmc_key *key);
 
 /**
  * @brief Creates a new ckmc_raw_buffer handle and returns it.
+ *
+ * @since_tizen 2.3
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/keymanager
  *
  * @remarks A newly created ckmc_raw_buffer should be destroyed by calling ckmc_buffer_free() if it is no longer needed.
  *
@@ -217,12 +223,13 @@ ckmc_raw_buffer * ckmc_buffer_new(unsigned char *data, size_t size);
 
 /**
  * @brief Destroys the ckmc_raw_buffer handle and releases all its resources.
+ *
+ * @since_tizen 2.3
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/keymanager
+ *
  * @param[in] buffer a ckmc_raw_buffer handle to destroy
  * @see ckmc_buffer_new()
- *
- * @since 2.3
- * @privlevel public
- * @privilege %http://tizen.org/privilege/keymanager *
  */
 void ckmc_buffer_free(ckmc_raw_buffer *buffer);
 
@@ -231,6 +238,10 @@ void ckmc_buffer_free(ckmc_raw_buffer *buffer);
 
 /**
  * @brief Creates a new ckmc_cert handle and returns it.
+ *
+ * @since_tizen 2.3
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/keymanager
  *
  * @remarks A newly created ckmc_cert should be destroyed by calling ckmc_cert_free() if it is no longer needed.
  *
@@ -244,28 +255,29 @@ void ckmc_buffer_free(ckmc_raw_buffer *buffer);
  * @see ckmc_load_cert_from_file()
  * @see ckmc_load_from_pkcs12_file
  * @see #ckmc_cert
- *
- * @since 2.3
- * @privlevel public
- * @privilege %http://tizen.org/privilege/keymanager *
  */
 ckmc_cert *ckmc_cert_new(unsigned char *raw_cert, size_t cert_size, ckmc_data_format data_format);
 
 /**
  * @brief Destroys the ckmc_cert handle and releases all its resources.
+ *
+ * @since_tizen 2.3
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/keymanager
+ *
  * @param[in] cert a ckmc_cert handle to destroy
  * @see ckmc_cert_new()
  * @see ckmc_load_cert_from_file()
  * @see ckmc_load_from_pkcs12_file
- *
- * @since 2.3
- * @privlevel public
- * @privilege %http://tizen.org/privilege/keymanager *
  */
 void ckmc_cert_free(ckmc_cert *cert);
 
 /**
  * @brief Create a new ckmc_cert handle from a given file and returns it.
+ *
+ * @since_tizen 2.3
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/keymanager
  *
  * @remarks A newly created ckmc_cert should be destroyed by calling ckmc_cert_free() if it is no longer needed.
  *
@@ -280,15 +292,15 @@ void ckmc_cert_free(ckmc_cert *cert);
  * @see ckmc_cert_new()
  * @see ckmc_load_from_pkcs12_file()
  * @see #ckmc_cert
- *
- * @since 2.3
- * @privlevel public
- * @privilege %http://tizen.org/privilege/keymanager *
  */
 int ckmc_load_cert_from_file(const char *file_path, ckmc_cert **cert);
 
 /**
  * @brief Create a new ckmc_key(private key), ckmc_cert(certificate), and ckmc_cert_list(CA certificates) handle from a given PKCS#12 file and returns them.
+ *
+ * @since_tizen 2.3
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/keymanager
  *
  * @remarks A newly created ckmc_key, ckmc_cert, and ckmc_cert_list should be destroyed by calling ckmc_key_free(), ckmc_cert_free(), and ckmc_cert_list_all_free() if they are no longer needed.
  *
@@ -308,10 +320,6 @@ int ckmc_load_cert_from_file(const char *file_path, ckmc_cert **cert);
  * @see #ckmc_key
  * @see #ckmc_cert
  * @see #ckmc_cert_list
- *
- * @since 2.3
- * @privlevel public
- * @privilege %http://tizen.org/privilege/keymanager *
  */
 int ckmc_load_from_pkcs12_file(const char *file_path, const char *passphrase, ckmc_key **private_key, ckmc_cert **cert, ckmc_cert_list **ca_cert_list);
 
@@ -319,6 +327,10 @@ int ckmc_load_from_pkcs12_file(const char *file_path, const char *passphrase, ck
 
 /**
  * @brief Creates a new ckmc_alias_list handle and returns it. The alias pointer in the returned ckmc_alias_list handle points to the provided characters and the next is null.
+ *
+ * @since_tizen 2.3
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/keymanager
  *
  * @remarks A newly created ckmc_alias_list should be destroyed by calling ckmc_alias_list_free() or ckmc_alias_list_all_free() if it is no longer needed.
  *
@@ -330,15 +342,15 @@ int ckmc_load_from_pkcs12_file(const char *file_path, const char *passphrase, ck
  * @see ckmc_alias_list_free()
  * @see ckmc_alias_list_all_free()
  * @see #ckmc_alias_list
- *
- * @since 2.3
- * @privlevel public
- * @privilege %http://tizen.org/privilege/keymanager *
  */
 ckmc_alias_list *ckmc_alias_list_new(char *alias);
 
 /**
  * @brief Creates a new ckmc_alias_list handle, add it to a previous ckmc_alias_list and returns it. The alias pointer in the returned ckmc_alias_list handle points to the provided characters and the next is null.
+ *
+ * @since_tizen 2.3
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/keymanager
  *
  * @param[in] previous the last ckmc_alias_list handle to which a newly created ckmc_alias_list is added
  * @param[in] alias is an item to be set in the newly created ckmc_alias_list.
@@ -349,15 +361,15 @@ ckmc_alias_list *ckmc_alias_list_new(char *alias);
  * @see ckmc_alias_list_free()
  * @see ckmc_alias_list_all_free()
  * @see #ckmc_alias_list
- *
- * @since 2.3
- * @privlevel public
- * @privilege %http://tizen.org/privilege/keymanager *
  */
 ckmc_alias_list *ckmc_alias_list_add(ckmc_alias_list *previous, char *alias);
 
 /**
  * @brief Destroys the ckmc_alias_list handle and releases resources of ckmc_alias_list from the provided first handle cascadingly.
+ *
+ * @since_tizen 2.3
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/keymanager
  *
  * @remarks It does not destroy an alias itself in ckmc_alias_list.
  *
@@ -366,15 +378,15 @@ ckmc_alias_list *ckmc_alias_list_add(ckmc_alias_list *previous, char *alias);
  * @see ckmc_alias_list_add()
  * @see ckmc_alias_list_all_free()
  * @see #ckmc_alias_list
- *
- * @since 2.3
- * @privlevel public
- * @privilege %http://tizen.org/privilege/keymanager *
  */
 void ckmc_alias_list_free(ckmc_alias_list *first);
 
 /**
  * @brief Destroys the ckmc_alias_list handle and releases all its resources from the provided first handle cascadingly.
+ *
+ * @since_tizen 2.3
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/keymanager
  *
  * @remarks It also destroy an alias in ckmc_alias_list.
  *
@@ -383,10 +395,6 @@ void ckmc_alias_list_free(ckmc_alias_list *first);
  * @see ckmc_alias_list_add()
  * @see ckmc_alias_list_free()
  * @see #ckmc_alias_list
- *
- * @since 2.3
- * @privlevel public
- * @privilege %http://tizen.org/privilege/keymanager *
  */
 void ckmc_alias_list_all_free(ckmc_alias_list *first);
 

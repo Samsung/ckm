@@ -33,13 +33,17 @@ extern "C" {
 #endif
 
 /**
- * @internal // control APIs are platform level APIs.
- * @addtogroup CAPI_KEY_MANAGER_MODULE
+ * @addtogroup CAPI_KEY_MANAGER_CONTROL_MODULE
  * @{
  */
 
 /**
  * @brief Decrypts a user key with password. A decrypted user key exists only on memory. If this API is called for the first time, a user key will be generated internally.
+ *
+ * @since_tizen 2.3
+ * @privlevel platform
+ * @privilege %http://tizen.org/privilege/keymanager.admin
+ *
  * @remarks The user key is a randomly generated key used in encrypting user data. And the user key is protected by a user's password.
  *
  * @param[in] user is a uid of a user whose key is decrypted.
@@ -55,15 +59,15 @@ extern "C" {
  * @see ckmc_remove_user_data()
  * @see ckmc_change_user_password()
  * @see ckmc_reset_user_password()
- *
- * @since 2.3
- * @privlevel platform
- * @privilege %http://tizen.org/privilege/keymanager.admin *
  */
 int ckmc_unlock_user_key(uid_t user, const char *password);
 
 /**
  * @brief remove a decrypted user key from memory
+ *
+ * @since_tizen 2.3
+ * @privlevel platform
+ * @privilege %http://tizen.org/privilege/keymanager.admin
  *
  * @param[in] user is a uid of a user whose key is removed from memory.
  *
@@ -75,15 +79,15 @@ int ckmc_unlock_user_key(uid_t user, const char *password);
  * @see ckmc_remove_user_data()
  * @see ckmc_change_user_password()
  * @see ckmc_reset_user_password()
- *
- * @since 2.3
- * @privlevel platform
- * @privilege %http://tizen.org/privilege/keymanager.admin *
  */
 int ckmc_lock_user_key(uid_t user);
 
 /**
  * @brief remove user data from Store and erase a user key used for encryption
+ *
+ * @since_tizen 2.3
+ * @privlevel platform
+ * @privilege %http://tizen.org/privilege/keymanager.admin
  *
  * @param[in] user is a uid of a user whose data and key are removed
  *
@@ -95,15 +99,15 @@ int ckmc_lock_user_key(uid_t user);
  * @see ckmc_lock_user_key()
  * @see ckmc_change_user_password()
  * @see ckmc_reset_user_password()
- *
- * @since 2.3
- * @privlevel platform
- * @privilege %http://tizen.org/privilege/keymanager.admin *
  */
 int ckmc_remove_user_data(uid_t user);
 
 /**
  * @brief change a password for a user. key manager decrypts a user key with old password and re-encrypts a user key with new password.
+ *
+ * @since_tizen 2.3
+ * @privlevel platform
+ * @privilege %http://tizen.org/privilege/keymanager.admin
  *
  * @param[in] user is a uid of a user whose user key is re-encrypted
  * @param[in] old_password is used in decrypting a user key.
@@ -119,15 +123,15 @@ int ckmc_remove_user_data(uid_t user);
  * @see ckmc_lock_user_key()
  * @see ckmc_remove_user_data()
  * @see ckmc_reset_user_password()
- *
- * @since 2.3
- * @privlevel platform
- * @privilege %http://tizen.org/privilege/keymanager.admin *
  */
 int ckmc_change_user_password(uid_t user, const char *old_password, const char *new_password);
 
 /**
  * @brief change a password for a user without old password.
+ *
+ * @since_tizen 2.3
+ * @privlevel platform
+ * @privilege %http://tizen.org/privilege/keymanager.admin
  *
  * @param[in] user is a uid of a user whose user key is re-encrypted
  * @param[in] new_password is used in re-encrypting a user key.
@@ -144,9 +148,6 @@ int ckmc_change_user_password(uid_t user, const char *old_password, const char *
  * @see ckmc_remove_user_data()
  * @see ckmc_change_user_password()
  *
- * @since 2.3
- * @privlevel platform
- * @privilege %http://tizen.org/privilege/keymanager.admin *
  */
 int ckmc_reset_user_password(uid_t user, const char *new_password);
 

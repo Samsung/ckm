@@ -25,7 +25,7 @@ extern "C" {
 #endif
 
 /**
- * @addtogroup CAPI_KEY_MANAGER_MODULE
+ * @addtogroup CAPI_KEY_MANAGER_TYPES_MODULE
  * @{
  */
 
@@ -51,19 +51,16 @@ extern "C" {
 
 /**
  * @brief indicating the transmitting request failed.
- * @remarks This Error code is deprecated.
  */
 #define CKMC_API_ERROR_SEND_FAILED -4
 
 /**
  * @brief indicating the receiving response failed.
- * @remarks This Error code is deprecated.
  */
 #define CKMC_API_ERROR_RECV_FAILED -5
 
 /**
  * @brief indicating the authentication between client and manager failed.
- * @remarks This Error code is deprecated.
  */
 #define CKMC_API_ERROR_AUTHENTICATION_FAILED -6
 

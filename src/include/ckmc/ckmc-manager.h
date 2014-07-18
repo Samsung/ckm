@@ -26,19 +26,24 @@
 #include <stddef.h>
 #include <sys/types.h>
 #include <ckmc/ckmc-type.h>
+#include <ckmc/ckmc-error.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /**
- * @addtogroup CAPI_KEY_MANAGER_MODULE
+ * @addtogroup CAPI_KEY_MANAGER_CLIENT_MODULE
  * @{
  */
 
 
 /**
  * @brief Stores a key inside key manager based on the provided policy.
+ *
+ * @since_tizen 2.3
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/keymanager
  *
  * @remarks Currently only four types of keys are supported for this API. These are RSA public/private key and ECDSA /private key.
  * @remarks key_type in key may be set to #CKMC_KEY_NONE as an input. key_type is determined inside key manager during storing keys.
@@ -64,15 +69,15 @@ extern "C" {
  * @see ckmc_get_key_alias_list()
  * @see #ckmc_key
  * @see #ckmc_policy
- *
- * @since 2.3
- * @privlevel platform
- * @privilege %http://tizen.org/privilege/keymanager *
  */
 int ckmc_save_key(const char *alias, const ckmc_key key, const ckmc_policy policy);
 
 /**
  * @brief Removes a key from key manager
+ *
+ * @since_tizen 2.3
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/keymanager
  *
  * @remarks a client can remove only keys stored by the client.
  *
@@ -90,15 +95,15 @@ int ckmc_save_key(const char *alias, const ckmc_key key, const ckmc_policy polic
  * @see ckmc_save_key()
  * @see ckmc_get_key()
  * @see ckmc_get_key_alias_list()
- *
- * @since 2.3
- * @privlevel platform
- * @privilege %http://tizen.org/privilege/keymanager *
  */
 int ckmc_remove_key(const char *alias);
 
 /**
  * @brief Get a key from key manager
+ *
+ * @since_tizen 2.3
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/keymanager
  *
  * @remarks a client can access only data stored by the client and non-restricted data stored by other clients.
  * @remarks A newly created ppkey should be destroyed by calling ckmc_key_free() if it is no longer needed.
@@ -119,15 +124,15 @@ int ckmc_remove_key(const char *alias);
  * @see ckmc_save_key()
  * @see ckmc_remove_key()
  * @see ckmc_get_key_alias_list()
- *
- * @since 2.3
- * @privlevel platform
- * @privilege %http://tizen.org/privilege/keymanager *
  */
 int ckmc_get_key(const char *alias, const char *password, ckmc_key **ppkey);
 
 /**
  * @brief Get a all alias of keys to which the client can access
+ *
+ * @since_tizen 2.3
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/keymanager
  *
  * @remarks a client can access only data stored by the client and non-restricted data stored by other clients.
  * @remarks A newly created ppalias_list should be destroyed by calling ckmc_alias_list_all_free() if it is no longer needed.
@@ -146,10 +151,6 @@ int ckmc_get_key(const char *alias, const char *password, ckmc_key **ppkey);
  * @see ckmc_save_key()
  * @see ckmc_remove_key()
  * @see ckmc_get_key()
- *
- * @since 2.3
- * @privlevel platform
- * @privilege %http://tizen.org/privilege/keymanager *
  */
 int ckmc_get_key_alias_list(ckmc_alias_list** ppalias_list);
 
@@ -158,6 +159,10 @@ int ckmc_get_key_alias_list(ckmc_alias_list** ppalias_list);
 
 /**
  * @brief Stores a certificate inside key manager based on the provided policy.
+ *
+ * @since_tizen 2.3
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/keymanager
  *
  * @param[in] alias is the name of a certificate to be stored
  * @param[in] cert has a certificate's binary value to be stored.
@@ -178,15 +183,15 @@ int ckmc_get_key_alias_list(ckmc_alias_list** ppalias_list);
  * @see ckmc_get_cert_alias_list()
  * @see #ckmc_cert
  * @see #ckmc_policy
- *
- * @since 2.3
- * @privlevel platform
- * @privilege %http://tizen.org/privilege/keymanager *
  */
 int ckmc_save_cert(const char *alias, const ckmc_cert cert, const ckmc_policy policy);
 
 /**
  * @brief Removes a certificate from key manager
+ *
+ * @since_tizen 2.3
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/keymanager
  *
  * @remarks a client can remove only certificates stored by the client.
  *
@@ -204,15 +209,15 @@ int ckmc_save_cert(const char *alias, const ckmc_cert cert, const ckmc_policy po
  * @see ckmc_save_cert()
  * @see ckmc_get_cert()
  * @see ckmc_get_cert_alias_list()
- *
- * @since 2.3
- * @privlevel platform
- * @privilege %http://tizen.org/privilege/keymanager *
  */
 int ckmc_remove_cert(const char *alias);
 
 /**
  * @brief Get a certificate from key manager
+ *
+ * @since_tizen 2.3
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/keymanager
  *
  * @remarks a client can access only certificate stored by the client and non-restricted certificate stored by other clients.
  * @remarks A newly created ppcert should be destroyed by calling ckmc_cert_free() if it is no longer needed.
@@ -233,15 +238,15 @@ int ckmc_remove_cert(const char *alias);
  * @see ckmc_save_cert()
  * @see ckmc_remove_cert()
  * @see ckmc_get_cert_alias_list()
- *
- * @since 2.3
- * @privlevel platform
- * @privilege %http://tizen.org/privilege/keymanager *
  */
 int ckmc_get_cert(const char *alias, const char *password, ckmc_cert **ppcert);
 
 /**
  * @brief Get a all alias of certificates to which the client can access
+ *
+ * @since_tizen 2.3
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/keymanager
  *
  * @remarks a client can access only data stored by the client and non-restricted data stored by other clients.
  * @remarks A newly created ppalias_list should be destroyed by calling ckmc_alias_list_all_free() if it is no longer needed.
@@ -260,10 +265,6 @@ int ckmc_get_cert(const char *alias, const char *password, ckmc_cert **ppcert);
  * @see ckmc_save_cert()
  * @see ckmc_remove_cert()
  * @see ckmc_get_cert()
- *
- * @since 2.3
- * @privlevel platform
- * @privilege %http://tizen.org/privilege/keymanager *
  */
 int ckmc_get_cert_alias_list(ckmc_alias_list** ppalias_list);
 
@@ -272,6 +273,10 @@ int ckmc_get_cert_alias_list(ckmc_alias_list** ppalias_list);
 
 /**
  * @brief Stores a data inside key manager based on the provided policy.
+ *
+ * @since_tizen 2.3
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/keymanager
  *
  * @param[in] alias is the name of a data to be stored
  * @param[in] data has a binary value to be stored.
@@ -291,15 +296,15 @@ int ckmc_get_cert_alias_list(ckmc_alias_list** ppalias_list);
  * @see ckmc_get_data_alias_list()
  * @see #ckmc_raw_buffer
  * @see #ckmc_policy
- *
- * @since 2.3
- * @privlevel public
- * @privilege %http://tizen.org/privilege/keymanager *
  */
 int ckmc_save_data(const char *alias, ckmc_raw_buffer data, const ckmc_policy policy);
 
 /**
  * @brief Removes a data from key manager
+ *
+ * @since_tizen 2.3
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/keymanager
  *
  * @remarks a client can remove only data stored by the client.
  *
@@ -317,15 +322,15 @@ int ckmc_save_data(const char *alias, ckmc_raw_buffer data, const ckmc_policy po
  * @see ckmc_save_data()
  * @see ckmc_get_data()
  * @see ckmc_get_data_alias_list()
- *
- * @since 2.3
- * @privlevel public
- * @privilege %http://tizen.org/privilege/keymanager *
  */
 int ckmc_remove_data(const char *alias);
 
 /**
  * @brief Get a data from key manager
+ *
+ * @since_tizen 2.3
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/keymanager
  *
  * @remarks a client can access only data stored by the client and non-restricted data stored by other clients.
  * @remarks A newly created ppdata should be destroyed by calling ckmc_buffer_free() if it is no longer needed.
@@ -346,15 +351,15 @@ int ckmc_remove_data(const char *alias);
  * @see ckmc_save_data()
  * @see ckmc_remove_data()
  * @see ckmc_get_data_alias_list()
- *
- * @since 2.3
- * @privlevel public
- * @privilege %http://tizen.org/privilege/keymanager *
  */
 int ckmc_get_data(const char *alias, const char *password, ckmc_raw_buffer **ppdata);
 
 /**
  * @brief Get a all alias of data to which the client can access
+ *
+ * @since_tizen 2.3
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/keymanager
  *
  * @remarks a client can access only data stored by the client and non-restricted data stored by other clients.
  * @remarks A newly created ppalias_list should be destroyed by calling ckmc_alias_list_all_free() if it is no longer needed.
@@ -373,10 +378,6 @@ int ckmc_get_data(const char *alias, const char *password, ckmc_raw_buffer **ppd
  * @see ckmc_save_data()
  * @see ckmc_remove_data()
  * @see ckmc_get_data()
- *
- * @since 2.3
- * @privlevel public
- * @privilege %http://tizen.org/privilege/keymanager *
  */
 int ckmc_get_data_alias_list(ckmc_alias_list** ppalias_list);
 
@@ -385,6 +386,10 @@ int ckmc_get_data_alias_list(ckmc_alias_list** ppalias_list);
 
 /**
  * @brief Creates RSA private/public key pair and stores them inside key manager based on each policy.
+ *
+ * @since_tizen 2.3
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/keymanager
  *
  * @remarks if password in policy is provided, the key is additionally encrypted with the password in policy.
  *
@@ -406,15 +411,15 @@ int ckmc_get_data_alias_list(ckmc_alias_list** ppalias_list);
  * @see ckmc_create_key_pair_ecdsa()
  * @see ckmc_create_signature()
  * @see ckmc_verify_signature()
- *
- * @since 2.3
- * @privlevel public
- * @privilege %http://tizen.org/privilege/keymanager *
  */
 int ckmc_create_key_pair_rsa(const size_t size, const char *private_key_alias, const char *public_key_alias, const ckmc_policy policy_private_key, const ckmc_policy policy_public_key);
 
 /**
  * @brief Creates ECDSA private/public key pair and stores them inside key manager based on each policy.
+ *
+ * @since_tizen 2.3
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/keymanager
  *
  * @remarks if password in policy is provided, the key is additionally encrypted with the password in policy.
  *
@@ -437,15 +442,15 @@ int ckmc_create_key_pair_rsa(const size_t size, const char *private_key_alias, c
  * @see ckmc_create_signature()
  * @see ckmc_verify_signature()
  * @see #ckmc_ec_type
- *
- * @since 2.3
- * @privlevel public
- * @privilege %http://tizen.org/privilege/keymanager *
  */
 int ckmc_create_key_pair_ecdsa(const ckmc_ec_type type, const char *private_key_alias, const char *public_key_alias, const ckmc_policy policy_private_key, const ckmc_policy policy_public_key);
 
 /**
  * @brief Creates a signature on a given message using a private key and returns the signature
+ *
+ * @since_tizen 2.3
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/keymanager
  *
  * @remarks If password of policy is provided during storing a key, the same password should be provided.
  * @remarks A newly created ppsignature should be destroyed by calling ckmc_buffer_free() if it is no longer needed.
@@ -472,15 +477,15 @@ int ckmc_create_key_pair_ecdsa(const ckmc_ec_type type, const char *private_key_
  * @see ckmc_buffer_free()
  * @see #ckmc_hash_algo
  * @see #ckmc_rsa_padding_algo
- *
- * @since 2.3
- * @privlevel public
- * @privilege %http://tizen.org/privilege/keymanager *
  */
 int ckmc_create_signature(const char *private_key_alias, const char *password, const ckmc_raw_buffer message, const ckmc_hash_algo hash, const ckmc_rsa_padding_algo padding, ckmc_raw_buffer **ppsignature);
 
 /**
  * @brief Verify a given signature on a given message using a public key and returns the signature status.
+ *
+ * @since_tizen 2.3
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/keymanager
  *
  * @remarks If password of policy is provided during storing a key, the same password should be provided.
  *
@@ -505,15 +510,15 @@ int ckmc_create_signature(const char *private_key_alias, const char *password, c
  * @see ckmc_verify_signature()
  * @see #ckmc_hash_algo
  * @see #ckmc_rsa_padding_algo
- *
- * @since 2.3
- * @privlevel public
- * @privilege %http://tizen.org/privilege/keymanager *
  */
 int ckmc_verify_signature(const char *public_key_alias, const char *password, const ckmc_raw_buffer message, const ckmc_raw_buffer signature, const ckmc_hash_algo hash, const ckmc_rsa_padding_algo padding);
 
 /**
  * @brief Verify a certificate chain and return that chain.
+ *
+ * @since_tizen 2.3
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/keymanager
  *
  * @remarks The trusted root certificate of the chain should exist in the system's certificate storage.
  * @remarks A newly created ppcert_chain_list should be destroyed by calling ckmc_cert_list_all_free() if it is no longer needed.
@@ -533,15 +538,15 @@ int ckmc_verify_signature(const char *public_key_alias, const char *password, co
  *
  * @see ckmc_get_cert_chain_with_alias())
  * @see ckmc_cert_list_all_free()
- *
- * @since 2.3
- * @privlevel public
- * @privilege %http://tizen.org/privilege/keymanager *
  */
 int ckmc_get_cert_chain(const ckmc_cert *cert, const ckmc_cert_list *untrustedcerts, ckmc_cert_list **ppcert_chain_list);
 
 /**
  * @brief Verify a certificate chain using a alias list of untrusted certificates and return that chain.
+ *
+ * @since_tizen 2.3
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/keymanager
  *
  * @remarks The trusted root certificate of the chain should exist in the system's certificate storage.
  * @remarks A newly created ppcert_chain_list should be destroyed by calling ckmc_cert_list_all_free() if it is no longer needed.
@@ -562,10 +567,6 @@ int ckmc_get_cert_chain(const ckmc_cert *cert, const ckmc_cert_list *untrustedce
  *
  * @see ckmc_get_cert_chain())
  * @see ckmc_cert_list_all_free()
- *
- * @since 2.3
- * @privlevel public
- * @privilege %http://tizen.org/privilege/keymanager *
  */
 int ckmc_get_cert_chain_with_alias(const ckmc_cert *cert, const ckmc_alias_list *untrustedcerts, ckmc_cert_list **ppcert_chain_list);
 
