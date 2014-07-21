@@ -77,7 +77,7 @@ namespace CKM {
             void getKeyAliases(
                     const std::string &label,
                     AliasVector &aliases);
-            void deleteDBRow(
+            int deleteDBRow(
                     const Alias& alias,
                     const std::string &label);
 
@@ -158,6 +158,9 @@ namespace CKM {
                     const std::string &alias,
                     const std::string &label);
             bool checkGlobalAliasExist(const std::string& alias);
+            int countRows(
+                    const std::string &alias,
+                    const std::string &label);
             void getSingleType(
                     DBDataType type,
                     const std::string& label,

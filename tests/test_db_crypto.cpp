@@ -75,7 +75,9 @@ void checkDBIntegrity(const DBRow &rowPattern, DBCrypto &db) {
     alias_duplicate.dataSize = alias_duplicate.data.size();
 
     BOOST_REQUIRE_THROW(db.saveDBRow(alias_duplicate), DBCrypto::Exception::AliasExists);
-    BOOST_REQUIRE_NO_THROW(db.deleteDBRow("alias", "label"));
+    unsigned int erased;
+    BOOST_REQUIRE_NO_THROW(erased = db.deleteDBRow("alias", "label"));
+    BOOST_REQUIRE_MESSAGE(erased > 0, "Inserted row didn't exist in db");
 
     DBCrypto::DBRowOptional row_optional;
     BOOST_REQUIRE_NO_THROW(row_optional = db.getDBRow("alias", "label", DBDataType::BINARY_DATA));

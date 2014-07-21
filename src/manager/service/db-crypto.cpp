@@ -78,6 +78,10 @@ namespace {
             //                                       1
             "SELECT label FROM CKM_TABLE WHERE alias=? AND restricted=0;";
 
+    const char *select_count_rows_cmd =
+            //                                   1           2
+            "SELECT COUNT(alias) FROM CKM_TABLE WHERE alias=? AND label=?;";
+
     const char *select_key_alias_cmd =
             //                                   1
             "SELECT * FROM CKM_TABLE WHERE alias=?"
@@ -409,19 +413,34 @@ using namespace DB;
                 "Couldn't get key aliases for label " << label);
     }
 
-    void DBCrypto::deleteDBRow(
+    int DBCrypto::countRows(const Alias &alias, const std::string &label) {
+        SqlConnection::DataCommandUniquePtr checkCmd =
+                    m_connection->PrepareDataCommand(select_count_rows_cmd);
+        checkCmd->BindString(1, alias.c_str());
+        checkCmd->BindString(2, label.c_str());
+        if(checkCmd->Step()) {
+            return checkCmd->GetColumnInteger(0);
+        } else {
+            LogDebug("Row does not exist for alias=" << alias << "and label=" << label);
+            return 0;
+        }
+    }
+    int DBCrypto::deleteDBRow(
             const Alias &alias,
             const std::string &label)
     {
         Try {
             Transaction transaction(this);
-            SqlConnection::DataCommandUniquePtr deleteCommand =
-                    m_connection->PrepareDataCommand(delete_alias_cmd);
-            deleteCommand->BindString(1, alias.c_str());
-            deleteCommand->BindString(2, label.c_str());
-            deleteCommand->Step();
-            transaction.commit();
-            return;
+            unsigned int count;
+            if((count = countRows(alias, label)) > 0) {
+                SqlConnection::DataCommandUniquePtr deleteCommand =
+                        m_connection->PrepareDataCommand(delete_alias_cmd);
+                deleteCommand->BindString(1, alias.c_str());
+                deleteCommand->BindString(2, label.c_str());
+                deleteCommand->Step();
+                transaction.commit();
+            }
+            return count;
         } Catch (SqlConnection::Exception::SyntaxError) {
             LogError("Couldn't prepare delete statement");
         } Catch (SqlConnection::Exception::InternalError) {
