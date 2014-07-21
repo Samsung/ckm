@@ -512,9 +512,8 @@ class SqlConnection
      * @param format
      * @param ...
      */
-    void ExecCommand(const char *format, ...) CKM_DEPRECATED_WITH_MESSAGE(
-            "To prevent sql injection do not use this \
-             method for direct sql execution");
+    //To prevent sql injection do not use this method for direct sql execution
+    void ExecCommand(const char *format, ...);
 
     /**
      * Execute BEGIN; command to start new transaction
