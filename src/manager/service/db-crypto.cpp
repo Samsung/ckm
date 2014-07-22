@@ -185,6 +185,9 @@ using namespace DB;
         } Catch(SqlConnection::Exception::SyntaxError) {
             LogError("Couldn't create table : " << table_name << "!");
             throw;
+        } Catch(SqlConnection::Exception::InternalError) {
+            LogError("Sqlite got into infinite busy state");
+            throw;
         }
     }
 

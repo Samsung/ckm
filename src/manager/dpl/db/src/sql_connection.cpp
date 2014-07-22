@@ -35,6 +35,11 @@
 #include <cstdarg>
 #include <memory>
 
+
+namespace {
+const int MAX_RETRY = 10;
+}
+
 namespace CKM {
 namespace DB {
 namespace // anonymous
@@ -73,14 +78,17 @@ SqlConnection::DataCommand::DataCommand(SqlConnection *connection,
     // Notify all after potentially synchronized database connection access
     ScopedNotifyAll notifyAll(connection->m_synchronizationObject.get());
 
-    for (;;) {
+    for (int i = 0; i < MAX_RETRY; i++) {
         int ret = sqlcipher3_prepare_v2(connection->m_connection,
                                      buffer, strlen(buffer),
                                      &m_stmt, NULL);
 
         if (ret == SQLCIPHER_OK) {
-            LogPedantic("Data command prepared successfuly");
-            break;
+            LogPedantic("Prepared data command: " << buffer);
+
+            // Increment stored data command count
+            ++m_masterConnection->m_dataCommandsCount;
+            return;
         } else if (ret == SQLCIPHER_BUSY) {
             LogPedantic("Collision occurred while preparing SQL command");
 
@@ -104,10 +112,8 @@ SqlConnection::DataCommand::DataCommand(SqlConnection *connection,
         ThrowMsg(Exception::SyntaxError, error);
     }
 
-    LogPedantic("Prepared data command: " << buffer);
-
-    // Increment stored data command count
-    ++m_masterConnection->m_dataCommandsCount;
+    LogError("sqlite in the state of possible infinite loop");
+    ThrowMsg(Exception::InternalError, "sqlite permanently busy");
 }
 
 SqlConnection::DataCommand::~DataCommand()
@@ -358,7 +364,7 @@ bool SqlConnection::DataCommand::Step()
     ScopedNotifyAll notifyAll(
         m_masterConnection->m_synchronizationObject.get());
 
-    for (;;) {
+    for (int i = 0; i < MAX_RETRY; i++) {
         int ret = sqlcipher3_step(m_stmt);
 
         if (ret == SQLCIPHER_ROW) {
@@ -379,7 +385,6 @@ bool SqlConnection::DataCommand::Step()
 
                 continue;
             }
-
             // No synchronization object defined. Fail.
         }
 
@@ -391,6 +396,9 @@ bool SqlConnection::DataCommand::Step()
 
         ThrowMsg(Exception::InternalError, error);
     }
+
+    LogError("sqlite in the state of possible infinite loop");
+    ThrowMsg(Exception::InternalError, "sqlite permanently busy");
 }
 
 void SqlConnection::DataCommand::Reset()
@@ -886,7 +894,7 @@ void SqlConnection::ExecCommand(const char *format, ...)
     // Notify all after potentially synchronized database connection access
     ScopedNotifyAll notifyAll(m_synchronizationObject.get());
 
-    for (;;) {
+    for (int i = 0; i < MAX_RETRY; i++) {
         char *errorBuffer;
 
         int ret = sqlcipher3_exec(m_connection,
@@ -924,6 +932,9 @@ void SqlConnection::ExecCommand(const char *format, ...)
         LogError("Failed to execute SQL command. Error: " << errorMsg);
         ThrowMsg(Exception::SyntaxError, errorMsg);
     }
+
+    LogError("sqlite in the state of possible infinite loop");
+    ThrowMsg(Exception::InternalError, "sqlite permanently busy");
 }
 
 SqlConnection::DataCommandUniquePtr SqlConnection::PrepareDataCommand(

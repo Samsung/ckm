@@ -100,6 +100,9 @@ namespace CKM {
                             m_db->m_connection->ExecCommand("BEGIN EXCLUSIVE");
                             m_db->m_inUserTransaction = true;
                             m_inTransaction = true;
+                        } Catch (DB::SqlConnection::Exception::InternalError) {
+                            LogError("sqlite got into infinite busy state");
+                            ReThrow(DBCrypto::Exception::TransactionError);
                         } Catch (DB::SqlConnection::Exception::Base) {
                             LogError("Couldn't begin transaction");
                             ReThrow(DBCrypto::Exception::TransactionError);
@@ -112,6 +115,9 @@ namespace CKM {
                             m_db->m_connection->CommitTransaction();
                             m_db->m_inUserTransaction = false;
                             m_inTransaction = false;
+                        } Catch (DB::SqlConnection::Exception::InternalError) {
+                            LogError("sqlite got into infinite busy state");
+                            ReThrow(DBCrypto::Exception::TransactionError);
                         } Catch (DB::SqlConnection::Exception::Base) {
                             LogError("Couldn't commit transaction");
                             ReThrow(DBCrypto::Exception::TransactionError);
@@ -124,6 +130,9 @@ namespace CKM {
                             m_db->m_connection->RollbackTransaction();
                             m_db->m_inUserTransaction = false;
                             m_inTransaction = false;
+                        } Catch (DB::SqlConnection::Exception::InternalError) {
+                            LogError("sqlite got into infinite busy state");
+                            ReThrow(DBCrypto::Exception::TransactionError);
                         } Catch (DB::SqlConnection::Exception::Base) {
                             LogError("Couldn't rollback transaction");
                             ReThrow(DBCrypto::Exception::TransactionError);
@@ -136,6 +145,9 @@ namespace CKM {
                             m_db->m_inUserTransaction = false;
                             m_db->m_connection->RollbackTransaction();
                         }
+                    } Catch (DB::SqlConnection::Exception::InternalError) {
+                        LogError("sqlite got into infinite busy state");
+                        ReThrow(DBCrypto::Exception::TransactionError);
                     } Catch (DB::SqlConnection::Exception::Base) {
                         LogError("Transaction rollback failed!");
                     }
