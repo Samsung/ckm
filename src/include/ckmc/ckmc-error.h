@@ -30,105 +30,124 @@ extern "C" {
  */
 
 /**
- * @brief indicating the result of the one specific API is successful
+ * @brief Indicates the result of the one specific API is successful
+ * @since_tizen 2.3
  */
-#define CKMC_API_SUCCESS 0
+#define CKMC_SUCCESS 0
 
 /**
- * @brief indicating the socket between client and Central Key Manager failed
+ * @brief Indicates the socket between client and Central Key Manager failed
+ * @since_tizen 2.3
  */
-#define CKMC_API_ERROR_SOCKET -1
+#define CKMC_ERROR_SOCKET -1
 
 /**
- * @brief indicating the request from client is malformed
+ * @brief Indicates the request from client is malformed
+ * @since_tizen 2.3
  */
-#define CKMC_API_ERROR_BAD_REQUEST -2
+#define CKMC_ERROR_BAD_REQUEST -2
 
 /**
- * @brief indicating the response from Central Key Manager is malformed
+ * @brief Indicates the response from Central Key Manager is malformed
+ * @since_tizen 2.3
  */
-#define CKMC_API_ERROR_BAD_RESPONSE -3
+#define CKMC_ERROR_BAD_RESPONSE -3
 
 /**
- * @brief indicating the transmitting request failed.
+ * @brief Indicates the transmitting request failed.
+ * @since_tizen 2.3
  */
-#define CKMC_API_ERROR_SEND_FAILED -4
+#define CKMC_ERROR_SEND_FAILED -4
 
 /**
- * @brief indicating the receiving response failed.
+ * @brief Indicates the receiving response failed.
+ * @since_tizen 2.3
  */
-#define CKMC_API_ERROR_RECV_FAILED -5
+#define CKMC_ERROR_RECV_FAILED -5
 
 /**
- * @brief indicating the authentication between client and manager failed.
+ * @brief Indicates the authentication between client and manager failed.
+ * @since_tizen 2.3
  */
-#define CKMC_API_ERROR_AUTHENTICATION_FAILED -6
+#define CKMC_ERROR_AUTHENTICATION_FAILED -6
 
 /**
- * @brief indicating the API's input parameter is malformed
+ * @brief Indicates the API's input parameter is malformed
+ * @since_tizen 2.3
  */
-#define CKMC_API_ERROR_INPUT_PARAM -7
+#define CKMC_ERROR_INPUT_PARAM -7
 
 /**
- * @brief indicating the output buffer size which is passed as parameter is too small
+ * @brief Indicates the output buffer size which is passed as parameter is too small
+ * @since_tizen 2.3
  */
-#define CKMC_API_ERROR_BUFFER_TOO_SMALL -8
+#define CKMC_ERROR_BUFFER_TOO_SMALL -8
 
 /**
- * @brief indicating system  is running out of memory state
+ * @brief Indicates system is running out of memory state
+ * @since_tizen 2.3
  */
-#define CKMC_API_ERROR_OUT_OF_MEMORY -9
+#define CKMC_ERROR_OUT_OF_MEMORY -9
 
 /**
- * @brief indicating the access has been denied by Central Key Manager
+ * @brief Indicates the access has been denied by Central Key Manager
+ * @since_tizen 2.3
  */
-#define CKMC_API_ERROR_ACCESS_DENIED -10
+#define CKMC_ERROR_ACCESS_DENIED -10
 
 /**
- * @brief indicating Central Key Manager has been failed for some reason
+ * @brief Indicates Central Key Manager has been failed for some reason
+ * @since_tizen 2.3
  */
-#define CKMC_API_ERROR_SERVER_ERROR -11
+#define CKMC_ERROR_SERVER_ERROR -11
 
 /**
- * @brief indicating the database was not unlocked - user did not login
+ * @brief Indicates the database was not unlocked - user did not login
+ * @since_tizen 2.3
  */
-#define CKMC_API_ERROR_DB_LOCKED -12
+#define CKMC_ERROR_DB_LOCKED -12
 
 /**
- * @brief indicating an internal error inside the database
+ * @brief Indicates an internal error inside the database
+ * @since_tizen 2.3
  */
-#define CKMC_API_ERROR_DB_ERROR -13
+#define CKMC_ERROR_DB_ERROR -13
 
 /**
- * @brief indicating that provided alias already exists in the database
+ * @brief Indicates that provided alias already exists in the database
+ * @since_tizen 2.3
  */
-#define CKMC_API_ERROR_DB_ALIAS_EXISTS -14
-
-
-/**
- * @brief indicating that request given to database returned no result
- */
-#define CKMC_API_ERROR_DB_ALIAS_UNKNOWN -15
+#define CKMC_ERROR_DB_ALIAS_EXISTS -14
 
 /**
- * @brief indicating that CA certificate(s) were unknown and chain could not be created
+ * @brief Indicates that request given to database returned no result
+ * @since_tizen 2.3
  */
-#define CKMC_API_ERROR_VERIFICATION_FAILED -16
+#define CKMC_ERROR_DB_ALIAS_UNKNOWN -15
 
 /**
- * @brief indicating that a provided file or binary has not a valid format
+ * @brief Indicates that CA certificate(s) were unknown and chain could not be created
+ * @since_tizen 2.3
  */
-#define CKMC_API_ERROR_INVALID_FORMAT -17
+#define CKMC_ERROR_VERIFICATION_FAILED -16
 
 /**
- * @brief indicating that provided file doesn't exists or cannot be accessed in the file system
+ * @brief Indicates that a provided file or binary has not a valid format
+ * @since_tizen 2.3
  */
-#define CKMC_API_ERROR_FILE_ACCESS_DENIED -18
+#define CKMC_ERROR_INVALID_FORMAT -17
 
 /**
- * @brief indicating the error with unknown reason
+ * @brief Indicates that provided file doesn't exists or cannot be accessed in the file system
+ * @since_tizen 2.3
  */
-#define CKMC_API_ERROR_UNKNOWN -255
+#define CKMC_ERROR_FILE_ACCESS_DENIED -18
+
+/**
+ * @brief Indicates the error with unknown reason
+ * @since_tizen 2.3
+ */
+#define CKMC_ERROR_UNKNOWN -255
 
 
 /**

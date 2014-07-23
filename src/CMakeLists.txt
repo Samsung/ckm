@@ -3,6 +3,7 @@ PKG_CHECK_MODULES(KEY_MANAGER_DEP
     openssl
     libsmack
     libsystemd-daemon
+    capi-base-common
     REQUIRED
     )
 

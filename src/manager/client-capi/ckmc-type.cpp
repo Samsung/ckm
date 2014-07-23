@@ -32,20 +32,25 @@
 #include <openssl/evp.h>
 #include <openssl/pem.h>
 
-int _ckmc_load_cert_from_x509(X509 *xCert, ckmc_cert **cert);
-
+int _ckmc_load_cert_from_x509(X509 *xCert, ckmc_cert_s **cert);
 
 KEY_MANAGER_CAPI
-ckmc_key *ckmc_key_new(unsigned char *raw_key, size_t key_size, ckmc_key_type key_type, char *password)
+int ckmc_key_new(unsigned char *raw_key, size_t key_size, ckmc_key_type_e key_type, char *password, ckmc_key_s **ppkey)
 {
-	ckmc_key *pkey = new ckmc_key;
-	if(pkey == NULL)
-		return NULL;
+	ckmc_key_s *pkey;
 
+	if(raw_key == NULL || key_size <= 0 || ppkey == NULL) {
+		return CKMC_ERROR_INPUT_PARAM;
+	}
+
+	pkey = new ckmc_key_s;
+	if(pkey == NULL) {
+		return CKMC_ERROR_OUT_OF_MEMORY;
+	}
 	pkey->raw_key = reinterpret_cast<unsigned char*>(malloc(key_size));
 	if(pkey->raw_key == NULL) {
 		free(pkey);
-		return NULL;
+		return CKMC_ERROR_OUT_OF_MEMORY;
 	}
 	memcpy(pkey->raw_key, raw_key, key_size);
 
@@ -57,7 +62,7 @@ ckmc_key *ckmc_key_new(unsigned char *raw_key, size_t key_size, ckmc_key_type ke
 		if(pkey->password == NULL) {
 			free(pkey);
 			free(pkey->raw_key);
-			return NULL;
+			return CKMC_ERROR_OUT_OF_MEMORY;
 		}
 		memset(pkey->password, 0, strlen(password) +1);
 		strncpy(pkey->password, password, strlen(password));
@@ -65,11 +70,13 @@ ckmc_key *ckmc_key_new(unsigned char *raw_key, size_t key_size, ckmc_key_type ke
 		pkey->password = NULL;
 	}
 
-	return pkey;
+	*ppkey = pkey;
+
+	return CKMC_SUCCESS;
 }
 
 KEY_MANAGER_CAPI
-void ckmc_key_free(ckmc_key *key)
+void ckmc_key_free(ckmc_key_s *key)
 {
 	if(key == NULL)
 		return;
@@ -85,26 +92,33 @@ void ckmc_key_free(ckmc_key *key)
 }
 
 KEY_MANAGER_CAPI
-ckmc_raw_buffer * ckmc_buffer_new(unsigned char *data, size_t size)
+int ckmc_buffer_new(unsigned char *data, size_t size,ckmc_raw_buffer_s **ppbuffer)
 {
-	ckmc_raw_buffer *pbuff = new ckmc_raw_buffer;
+	ckmc_raw_buffer_s *pbuff;
+
+	if(data == NULL || size <= 0 || ppbuffer == NULL) {
+		return CKMC_ERROR_INPUT_PARAM;
+	}
+
+	pbuff = new ckmc_raw_buffer_s;
 	if(pbuff == NULL)
-			return NULL;
+			return CKMC_ERROR_OUT_OF_MEMORY;
 
 	pbuff->data = reinterpret_cast<unsigned char*>(malloc(size));
 	if(pbuff->data == NULL) {
 		free(pbuff);
-		return NULL;
+		return CKMC_ERROR_OUT_OF_MEMORY;
 	}
 	memcpy(pbuff->data, data, size);
 
 	pbuff->size = size;
+	*ppbuffer = pbuff;
 
-	return pbuff;
+	return CKMC_SUCCESS;
 }
 
 KEY_MANAGER_CAPI
-void ckmc_buffer_free(ckmc_raw_buffer *buffer)
+void ckmc_buffer_free(ckmc_raw_buffer_s *buffer)
 {
 	if(buffer == NULL)
 		return;
@@ -117,33 +131,40 @@ void ckmc_buffer_free(ckmc_raw_buffer *buffer)
 }
 
 KEY_MANAGER_CAPI
-ckmc_cert *ckmc_cert_new(unsigned char *raw_cert, size_t cert_size, ckmc_data_format data_format)
+int ckmc_cert_new(unsigned char *raw_cert, size_t cert_size, ckmc_data_format_e data_format, ckmc_cert_s **ppcert)
 {
-	ckmc_cert *pcert = new ckmc_cert;
-	if(pcert == NULL)
-		return NULL;
+	ckmc_cert_s *pcert;
 
+	if(raw_cert == NULL || cert_size <= 0 || ppcert == NULL) {
+		return CKMC_ERROR_INPUT_PARAM;
+	}
+
+	pcert = new ckmc_cert_s;
+	if(pcert == NULL) {
+		return CKMC_ERROR_OUT_OF_MEMORY;
+	}
 	pcert->raw_cert = reinterpret_cast<unsigned char*>(malloc(cert_size));
 	if(pcert->raw_cert == NULL) {
 		free(pcert);
-		return NULL;
+		return CKMC_ERROR_OUT_OF_MEMORY;
 	}
 	memcpy(pcert->raw_cert, raw_cert, cert_size);
 
 	pcert->cert_size = cert_size;
 	pcert->data_format = data_format;
 
-	return pcert;
+	*ppcert = pcert;
+	return CKMC_SUCCESS;
 }
 
 KEY_MANAGER_CAPI
-int ckmc_load_cert_from_file(const char *file_path, ckmc_cert **cert)
+int ckmc_load_cert_from_file(const char *file_path, ckmc_cert_s **cert)
 {
 	OpenSSL_add_all_algorithms();
 
 	FILE *fp = fopen(file_path, "r");
 	if(fp == NULL)
-		return CKMC_API_ERROR_FILE_ACCESS_DENIED;
+		return CKMC_ERROR_FILE_ACCESS_DENIED;
 	X509 *pcert = NULL;
 	if(!(pcert = d2i_X509_fp(fp, NULL))) {
 		fseek(fp, 0, SEEK_SET);
@@ -151,18 +172,18 @@ int ckmc_load_cert_from_file(const char *file_path, ckmc_cert **cert)
 	}
 	fclose(fp);
 	if(pcert == NULL) {
-		return CKMC_API_ERROR_INVALID_FORMAT;
+		return CKMC_ERROR_INVALID_FORMAT;
 	}
 
 	int ret = _ckmc_load_cert_from_x509(pcert, cert);
-	if(ret != CKMC_API_SUCCESS) {
+	if(ret != CKMC_SUCCESS) {
 		X509_free(pcert);
 	}
 	return ret;
 }
 
 KEY_MANAGER_CAPI
-int ckmc_load_from_pkcs12_file(const char *file_path, const char *passphrase, ckmc_key **private_key, ckmc_cert **ckmcert, ckmc_cert_list **ca_cert_list)
+int ckmc_load_from_pkcs12_file(const char *file_path, const char *passphrase, ckmc_key_s **private_key, ckmc_cert_s **ckmcert, ckmc_cert_list_s **ca_cert_list)
 {
 	class Pkcs12Converter {
 	private:
@@ -174,9 +195,9 @@ int ckmc_load_from_pkcs12_file(const char *file_path, const char *passphrase, ck
 
 		int ret;
 	public:
-		ckmc_key *retPrivateKey;
-		ckmc_cert *retCkmCert;
-		ckmc_cert_list *retCaCertList;
+		ckmc_key_s *retPrivateKey;
+		ckmc_cert_s *retCkmCert;
+		ckmc_cert_list_s *retCaCertList;
 
 		Pkcs12Converter(){
 			fp_in = NULL;
@@ -184,7 +205,7 @@ int ckmc_load_from_pkcs12_file(const char *file_path, const char *passphrase, ck
 			pkey = NULL;
 			x509Cert = NULL;
 			ca = NULL;
-			ret = CKMC_API_SUCCESS;
+			ret = CKMC_SUCCESS;
 			retPrivateKey = NULL;
 			retCkmCert = NULL;
 			retCaCertList = NULL;
@@ -202,38 +223,44 @@ int ckmc_load_from_pkcs12_file(const char *file_path, const char *passphrase, ck
 				sk_X509_pop_free(ca, X509_free);
 			EVP_cleanup();
 
-			if(ret != CKMC_API_SUCCESS) {
-				if(retPrivateKey != NULL)
+			if(ret != CKMC_SUCCESS) {
+				if(retPrivateKey != NULL){
 					ckmc_key_free(retPrivateKey);
-				if(retCkmCert != NULL)
+					retPrivateKey = NULL;
+				}
+				if(retCkmCert != NULL) {
 					ckmc_cert_free(retCkmCert);
-				if(retCaCertList != NULL)
+					retCkmCert = NULL;
+				}
+				if(retCaCertList != NULL) {
 					ckmc_cert_list_all_free(retCaCertList);
+					retCaCertList = NULL;
+				}
 			}
 		};
 
 		int parsePkcs12(const char *filePath, const char *pass) {
 			fp_in = NULL;
 			if(!(fp_in = fopen(filePath, "rb"))) {
-				return CKMC_API_ERROR_FILE_ACCESS_DENIED;
+				return CKMC_ERROR_FILE_ACCESS_DENIED;
 			}
 
 			if(!(p12 = d2i_PKCS12_fp(fp_in, NULL))) {
-				return CKMC_API_ERROR_INVALID_FORMAT;
+				return CKMC_ERROR_INVALID_FORMAT;
 			}
 
 			/* parse PKCS#12 certificate */
 			if((ret = PKCS12_parse(p12, pass, &pkey, &x509Cert, &ca)) != 1) {
-				return CKMC_API_ERROR_INVALID_FORMAT;
+				return CKMC_ERROR_INVALID_FORMAT;
 			}
-			return CKMC_API_SUCCESS;
+			return CKMC_SUCCESS;
 		}
 
 		int toCkmCert() {
-			if( (ret =_ckmc_load_cert_from_x509(x509Cert,&retCkmCert)) != CKMC_API_SUCCESS) {
+			if( (ret =_ckmc_load_cert_from_x509(x509Cert,&retCkmCert)) != CKMC_SUCCESS) {
 				return ret;
 			}
-			return CKMC_API_SUCCESS;
+			return CKMC_SUCCESS;
 		}
 
 		int toCkmKey() {
@@ -245,12 +272,12 @@ int ckmc_load_from_pkcs12_file(const char *file_path, const char *passphrase, ck
 		    int size = BIO_read(bkey, output.data(), output.size());
 			BIO_free_all(bkey);
 		    if (size <= 0) {
-		        return CKMC_API_ERROR_INVALID_FORMAT;
+		        return CKMC_ERROR_INVALID_FORMAT;
 		    }
 		    output.resize(size);
 
 			int type = EVP_PKEY_type(pkey->type);
-			ckmc_key_type key_type = CKMC_KEY_NONE;
+			ckmc_key_type_e key_type = CKMC_KEY_NONE;
 			switch(type) {
 			case EVP_PKEY_RSA :
 				key_type = CKMC_KEY_RSA_PRIVATE;
@@ -260,49 +287,53 @@ int ckmc_load_from_pkcs12_file(const char *file_path, const char *passphrase, ck
 				break;
 			}
 			if(key_type == CKMC_KEY_NONE) {
-				return CKMC_API_ERROR_INVALID_FORMAT;
+				return CKMC_ERROR_INVALID_FORMAT;
 			}
 
 			char *nullPassword = NULL;
 
-			retPrivateKey = ckmc_key_new(output.data(), size, key_type, nullPassword);
-
-			return CKMC_API_SUCCESS;
+			return ckmc_key_new(output.data(), size, key_type, nullPassword, &retPrivateKey);
 		}
 
 		int toCaCkmCertList() {
+			int tmpRet;
 			X509* popedCert = NULL;
-			ckmc_cert *popedCkmCert = NULL;
-			ckmc_cert_list *tmpCertList = NULL;
+			ckmc_cert_s *popedCkmCert = NULL;
+			ckmc_cert_list_s *tmpCertList = NULL;
 			while((popedCert = sk_X509_pop(ca)) != NULL) {
-				if( (ret =_ckmc_load_cert_from_x509(popedCert, &popedCkmCert)) != CKMC_API_SUCCESS) {
-					return CKMC_API_ERROR_OUT_OF_MEMORY;
+				if( (tmpRet =_ckmc_load_cert_from_x509(popedCert, &popedCkmCert)) != CKMC_SUCCESS) {
+					return CKMC_ERROR_OUT_OF_MEMORY;
 				}
 				if(tmpCertList == NULL) { // first
-					tmpCertList = ckmc_cert_list_new(popedCkmCert);
+					tmpRet = ckmc_cert_list_new(popedCkmCert, &tmpCertList);
 					retCaCertList = tmpCertList;
 				}else {
-					tmpCertList = ckmc_cert_list_add(tmpCertList, popedCkmCert);
+					tmpRet = ckmc_cert_list_add(tmpCertList, popedCkmCert, &tmpCertList);
+				}
+				if(tmpRet != CKMC_SUCCESS) {
+					ckmc_cert_list_all_free(retCaCertList);
+					retCaCertList = NULL;
+					return tmpRet;
 				}
 			}
-			return CKMC_API_SUCCESS;
+			return CKMC_SUCCESS;
 		}
 
 	};
 
-	int ret = CKMC_API_SUCCESS;
+	int ret = CKMC_SUCCESS;
 
 	Pkcs12Converter converter;
-	if((ret = converter.parsePkcs12(file_path, passphrase)) != CKMC_API_SUCCESS) {
+	if((ret = converter.parsePkcs12(file_path, passphrase)) != CKMC_SUCCESS) {
 		return ret;
 	}
-	if((ret = converter.toCkmCert()) != CKMC_API_SUCCESS) {
+	if((ret = converter.toCkmCert()) != CKMC_SUCCESS) {
 		return ret;
 	}
-	if((ret = converter.toCkmKey()) != CKMC_API_SUCCESS) {
+	if((ret = converter.toCkmKey()) != CKMC_SUCCESS) {
 		return ret;
 	}
-	if((ret = converter.toCaCkmCertList()) != CKMC_API_SUCCESS) {
+	if((ret = converter.toCaCkmCertList()) != CKMC_SUCCESS) {
 		return ret;
 	}
 
@@ -310,11 +341,11 @@ int ckmc_load_from_pkcs12_file(const char *file_path, const char *passphrase, ck
 	*ckmcert = converter.retCkmCert;
 	*ca_cert_list = converter.retCaCertList;
 
-	return CKMC_API_SUCCESS;
+	return CKMC_SUCCESS;
 }
 
 KEY_MANAGER_CAPI
-void ckmc_cert_free(ckmc_cert *cert)
+void ckmc_cert_free(ckmc_cert_s *cert)
 {
 	if(cert == NULL)
 		return;
@@ -327,34 +358,45 @@ void ckmc_cert_free(ckmc_cert *cert)
 }
 
 KEY_MANAGER_CAPI
-ckmc_alias_list *ckmc_alias_list_new(char *alias)
+int ckmc_alias_list_new(char *alias, ckmc_alias_list_s **ppalias_list)
 {
-	ckmc_alias_list *previous = NULL;
-	return ckmc_alias_list_add(previous, alias);
+	ckmc_alias_list_s *previous = NULL;
+	return ckmc_alias_list_add(previous, alias, ppalias_list);
 }
 
 KEY_MANAGER_CAPI
-ckmc_alias_list *ckmc_alias_list_add(ckmc_alias_list *previous, char *alias)
+int ckmc_alias_list_add(ckmc_alias_list_s *previous, char *alias, ckmc_alias_list_s **pplast)
 {
-	ckmc_alias_list *plist = new ckmc_alias_list;
+	ckmc_alias_list_s *plist;
+
+	if(alias == NULL || pplast == NULL) {
+		return CKMC_ERROR_INPUT_PARAM;
+	}
+
+	plist = new ckmc_alias_list_s;
+	if(plist == NULL) {
+		return CKMC_ERROR_OUT_OF_MEMORY;
+	}
 
 	plist->alias = alias;
 	plist->next = NULL;
 
-	if(previous != NULL)
+	if(previous != NULL) {
 		previous->next = plist;
+	}
+	*pplast = plist;
 
-	return plist;
+	return CKMC_SUCCESS;
 }
 
 KEY_MANAGER_CAPI
-void ckmc_alias_list_free(ckmc_alias_list *first)
+void ckmc_alias_list_free(ckmc_alias_list_s *first)
 {
 	if(first == NULL)
 		return;
 
-	ckmc_alias_list *current = NULL;
-	ckmc_alias_list *next = first;
+	ckmc_alias_list_s *current = NULL;
+	ckmc_alias_list_s *next = first;
 	do {
 		current = next;
 		next = current->next;
@@ -363,12 +405,12 @@ void ckmc_alias_list_free(ckmc_alias_list *first)
 }
 
 KEY_MANAGER_CAPI
-void ckmc_alias_list_all_free(ckmc_alias_list *first)
+void ckmc_alias_list_all_free(ckmc_alias_list_s *first)
 {
 	if(first == NULL)
 		return;
-	ckmc_alias_list *current = NULL;
-	ckmc_alias_list *next = first;
+	ckmc_alias_list_s *current = NULL;
+	ckmc_alias_list_s *next = first;
 	do {
 		current = next;
 		next = current->next;
@@ -380,34 +422,45 @@ void ckmc_alias_list_all_free(ckmc_alias_list *first)
 }
 
 KEY_MANAGER_CAPI
-ckmc_cert_list *ckmc_cert_list_new(ckmc_cert *cert)
+int ckmc_cert_list_new(ckmc_cert_s *cert, ckmc_cert_list_s **ppalias_list)
 {
-	ckmc_cert_list *previous = NULL;
-	return ckmc_cert_list_add(previous, cert);
+	ckmc_cert_list_s *previous = NULL;
+	return ckmc_cert_list_add(previous, cert, ppalias_list);
 }
 
 KEY_MANAGER_CAPI
-ckmc_cert_list *ckmc_cert_list_add(ckmc_cert_list *previous, ckmc_cert *cert)
+int ckmc_cert_list_add(ckmc_cert_list_s *previous, ckmc_cert_s *cert, ckmc_cert_list_s **pplast)
 {
-	ckmc_cert_list *plist = new ckmc_cert_list;
+	ckmc_cert_list_s *plist;
 
+	if(cert == NULL || pplast == NULL) {
+		return CKMC_ERROR_INPUT_PARAM;
+	}
+
+	plist = new ckmc_cert_list_s;
+	if(plist == NULL) {
+		return CKMC_ERROR_OUT_OF_MEMORY;
+	}
 	plist->cert = cert;
 	plist->next = NULL;
 
-	if(previous != NULL)
+	if(previous != NULL) {
 		previous->next = plist;
+	}
 
-	return plist;
+	*pplast = plist;
+
+	return CKMC_SUCCESS;
 }
 
 KEY_MANAGER_CAPI
-void ckmc_cert_list_free(ckmc_cert_list *first)
+void ckmc_cert_list_free(ckmc_cert_list_s *first)
 {
 	if(first == NULL)
 		return;
 
-	ckmc_cert_list *current = NULL;
-	ckmc_cert_list *next = first;
+	ckmc_cert_list_s *current = NULL;
+	ckmc_cert_list_s *next = first;
 	do {
 		current = next;
 		next = current->next;
@@ -416,13 +469,13 @@ void ckmc_cert_list_free(ckmc_cert_list *first)
 }
 
 KEY_MANAGER_CAPI
-void ckmc_cert_list_all_free(ckmc_cert_list *first)
+void ckmc_cert_list_all_free(ckmc_cert_list_s *first)
 {
 	if(first == NULL)
 		return;
 
-	ckmc_cert_list *current = NULL;
-	ckmc_cert_list *next = first;
+	ckmc_cert_list_s *current = NULL;
+	ckmc_cert_list_s *next = first;
 	do {
 		current = next;
 		next = current->next;
@@ -433,10 +486,10 @@ void ckmc_cert_list_all_free(ckmc_cert_list *first)
 	}while(next != NULL);
 }
 
-int _ckmc_load_cert_from_x509(X509 *xCert, ckmc_cert **cert)
+int _ckmc_load_cert_from_x509(X509 *xCert, ckmc_cert_s **cert)
 {
 	if(xCert == NULL) {
-		return CKMC_API_ERROR_INVALID_FORMAT;
+		return CKMC_ERROR_INVALID_FORMAT;
 	}
 
 	BIO *bcert = BIO_new(BIO_s_mem());
@@ -447,11 +500,9 @@ int _ckmc_load_cert_from_x509(X509 *xCert, ckmc_cert **cert)
     int size = BIO_read(bcert, output.data(), output.size());
 	BIO_free_all(bcert);
     if (size <= 0) {
-        return CKMC_API_ERROR_INVALID_FORMAT;
+        return CKMC_ERROR_INVALID_FORMAT;
     }
     output.resize(size);
 
-	*cert = ckmc_cert_new(output.data(), output.size(), CKMC_FORM_DER);
-
-	return CKMC_API_SUCCESS;
+	return ckmc_cert_new(output.data(), output.size(), CKMC_FORM_DER, cert);
 }

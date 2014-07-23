@@ -33,12 +33,13 @@ extern "C" {
 #endif
 
 /**
+ * @internal
  * @addtogroup CAPI_KEY_MANAGER_CONTROL_MODULE
  * @{
  */
 
 /**
- * @brief Decrypts a user key with password. A decrypted user key exists only on memory. If this API is called for the first time, a user key will be generated internally.
+ * @brief Decrypts a user key(DKEK) with password. A decrypted user key exists only on memory. If this API is called for the first time, a user key will be generated internally.
  *
  * @since_tizen 2.3
  * @privlevel platform
@@ -46,14 +47,15 @@ extern "C" {
  *
  * @remarks The user key is a randomly generated key used in encrypting user data. And the user key is protected by a user's password.
  *
- * @param[in] user is a uid of a user whose key is decrypted.
- * @param[in] password is used in decrypting a user key.
+ * @param[in] user a uid of a user whose key is decrypted.
+ * @param[in] password used in decrypting a user key.
  *
  * @return 0 on success, otherwise a negative error value
- * @exception #CKMC_API_SUCCESS Successful
- * @exception #CKMC_API_ERROR_SERVER_ERROR failed to unlock user key
- * @exception #CKMC_API_ERROR_INPUT_PARAM invalid input parameter
- * @exception #CKMC_API_ERROR_AUTHENTICATION_FAILED not correct password
+ * @retval #CKMC_SUCCESS Successful
+ * @retval #CKMC_ERROR_SERVER_ERROR failed to unlock user key
+ * @retval #CKMC_ERROR_INPUT_PARAM invalid input parameter
+ * @retval #CKMC_ERROR_AUTHENTICATION_FAILED not correct password
+ * @retval #CKMC_ERROR_FILE_ACCESS_DENIED provided file doesn't exists or cannot be accessed
  *
  * @see ckmc_lock_user_key()
  * @see ckmc_remove_user_data()
@@ -63,17 +65,18 @@ extern "C" {
 int ckmc_unlock_user_key(uid_t user, const char *password);
 
 /**
- * @brief remove a decrypted user key from memory
+ * @brief Removes a decrypted user key(DKEK) from memory
  *
  * @since_tizen 2.3
  * @privlevel platform
  * @privilege %http://tizen.org/privilege/keymanager.admin
  *
- * @param[in] user is a uid of a user whose key is removed from memory.
+ * @param[in] user a uid of a user whose key is removed from memory.
  *
  * @return 0 on success, otherwise a negative error value
- * @exception #CKMC_API_SUCCESS Successful
- * @exception #CKMC_API_ERROR_INPUT_PARAM invalid input parameter
+ * @retval #CKMC_SUCCESS Successful
+ * @retval #CKMC_ERROR_INPUT_PARAM invalid input parameter
+ * @retval #CKMC_ERROR_FILE_ACCESS_DENIED provided file doesn't exists or cannot be accessed
  *
  * @see ckmc_unlock_user_key()
  * @see ckmc_remove_user_data()
@@ -83,17 +86,18 @@ int ckmc_unlock_user_key(uid_t user, const char *password);
 int ckmc_lock_user_key(uid_t user);
 
 /**
- * @brief remove user data from Store and erase a user key used for encryption
+ * @brief Removes user data from Store and erase a user key(DKEK) used for encryption
  *
  * @since_tizen 2.3
  * @privlevel platform
  * @privilege %http://tizen.org/privilege/keymanager.admin
  *
- * @param[in] user is a uid of a user whose data and key are removed
+ * @param[in] user a uid of a user whose data and key are removed
  *
  * @return 0 on success, otherwise a negative error value
- * @exception #CKMC_API_SUCCESS Successful
- * @exception #CKMC_API_ERROR_INPUT_PARAM invalid input parameter
+ * @retval #CKMC_SUCCESS Successful
+ * @retval #CKMC_ERROR_INPUT_PARAM invalid input parameter
+ * @retval #CKMC_ERROR_FILE_ACCESS_DENIED provided file doesn't exists or cannot be accessed
  *
  * @see ckmc_unlock_user_key()
  * @see ckmc_lock_user_key()
@@ -103,21 +107,22 @@ int ckmc_lock_user_key(uid_t user);
 int ckmc_remove_user_data(uid_t user);
 
 /**
- * @brief change a password for a user. key manager decrypts a user key with old password and re-encrypts a user key with new password.
+ * @brief Changes a password for a user. key manager decrypts a user key(DKEK) with old password and re-encrypts a user key with new password.
  *
  * @since_tizen 2.3
  * @privlevel platform
  * @privilege %http://tizen.org/privilege/keymanager.admin
  *
- * @param[in] user is a uid of a user whose user key is re-encrypted
- * @param[in] old_password is used in decrypting a user key.
- * @param[in] new_password is used in re-encrypting a user key.
+ * @param[in] user a uid of a user whose user key is re-encrypted
+ * @param[in] old_password used in decrypting a user key.
+ * @param[in] new_password used in re-encrypting a user key.
  *
  * @return 0 on success, otherwise a negative error value
- * @exception #CKMC_API_SUCCESS Successful
- * @exception #CKMC_API_ERROR_INPUT_PARAM invalid input parameter
- * @exception #CKMC_API_ERROR_AUTHENTICATION_FAILED not correct password
- * @exception #CKMC_API_ERROR_BAD_REQUEST no information about old password
+ * @retval #CKMC_SUCCESS Successful
+ * @retval #CKMC_ERROR_INPUT_PARAM invalid input parameter
+ * @retval #CKMC_ERROR_AUTHENTICATION_FAILED not correct password
+ * @retval #CKMC_ERROR_BAD_REQUEST no information about old password
+ * @retval #CKMC_ERROR_FILE_ACCESS_DENIED provided file doesn't exists or cannot be accessed
  *
  * @see ckmc_unlock_user_key()
  * @see ckmc_lock_user_key()
@@ -127,19 +132,20 @@ int ckmc_remove_user_data(uid_t user);
 int ckmc_change_user_password(uid_t user, const char *old_password, const char *new_password);
 
 /**
- * @brief change a password for a user without old password.
+ * @brief Changes a password for a user without old password.
  *
  * @since_tizen 2.3
  * @privlevel platform
  * @privilege %http://tizen.org/privilege/keymanager.admin
  *
- * @param[in] user is a uid of a user whose user key is re-encrypted
+ * @param[in] user a uid of a user whose user key is re-encrypted
  * @param[in] new_password is used in re-encrypting a user key.
  *
  * @return 0 on success, otherwise a negative error value
- * @exception #CKMC_API_SUCCESS Successful
- * @exception #CKMC_API_ERROR_INPUT_PARAM invalid input parameter
- * @exception #CKMC_API_ERROR_BAD_REQUEST a user key is not unlocked.
+ * @retval #CKMC_SUCCESS Successful
+ * @retval #CKMC_ERROR_INPUT_PARAM invalid input parameter
+ * @retval #CKMC_ERROR_BAD_REQUEST a user key is not unlocked.
+ * @retval #CKMC_ERROR_FILE_ACCESS_DENIED provided file doesn't exists or cannot be accessed
  *
  * @pre User must be already logged in and his user key is already loaded into memory in plain text form.
  *

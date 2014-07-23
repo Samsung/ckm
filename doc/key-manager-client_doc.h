@@ -16,7 +16,7 @@
 #ifndef __TIZEN_CORE_KEY_MANAGER_CLIENT_DOC_H__
 #define __TIZEN_CORE_KEY_MANAGER_CLIENT_DOC_H__
 /**
- * @ingroup CAPI_KEY_MANAGER_MODULE *
+ * @ingroup CAPI_KEY_MANAGER_MODULE 
  * @defgroup CAPI_KEY_MANAGER_CLIENT_MODULE Key Manager Client
  * @brief    It provides APIs accessing on the secure repository and additional secure cryptographic operations.
  *

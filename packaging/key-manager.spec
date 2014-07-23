@@ -14,6 +14,7 @@ BuildRequires: pkgconfig(libsmack)
 BuildRequires: pkgconfig(libsystemd-daemon)
 BuildRequires: pkgconfig(db-util)
 BuildRequires: boost-devel
+BuildRequires: pkgconfig(capi-base-common)
 Requires: boost-test
 %{?systemd_requires}
 
