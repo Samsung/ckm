@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_CASE(KeyDomainKEK){
     BOOST_REQUIRE_MESSAGE(isLibInitialized,
             "Library is not initialized!");
     CKM::KeyProvider keyProvider;
-    CKM::SafeBuffer rb_test;
+    CKM::RawBuffer rb_test;
     BOOST_REQUIRE_NO_THROW(rb_test =
             CKM::KeyProvider::generateDomainKEK(USERNAME_LONG, PASSWORD));
     BOOST_REQUIRE_NO_THROW(keyProvider = CKM::KeyProvider(rb_test, PASSWORD));
@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(KeyDomainKekInvalidPassword){
     BOOST_REQUIRE_MESSAGE(isLibInitialized,
             "Library is not initialized!");
     CKM::KeyProvider keyProvider;
-    CKM::SafeBuffer rb_test;
+    CKM::RawBuffer rb_test;
     BOOST_REQUIRE_NO_THROW(rb_test =
             CKM::KeyProvider::generateDomainKEK(USERNAME_LONG, PASSWORD));
     BOOST_REQUIRE_THROW(keyProvider = CKM::KeyProvider(rb_test, INCORRECT_PASSWORD),
@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(KeygetPureDomainKEK){
     BOOST_REQUIRE_MESSAGE(isLibInitialized,
             "Library is not initialized!");
     CKM::KeyProvider keyProvider;
-    CKM::SafeBuffer rb_test;
+    CKM::RawBuffer rb_test;
     BOOST_REQUIRE_NO_THROW(rb_test =
             CKM::KeyProvider::generateDomainKEK(USERNAME_LONG, PASSWORD));
     BOOST_REQUIRE_NO_THROW(keyProvider = CKM::KeyProvider(rb_test, std::string(PASSWORD)));
@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(KeyGetWrappedDomainKEK){
     BOOST_REQUIRE_MESSAGE(isLibInitialized,
             "Library is not initialized!");
     CKM::KeyProvider keyProvider;
-    CKM::SafeBuffer rb_test;
+    CKM::RawBuffer rb_test;
     BOOST_REQUIRE_NO_THROW(rb_test =
             CKM::KeyProvider::generateDomainKEK(USERNAME_LONG, PASSWORD));
     BOOST_REQUIRE_NO_THROW(keyProvider = CKM::KeyProvider(rb_test, PASSWORD));
@@ -92,8 +92,8 @@ BOOST_AUTO_TEST_CASE(KeyGenerateDEK){
     BOOST_REQUIRE_MESSAGE(isLibInitialized,
             "Library is not initialized!");
     CKM::KeyProvider keyProvider;
-    CKM::SafeBuffer rb_test;
-    CKM::SafeBuffer rb_DEK1;
+    CKM::RawBuffer rb_test;
+    CKM::RawBuffer rb_DEK1;
     BOOST_REQUIRE_NO_THROW(rb_test =
             CKM::KeyProvider::generateDomainKEK(USERNAME_LONG, PASSWORD));
     BOOST_REQUIRE_NO_THROW(keyProvider = CKM::KeyProvider(rb_test, PASSWORD));
@@ -106,9 +106,9 @@ BOOST_AUTO_TEST_CASE(KeyGetPureDEK){
     BOOST_REQUIRE_MESSAGE(isLibInitialized,
             "Library is not initialized!");
     CKM::KeyProvider keyProvider;
-    CKM::SafeBuffer rb_pureDEK1;
-    CKM::SafeBuffer rb_DEK1;
-    CKM::SafeBuffer rb_test;
+    CKM::RawBuffer rb_pureDEK1;
+    CKM::RawBuffer rb_DEK1;
+    CKM::RawBuffer rb_test;
     BOOST_REQUIRE_NO_THROW(rb_test =
             CKM::KeyProvider::generateDomainKEK(USERNAME_LONG, PASSWORD));
     BOOST_REQUIRE_NO_THROW(keyProvider = CKM::KeyProvider(rb_test, PASSWORD));
@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE(KeyGetPureDEK){
 BOOST_AUTO_TEST_CASE(KeyReencrypt){
     BOOST_REQUIRE_MESSAGE(isLibInitialized,
             "Library is not initialized!");
-    CKM::SafeBuffer rb_test;
+    CKM::RawBuffer rb_test;
     BOOST_REQUIRE_NO_THROW(rb_test =
             CKM::KeyProvider::generateDomainKEK(USERNAME_LONG, PASSWORD));
     BOOST_REQUIRE_NO_THROW(CKM::KeyProvider::reencrypt(rb_test, PASSWORD,
@@ -131,7 +131,7 @@ BOOST_AUTO_TEST_CASE(KeyReencrypt){
 BOOST_AUTO_TEST_CASE(KeyReencrypt_incorrect_password){
     BOOST_REQUIRE_MESSAGE(isLibInitialized,
             "Library is not initialized!");
-    CKM::SafeBuffer rb_test;
+    CKM::RawBuffer rb_test;
     BOOST_REQUIRE_NO_THROW(rb_test =
             CKM::KeyProvider::generateDomainKEK(USERNAME_LONG, PASSWORD));
     BOOST_REQUIRE_THROW((rb_test = CKM::KeyProvider::reencrypt(rb_test, INCORRECT_PASSWORD,
@@ -142,8 +142,8 @@ BOOST_AUTO_TEST_CASE(KeyGetPureDEK_after_reencrypt){
     BOOST_REQUIRE_MESSAGE(isLibInitialized,
             "Library is not initialized!");
     CKM::KeyProvider keyProvider;
-    CKM::SafeBuffer rb_DEK1;
-    CKM::SafeBuffer rb_test;
+    CKM::RawBuffer rb_DEK1;
+    CKM::RawBuffer rb_test;
     BOOST_REQUIRE_NO_THROW(rb_test =
             CKM::KeyProvider::generateDomainKEK(USERNAME_LONG, PASSWORD));
     BOOST_REQUIRE_NO_THROW(keyProvider = CKM::KeyProvider(rb_test, PASSWORD));

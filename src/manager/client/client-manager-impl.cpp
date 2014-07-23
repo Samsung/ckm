@@ -25,7 +25,6 @@
 
 #include <client-manager-impl.h>
 #include <client-common.h>
-#include <buffer-conversion.h>
 #include <message-buffer.h>
 #include <protocols.h>
 #include <generic-key.h>
@@ -60,7 +59,7 @@ ManagerImpl::ManagerImpl()
 int ManagerImpl::saveBinaryData(
     const Alias &alias,
     DBDataType dataType,
-    const SafeBuffer &rawData,
+    const RawBuffer &rawData,
     const Policy &policy)
 {
     m_counter++;
@@ -105,7 +104,7 @@ int ManagerImpl::saveBinaryData(
 int ManagerImpl::saveKey(const Alias &alias, const KeyShPtr &key, const Policy &policy) {
     if (key.get() == NULL)
         return CKM_API_ERROR_INPUT_PARAM;
-    return saveBinaryData(alias, toDBDataType(key->getType()), toSafeBuffer(key->getDER()), policy);
+    return saveBinaryData(alias, toDBDataType(key->getType()), key->getDER(), policy);
 }
 
 int ManagerImpl::saveCertificate(
@@ -115,13 +114,13 @@ int ManagerImpl::saveCertificate(
 {
     if (cert.get() == NULL)
         return CKM_API_ERROR_INPUT_PARAM;
-    return saveBinaryData(alias, DBDataType::CERTIFICATE, toSafeBuffer(cert->getDER()), policy);
+    return saveBinaryData(alias, DBDataType::CERTIFICATE, cert->getDER(), policy);
 }
 
 int ManagerImpl::saveData(const Alias &alias, const RawBuffer &rawData, const Policy &policy) {
     if (!policy.extractable)
         return CKM_API_ERROR_INPUT_PARAM;
-    return saveBinaryData(alias, DBDataType::BINARY_DATA, toSafeBuffer(rawData), policy);
+    return saveBinaryData(alias, DBDataType::BINARY_DATA, rawData, policy);
 }
 
 int ManagerImpl::removeBinaryData(const Alias &alias, DBDataType dataType)
@@ -178,7 +177,7 @@ int ManagerImpl::getBinaryData(
     DBDataType sendDataType,
     const std::string &password,
     DBDataType &recvDataType,
-    SafeBuffer &rawData)
+    RawBuffer &rawData)
 {
     return try_catch([&] {
         if (alias.empty())
@@ -220,7 +219,7 @@ int ManagerImpl::getBinaryData(
 
 int ManagerImpl::getKey(const Alias &alias, const std::string &password, KeyShPtr &key) {
     DBDataType recvDataType;
-    SafeBuffer rawData;
+    RawBuffer rawData;
 
     int retCode = getBinaryData(
         alias,
@@ -247,7 +246,7 @@ int ManagerImpl::getKey(const Alias &alias, const std::string &password, KeyShPt
 int ManagerImpl::getCertificate(const Alias &alias, const std::string &password, CertificateShPtr &cert)
 {
     DBDataType recvDataType;
-    SafeBuffer rawData;
+    RawBuffer rawData;
 
     int retCode = getBinaryData(
         alias,
@@ -275,16 +274,13 @@ int ManagerImpl::getCertificate(const Alias &alias, const std::string &password,
 int ManagerImpl::getData(const Alias &alias, const std::string &password, RawBuffer &rawData)
 {
     DBDataType recvDataType;
-    SafeBuffer safeData;
 
     int retCode = getBinaryData(
         alias,
         DBDataType::BINARY_DATA,
         password,
         recvDataType,
-        safeData);
-
-    rawData = toRawBuffer(safeData);
+        rawData);
 
     if (retCode != CKM_API_SUCCESS)
         return retCode;
@@ -455,7 +451,7 @@ int getCertChain(
 
         int retCommand;
         int retCounter;
-        SafeBufferVector rawBufferVector;
+        RawBufferVector rawBufferVector;
 
         Deserialization::Deserialize(recv, retCommand);
         Deserialization::Deserialize(recv, retCounter);
@@ -487,10 +483,10 @@ int ManagerImpl::getCertificateChain(
     const CertificateShPtrVector &untrustedCertificates,
     CertificateShPtrVector &certificateChainVector)
 {
-    SafeBufferVector rawBufferVector;
+    RawBufferVector rawBufferVector;
 
     for (auto &e: untrustedCertificates) {
-        rawBufferVector.push_back(toSafeBuffer(e->getDER()));
+        rawBufferVector.push_back(e->getDER());
     }
 
     return getCertChain(
@@ -531,7 +527,7 @@ int ManagerImpl::createSignature(
         Serialization::Serialize(send, my_counter);
         Serialization::Serialize(send, privateKeyAlias);
         Serialization::Serialize(send, password);
-        Serialization::Serialize(send, toSafeBuffer(message));
+        Serialization::Serialize(send, message);
         Serialization::Serialize(send, static_cast<int>(hash));
         Serialization::Serialize(send, static_cast<int>(padding));
 
@@ -546,14 +542,11 @@ int ManagerImpl::createSignature(
 
         int command;
         int counter;
-        SafeBuffer safeData;
 
         Deserialization::Deserialize(recv, command);
         Deserialization::Deserialize(recv, counter);
         Deserialization::Deserialize(recv, retCode);
-        Deserialization::Deserialize(recv, safeData);
-
-        signature = toRawBuffer(safeData);
+        Deserialization::Deserialize(recv, signature);
 
         if ((command != static_cast<int>(LogicCommand::CREATE_SIGNATURE))
             || (counter != my_counter))
@@ -582,8 +575,8 @@ int ManagerImpl::verifySignature(
         Serialization::Serialize(send, my_counter);
         Serialization::Serialize(send, publicKeyOrCertAlias);
         Serialization::Serialize(send, password);
-        Serialization::Serialize(send, toSafeBuffer(message));
-        Serialization::Serialize(send, toSafeBuffer(signature));
+        Serialization::Serialize(send, message);
+        Serialization::Serialize(send, signature);
         Serialization::Serialize(send, static_cast<int>(hash));
         Serialization::Serialize(send, static_cast<int>(padding));
 
@@ -619,9 +612,9 @@ int ManagerImpl::ocspCheck(const CertificateShPtrVector &certChain, int &ocspSta
         int my_counter = ++m_counter;
         MessageBuffer send, recv;
 
-        SafeBufferVector rawCertChain;
+        RawBufferVector rawCertChain;
         for (auto &e: certChain) {
-            rawCertChain.push_back(toSafeBuffer(e->getDER()));
+            rawCertChain.push_back(e->getDER());
         }
 
         Serialization::Serialize(send, my_counter);

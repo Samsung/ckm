@@ -29,13 +29,13 @@
 
 namespace CKM {
 
-void MessageBuffer::Push(const SafeBuffer &data) {
+void MessageBuffer::Push(const RawBuffer &data) {
     m_buffer.AppendCopy(&data[0], data.size());
 }
 
-SafeBuffer MessageBuffer::Pop() {
+RawBuffer MessageBuffer::Pop() {
     size_t size = m_buffer.Size();
-    SafeBuffer buffer;
+    RawBuffer buffer;
     buffer.resize(size + sizeof(size_t));
     memcpy(&buffer[0], &size, sizeof(size_t));
     m_buffer.FlattenConsume(&buffer[sizeof(size_t)], size);

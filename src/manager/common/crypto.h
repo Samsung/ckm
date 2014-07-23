@@ -24,7 +24,8 @@
 
 #include <openssl/evp.h>
 
-#include <safe-buffer.h>
+#include <vector>
+#include <dpl/raw-buffer.h>
 
 namespace CKM {
 
@@ -121,8 +122,8 @@ public:                                                               \
     {}                                                                \
 }
 
-DEFINE_CIPHER(AesCbcEncryption, SafeBuffer, EVP_aes_256_cbc(), true);
-DEFINE_CIPHER(AesCbcDecryption, SafeBuffer, EVP_aes_256_cbc(), false);
+DEFINE_CIPHER(AesCbcEncryption, RawBuffer, EVP_aes_256_cbc(), true);
+DEFINE_CIPHER(AesCbcDecryption, RawBuffer, EVP_aes_256_cbc(), false);
 
 #undef DEFINE_CIPHER
 

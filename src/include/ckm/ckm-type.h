@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2014 Samsung Electronics Co.
+ *  Copyright (c) 2000 - 2013 Samsung Electronics Co., Ltd All Rights Reserved
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -24,10 +24,11 @@
 #include <string>
 #include <vector>
 
+#include <ckm/ckm-raw-buffer.h>
+
 namespace CKM {
 
 // used to pass password and raw key data
-typedef std::vector<unsigned char> RawBuffer;
 typedef std::vector<RawBuffer> RawBufferVector;
 typedef std::string Alias;
 typedef std::vector<Alias> AliasVector;

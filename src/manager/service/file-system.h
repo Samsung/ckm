@@ -31,8 +31,8 @@ public:
     FileSystem(uid_t uid);
 
     std::string getDBPath() const;
-    SafeBuffer getDomainKEK() const;
-    bool saveDomainKEK(const SafeBuffer &buffer) const;
+    RawBuffer getDomainKEK() const;
+    bool saveDomainKEK(const RawBuffer &buffer) const;
     int removeUserData() const;
 
     static int init();

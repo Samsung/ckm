@@ -34,7 +34,7 @@ Base64Encoder::Base64Encoder() :
 {
 }
 
-void Base64Encoder::append(const SafeBuffer &data)
+void Base64Encoder::append(const RawBuffer &data)
 {
     if (m_finalized) {
         LogWarning("Already finalized.");
@@ -57,7 +57,7 @@ void Base64Encoder::finalize()
     BIO_flush(m_b64);
 }
 
-SafeBuffer Base64Encoder::get()
+RawBuffer Base64Encoder::get()
 {
     if (!m_finalized) {
         LogWarning("Not finalized");
@@ -71,9 +71,9 @@ SafeBuffer Base64Encoder::get()
     }
 
     if (bptr->length > 0) {
-        return SafeBuffer(bptr->data, bptr->data + bptr->length);
+        return RawBuffer(bptr->data, bptr->data + bptr->length);
     }
-    return SafeBuffer();
+    return RawBuffer();
 }
 
 void Base64Encoder::reset()
@@ -101,7 +101,7 @@ Base64Decoder::Base64Decoder() :
 {
 }
 
-void Base64Decoder::append(const SafeBuffer &data)
+void Base64Decoder::append(const RawBuffer &data)
 {
     if (m_finalized) {
         LogWarning("Already finalized.");
@@ -144,7 +144,7 @@ bool Base64Decoder::finalize()
     BIO *b64, *bmem;
     size_t len = m_input.size();
 
-    SafeBuffer buffer(len);
+    RawBuffer buffer(len);
 
     if (!buffer.data()) {
         LogError("Error in malloc.");
@@ -158,7 +158,7 @@ bool Base64Decoder::finalize()
         ThrowMsg(Exception::InternalError, "Couldn't create BIO object.");
     }
     BIO_set_flags(b64, BIO_FLAGS_BASE64_NO_NL);
-    SafeBuffer tmp(m_input);
+    RawBuffer tmp(m_input);
     m_input.clear();
 
     bmem = BIO_new_mem_buf(tmp.data(), len);
@@ -193,7 +193,7 @@ bool Base64Decoder::finalize()
     return status;
 }
 
-SafeBuffer Base64Decoder::get() const
+RawBuffer Base64Decoder::get() const
 {
     if (!m_finalized) {
         LogWarning("Not finalized.");

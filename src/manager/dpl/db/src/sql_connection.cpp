@@ -35,8 +35,6 @@
 #include <cstdarg>
 #include <memory>
 
-#include <safe-buffer.h>
-
 namespace CKM {
 namespace DB {
 namespace // anonymous
@@ -233,7 +231,7 @@ void SqlConnection::DataCommand::BindString(
 
 void SqlConnection::DataCommand::BindBlob(
     SqlConnection::ArgumentIndex position,
-    const SafeBuffer &raw)
+    const RawBuffer &raw)
 {
     if (raw.size() == 0) {
         BindNull(position);
@@ -345,7 +343,7 @@ void SqlConnection::DataCommand::BindString(
 
 void SqlConnection::DataCommand::BindBlob(
     SqlConnection::ArgumentIndex position,
-    const boost::optional<SafeBuffer> &value)
+    const boost::optional<RawBuffer> &value)
 {
     if (!!value) {
         BindBlob(position, *value);
@@ -514,7 +512,7 @@ std::string SqlConnection::DataCommand::GetColumnString(
     return std::string(value);
 }
 
-SafeBuffer SqlConnection::DataCommand::GetColumnBlob(
+RawBuffer SqlConnection::DataCommand::GetColumnBlob(
     SqlConnection::ColumnIndex column)
 {
     LogPedantic("SQL data command get column blog: [" << column << "]");
@@ -524,13 +522,13 @@ SafeBuffer SqlConnection::DataCommand::GetColumnBlob(
             sqlcipher3_column_blob(m_stmt, column));
 
     if (value == NULL) {
-        return SafeBuffer();
+        return RawBuffer();
     }
 
     int length = sqlcipher3_column_bytes(m_stmt, column);
     LogPedantic("Got blob of length: " << length);
 
-    return SafeBuffer(value, value + length);
+    return RawBuffer(value, value + length);
 }
 
 boost::optional<int> SqlConnection::DataCommand::GetColumnOptionalInteger(
@@ -647,14 +645,14 @@ boost::optional<String> SqlConnection::DataCommand::GetColumnOptionalString(
     return boost::optional<String>(s);
 }
 
-boost::optional<SafeBuffer> SqlConnection::DataCommand::GetColumnOptionalBlob(
+boost::optional<RawBuffer> SqlConnection::DataCommand::GetColumnOptionalBlob(
     SqlConnection::ColumnIndex column)
 {
     LogPedantic("SQL data command get column blog: [" << column << "]");
     CheckColumnIndex(column);
 
     if (sqlcipher3_column_type(m_stmt, column) == SQLCIPHER_NULL) {
-        return boost::optional<SafeBuffer>();
+        return boost::optional<RawBuffer>();
     }
     const unsigned char *value = reinterpret_cast<const unsigned char*>(
             sqlcipher3_column_blob(m_stmt, column));
@@ -662,8 +660,8 @@ boost::optional<SafeBuffer> SqlConnection::DataCommand::GetColumnOptionalBlob(
     int length = sqlcipher3_column_bytes(m_stmt, column);
     LogPedantic("Got blob of length: " << length);
 
-    SafeBuffer temp(value, value + length);
-    return boost::optional<SafeBuffer>(temp);
+    RawBuffer temp(value, value + length);
+    return boost::optional<RawBuffer>(temp);
 }
 
 void SqlConnection::Connect(const std::string &address,
@@ -700,12 +698,12 @@ const std::size_t SQLCIPHER_RAW_DATA_SIZE = 32;
 
 void rawToHexString(TransitoryString& str,
                     std::size_t offset,
-                    const SafeBuffer &raw) {
+                    const RawBuffer &raw) {
     for (std::size_t i = 0; i < raw.size(); i++)
         sprintf(&str[offset + i*2], "%02X", raw[i]);
 }
 
-TransitoryString createHexPass(const SafeBuffer &rawPass){
+TransitoryString createHexPass(const RawBuffer &rawPass){
     TransitoryString pass = TransitoryString('0', SQLCIPHER_RAW_PREFIX.length() +
                                              //We are required to pass 64byte
                                              //long hex password made out of
@@ -722,7 +720,7 @@ TransitoryString createHexPass(const SafeBuffer &rawPass){
 
 }
 
-void SqlConnection::SetKey(const SafeBuffer &rawPass){
+void SqlConnection::SetKey(const RawBuffer &rawPass){
     if (m_connection == NULL) {
         LogPedantic("Cannot set key. No connection to DB!");
         return;
@@ -744,9 +742,8 @@ void SqlConnection::SetKey(const SafeBuffer &rawPass){
     m_isKeySet = true;
 };
 
-void SqlConnection::ResetKey(const SafeBuffer &rawPassOld,
-                             const SafeBuffer &rawPassNew)
-{
+void SqlConnection::ResetKey(const RawBuffer &rawPassOld,
+                             const RawBuffer &rawPassNew) {
     if (m_connection == NULL) {
         LogPedantic("Cannot reset key. No connection to DB!");
         return;

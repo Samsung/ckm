@@ -34,19 +34,9 @@
 
 #include <ckm/ckm-type.h>
 #include <generic-key.h>
-#include <buffer-conversion.h>
 
 namespace CKM {
 namespace {
-
-//void printDER(const SafeBuffer &key) {
-//    std::stringstream ss;
-//    for (auto &e : key) {
-//        ss << std::hex << " " << (int)e;
-//    }
-//    ss << std::dec;
-//    LogError(ss.str());
-//}
 
 typedef std::unique_ptr<BIO, std::function<void(BIO*)>> BioUniquePtr;
 
@@ -65,31 +55,31 @@ int passcb(char *buff, int size, int rwflag, void *userdata) {
 
 typedef int(*I2D_CONV)(BIO*, EVP_PKEY*);
 
-CKM::SafeBuffer i2d(I2D_CONV fun, EVP_PKEY* pkey) {
+CKM::RawBuffer i2d(I2D_CONV fun, EVP_PKEY* pkey) {
     BioUniquePtr bio(BIO_new(BIO_s_mem()), BIO_free_all);
 
     if (NULL == pkey) {
         LogDebug("You are trying to read empty key!");
-        return SafeBuffer();
+        return RawBuffer();
     }
 
     if (NULL == bio.get()) {
         LogError("Error in memory allocation! Function: BIO_new.");
-        return SafeBuffer();
+        return RawBuffer();
     }
 
     if (1 != fun(bio.get(), pkey)) {
         LogError("Error in conversion EVP_PKEY to der");
-        return SafeBuffer();
+        return RawBuffer();
     }
 
-    CKM::SafeBuffer output(8196);
+    CKM::RawBuffer output(8196);
 
     int size = BIO_read(bio.get(), output.data(), output.size());
 
     if (size <= 0) {
         LogError("Error in BIO_read: " << size);
-        return SafeBuffer();
+        return RawBuffer();
     }
 
     output.resize(size);
@@ -108,7 +98,7 @@ GenericKey::GenericKey(const GenericKey &second) {
     m_type = second.m_type;
 }
 
-GenericKey::GenericKey(const SafeBuffer &buf, const std::string &pass)
+GenericKey::GenericKey(const RawBuffer &buf, const std::string &pass)
   : m_pkey(NULL, EVP_PKEY_free)
   , m_type(KeyType::KEY_NONE)
 {
@@ -197,29 +187,25 @@ KeyType GenericKey::getType() const {
     return m_type;
 }
 
-SafeBuffer GenericKey::getDERPRV() const {
+RawBuffer GenericKey::getDERPRV() const {
     return i2d(i2d_PrivateKey_bio, m_pkey.get());
 }
 
-SafeBuffer GenericKey::getDERPUB() const {
+RawBuffer GenericKey::getDERPUB() const {
     return i2d(i2d_PUBKEY_bio, m_pkey.get());
 }
 
-SafeBuffer GenericKey::getDERSB() const {
+RawBuffer GenericKey::getDER() const {
     if (m_type == KeyType::KEY_ECDSA_PRIVATE || m_type == KeyType::KEY_RSA_PRIVATE) {
         return getDERPRV();
     } else if (m_type == KeyType::KEY_RSA_PUBLIC || m_type == KeyType::KEY_ECDSA_PUBLIC) {
         return getDERPUB();
     }
-    return SafeBuffer();
-}
-
-RawBuffer GenericKey::getDER() const {
-    return toRawBuffer(getDERSB());
+    return RawBuffer();
 }
 
 KeyShPtr Key::create(const RawBuffer &raw, const std::string &password) {
-    KeyShPtr output(new GenericKey(toSafeBuffer(raw), password));
+    KeyShPtr output(new GenericKey(raw, password));
     if (output->empty())
         output.reset();
     return output;

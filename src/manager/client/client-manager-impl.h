@@ -21,7 +21,6 @@
 #pragma once
 
 #include <protocols.h>
-#include <safe-buffer.h>
 
 #include <ckm/ckm-type.h>
 #include <ckm/ckm-key.h>
@@ -95,7 +94,7 @@ protected:
     int saveBinaryData(
         const Alias &alias,
         DBDataType dataType,
-        const SafeBuffer &rawData,
+        const RawBuffer &rawData,
         const Policy &policy);
 
     int removeBinaryData(
@@ -107,7 +106,7 @@ protected:
         DBDataType sendDataType,
         const std::string &password,
         DBDataType &recvDataType,
-        SafeBuffer &rawData);
+        RawBuffer &rawData);
 
     int getBinaryDataAliasVector(
         DBDataType sendDataType,

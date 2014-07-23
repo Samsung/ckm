@@ -19,7 +19,8 @@
 #include <string>
 #include <dpl/noncopyable.h>
 #include <dpl/exception.h>
-#include <safe-buffer.h>
+
+#include <ckm/ckm-type.h>
 
 struct bio_st;
 typedef bio_st BIO;
@@ -38,9 +39,9 @@ class Base64Encoder : public CKM::Noncopyable
         DECLARE_EXCEPTION_TYPE(Base, AlreadyFinalized)
     };
     Base64Encoder();
-    void append(const SafeBuffer &data);
+    void append(const RawBuffer &data);
     void finalize();
-    SafeBuffer get();
+    RawBuffer get();
     void reset();
     ~Base64Encoder();
 
@@ -62,22 +63,22 @@ class Base64Decoder : public CKM::Noncopyable
         DECLARE_EXCEPTION_TYPE(Base, AlreadyFinalized)
     };
     Base64Decoder();
-    void append(const SafeBuffer &data);
+    void append(const RawBuffer &data);
 
     /*
      *  Function will return false when BIO_read fails
      *  (for example: when string was not in base64 format).
      */
     bool finalize();
-    SafeBuffer get() const;
+    RawBuffer get() const;
     void reset();
     ~Base64Decoder()
     {
     }
 
   private:
-    SafeBuffer m_input;
-    SafeBuffer m_output;
+    RawBuffer m_input;
+    RawBuffer m_output;
     bool m_finalized;
 };
 } // namespace CKM

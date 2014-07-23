@@ -33,9 +33,7 @@
 #include <string>
 #include <dpl/assert.h>
 #include <stdint.h>
-#include <vector>
-
-#include <safe-buffer.h>
+#include <dpl/raw-buffer.h>
 
 namespace CKM {
 namespace DB {
@@ -167,7 +165,7 @@ class SqlConnection
          * @param position Index of argument to bind value to
          * @param value Value to bind
          */
-        void BindBlob(ArgumentIndex position, const SafeBuffer &value);
+        void BindBlob(ArgumentIndex position, const RawBuffer &value);
 
         /**
          * Bind optional int to the prepared statement argument.
@@ -248,8 +246,7 @@ class SqlConnection
          * @param position Index of argument to bind value to
          * @param value Value to bind
          */
-        void BindBlob(ArgumentIndex position,
-                const boost::optional<SafeBuffer> &value);
+        void BindBlob(ArgumentIndex position, const boost::optional<RawBuffer> &value);
 
         /**
          * Execute the prepared statement and/or move
@@ -332,7 +329,7 @@ class SqlConnection
          *
          * @throw Exception::InvalidColumn
          */
-        SafeBuffer GetColumnBlob(ColumnIndex column);
+        RawBuffer GetColumnBlob(ColumnIndex column);
 
         /**
          * Get optional integer value from column in current row.
@@ -395,7 +392,7 @@ class SqlConnection
          *
          * @throw Exception::InvalidColumn
          */
-        boost::optional<SafeBuffer> GetColumnOptionalBlob(ColumnIndex column);
+        boost::optional<RawBuffer> GetColumnOptionalBlob(ColumnIndex column);
     };
 
     // Move on copy constructor. No copy semantics
@@ -492,7 +489,7 @@ class SqlConnection
      *
      * @param rawPass password given in raw binary format
      */
-    void SetKey(const SafeBuffer &rawPass);
+    void SetKey(const RawBuffer &rawPass);
 
     /**
      * ResetKey is used for changing key used for database encryption.
@@ -506,8 +503,8 @@ class SqlConnection
      * @param rawPassNew new password for encryption in raw binary format
      *
      */
-    void ResetKey(const SafeBuffer &rawPassOld,
-                  const SafeBuffer &rawPassNew);
+    void ResetKey(const RawBuffer &rawPassOld,
+                  const RawBuffer &rawPassNew);
 
     /**
      * Execute SQL command without result

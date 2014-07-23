@@ -147,6 +147,7 @@ INSTALL(FILES
     ${KEY_MANAGER_SRC_PATH}/include/ckm/ckm-error.h
     ${KEY_MANAGER_SRC_PATH}/include/ckm/ckm-echo.h
     ${KEY_MANAGER_SRC_PATH}/include/ckm/ckm-key.h
+    ${KEY_MANAGER_SRC_PATH}/include/ckm/ckm-raw-buffer.h
     ${KEY_MANAGER_SRC_PATH}/include/ckm/ckm-type.h
     DESTINATION /usr/include/ckm/ckm
     )

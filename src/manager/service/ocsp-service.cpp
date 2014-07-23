@@ -83,11 +83,11 @@ bool OCSPService::processOne(
         auto &buffer = info.buffer;
 
         int commandId;
-        SafeBufferVector chainVector;
+        RawBufferVector chainVector;
         Deserialization::Deserialize(buffer, commandId);
         Deserialization::Deserialize(buffer, chainVector);
 
-        SafeBuffer response = m_logic->ocspCheck(commandId, chainVector);
+        RawBuffer response = m_logic->ocspCheck(commandId, chainVector);
         m_serviceManager->Write(conn, response);
 
         return true;

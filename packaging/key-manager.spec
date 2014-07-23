@@ -169,6 +169,7 @@ fi
 %{_includedir}/ckm/ckm/ckm-error.h
 %{_includedir}/ckm/ckm/ckm-echo.h
 %{_includedir}/ckm/ckm/ckm-key.h
+%{_includedir}/ckm/ckm/ckm-raw-buffer.h
 %{_includedir}/ckm/ckm/ckm-type.h
 %{_includedir}/ckm/ckmc/ckmc-manager.h
 %{_includedir}/ckm/ckmc/ckmc-control.h

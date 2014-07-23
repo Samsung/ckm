@@ -52,7 +52,7 @@ public:
 
     virtual void RegisterSocketService(GenericSocketService *service);
     virtual void Close(ConnectionID connectionID);
-    virtual void Write(ConnectionID connectionID, const SafeBuffer &rawBuffer);
+    virtual void Write(ConnectionID connectionID, const RawBuffer &rawBuffer);
 
 protected:
     void CreateDomainSocket(
@@ -79,7 +79,7 @@ protected:
         InterfaceID interfaceID;
         GenericSocketService *service;
         time_t timeout;
-        SafeBuffer rawBuffer;
+        RawBuffer rawBuffer;
         int counter;
 
         SocketDescription()
@@ -97,7 +97,7 @@ protected:
 
     struct WriteBuffer {
         ConnectionID connectionID;
-        SafeBuffer rawBuffer;
+        RawBuffer rawBuffer;
     };
 
     struct Timeout {

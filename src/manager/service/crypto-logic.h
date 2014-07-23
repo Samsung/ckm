@@ -53,35 +53,35 @@ public:
 
     bool haveKey(const std::string &smackLabel);
     void pushKey(const std::string &smackLabel,
-                 const SafeBuffer &applicationKey);
+                 const RawBuffer &applicationKey);
 
 private:
 	static const int ENCR_BASE64 =   1 << 0;
 	static const int ENCR_APPKEY =   1 << 1;
 	static const int ENCR_PASSWORD = 1 << 2;
 
-	std::map<std::string, SafeBuffer> m_keyMap;
+	std::map<std::string, RawBuffer> m_keyMap;
 
-    SafeBuffer generateRandIV() const;
-    SafeBuffer passwordToKey(const std::string &password,
-                            const SafeBuffer &salt,
+    RawBuffer generateRandIV() const;
+    RawBuffer passwordToKey(const std::string &password,
+                            const RawBuffer &salt,
                             size_t keySize) const;
 
-    SafeBuffer encryptData(
-        const SafeBuffer &data,
-        const SafeBuffer &key,
-        const SafeBuffer &iv) const;
+    RawBuffer encryptData(
+        const RawBuffer &data,
+        const RawBuffer &key,
+        const RawBuffer &iv) const;
 
-    SafeBuffer decryptData(
-        const SafeBuffer &data,
-        const SafeBuffer &key,
-        const SafeBuffer &iv) const;
+    RawBuffer decryptData(
+        const RawBuffer &data,
+        const RawBuffer &key,
+        const RawBuffer &iv) const;
 
-    void decBase64(SafeBuffer &data);
-    void encBase64(SafeBuffer &data);
-    bool equalDigests(SafeBuffer &dig1, SafeBuffer &dig2);
-    std::size_t insertDigest(SafeBuffer &data, const int dataSize);
-    void removeDigest(SafeBuffer &data, SafeBuffer &digest);
+    void decBase64(RawBuffer &data);
+    void encBase64(RawBuffer &data);
+    bool equalDigests(RawBuffer &dig1, RawBuffer &dig2);
+    std::size_t insertDigest(RawBuffer &data, const int dataSize);
+    void removeDigest(RawBuffer &data, RawBuffer &digest);
 };
 
 } // namespace CKM

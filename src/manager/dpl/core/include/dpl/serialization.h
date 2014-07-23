@@ -28,7 +28,7 @@
 #include <map>
 #include <memory>
 
-#include <safe-buffer.h>
+#include <dpl/raw-buffer.h>
 
 namespace CKM {
 // Abstract data stream buffer
@@ -215,14 +215,14 @@ struct Serialization {
         Serialize(stream, *p);
     }
 
-    static void Serialize(IStream& stream, const SafeBuffer& vec)
+    static void Serialize(IStream& stream, const RawBuffer& vec)
     {
         int length = vec.size();
         stream.Write(sizeof(length), &length);
         stream.Write(length, vec.data());
     }
 
-    static void Serialize(IStream& stream, const SafeBuffer* const vec)
+    static void Serialize(IStream& stream, const RawBuffer* const vec)
     {
         Serialize(stream, *vec);
     }
@@ -409,7 +409,7 @@ struct Deserialization {
         Deserialize(stream, *map);
     }
 
-    static void Deserialize(IStream& stream, SafeBuffer& vec)
+    static void Deserialize(IStream& stream, RawBuffer& vec)
     {
         int length;
         stream.Read(sizeof(length), &length);
@@ -417,9 +417,9 @@ struct Deserialization {
         stream.Read(length, vec.data());
     }
 
-    static void Deserialize(IStream& stream, SafeBuffer*& vec)
+    static void Deserialize(IStream& stream, RawBuffer*& vec)
     {
-        vec = new SafeBuffer;
+        vec = new RawBuffer;
         Deserialize(stream, *vec);
     }
 

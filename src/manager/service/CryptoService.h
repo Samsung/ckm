@@ -61,14 +61,14 @@ class CryptoService {
     		 	 	 	 GenericKey &createdPublicKey);  // returned value
 
      int createSignature(const GenericKey &privateKey,
-                         const SafeBuffer &message,
+                         const RawBuffer &message,
                          const HashAlgorithm hashAlgo,
                          const RSAPaddingAlgorithm padAlgo,
-                         SafeBuffer &signature);
+                         RawBuffer &signature);
 
      int verifySignature(const GenericKey &publicKey,
-                         const SafeBuffer &message,
-                         const SafeBuffer &signature,
+                         const RawBuffer &message,
+                         const RawBuffer &signature,
                          const HashAlgorithm hashAlgo,
                          const RSAPaddingAlgorithm padAlgo);
 

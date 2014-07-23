@@ -22,10 +22,6 @@
 #ifndef _SAFE_BUFFER_H_
 #define _SAFE_BUFFER_H_
 
-#include <string.h>
-
-#include <vector>
-
 #include <boost/container/vector.hpp>
 
 namespace CKM {
@@ -70,19 +66,18 @@ constexpr bool operator!= (const erase_on_dealloc<T>&, const erase_on_dealloc<U>
  *  template <typename T>
  *  using SafeBuffer = std::vector<T, erase_on_dealloc<T>>;
  *
- *  typedef SafeBuffer<unsigned char> SafeBuffer
+ *  typedef SafeBuffer<unsigned char> RawBuffer
  *
  * when gcc 4.7/4.8 is available. Also replace boost::vector with std::vector
  * in other parts of code
  */
 template <typename T>
-struct SafeBufferT {
+struct SafeBuffer {
     typedef boost::container::vector<T, erase_on_dealloc<T>> Type;
 };
 
 // used to pass password and raw key data
-typedef SafeBufferT<unsigned char>::Type SafeBuffer;
-typedef std::vector<SafeBuffer> SafeBufferVector;
+typedef SafeBuffer<unsigned char>::Type RawBuffer;
 
 } // namespace CKM
 

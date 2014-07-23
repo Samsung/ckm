@@ -39,7 +39,7 @@ namespace CKM {
     class DBCrypto {
          public:
             typedef boost::optional<DBRow> DBRowOptional;
-            typedef boost::optional<SafeBuffer> SafeBufferOptional;
+            typedef boost::optional<RawBuffer> RawBufferOptional;
             class Exception
             {
               public:
@@ -53,7 +53,7 @@ namespace CKM {
                 m_inUserTransaction(false)
               {};
             //user name instead of path?
-            DBCrypto(const std::string &path, const SafeBuffer &rawPass);
+            DBCrypto(const std::string &path, const RawBuffer &rawPass);
             DBCrypto(const DBCrypto &other) = delete;
             DBCrypto(DBCrypto &&other);
 
@@ -81,8 +81,8 @@ namespace CKM {
                     const Alias& alias,
                     const std::string &label);
 
-            void saveKey(const std::string& label, const SafeBuffer &key);
-            SafeBufferOptional getKey(
+            void saveKey(const std::string& label, const RawBuffer &key);
+            RawBufferOptional getKey(
                     const std::string& label);
             void deleteKey(const std::string& label);
 

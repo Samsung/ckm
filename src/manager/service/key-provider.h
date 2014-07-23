@@ -1,7 +1,5 @@
 #pragma once
 
-#include <safe-buffer.h>
-
 #include <ckm-key-provider.h>
 #include <ckm/ckm-type.h>
 #include <dpl/exception.h>
@@ -54,7 +52,7 @@ public:
 	// if (keyInWrapForm.size() != sizeof(WrappedKeyMaterial))
 	//	 throw exception; // buffer does not have proper size to store WrappedKeyMaterial
 	// WrappedKeyMaterial *wkm = static_cast<WrappedKeyMaterial>(keyInWrapForm.data());
-	KeyProvider(const SafeBuffer &domainKEKInWrapForm, const std::string &password);
+	KeyProvider(const RawBuffer &domainKEKInWrapForm, const std::string &password);
 
 	KeyProvider(KeyProvider &&);
 	KeyProvider(const KeyProvider &) = delete;
@@ -64,31 +62,31 @@ public:
 	bool isInitialized();
 
 	// Returns Key used to decrypt database.
-	SafeBuffer getPureDomainKEK();
+	RawBuffer getPureDomainKEK();
 
 	// Returns Key in form used to store key in file
-	// Requied by Control::resetPassword(const SafeBuffer &newPassword);
+	// Requied by Control::resetPassword(const RawBuffer &newPassword);
 	// This api should be used only on Tizen 2.2.1
-	SafeBuffer getWrappedDomainKEK(const std::string &password);
+	RawBuffer getWrappedDomainKEK(const std::string &password);
 
 	// EncryptedKey key extracted from database. Used to encrypt application data.
 	// This key will be used to decrypt/encrypt data in ROW
-	SafeBuffer getPureDEK(const SafeBuffer &DEKInWrapForm);
+	RawBuffer getPureDEK(const RawBuffer &DEKInWrapForm);
 
 	// Returns WRAPPED DEK. This will be written to datbase.
 	// This key will be used to encrypt all application information.
 	// All application are identified by smackLabel.
-	SafeBuffer generateDEK(const std::string &smackLabel);
+	RawBuffer generateDEK(const std::string &smackLabel);
 
 	// used by change user password. On error -> exception
-	static SafeBuffer reencrypt(
-		const SafeBuffer &domainKEKInWrapForm,
+	static RawBuffer reencrypt(
+		const RawBuffer &domainKEKInWrapForm,
 		const std::string &oldPass,
 		const std::string &newPass);
 
 	// First run of application for some user. DomainKEK was not created yet. We must create one.
 	// This key will be used to encrypt user database.
-	static SafeBuffer generateDomainKEK(const std::string &user, const std::string &userPassword);
+	static RawBuffer generateDomainKEK(const std::string &user, const std::string &userPassword);
 
 	// This will be called by framework at the begin of the program
 	static int initializeLibrary();

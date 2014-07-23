@@ -31,11 +31,10 @@
 
 #include <sys/types.h>
 
-#include <safe-buffer.h>
-
 #include <dpl/exception.h>
 
 #include <generic-event.h>
+#include <dpl/raw-buffer.h>
 
 extern "C" {
 struct msghdr;
@@ -96,7 +95,7 @@ struct GenericSocketService {
 
     struct ReadEvent : public GenericEvent {
         ConnectionID connectionID;
-        SafeBuffer rawBuffer;
+        RawBuffer rawBuffer;
     };
 
     struct CloseEvent : public GenericEvent {
@@ -123,7 +122,7 @@ struct GenericSocketManager {
     virtual void MainLoop() = 0;
     virtual void RegisterSocketService(GenericSocketService *ptr) = 0;
     virtual void Close(ConnectionID connectionID) = 0;
-    virtual void Write(ConnectionID connectionID, const SafeBuffer &rawBuffer) = 0;
+    virtual void Write(ConnectionID connectionID, const RawBuffer &rawBuffer) = 0;
     virtual ~GenericSocketManager(){}
 };
 

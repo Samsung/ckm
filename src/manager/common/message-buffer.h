@@ -26,11 +26,13 @@
 #ifndef _CENT_KEY_MNG_SOCKET_BUFFER_
 #define _CENT_KEY_MNG_SOCKET_BUFFER_
 
-#include <safe-buffer.h>
+#include <vector>
 
 #include <dpl/binary_queue.h>
 #include <dpl/exception.h>
 #include <dpl/serialization.h>
+
+#include <dpl/raw-buffer.h>
 
 namespace CKM {
 
@@ -47,9 +49,9 @@ public:
       : m_bytesLeft(0)
     {}
 
-    void Push(const SafeBuffer &data);
+    void Push(const RawBuffer &data);
 
-    SafeBuffer Pop();
+    RawBuffer Pop();
 
     bool Ready();
 

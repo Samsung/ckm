@@ -28,9 +28,6 @@
 #include <sstream>
 #include <fstream>
 
-#include <safe-buffer.h>
-#include <buffer-conversion.h>
-
 #include <dpl/log/log.h>
 
 #include <file-system.h>
@@ -62,15 +59,18 @@ std::string FileSystem::getDKEKPath() const {
     return ss.str();
 }
 
-SafeBuffer FileSystem::getDomainKEK() const
+RawBuffer FileSystem::getDomainKEK() const
 {
     std::ifstream is(getDKEKPath());
     std::istreambuf_iterator<char> begin(is),end;
-    RawBuffer buffer(begin, end);
-    return toSafeBuffer(buffer);
+    std::vector<char> buff(begin,end); // This trick does not work with boost vector
+
+    RawBuffer buffer(buff.size());
+    memcpy(buffer.data(), buff.data(), buff.size());
+    return buffer;
 }
 
-bool FileSystem::saveDomainKEK(const SafeBuffer &buffer) const
+bool FileSystem::saveDomainKEK(const RawBuffer &buffer) const
 {
     std::ofstream os(getDKEKPath(), std::ios::out | std::ofstream::binary);
     std::copy(buffer.begin(), buffer.end(), std::ostreambuf_iterator<char>(os));
