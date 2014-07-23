@@ -130,7 +130,7 @@ RawBuffer CryptoLogic::decryptData(
 }
 
 RawBuffer CryptoLogic::passwordToKey(
-    const std::string &password,
+    const Password &password,
     const RawBuffer &salt,
     size_t keySize) const
 {
@@ -161,7 +161,7 @@ RawBuffer CryptoLogic::generateRandIV() const {
     return civ;
 }
 
-void CryptoLogic::encryptRow(const std::string &password, DBRow &row)
+void CryptoLogic::encryptRow(const Password &password, DBRow &row)
 {
     try {
         DBRow crow = row;
@@ -213,7 +213,7 @@ void CryptoLogic::encryptRow(const std::string &password, DBRow &row)
     }
 }
 
-void CryptoLogic::decryptRow(const std::string &password, DBRow &row)
+void CryptoLogic::decryptRow(const Password &password, DBRow &row)
 {
     try {
         DBRow crow = row;

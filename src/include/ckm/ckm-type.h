@@ -32,6 +32,7 @@ namespace CKM {
 typedef std::vector<RawBuffer> RawBufferVector;
 typedef std::string Alias;
 typedef std::vector<Alias> AliasVector;
+typedef std::string Password;
 
 enum class KeyType : int {
     KEY_NONE,
@@ -60,13 +61,13 @@ enum class CertificateFieldId : int {
 };
 
 struct Policy {
-    Policy(const std::string &pass = std::string(), bool extract = true, bool rest = false)
+    Policy(const Password &pass = Password(), bool extract = true, bool rest = false)
       : password(pass)
       , extractable(extract)
       , restricted(rest)
     {}
     virtual ~Policy(){}
-    std::string password;  // byte array used to encrypt data inside CKM
+    Password password;  // byte array used to encrypt data inside CKM
     bool extractable;  // if true key may be extracted from storage
     bool restricted;   // if true only key owner may see data
 };

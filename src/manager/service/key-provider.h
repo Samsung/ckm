@@ -52,7 +52,7 @@ public:
 	// if (keyInWrapForm.size() != sizeof(WrappedKeyMaterial))
 	//	 throw exception; // buffer does not have proper size to store WrappedKeyMaterial
 	// WrappedKeyMaterial *wkm = static_cast<WrappedKeyMaterial>(keyInWrapForm.data());
-	KeyProvider(const RawBuffer &domainKEKInWrapForm, const std::string &password);
+	KeyProvider(const RawBuffer &domainKEKInWrapForm, const Password &password);
 
 	KeyProvider(KeyProvider &&);
 	KeyProvider(const KeyProvider &) = delete;
@@ -67,7 +67,7 @@ public:
 	// Returns Key in form used to store key in file
 	// Requied by Control::resetPassword(const RawBuffer &newPassword);
 	// This api should be used only on Tizen 2.2.1
-	RawBuffer getWrappedDomainKEK(const std::string &password);
+	RawBuffer getWrappedDomainKEK(const Password &password);
 
 	// EncryptedKey key extracted from database. Used to encrypt application data.
 	// This key will be used to decrypt/encrypt data in ROW
@@ -81,12 +81,12 @@ public:
 	// used by change user password. On error -> exception
 	static RawBuffer reencrypt(
 		const RawBuffer &domainKEKInWrapForm,
-		const std::string &oldPass,
-		const std::string &newPass);
+		const Password &oldPass,
+		const Password &newPass);
 
 	// First run of application for some user. DomainKEK was not created yet. We must create one.
 	// This key will be used to encrypt user database.
-	static RawBuffer generateDomainKEK(const std::string &user, const std::string &userPassword);
+	static RawBuffer generateDomainKEK(const std::string &user, const Password &userPassword);
 
 	// This will be called by framework at the begin of the program
 	static int initializeLibrary();

@@ -175,7 +175,7 @@ int ManagerImpl::removeData(const Alias &alias) {
 int ManagerImpl::getBinaryData(
     const Alias &alias,
     DBDataType sendDataType,
-    const std::string &password,
+    const Password &password,
     DBDataType &recvDataType,
     RawBuffer &rawData)
 {
@@ -217,7 +217,7 @@ int ManagerImpl::getBinaryData(
     });
 }
 
-int ManagerImpl::getKey(const Alias &alias, const std::string &password, KeyShPtr &key) {
+int ManagerImpl::getKey(const Alias &alias, const Password &password, KeyShPtr &key) {
     DBDataType recvDataType;
     RawBuffer rawData;
 
@@ -243,7 +243,7 @@ int ManagerImpl::getKey(const Alias &alias, const std::string &password, KeyShPt
     return CKM_API_SUCCESS;
 }
 
-int ManagerImpl::getCertificate(const Alias &alias, const std::string &password, CertificateShPtr &cert)
+int ManagerImpl::getCertificate(const Alias &alias, const Password &password, CertificateShPtr &cert)
 {
     DBDataType recvDataType;
     RawBuffer rawData;
@@ -271,7 +271,7 @@ int ManagerImpl::getCertificate(const Alias &alias, const std::string &password,
     return CKM_API_SUCCESS;
 }
 
-int ManagerImpl::getData(const Alias &alias, const std::string &password, RawBuffer &rawData)
+int ManagerImpl::getData(const Alias &alias, const Password &password, RawBuffer &rawData)
 {
     DBDataType recvDataType;
 
@@ -512,7 +512,7 @@ int ManagerImpl::getCertificateChain(
 
 int ManagerImpl::createSignature(
     const Alias &privateKeyAlias,
-    const std::string &password,           // password for private_key
+    const Password &password,           // password for private_key
     const RawBuffer &message,
     const HashAlgorithm hash,
     const RSAPaddingAlgorithm padding,
@@ -560,7 +560,7 @@ int ManagerImpl::createSignature(
 
 int ManagerImpl::verifySignature(
     const Alias &publicKeyOrCertAlias,
-    const std::string &password,           // password for public_key (optional)
+    const Password &password,           // password for public_key (optional)
     const RawBuffer &message,
     const RawBuffer &signature,
     const HashAlgorithm hash,

@@ -50,7 +50,7 @@ CKMLogic::CKMLogic()
 
 CKMLogic::~CKMLogic(){}
 
-RawBuffer CKMLogic::unlockUserKey(uid_t user, const std::string &password) {
+RawBuffer CKMLogic::unlockUserKey(uid_t user, const Password &password) {
     // TODO try catch for all errors that should be supported by error code
     int retCode = CKM_API_SUCCESS;
 
@@ -116,8 +116,8 @@ RawBuffer CKMLogic::removeUserData(uid_t user) {
 
 RawBuffer CKMLogic::changeUserPassword(
     uid_t user,
-    const std::string &oldPassword,
-    const std::string &newPassword)
+    const Password &oldPassword,
+    const Password &newPassword)
 {
     int retCode = CKM_API_SUCCESS;
     try {
@@ -147,7 +147,7 @@ RawBuffer CKMLogic::changeUserPassword(
 
 RawBuffer CKMLogic::resetUserPassword(
     uid_t user,
-    const std::string &newPassword)
+    const Password &newPassword)
 {
     int retCode = CKM_API_SUCCESS;
     // TODO try-catch
@@ -277,7 +277,7 @@ int CKMLogic::getDataHelper(
     Credentials &cred,
     DBDataType dataType,
     const Alias &alias,
-    const std::string &password,
+    const Password &password,
     DBRow &row)
 {
 
@@ -325,7 +325,7 @@ RawBuffer CKMLogic::getData(
     int commandId,
     DBDataType dataType,
     const Alias &alias,
-    const std::string &password)
+    const Password &password)
 {
     int retCode = CKM_API_SUCCESS;
     DBRow row;
@@ -619,7 +619,7 @@ RawBuffer CKMLogic::getCertificateChain(
         }
 
         for (auto &i: aliasVector) {
-            retCode = getDataHelper(cred, DBDataType::CERTIFICATE, i, std::string(), row);
+            retCode = getDataHelper(cred, DBDataType::CERTIFICATE, i, Password(), row);
 
             if (retCode != CKM_API_SUCCESS)
                 goto senderror;
@@ -658,7 +658,7 @@ RawBuffer CKMLogic::createSignature(
         Credentials &cred,
         int commandId,
         const Alias &privateKeyAlias,
-        const std::string &password,           // password for private_key
+        const Password &password,           // password for private_key
         const RawBuffer &message,
         const HashAlgorithm hash,
         const RSAPaddingAlgorithm padding)
@@ -677,7 +677,7 @@ RawBuffer CKMLogic::createSignature(
                 break;
             }
 
-            GenericKey keyParsed(row.data, std::string());
+            GenericKey keyParsed(row.data, Password());
             if (keyParsed.empty())
                 retCode = CKM_API_ERROR_SERVER_ERROR;
             else
@@ -709,7 +709,7 @@ RawBuffer CKMLogic::verifySignature(
         Credentials &cred,
         int commandId,
         const Alias &publicKeyOrCertAlias,
-        const std::string &password,           // password for public_key (optional)
+        const Password &password,           // password for public_key (optional)
         const RawBuffer &message,
         const RawBuffer &signature,
         const HashAlgorithm hash,

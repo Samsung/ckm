@@ -35,17 +35,17 @@ public:
 
     int saveKey(const Alias &alias, const KeyShPtr &key, const Policy &policy);
     int removeKey(const Alias &alias);
-    int getKey(const Alias &alias, const std::string &password, KeyShPtr &key);
+    int getKey(const Alias &alias, const Password &password, KeyShPtr &key);
     int getKeyAliasVector(AliasVector &aliasVector);
 
     int saveCertificate(const Alias &alias, const CertificateShPtr &cert, const Policy &policy);
     int removeCertificate(const Alias &alias);
-    int getCertificate(const Alias &alias, const std::string &password, CertificateShPtr &cert);
+    int getCertificate(const Alias &alias, const Password &password, CertificateShPtr &cert);
     int getCertificateAliasVector(AliasVector &aliasVector);
 
     int saveData(const Alias &alias, const RawBuffer &rawData, const Policy &policy);
     int removeData(const Alias &alias);
-    int getData(const Alias &alias, const std::string &password, RawBuffer &cert);
+    int getData(const Alias &alias, const Password &password, RawBuffer &cert);
     int getDataAliasVector(AliasVector &aliasVector);
 
     int createKeyPairRSA(
@@ -74,7 +74,7 @@ public:
 
     int createSignature(
         const Alias &privateKeyAlias,
-        const std::string &password,           // password for private_key
+        const Password &password,           // password for private_key
         const RawBuffer &message,
         const HashAlgorithm hash,
         const RSAPaddingAlgorithm padding,
@@ -82,7 +82,7 @@ public:
 
     int verifySignature(
         const Alias &publicKeyOrCertAlias,
-        const std::string &password,           // password for public_key (optional)
+        const Password &password,           // password for public_key (optional)
         const RawBuffer &message,
         const RawBuffer &signature,
         const HashAlgorithm hash,
@@ -104,7 +104,7 @@ protected:
     int getBinaryData(
         const Alias &alias,
         DBDataType sendDataType,
-        const std::string &password,
+        const Password &password,
         DBDataType &recvDataType,
         RawBuffer &rawData);
 

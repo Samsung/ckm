@@ -36,7 +36,7 @@ public:
     ControlImpl& operator=(const ControlImpl &) = delete;
     ControlImpl& operator=(ControlImpl &&) = delete;
 
-    virtual int unlockUserKey(uid_t user, const std::string &password) const {
+    virtual int unlockUserKey(uid_t user, const Password &password) const {
         return try_catch([&] {
             MessageBuffer send, recv;
             Serialization::Serialize(send, static_cast<int>(ControlCommand::UNLOCK_USER_KEY));
@@ -118,7 +118,7 @@ public:
         });
     }
 
-    virtual int changeUserPassword(uid_t user, const std::string &oldPassword, const std::string &newPassword) const {
+    virtual int changeUserPassword(uid_t user, const Password &oldPassword, const Password &newPassword) const {
         return try_catch([&] {
             MessageBuffer send, recv;
             Serialization::Serialize(send, static_cast<int>(ControlCommand::CHANGE_USER_PASSWORD));
@@ -147,7 +147,7 @@ public:
         });
     }
 
-    virtual int resetUserPassword(uid_t user, const std::string &newPassword) const {
+    virtual int resetUserPassword(uid_t user, const Password &newPassword) const {
         return try_catch([&] {
             MessageBuffer send, recv;
             Serialization::Serialize(send, static_cast<int>(ControlCommand::RESET_USER_PASSWORD));
@@ -176,7 +176,6 @@ public:
     }
 
     virtual ~ControlImpl(){}
-
 };
 
 ControlShPtr Control::create() {

@@ -39,7 +39,7 @@ public:
 
     static KeyShPtr create(
         const RawBuffer &rawBuffer,
-        const std::string &password = std::string());
+        const Password &password = Password());
 };
 
 } // namespace CKM

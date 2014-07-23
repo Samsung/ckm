@@ -48,8 +48,8 @@ public:
 
     virtual ~CryptoLogic(){}
 
-    void decryptRow(const std::string &password, DBRow &row);
-    void encryptRow(const std::string &password, DBRow &row);
+    void decryptRow(const Password &password, DBRow &row);
+    void encryptRow(const Password &password, DBRow &row);
 
     bool haveKey(const std::string &smackLabel);
     void pushKey(const std::string &smackLabel,
@@ -63,7 +63,7 @@ private:
 	std::map<std::string, RawBuffer> m_keyMap;
 
     RawBuffer generateRandIV() const;
-    RawBuffer passwordToKey(const std::string &password,
+    RawBuffer passwordToKey(const Password &password,
                             const RawBuffer &salt,
                             size_t keySize) const;
 

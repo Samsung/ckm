@@ -50,7 +50,7 @@ public:
     CKMLogic& operator=(CKMLogic &&) = delete;
     virtual ~CKMLogic();
 
-    RawBuffer unlockUserKey(uid_t user, const std::string &password);
+    RawBuffer unlockUserKey(uid_t user, const Password &password);
 
     RawBuffer lockUserKey(uid_t user);
 
@@ -58,12 +58,12 @@ public:
 
     RawBuffer changeUserPassword(
         uid_t user,
-        const std::string &oldPassword,
-        const std::string &newPassword);
+        const Password &oldPassword,
+        const Password &newPassword);
 
     RawBuffer resetUserPassword(
         uid_t user,
-        const std::string &newPassword);
+        const Password &newPassword);
 
     RawBuffer saveData(
         Credentials &cred,
@@ -84,7 +84,7 @@ public:
         int commandId,
         DBDataType dataType,
         const Alias &alias,
-        const std::string &password);
+        const Password &password);
 
     RawBuffer getDataList(
         Credentials &cred,
@@ -125,7 +125,7 @@ public:
         Credentials &cred,
         int commandId,
         const Alias &privateKeyAlias,
-        const std::string &password,           // password for private_key
+        const Password &password,           // password for private_key
         const RawBuffer &message,
         const HashAlgorithm hash,
         const RSAPaddingAlgorithm padding);
@@ -134,7 +134,7 @@ public:
         Credentials &cred,
         int commandId,
         const Alias &publicKeyOrCertAlias,
-        const std::string &password,           // password for public_key (optional)
+        const Password &password,           // password for public_key (optional)
         const RawBuffer &message,
         const RawBuffer &signature,
         const HashAlgorithm hash,
@@ -153,7 +153,7 @@ private:
         Credentials &cred,
         DBDataType dataType,
         const Alias &alias,
-        const std::string &password,
+        const Password &password,
         DBRow &row);
 
     int createKeyPairRSAHelper(
@@ -175,7 +175,7 @@ private:
     int getKeyHelper(
         Credentials &cred,
         const Alias &publicKeyOrCertAlias,
-        const std::string &password,           // password for public_key (optional)
+        const Password &password,           // password for public_key (optional)
         const GenericKey &genericKey);
 
     std::map<uid_t, UserData> m_userDataMap;

@@ -42,7 +42,7 @@ typedef std::unique_ptr<BIO, std::function<void(BIO*)>> BioUniquePtr;
 
 int passcb(char *buff, int size, int rwflag, void *userdata) {
     (void) rwflag;
-    std::string *ptr = static_cast<std::string*>(userdata);
+    Password *ptr = static_cast<Password*>(userdata);
     if (ptr == NULL)
         return 0;
     if (ptr->empty())
@@ -98,7 +98,7 @@ GenericKey::GenericKey(const GenericKey &second) {
     m_type = second.m_type;
 }
 
-GenericKey::GenericKey(const RawBuffer &buf, const std::string &pass)
+GenericKey::GenericKey(const RawBuffer &buf, const Password &password)
   : m_pkey(NULL, EVP_PKEY_free)
   , m_type(KeyType::KEY_NONE)
 {
@@ -127,7 +127,7 @@ GenericKey::GenericKey(const RawBuffer &buf, const std::string &pass)
     if (!pkey && buf[0] == '-') {
         BIO_reset(bio.get());
         BIO_write(bio.get(), buf.data(), buf.size());
-        pkey = PEM_read_bio_PUBKEY(bio.get(), NULL, passcb, const_cast<std::string*>(&pass));
+        pkey = PEM_read_bio_PUBKEY(bio.get(), NULL, passcb, const_cast<Password*>(&password));
         isPrivate = false;
         LogDebug("PEM_read_bio_PUBKEY Status: " << (void*)pkey);
     }
@@ -135,7 +135,7 @@ GenericKey::GenericKey(const RawBuffer &buf, const std::string &pass)
     if (!pkey && buf[0] == '-') {
         BIO_reset(bio.get());
         BIO_write(bio.get(), buf.data(), buf.size());
-        pkey = PEM_read_bio_PrivateKey(bio.get(), NULL, passcb, const_cast<std::string*>(&pass));
+        pkey = PEM_read_bio_PrivateKey(bio.get(), NULL, passcb, const_cast<Password*>(&password));
         isPrivate = true;
         LogDebug("PEM_read_bio_PrivateKey Status: " << (void*)pkey);
     }
@@ -204,7 +204,7 @@ RawBuffer GenericKey::getDER() const {
     return RawBuffer();
 }
 
-KeyShPtr Key::create(const RawBuffer &raw, const std::string &password) {
+KeyShPtr Key::create(const RawBuffer &raw, const Password &password) {
     KeyShPtr output(new GenericKey(raw, password));
     if (output->empty())
         output.reset();

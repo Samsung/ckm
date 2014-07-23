@@ -79,12 +79,12 @@ public:
     virtual int removeCertificate(const Alias &alias) = 0;
     virtual int removeData(const Alias &alias) = 0;
 
-    virtual int getKey(const Alias &alias, const std::string &password, KeyShPtr &key) = 0;
+    virtual int getKey(const Alias &alias, const Password &password, KeyShPtr &key) = 0;
     virtual int getCertificate(
         const Alias &alias,
-        const std::string &password,
+        const Password &password,
         CertificateShPtr &certificate) = 0;
-    virtual int getData(const Alias &alias, const std::string &password, RawBuffer &data) = 0;
+    virtual int getData(const Alias &alias, const Password &password, RawBuffer &data) = 0;
 
     // send request for list of all keys/certificates/data that application/user may use
     virtual int getKeyAliasVector(AliasVector &aliasVector) = 0;
@@ -117,7 +117,7 @@ public:
 
     virtual int createSignature(
         const Alias &privateKeyAlias,
-        const std::string &password,           // password for private_key
+        const Password &password,           // password for private_key
         const RawBuffer &message,
         const HashAlgorithm hash,
         const RSAPaddingAlgorithm padding,
@@ -125,7 +125,7 @@ public:
 
     virtual int verifySignature(
         const Alias &publicKeyOrCertAlias,
-        const std::string &password,           // password for public_key (optional)
+        const Password &password,           // password for public_key (optional)
         const RawBuffer &message,
         const RawBuffer &signature,
         const HashAlgorithm hash,

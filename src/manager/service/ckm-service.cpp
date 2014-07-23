@@ -107,7 +107,7 @@ RawBuffer CKMService::processControl(MessageBuffer &buffer) {
     int command;
     uid_t user;
     ControlCommand cc;
-    std::string newPass, oldPass;
+    Password newPass, oldPass;
 
     Deserialization::Deserialize(buffer, command);
     Deserialization::Deserialize(buffer, user);
@@ -178,7 +178,7 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer){
         }
         case LogicCommand::GET:
         {
-            std::string password;
+            Password password;
             Deserialization::Deserialize(buffer, tmpDataType);
             Deserialization::Deserialize(buffer, alias);
             Deserialization::Deserialize(buffer, password);
@@ -266,7 +266,7 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer){
         case LogicCommand::CREATE_SIGNATURE:
         {
             Alias privateKeyAlias;
-            std::string password;        // password for private_key
+            Password password;        // password for private_key
             RawBuffer message;
             int padding, hash;
             Deserialization::Deserialize(buffer, privateKeyAlias);
@@ -287,7 +287,7 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer){
         case LogicCommand::VERIFY_SIGNATURE:
         {
             Alias publicKeyOrCertAlias;
-            std::string password;           // password for public_key (optional)
+            Password password;           // password for public_key (optional)
             RawBuffer message;
             RawBuffer signature;
             //HashAlgorithm hash;
