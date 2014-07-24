@@ -25,6 +25,7 @@
 #include <vector>
 
 #include <ckm/ckm-raw-buffer.h>
+#include <ckm/ckm-password.h>
 
 namespace CKM {
 
@@ -32,7 +33,6 @@ namespace CKM {
 typedef std::vector<RawBuffer> RawBufferVector;
 typedef std::string Alias;
 typedef std::vector<Alias> AliasVector;
-typedef std::string Password;
 
 enum class KeyType : int {
     KEY_NONE,

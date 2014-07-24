@@ -29,6 +29,8 @@
 #include <memory>
 
 #include <dpl/raw-buffer.h>
+// temporary fix for tizen 2.3
+#include <ckm/ckm-password.h>
 
 namespace CKM {
 // Abstract data stream buffer
@@ -133,6 +135,20 @@ struct Serialization {
         stream.Write(length, str.c_str());
     }
     static void Serialize(IStream& stream, const std::string* const str)
+    {
+        int length = str->size();
+        stream.Write(sizeof(length), &length);
+        stream.Write(length, str->c_str());
+    }
+
+    // Password
+    static void Serialize(IStream& stream, const Password& str)
+    {
+        int length = str.size();
+        stream.Write(sizeof(length), &length);
+        stream.Write(length, str.c_str());
+    }
+    static void Serialize(IStream& stream, const Password* const str)
     {
         int length = str->size();
         stream.Write(sizeof(length), &length);
@@ -331,6 +347,28 @@ struct Deserialization {
         stream.Read(length, buf);
         buf[length] = 0;
         str = new std::string(buf);
+        delete[] buf;
+    }
+
+    // Password
+    static void Deserialize(IStream& stream, Password& str)
+    {
+        int length;
+        stream.Read(sizeof(length), &length);
+        char * buf = new char[length + 1];
+        stream.Read(length, buf);
+        buf[length] = 0;
+        str = Password(buf);
+        delete[] buf;
+    }
+    static void Deserialize(IStream& stream, Password*& str)
+    {
+        int length;
+        stream.Read(sizeof(length), &length);
+        char * buf = new char[length + 1];
+        stream.Read(length, buf);
+        buf[length] = 0;
+        str = new Password(buf);
         delete[] buf;
     }
 

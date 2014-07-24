@@ -4,9 +4,9 @@
 #include <test_common.h>
 #include <iostream>
 
-const std::string PASSWORD = "12345TIZEN12345AAAAAAAAA";
-const std::string INCORRECT_PASSWORD = "AAAAAAAAAAAAAAAAAAAAA";
-const std::string NEW_PASSWORD = "NEW12345TIZEN12345NEW";
+const CKM::Password PASSWORD = "12345TIZEN12345AAAAAAAAA";
+const CKM::Password INCORRECT_PASSWORD = "AAAAAAAAAAAAAAAAAAAAA";
+const CKM::Password NEW_PASSWORD = "NEW12345TIZEN12345NEW";
 
 const std::string USERNAME_SHORT = "AB";
 const std::string USERNAME_LONG = "SOFTWARE_CENTER_SYSTEM_SW_LAB_SECURITY_PART";
@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE(KeygetPureDomainKEK){
     CKM::RawBuffer rb_test;
     BOOST_REQUIRE_NO_THROW(rb_test =
             CKM::KeyProvider::generateDomainKEK(USERNAME_LONG, PASSWORD));
-    BOOST_REQUIRE_NO_THROW(keyProvider = CKM::KeyProvider(rb_test, std::string(PASSWORD)));
+    BOOST_REQUIRE_NO_THROW(keyProvider = CKM::KeyProvider(rb_test, PASSWORD));
     BOOST_REQUIRE_MESSAGE(keyProvider.isInitialized(),
             "KeyProvider created, but uninitialized");
     BOOST_REQUIRE_NO_THROW(rb_test = keyProvider.getPureDomainKEK());

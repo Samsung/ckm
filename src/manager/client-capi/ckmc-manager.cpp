@@ -29,11 +29,11 @@
 #include <iostream>
 #include <string.h>
 
-std::string _tostring(const char *str)
+CKM::Password _tostring(const char *str)
 {
 	if(str == NULL)
-		return std::string();
-	return std::string(str);
+		return CKM::Password();
+	return CKM::Password(str);
 }
 
 CKM::CertificateShPtr _toCkmCertificate(const ckmc_cert_s *cert)
