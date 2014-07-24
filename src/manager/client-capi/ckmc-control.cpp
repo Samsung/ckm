@@ -23,40 +23,46 @@
 #include <ckm/ckm-control.h>
 #include <ckmc/ckmc-control.h>
 #include <ckmc/ckmc-error.h>
+#include <ckmc-type-converter.h>
 
 KEY_MANAGER_CAPI
 int ckmc_unlock_user_key(uid_t user, const char *password)
 {
 	auto control = CKM::Control::create();
-	return control->unlockUserKey(user, std::string(password));
+	int ret = control->unlockUserKey(user, std::string(password));
+	return to_ckmc_error(ret);
 }
 
 KEY_MANAGER_CAPI
 int ckmc_lock_user_key(uid_t user)
 {
 	auto control = CKM::Control::create();
-	return control->lockUserKey(user);
+	int ret =  control->lockUserKey(user);
+	return to_ckmc_error(ret);
 }
 
 KEY_MANAGER_CAPI
 int ckmc_remove_user_data(uid_t user)
 {
 	auto control = CKM::Control::create();
-	return control->removeUserData(user);
+	int ret =  control->removeUserData(user);
+	return to_ckmc_error(ret);
 }
 
 KEY_MANAGER_CAPI
 int ckmc_change_user_password(uid_t user, const char *oldPassword, const char *newPassword)
 {
 	auto control = CKM::Control::create();
-	return control->changeUserPassword(user, std::string(oldPassword), std::string(newPassword));
+	int ret =  control->changeUserPassword(user, std::string(oldPassword), std::string(newPassword));
+	return to_ckmc_error(ret);
 }
 
 KEY_MANAGER_CAPI
 int ckmc_reset_user_password(uid_t user, const char *newPassword)
 {
 	auto control = CKM::Control::create();
-	return control->resetUserPassword(user, std::string(newPassword));
+	int ret =  control->resetUserPassword(user, std::string(newPassword));
+	return to_ckmc_error(ret);
 }
 
 

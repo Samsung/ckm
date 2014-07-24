@@ -68,6 +68,7 @@ SET(KEY_MANAGER_CLIENT_CAPI_SRC_PATH ${KEY_MANAGER_PATH}/client-capi)
 
 INCLUDE_DIRECTORIES(
     ${KEY_MANAGER_PATH}/client
+    ${KEY_MANAGER_PATH}/client-capi
     ${KEY_MANAGER_PATH}/common
     ${KEY_MANAGER_PATH}/dpl/core/include
     ${KEY_MANAGER_PATH}/dpl/log/include

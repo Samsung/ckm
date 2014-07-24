@@ -27,6 +27,7 @@
 #include <ckm/ckm-type.h>
 #include <ckmc/ckmc-type.h>
 #include <ckmc/ckmc-error.h>
+#include <ckmc-type-converter.h>
 #include <openssl/x509v3.h>
 #include <openssl/pkcs12.h>
 #include <openssl/evp.h>
@@ -505,4 +506,30 @@ int _ckmc_load_cert_from_x509(X509 *xCert, ckmc_cert_s **cert)
     output.resize(size);
 
 	return ckmc_cert_new(output.data(), output.size(), CKMC_FORM_DER, cert);
+}
+
+int to_ckmc_error(int ckm_error) {
+	switch(ckm_error) {
+	case CKM_API_SUCCESS:                     return CKMC_SUCCESS;
+	case CKM_API_ERROR_SOCKET:                return CKMC_ERROR_SOCKET;
+	case CKM_API_ERROR_BAD_REQUEST:           return CKMC_ERROR_BAD_REQUEST;
+	case CKM_API_ERROR_BAD_RESPONSE:          return CKMC_ERROR_BAD_RESPONSE;
+	case CKM_API_ERROR_SEND_FAILED:           return CKMC_ERROR_SEND_FAILED;
+	case CKM_API_ERROR_RECV_FAILED:           return CKMC_ERROR_RECV_FAILED;
+	case CKM_API_ERROR_AUTHENTICATION_FAILED: return CKMC_ERROR_AUTHENTICATION_FAILED;
+	case CKM_API_ERROR_INPUT_PARAM:           return CKMC_ERROR_INPUT_PARAM;
+	case CKM_API_ERROR_BUFFER_TOO_SMALL:      return CKMC_ERROR_BUFFER_TOO_SMALL;
+	case CKM_API_ERROR_OUT_OF_MEMORY:         return CKMC_ERROR_OUT_OF_MEMORY;
+	case CKM_API_ERROR_ACCESS_DENIED:         return CKMC_ERROR_ACCESS_DENIED;
+	case CKM_API_ERROR_SERVER_ERROR:          return CKMC_ERROR_SERVER_ERROR;
+	case CKM_API_ERROR_DB_LOCKED:             return CKMC_ERROR_DB_LOCKED;
+	case CKM_API_ERROR_DB_ERROR:              return CKMC_ERROR_DB_ERROR;
+	case CKM_API_ERROR_DB_ALIAS_EXISTS:       return CKMC_ERROR_DB_ALIAS_EXISTS;
+	case CKM_API_ERROR_DB_ALIAS_UNKNOWN:      return CKMC_ERROR_DB_ALIAS_UNKNOWN;
+	case CKM_API_ERROR_VERIFICATION_FAILED:   return CKMC_ERROR_VERIFICATION_FAILED;
+	case CKM_API_ERROR_INVALID_FORMAT:        return CKMC_ERROR_INVALID_FORMAT;
+	case CKM_API_ERROR_FILE_ACCESS_DENIED:    return CKMC_ERROR_FILE_ACCESS_DENIED;
+	case CKM_API_ERROR_UNKNOWN:               return CKMC_ERROR_UNKNOWN;
+	}
+	return CKMC_ERROR_UNKNOWN;
 }
