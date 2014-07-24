@@ -14,7 +14,6 @@ BuildRequires: pkgconfig(libsmack)
 BuildRequires: pkgconfig(libsystemd-daemon)
 BuildRequires: pkgconfig(db-util)
 BuildRequires: boost-devel
-BuildRequires: pkgconfig(capi-base-common)
 Requires: boost-test
 %{?systemd_requires}
 
@@ -34,6 +33,8 @@ Central Key Manager package (client)
 %package -n libkey-manager-client-devel
 Summary:    Central Key Manager (client-devel)
 Group:      Development/Libraries
+BuildRequires: pkgconfig(capi-base-common)
+Requires:   pkgconfig(capi-base-common)
 Requires:   libkey-manager-client = %{version}-%{release}
 
 %description -n libkey-manager-client-devel
