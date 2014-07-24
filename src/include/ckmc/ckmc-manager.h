@@ -56,13 +56,13 @@ extern "C" {
  * @param[in] policy about how to store a key securely.
  *
  * @return 0 on success, otherwise a negative error value
- * @retval #CKMC_SUCCESS Successful
- * @retval #CKMC_ERROR_INPUT_PARAM input parameter is invalid
+ * @retval #CKMC_ERROR_NONE Successful
+ * @retval #CKMC_ERROR_INVALID_PARAMETER input parameter is invalid
  * @retval #CKMC_ERROR_DB_LOCKED a user key is not loaded in memory(a user is not logged in)
  * @retval #CKMC_ERROR_DB_ALIAS_EXISTS alias already exists.
  * @retval #CKMC_ERROR_INVALID_FORMAT the format of raw_key is not valid.
  * @retval #CKMC_ERROR_DB_ERROR failed due to other DB transaction unexpectedly.
- * @retval #CKMC_ERROR_FILE_ACCESS_DENIED provided file doesn't exists or cannot be accessed
+ * @retval #CKMC_ERROR_PERMISSION_DENIED failed to access key manager
  *
  * @pre User must be already logged in and his user key is already loaded into memory in plain text form.
  *
@@ -86,12 +86,12 @@ int ckmc_save_key(const char *alias, const ckmc_key_s key, const ckmc_policy_s p
  * @param[in] alias the name of a key to be removed
  *
  * @return 0 on success, otherwise a negative error value
- * @retval #CKMC_SUCCESS Successful
- * @retval #CKMC_ERROR_INPUT_PARAM input parameter is invalid
+ * @retval #CKMC_ERROR_NONE Successful
+ * @retval #CKMC_ERROR_INVALID_PARAMETER input parameter is invalid
  * @retval #CKMC_ERROR_DB_LOCKED a user key is not loaded in memory(a user is not logged in)
  * @retval #CKMC_ERROR_DB_ERROR failed due to the error with unknown reason
  * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN alias doesn't exists.
- * @retval #CKMC_ERROR_FILE_ACCESS_DENIED provided file doesn't exists or cannot be accessed
+ * @retval #CKMC_ERROR_PERMISSION_DENIED failed to access key manager
  *
  * @pre User must be already logged in and his user key is already loaded into memory in plain text form.
  *
@@ -116,12 +116,12 @@ int ckmc_remove_key(const char *alias);
  * @param[out] ppkey a pointer to a newly created ckmc_key_s handle
  *
  * @return 0 on success, otherwise a negative error value
- * @retval #CKMC_SUCCESS Successful
- * @retval #CKMC_ERROR_INPUT_PARAM input parameter is invalid
+ * @retval #CKMC_ERROR_NONE Successful
+ * @retval #CKMC_ERROR_INVALID_PARAMETER input parameter is invalid
  * @retval #CKMC_ERROR_DB_LOCKED a user key is not loaded in memory(a user is not logged in)
  * @retval #CKMC_ERROR_DB_ERROR failed due to the error with unknown reason
  * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN alias doesn't exists.
- * @retval #CKMC_ERROR_FILE_ACCESS_DENIED provided file doesn't exists or cannot be accessed
+ * @retval #CKMC_ERROR_PERMISSION_DENIED failed to access key manager
  *
  * @pre User must be already logged in and his user key is already loaded into memory in plain text form.
  *
@@ -144,11 +144,11 @@ int ckmc_get_key(const char *alias, const char *password, ckmc_key_s **ppkey);
  * @param[out] ppalias_list a pointer to a newly created ckmc_alias_list_s handle containing all available alias of keys. If there is no available key alias, *ppalias_list will be null.
  *
  * @return 0 on success, otherwise a negative error value
- * @retval #CKMC_SUCCESS Successful
- * @retval #CKMC_ERROR_INPUT_PARAM input parameter is invalid
+ * @retval #CKMC_ERROR_NONE Successful
+ * @retval #CKMC_ERROR_INVALID_PARAMETER input parameter is invalid
  * @retval #CKMC_ERROR_DB_LOCKED a user key is not loaded in memory(a user is not logged in)
  * @retval #CKMC_ERROR_DB_ERROR failed due to the error with unknown reason
- * @retval #CKMC_ERROR_FILE_ACCESS_DENIED provided file doesn't exists or cannot be accessed
+ * @retval #CKMC_ERROR_PERMISSION_DENIED failed to access key manager
  *
  * @pre User must be already logged in and his user key is already loaded into memory in plain text form.
  *
@@ -173,13 +173,13 @@ int ckmc_get_key_alias_list(ckmc_alias_list_s** ppalias_list);
  * @param[in] policy about how to store a certificate securely.
  *
  * @return 0 on success, otherwise a negative error value
- * @retval #CKMC_SUCCESS Successful
- * @retval #CKMC_ERROR_INPUT_PARAM input parameter is invalid
+ * @retval #CKMC_ERROR_NONE Successful
+ * @retval #CKMC_ERROR_INVALID_PARAMETER input parameter is invalid
  * @retval #CKMC_ERROR_DB_LOCKED a user key is not loaded in memory(a user is not logged in)
  * @retval #CKMC_ERROR_DB_ALIAS_EXISTS alias already exists.
  * @retval #CKMC_ERROR_INVALID_FORMAT the format of raw_cert is not valid.
  * @retval #CKMC_ERROR_DB_ERROR failed due to other DB transaction unexpectedly.
- * @retval #CKMC_ERROR_FILE_ACCESS_DENIED provided file doesn't exists or cannot be accessed
+ * @retval #CKMC_ERROR_PERMISSION_DENIED failed to access key manager
  *
  * @pre User must be already logged in and his user key is already loaded into memory in plain text form.
  *
@@ -203,12 +203,12 @@ int ckmc_save_cert(const char *alias, const ckmc_cert_s cert, const ckmc_policy_
  * @param[in] alias the name of a certificate to be removed
  *
  * @return 0 on success, otherwise a negative error value
- * @retval #CKMC_SUCCESS Successful
- * @retval #CKMC_ERROR_INPUT_PARAM input parameter is invalid
+ * @retval #CKMC_ERROR_NONE Successful
+ * @retval #CKMC_ERROR_INVALID_PARAMETER input parameter is invalid
  * @retval #CKMC_ERROR_DB_LOCKED a user key is not loaded in memory(a user is not logged in)
  * @retval #CKMC_ERROR_DB_ERROR failed due to the error with unknown reason
  * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN alias doesn't exists.
- * @retval #CKMC_ERROR_FILE_ACCESS_DENIED provided file doesn't exists or cannot be accessed
+ * @retval #CKMC_ERROR_PERMISSION_DENIED failed to access key manager
  *
  * @pre User must be already logged in and his user key is already loaded into memory in plain text form.
  *
@@ -233,12 +233,12 @@ int ckmc_remove_cert(const char *alias);
  * @param[out] ppcert a pointer to a newly created ckmc_cert_s handle
  *
  * @return 0 on success, otherwise a negative error value
- * @retval #CKMC_SUCCESS Successful
- * @retval #CKMC_ERROR_INPUT_PARAM input parameter is invalid
+ * @retval #CKMC_ERROR_NONE Successful
+ * @retval #CKMC_ERROR_INVALID_PARAMETER input parameter is invalid
  * @retval #CKMC_ERROR_DB_LOCKED a user key is not loaded in memory(a user is not logged in)
  * @retval #CKMC_ERROR_DB_ERROR failed due to the error with unknown reason
  * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN alias doesn't exists.
- * @retval #CKMC_ERROR_FILE_ACCESS_DENIED provided file doesn't exists or cannot be accessed
+ * @retval #CKMC_ERROR_PERMISSION_DENIED failed to access key manager
  *
  * @pre User must be already logged in and his user key is already loaded into memory in plain text form.
  *
@@ -261,11 +261,11 @@ int ckmc_get_cert(const char *alias, const char *password, ckmc_cert_s **ppcert)
  * @param[out] ppalias_list a pointer to a newly created ckmc_alias_list_s handle containing all available alias of keys. If there is no available key alias, *ppalias_list will be null.
  *
  * @return 0 on success, otherwise a negative error value
- * @retval #CKMC_SUCCESS Successful
- * @retval #CKMC_ERROR_INPUT_PARAM input parameter is invalid
+ * @retval #CKMC_ERROR_NONE Successful
+ * @retval #CKMC_ERROR_INVALID_PARAMETER input parameter is invalid
  * @retval #CKMC_ERROR_DB_LOCKED a user key is not loaded in memory(a user is not logged in)
  * @retval #CKMC_ERROR_DB_ERROR failed due to the error with unknown reason
- * @retval #CKMC_ERROR_FILE_ACCESS_DENIED provided file doesn't exists or cannot be accessed
+ * @retval #CKMC_ERROR_PERMISSION_DENIED failed to access key manager
  *
  * @pre User must be already logged in and his user key is already loaded into memory in plain text form.
  *
@@ -290,12 +290,12 @@ int ckmc_get_cert_alias_list(ckmc_alias_list_s** ppalias_list);
  * @param[in] policy about how to store a data securely.
  *
  * @return 0 on success, otherwise a negative error value
- * @retval #CKMC_SUCCESS Successful
- * @retval #CKMC_ERROR_INPUT_PARAM input parameter is invalid
+ * @retval #CKMC_ERROR_NONE Successful
+ * @retval #CKMC_ERROR_INVALID_PARAMETER input parameter is invalid
  * @retval #CKMC_ERROR_DB_LOCKED a user key is not loaded in memory(a user is not logged in)
  * @retval #CKMC_ERROR_DB_ALIAS_EXISTS alias already exists.
  * @retval #CKMC_ERROR_DB_ERROR failed due to other DB transaction unexpectedly.
- * @retval #CKMC_ERROR_FILE_ACCESS_DENIED provided file doesn't exists or cannot be accessed
+ * @retval #CKMC_ERROR_PERMISSION_DENIED failed to access key manager
  *
  * @pre User must be already logged in and his user key is already loaded into memory in plain text form.
  *
@@ -319,12 +319,12 @@ int ckmc_save_data(const char *alias, ckmc_raw_buffer_s data, const ckmc_policy_
  * @param[in] alias the name of a data to be removed
  *
  * @return 0 on success, otherwise a negative error value
- * @retval #CKMC_SUCCESS Successful
- * @retval #CKMC_ERROR_INPUT_PARAM input parameter is invalid
+ * @retval #CKMC_ERROR_NONE Successful
+ * @retval #CKMC_ERROR_INVALID_PARAMETER input parameter is invalid
  * @retval #CKMC_ERROR_DB_LOCKED a user key is not loaded in memory(a user is not logged in)
  * @retval #CKMC_ERROR_DB_ERROR failed due to the error with unknown reason
  * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN alias doesn't exists.
- * @retval #CKMC_ERROR_FILE_ACCESS_DENIED provided file doesn't exists or cannot be accessed
+ * @retval #CKMC_ERROR_PERMISSION_DENIED failed to access key manager
  *
  * @pre User must be already logged in and his user key is already loaded into memory in plain text form.
  *
@@ -349,12 +349,12 @@ int ckmc_remove_data(const char *alias);
  * @param[out] ppdata a pointer to a newly created ckmc_raw_buffer_s handle
  *
  * @return 0 on success, otherwise a negative error value
- * @retval #CKMC_SUCCESS Successful
- * @retval #CKMC_ERROR_INPUT_PARAM input parameter is invalid
+ * @retval #CKMC_ERROR_NONE Successful
+ * @retval #CKMC_ERROR_INVALID_PARAMETER input parameter is invalid
  * @retval #CKMC_ERROR_DB_LOCKED a user key is not loaded in memory(a user is not logged in)
  * @retval #CKMC_ERROR_DB_ERROR failed due to the error with unknown reason
  * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN alias doesn't exists.
- * @retval #CKMC_ERROR_FILE_ACCESS_DENIED provided file doesn't exists or cannot be accessed
+ * @retval #CKMC_ERROR_PERMISSION_DENIED failed to access key manager
  *
  * @pre User must be already logged in and his user key is already loaded into memory in plain text form.
  *
@@ -377,11 +377,11 @@ int ckmc_get_data(const char *alias, const char *password, ckmc_raw_buffer_s **p
  * @param[out] ppalias_list a pointer to a newly created ckmc_alias_list_s handle containing all available alias of keys. If there is no available key alias, *ppalias_list will be null.
  *
  * @return 0 on success, otherwise a negative error value
- * @retval #CKMC_SUCCESS Successful
- * @retval #CKMC_ERROR_INPUT_PARAM input parameter is invalid
+ * @retval #CKMC_ERROR_NONE Successful
+ * @retval #CKMC_ERROR_INVALID_PARAMETER input parameter is invalid
  * @retval #CKMC_ERROR_DB_LOCKED a user key is not loaded in memory(a user is not logged in)
  * @retval #CKMC_ERROR_DB_ERROR failed due to the error with unknown reason
- * @retval #CKMC_ERROR_FILE_ACCESS_DENIED provided file doesn't exists or cannot be accessed
+ * @retval #CKMC_ERROR_PERMISSION_DENIED failed to access key manager
  *
  * @pre User must be already logged in and his user key is already loaded into memory in plain text form.
  *
@@ -410,12 +410,12 @@ int ckmc_get_data_alias_list(ckmc_alias_list_s** ppalias_list);
  * @param[in] policy_public_key about how to store a public key securely.
  *
  * @return 0 on success, otherwise a negative error value
- * @retval #CKMC_SUCCESS Successful
- * @retval #CKMC_ERROR_INPUT_PARAM input parameter is invalid
+ * @retval #CKMC_ERROR_NONE Successful
+ * @retval #CKMC_ERROR_INVALID_PARAMETER input parameter is invalid
  * @retval #CKMC_ERROR_DB_LOCKED a user key is not loaded in memory(a user is not logged in)
  * @retval #CKMC_ERROR_DB_ALIAS_EXISTS alias already exists.
  * @retval #CKMC_ERROR_DB_ERROR failed due to other DB transaction unexpectedly.
- * @retval #CKMC_ERROR_FILE_ACCESS_DENIED provided file doesn't exists or cannot be accessed
+ * @retval #CKMC_ERROR_PERMISSION_DENIED failed to access key manager
  *
  * @pre User must be already logged in and his user key is already loaded into memory in plain text form.
  *
@@ -441,12 +441,12 @@ int ckmc_create_key_pair_rsa(const size_t size, const char *private_key_alias, c
  * @param[in] policy_public_key about how to store a public key securely.
  *
  * @return 0 on success, otherwise a negative error value
- * @retval #CKMC_SUCCESS Successful
- * @retval #CKMC_ERROR_INPUT_PARAM input parameter is invalid
+ * @retval #CKMC_ERROR_NONE Successful
+ * @retval #CKMC_ERROR_INVALID_PARAMETER input parameter is invalid
  * @retval #CKMC_ERROR_DB_LOCKED a user key is not loaded in memory(a user is not logged in)
  * @retval #CKMC_ERROR_DB_ALIAS_EXISTS alias already exists.
  * @retval #CKMC_ERROR_DB_ERROR failed due to other DB transaction unexpectedly.
- * @retval #CKMC_ERROR_FILE_ACCESS_DENIED provided file doesn't exists or cannot be accessed
+ * @retval #CKMC_ERROR_PERMISSION_DENIED failed to access key manager
  *
  * @pre User must be already logged in and his user key is already loaded into memory in plain text form.
  *
@@ -476,11 +476,11 @@ int ckmc_create_key_pair_ecdsa(const ckmc_ec_type_e type, const char *private_ke
  * @param[out] ppsignature a pointer to a newly created signature's. If an error occurs, *ppsignature will be null.
  *
  * @return 0 on success, otherwise a negative error value
- * @retval #CKMC_SUCCESS Successful
- * @retval #CKMC_ERROR_INPUT_PARAM input parameter is invalid
+ * @retval #CKMC_ERROR_NONE Successful
+ * @retval #CKMC_ERROR_INVALID_PARAMETER input parameter is invalid
  * @retval #CKMC_ERROR_DB_LOCKED a user key is not loaded in memory(a user is not logged in)
  * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN alias doesn't exists.
- * @retval #CKMC_ERROR_FILE_ACCESS_DENIED provided file doesn't exists or cannot be accessed
+ * @retval #CKMC_ERROR_PERMISSION_DENIED failed to access key manager
  *
  * @pre User must be already logged in and his user key is already loaded into memory in plain text form.
  *
@@ -510,12 +510,12 @@ int ckmc_create_signature(const char *private_key_alias, const char *password, c
  * @param[in] padding the RSA padding algorithm used in verifying signature. It is used only when the signature algorithm is RSA.
  *
  * @return 0 on success and the signature is valid, otherwise a negative error value
- * @retval #CKMC_SUCCESS Successful
+ * @retval #CKMC_ERROR_NONE Successful
  * @retval #CKMC_ERROR_VERIFICATION_FAILED the signature is invalid
- * @retval #CKMC_ERROR_INPUT_PARAM input parameter is invalid
+ * @retval #CKMC_ERROR_INVALID_PARAMETER input parameter is invalid
  * @retval #CKMC_ERROR_DB_LOCKED a user key is not loaded in memory(a user is not logged in)
  * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN alias doesn't exists.
- * @retval #CKMC_ERROR_FILE_ACCESS_DENIED provided file doesn't exists or cannot be accessed
+ * @retval #CKMC_ERROR_PERMISSION_DENIED failed to access key manager
  *
  * @pre User must be already logged in and his user key is already loaded into memory in plain text form.
  *
@@ -542,12 +542,12 @@ int ckmc_verify_signature(const char *public_key_alias, const char *password, co
  * @param[out] ppcert_chain_list a pointer to a newly created certificate chain's handle. If an error occurs, *ppcert_chain_list will be null.
  *
  * @return 0 on success and the signature is valid, otherwise a negative error value
- * @retval #CKMC_SUCCESS Successful
+ * @retval #CKMC_ERROR_NONE Successful
  * @retval #CKMC_ERROR_VERIFICATION_FAILED the certificate chain is not valid
- * @retval #CKMC_ERROR_INPUT_PARAM input parameter is invalid
+ * @retval #CKMC_ERROR_INVALID_PARAMETER input parameter is invalid
  * @retval #CKMC_ERROR_DB_LOCKED a user key is not loaded in memory(a user is not logged in)
  * @retval #CKMC_ERROR_INVALID_FORMAT the format of certificate is not valid.
- * @retval #CKMC_ERROR_FILE_ACCESS_DENIED provided file doesn't exists or cannot be accessed
+ * @retval #CKMC_ERROR_PERMISSION_DENIED failed to access key manager
  *
  * @pre User must be already logged in and his user key is already loaded into memory in plain text form.
  *
@@ -571,13 +571,13 @@ int ckmc_get_cert_chain(const ckmc_cert_s *cert, const ckmc_cert_list_s *untrust
  * @param[out] ppcert_chain_list a pointer to a newly created certificate chain's handle. If an error occurs, *ppcert_chain_list will be null.
  *
  * @return 0 on success and the signature is valid, otherwise a negative error value
- * @retval #CKMC_SUCCESS Successful
+ * @retval #CKMC_ERROR_NONE Successful
  * @retval #CKMC_ERROR_VERIFICATION_FAILED the certificate chain is not valid
- * @retval #CKMC_ERROR_INPUT_PARAM input parameter is invalid
+ * @retval #CKMC_ERROR_INVALID_PARAMETER input parameter is invalid
  * @retval #CKMC_ERROR_DB_LOCKED a user key is not loaded in memory(a user is not logged in)
  * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN alias doesn't exists.
  * @retval #CKMC_ERROR_INVALID_FORMAT the format of certificate is not valid.
- * @retval #CKMC_ERROR_FILE_ACCESS_DENIED provided file doesn't exists or cannot be accessed
+ * @retval #CKMC_ERROR_PERMISSION_DENIED failed to access key manager
  *
  * @pre User must be already logged in and his user key is already loaded into memory in plain text form.
  *

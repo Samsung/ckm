@@ -179,7 +179,7 @@ typedef struct __ckmc_cert_list {
  * @param[in] password byte array used to decrypt raw_key inside key manager. If raw_key is not encrypted, password can be null.
  * @param[out] ppkey a pointer to a newly created ckmc_key_s handle
  * @return 0 on success, otherwise a negative error value
- * @retval #CKMC_ERROR_INPUT_PARAM input parameter is invalid
+ * @retval #CKMC_ERROR_INVALID_PARAMETER input parameter is invalid
  * @retval #CKMC_ERROR_OUT_OF_MEMORY not enough memory
  * @see ckmc_key_free()
  * @see #ckmc_key_s
@@ -213,7 +213,7 @@ void ckmc_key_free(ckmc_key_s *key);
  * @param[in] size the byte size of buffer
  * @param[out] ppbuffer a pointer to a newly created ckmc_buffer_s handle
  * @return 0 on success, otherwise a negative error value
- * @retval #CKMC_ERROR_INPUT_PARAM input parameter is invalid
+ * @retval #CKMC_ERROR_INVALID_PARAMETER input parameter is invalid
  * @retval #CKMC_ERROR_OUT_OF_MEMORY not enough memory
  * @see ckmc_buffer_free()
  * @see #ckmc_raw_buffer_s
@@ -247,7 +247,7 @@ void ckmc_buffer_free(ckmc_raw_buffer_s *buffer);
  * @param[in] data_format the encoding format of raw_cert
  * @param[out] ppcert a pointer to a newly created ckmc_cert_s handle
  * @return 0 on success, otherwise a negative error value
- * @retval #CKMC_ERROR_INPUT_PARAM input parameter is invalid
+ * @retval #CKMC_ERROR_INVALID_PARAMETER input parameter is invalid
  * @retval #CKMC_ERROR_OUT_OF_MEMORY not enough memory
  * @see ckmc_cert_free()
  * @see ckmc_load_cert_from_file()
@@ -282,8 +282,8 @@ void ckmc_cert_free(ckmc_cert_s *cert);
  *
  * @param[in] file_path a path of certificate file to be loaded. The  only DER or PEM encoded certificate file is supported.
  * @param[out] cert the pointer of newly created ckmc_cert_s handle
- * @return #CKMC_SUCCESS on success, otherwise a negative error value
- * @retval #CKMC_SUCCESS Successful
+ * @return #CKMC_ERROR_NONE on success, otherwise a negative error value
+ * @retval #CKMC_ERROR_NONE Successful
  * @retval #CKMC_ERROR_OUT_OF_MEMORY not enough memory space
  * @retval #CKMC_ERROR_INVALID_FORMAT invalid certificate file format
  * @retval #CKMC_ERROR_FILE_ACCESS_DENIED provided file doesn't exists or cannot be accessed
@@ -308,8 +308,8 @@ int ckmc_load_cert_from_file(const char *file_path, ckmc_cert_s **cert);
  * @param[out] private_key the pointer of newly created ckmc_key_s handle for a private key
  * @param[out] cert the pointer of newly created ckmc_cert_s handle for a certificate. It is null if the PKCS12 file doesn't contain a certificate.
  * @param[out] ca_cert_list the pointer of newly created ckmc_cert_list_s handle for CA certificates. It is null if the PKCS12 file doesn't contain CA certificates.
- * @return #CKMC_SUCCESS on success, otherwise a negaprevious == NULL || tive error value
- * @retval #CKMC_SUCCESS Successful
+ * @return #CKMC_ERROR_NONE on success, otherwise a negative error value
+ * @retval #CKMC_ERROR_NONE Successful
  * @retval #CKMC_ERROR_OUT_OF_MEMORY not enough memory space
  * @retval #CKMC_ERROR_INVALID_FORMAT invalid PKCS12 file format
  * @retval #CKMC_ERROR_FILE_ACCESS_DENIED provided file doesn't exists or cannot be accessed
@@ -337,7 +337,7 @@ int ckmc_load_from_pkcs12_file(const char *file_path, const char *passphrase,
  * @param[in] alias the first item to be set in the newly created ckmc_alias_list_s.
  * @param[out] ppalias_list a pointer to a newly created ckmc_alias_list_s handle
  * @return 0 on success, otherwise a negative error value
- * @retval #CKMC_ERROR_INPUT_PARAM input parameter is invalid
+ * @retval #CKMC_ERROR_INVALID_PARAMETER input parameter is invalid
  * @retval #CKMC_ERROR_OUT_OF_MEMORY not enough memory
  * @see ckmc_alias_list_add()
  * @see ckmc_alias_list_free()
@@ -358,7 +358,7 @@ int ckmc_alias_list_new(char *alias, ckmc_alias_list_s **ppalias_list);
  * @param[in] alias an item to be set in the newly created ckmc_alias_list_s.
  * @param[out] pplast a pointer to a newly created and added ckmc_alias_list_s handle
  * @return 0 on success, otherwise a negative error value
- * @retval #CKMC_ERROR_INPUT_PARAM input parameter is invalid
+ * @retval #CKMC_ERROR_INVALID_PARAMETER input parameter is invalid
  * @retval #CKMC_ERROR_OUT_OF_MEMORY not enough memory
  * @see ckmc_alias_list_add()
  * @see ckmc_alias_list_free()
@@ -417,7 +417,7 @@ void ckmc_alias_list_all_free(ckmc_alias_list_s *first);
  * @param[in] cert the first item to be set in the newly created ckmc_cert_list_s.
  * @param[out] ppalias_list a pointer to a newly created ckmc_alias_list_s handle
  * @return 0 on success, otherwise a negative error value
- * @retval #CKMC_ERROR_INPUT_PARAM input parameter is invalid
+ * @retval #CKMC_ERROR_INVALID_PARAMETER input parameter is invalid
  * @retval #CKMC_ERROR_OUT_OF_MEMORY not enough memory
  * @see ckmc_cert_list_add()
  * @see ckmc_cert_list_free()
@@ -438,7 +438,7 @@ int ckmc_cert_list_new(ckmc_cert_s *cert, ckmc_cert_list_s **ppalias_list);
  * @param[in] cert an item to be set in the newly created ckmc_cert_list_s.
  * @param[out] pplast a pointer to a newly created and added ckmc_alias_list_s handle
  * @return 0 on success, otherwise a negative error value
- * @retval #CKMC_ERROR_INPUT_PARAM input parameter is invalid
+ * @retval #CKMC_ERROR_INVALID_PARAMETER input parameter is invalid
  * @retval #CKMC_ERROR_OUT_OF_MEMORY not enough memory
  * @see ckmc_cert_list_add()
  * @see ckmc_cert_list_free()

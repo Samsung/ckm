@@ -41,7 +41,7 @@ int ckmc_key_new(unsigned char *raw_key, size_t key_size, ckmc_key_type_e key_ty
 	ckmc_key_s *pkey;
 
 	if(raw_key == NULL || key_size <= 0 || ppkey == NULL) {
-		return CKMC_ERROR_INPUT_PARAM;
+		return CKMC_ERROR_INVALID_PARAMETER;
 	}
 
 	pkey = new ckmc_key_s;
@@ -73,7 +73,7 @@ int ckmc_key_new(unsigned char *raw_key, size_t key_size, ckmc_key_type_e key_ty
 
 	*ppkey = pkey;
 
-	return CKMC_SUCCESS;
+	return CKMC_ERROR_NONE;
 }
 
 KEY_MANAGER_CAPI
@@ -98,7 +98,7 @@ int ckmc_buffer_new(unsigned char *data, size_t size,ckmc_raw_buffer_s **ppbuffe
 	ckmc_raw_buffer_s *pbuff;
 
 	if(data == NULL || size <= 0 || ppbuffer == NULL) {
-		return CKMC_ERROR_INPUT_PARAM;
+		return CKMC_ERROR_INVALID_PARAMETER;
 	}
 
 	pbuff = new ckmc_raw_buffer_s;
@@ -115,7 +115,7 @@ int ckmc_buffer_new(unsigned char *data, size_t size,ckmc_raw_buffer_s **ppbuffe
 	pbuff->size = size;
 	*ppbuffer = pbuff;
 
-	return CKMC_SUCCESS;
+	return CKMC_ERROR_NONE;
 }
 
 KEY_MANAGER_CAPI
@@ -137,7 +137,7 @@ int ckmc_cert_new(unsigned char *raw_cert, size_t cert_size, ckmc_data_format_e 
 	ckmc_cert_s *pcert;
 
 	if(raw_cert == NULL || cert_size <= 0 || ppcert == NULL) {
-		return CKMC_ERROR_INPUT_PARAM;
+		return CKMC_ERROR_INVALID_PARAMETER;
 	}
 
 	pcert = new ckmc_cert_s;
@@ -155,7 +155,7 @@ int ckmc_cert_new(unsigned char *raw_cert, size_t cert_size, ckmc_data_format_e 
 	pcert->data_format = data_format;
 
 	*ppcert = pcert;
-	return CKMC_SUCCESS;
+	return CKMC_ERROR_NONE;
 }
 
 KEY_MANAGER_CAPI
@@ -177,7 +177,7 @@ int ckmc_load_cert_from_file(const char *file_path, ckmc_cert_s **cert)
 	}
 
 	int ret = _ckmc_load_cert_from_x509(pcert, cert);
-	if(ret != CKMC_SUCCESS) {
+	if(ret != CKMC_ERROR_NONE) {
 		X509_free(pcert);
 	}
 	return ret;
@@ -206,7 +206,7 @@ int ckmc_load_from_pkcs12_file(const char *file_path, const char *passphrase, ck
 			pkey = NULL;
 			x509Cert = NULL;
 			ca = NULL;
-			ret = CKMC_SUCCESS;
+			ret = CKMC_ERROR_NONE;
 			retPrivateKey = NULL;
 			retCkmCert = NULL;
 			retCaCertList = NULL;
@@ -224,7 +224,7 @@ int ckmc_load_from_pkcs12_file(const char *file_path, const char *passphrase, ck
 				sk_X509_pop_free(ca, X509_free);
 			EVP_cleanup();
 
-			if(ret != CKMC_SUCCESS) {
+			if(ret != CKMC_ERROR_NONE) {
 				if(retPrivateKey != NULL){
 					ckmc_key_free(retPrivateKey);
 					retPrivateKey = NULL;
@@ -254,14 +254,14 @@ int ckmc_load_from_pkcs12_file(const char *file_path, const char *passphrase, ck
 			if((ret = PKCS12_parse(p12, pass, &pkey, &x509Cert, &ca)) != 1) {
 				return CKMC_ERROR_INVALID_FORMAT;
 			}
-			return CKMC_SUCCESS;
+			return CKMC_ERROR_NONE;
 		}
 
 		int toCkmCert() {
-			if( (ret =_ckmc_load_cert_from_x509(x509Cert,&retCkmCert)) != CKMC_SUCCESS) {
+			if( (ret =_ckmc_load_cert_from_x509(x509Cert,&retCkmCert)) != CKMC_ERROR_NONE) {
 				return ret;
 			}
-			return CKMC_SUCCESS;
+			return CKMC_ERROR_NONE;
 		}
 
 		int toCkmKey() {
@@ -302,7 +302,7 @@ int ckmc_load_from_pkcs12_file(const char *file_path, const char *passphrase, ck
 			ckmc_cert_s *popedCkmCert = NULL;
 			ckmc_cert_list_s *tmpCertList = NULL;
 			while((popedCert = sk_X509_pop(ca)) != NULL) {
-				if( (tmpRet =_ckmc_load_cert_from_x509(popedCert, &popedCkmCert)) != CKMC_SUCCESS) {
+				if( (tmpRet =_ckmc_load_cert_from_x509(popedCert, &popedCkmCert)) != CKMC_ERROR_NONE) {
 					return CKMC_ERROR_OUT_OF_MEMORY;
 				}
 				if(tmpCertList == NULL) { // first
@@ -311,30 +311,30 @@ int ckmc_load_from_pkcs12_file(const char *file_path, const char *passphrase, ck
 				}else {
 					tmpRet = ckmc_cert_list_add(tmpCertList, popedCkmCert, &tmpCertList);
 				}
-				if(tmpRet != CKMC_SUCCESS) {
+				if(tmpRet != CKMC_ERROR_NONE) {
 					ckmc_cert_list_all_free(retCaCertList);
 					retCaCertList = NULL;
 					return tmpRet;
 				}
 			}
-			return CKMC_SUCCESS;
+			return CKMC_ERROR_NONE;
 		}
 
 	};
 
-	int ret = CKMC_SUCCESS;
+	int ret = CKMC_ERROR_NONE;
 
 	Pkcs12Converter converter;
-	if((ret = converter.parsePkcs12(file_path, passphrase)) != CKMC_SUCCESS) {
+	if((ret = converter.parsePkcs12(file_path, passphrase)) != CKMC_ERROR_NONE) {
 		return ret;
 	}
-	if((ret = converter.toCkmCert()) != CKMC_SUCCESS) {
+	if((ret = converter.toCkmCert()) != CKMC_ERROR_NONE) {
 		return ret;
 	}
-	if((ret = converter.toCkmKey()) != CKMC_SUCCESS) {
+	if((ret = converter.toCkmKey()) != CKMC_ERROR_NONE) {
 		return ret;
 	}
-	if((ret = converter.toCaCkmCertList()) != CKMC_SUCCESS) {
+	if((ret = converter.toCaCkmCertList()) != CKMC_ERROR_NONE) {
 		return ret;
 	}
 
@@ -342,7 +342,7 @@ int ckmc_load_from_pkcs12_file(const char *file_path, const char *passphrase, ck
 	*ckmcert = converter.retCkmCert;
 	*ca_cert_list = converter.retCaCertList;
 
-	return CKMC_SUCCESS;
+	return CKMC_ERROR_NONE;
 }
 
 KEY_MANAGER_CAPI
@@ -371,7 +371,7 @@ int ckmc_alias_list_add(ckmc_alias_list_s *previous, char *alias, ckmc_alias_lis
 	ckmc_alias_list_s *plist;
 
 	if(alias == NULL || pplast == NULL) {
-		return CKMC_ERROR_INPUT_PARAM;
+		return CKMC_ERROR_INVALID_PARAMETER;
 	}
 
 	plist = new ckmc_alias_list_s;
@@ -387,7 +387,7 @@ int ckmc_alias_list_add(ckmc_alias_list_s *previous, char *alias, ckmc_alias_lis
 	}
 	*pplast = plist;
 
-	return CKMC_SUCCESS;
+	return CKMC_ERROR_NONE;
 }
 
 KEY_MANAGER_CAPI
@@ -435,7 +435,7 @@ int ckmc_cert_list_add(ckmc_cert_list_s *previous, ckmc_cert_s *cert, ckmc_cert_
 	ckmc_cert_list_s *plist;
 
 	if(cert == NULL || pplast == NULL) {
-		return CKMC_ERROR_INPUT_PARAM;
+		return CKMC_ERROR_INVALID_PARAMETER;
 	}
 
 	plist = new ckmc_cert_list_s;
@@ -451,7 +451,7 @@ int ckmc_cert_list_add(ckmc_cert_list_s *previous, ckmc_cert_s *cert, ckmc_cert_
 
 	*pplast = plist;
 
-	return CKMC_SUCCESS;
+	return CKMC_ERROR_NONE;
 }
 
 KEY_MANAGER_CAPI
@@ -510,17 +510,17 @@ int _ckmc_load_cert_from_x509(X509 *xCert, ckmc_cert_s **cert)
 
 int to_ckmc_error(int ckm_error) {
 	switch(ckm_error) {
-	case CKM_API_SUCCESS:                     return CKMC_SUCCESS;
+	case CKM_API_SUCCESS:                     return CKMC_ERROR_NONE;
 	case CKM_API_ERROR_SOCKET:                return CKMC_ERROR_SOCKET;
 	case CKM_API_ERROR_BAD_REQUEST:           return CKMC_ERROR_BAD_REQUEST;
 	case CKM_API_ERROR_BAD_RESPONSE:          return CKMC_ERROR_BAD_RESPONSE;
 	case CKM_API_ERROR_SEND_FAILED:           return CKMC_ERROR_SEND_FAILED;
 	case CKM_API_ERROR_RECV_FAILED:           return CKMC_ERROR_RECV_FAILED;
 	case CKM_API_ERROR_AUTHENTICATION_FAILED: return CKMC_ERROR_AUTHENTICATION_FAILED;
-	case CKM_API_ERROR_INPUT_PARAM:           return CKMC_ERROR_INPUT_PARAM;
+	case CKM_API_ERROR_INPUT_PARAM:           return CKMC_ERROR_INVALID_PARAMETER;
 	case CKM_API_ERROR_BUFFER_TOO_SMALL:      return CKMC_ERROR_BUFFER_TOO_SMALL;
 	case CKM_API_ERROR_OUT_OF_MEMORY:         return CKMC_ERROR_OUT_OF_MEMORY;
-	case CKM_API_ERROR_ACCESS_DENIED:         return CKMC_ERROR_ACCESS_DENIED;
+	case CKM_API_ERROR_ACCESS_DENIED:         return CKMC_ERROR_PERMISSION_DENIED;
 	case CKM_API_ERROR_SERVER_ERROR:          return CKMC_ERROR_SERVER_ERROR;
 	case CKM_API_ERROR_DB_LOCKED:             return CKMC_ERROR_DB_LOCKED;
 	case CKM_API_ERROR_DB_ERROR:              return CKMC_ERROR_DB_ERROR;

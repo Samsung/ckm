@@ -51,11 +51,11 @@ extern "C" {
  * @param[in] password used in decrypting a user key.
  *
  * @return 0 on success, otherwise a negative error value
- * @retval #CKMC_SUCCESS Successful
+ * @retval #CKMC_ERROR_NONE Successful
  * @retval #CKMC_ERROR_SERVER_ERROR failed to unlock user key
- * @retval #CKMC_ERROR_INPUT_PARAM invalid input parameter
+ * @retval #CKMC_ERROR_INVALID_PARAMETER invalid input parameter
  * @retval #CKMC_ERROR_AUTHENTICATION_FAILED not correct password
- * @retval #CKMC_ERROR_FILE_ACCESS_DENIED provided file doesn't exists or cannot be accessed
+ * @retval #CKMC_ERROR_PERMISSION_DENIED failed to access key manager
  *
  * @see ckmc_lock_user_key()
  * @see ckmc_remove_user_data()
@@ -74,9 +74,9 @@ int ckmc_unlock_user_key(uid_t user, const char *password);
  * @param[in] user a uid of a user whose key is removed from memory.
  *
  * @return 0 on success, otherwise a negative error value
- * @retval #CKMC_SUCCESS Successful
- * @retval #CKMC_ERROR_INPUT_PARAM invalid input parameter
- * @retval #CKMC_ERROR_FILE_ACCESS_DENIED provided file doesn't exists or cannot be accessed
+ * @retval #CKMC_ERROR_NONE Successful
+ * @retval #CKMC_ERROR_INVALID_PARAMETER invalid input parameter
+ * @retval #CKMC_ERROR_PERMISSION_DENIED failed to access key manager
  *
  * @see ckmc_unlock_user_key()
  * @see ckmc_remove_user_data()
@@ -95,9 +95,9 @@ int ckmc_lock_user_key(uid_t user);
  * @param[in] user a uid of a user whose data and key are removed
  *
  * @return 0 on success, otherwise a negative error value
- * @retval #CKMC_SUCCESS Successful
- * @retval #CKMC_ERROR_INPUT_PARAM invalid input parameter
- * @retval #CKMC_ERROR_FILE_ACCESS_DENIED provided file doesn't exists or cannot be accessed
+ * @retval #CKMC_ERROR_NONE Successful
+ * @retval #CKMC_ERROR_INVALID_PARAMETER invalid input parameter
+ * @retval #CKMC_ERROR_PERMISSION_DENIED failed to access key manager
  *
  * @see ckmc_unlock_user_key()
  * @see ckmc_lock_user_key()
@@ -118,11 +118,11 @@ int ckmc_remove_user_data(uid_t user);
  * @param[in] new_password used in re-encrypting a user key.
  *
  * @return 0 on success, otherwise a negative error value
- * @retval #CKMC_SUCCESS Successful
- * @retval #CKMC_ERROR_INPUT_PARAM invalid input parameter
+ * @retval #CKMC_ERROR_NONE Successful
+ * @retval #CKMC_ERROR_INVALID_PARAMETER invalid input parameter
  * @retval #CKMC_ERROR_AUTHENTICATION_FAILED not correct password
  * @retval #CKMC_ERROR_BAD_REQUEST no information about old password
- * @retval #CKMC_ERROR_FILE_ACCESS_DENIED provided file doesn't exists or cannot be accessed
+ * @retval #CKMC_ERROR_PERMISSION_DENIED failed to access key manager
  *
  * @see ckmc_unlock_user_key()
  * @see ckmc_lock_user_key()
@@ -142,10 +142,10 @@ int ckmc_change_user_password(uid_t user, const char *old_password, const char *
  * @param[in] new_password is used in re-encrypting a user key.
  *
  * @return 0 on success, otherwise a negative error value
- * @retval #CKMC_SUCCESS Successful
- * @retval #CKMC_ERROR_INPUT_PARAM invalid input parameter
+ * @retval #CKMC_ERROR_NONE Successful
+ * @retval #CKMC_ERROR_INVALID_PARAMETER invalid input parameter
  * @retval #CKMC_ERROR_BAD_REQUEST a user key is not unlocked.
- * @retval #CKMC_ERROR_FILE_ACCESS_DENIED provided file doesn't exists or cannot be accessed
+ * @retval #CKMC_ERROR_PERMISSION_DENIED failed to access key manager
  *
  * @pre User must be already logged in and his user key is already loaded into memory in plain text form.
  *
