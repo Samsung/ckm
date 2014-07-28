@@ -40,14 +40,6 @@ Requires:   libkey-manager-client = %{version}-%{release}
 %description -n libkey-manager-client-devel
 Central Key Manager package (client-devel)
 
-%package -n key-manager-devel
-Summary:    Central Key Manager (Development)
-Group:      Development/Libraries
-Requires:   key-manager = %{version}-%{release}
-
-%description -n key-manager-devel
-Central Key Manager (Development)
-
 %package -n key-manager-tests
 Summary:    internal test for key-manager
 Group:      Development
@@ -131,8 +123,8 @@ fi
 %files -n key-manager
 %manifest %{_datadir}/key-manager.manifest
 %attr(755,root,root) /usr/bin/key-manager
-%{_libdir}/libkey-manager-commons.so.*
-%{_libdir}/libkey-manager-key-provider.so.*
+%{_libdir}/libkey-manager-commons.so*
+%{_libdir}/libkey-manager-key-provider.so*
 %attr(-,root,root) /usr/lib/systemd/system/multi-user.target.wants/central-key-manager.service
 %attr(-,root,root) /usr/lib/systemd/system/central-key-manager.service
 %attr(-,root,root) /usr/lib/systemd/system/central-key-manager.target
@@ -145,10 +137,6 @@ fi
 %attr(-,root,root) /usr/lib/systemd/system/sockets.target.wants/central-key-manager-api-ocsp.socket
 %attr(-,root,root) /usr/lib/systemd/system/central-key-manager-api-ocsp.socket
 %{_datadir}/license/%{name}
-
-%files -n key-manager-devel
-%defattr(-,root,root,-)
-%{_libdir}/libkey-manager-key-provider.so
 
 %files -n libkey-manager-client
 %manifest %{_datadir}/libkey-manager-client.manifest
@@ -164,7 +152,6 @@ fi
 %defattr(-,root,root,-)
 %{_libdir}/libkey-manager-client.so
 %{_libdir}/libkey-manager-control-client.so
-%{_libdir}/libkey-manager-commons.so
 %{_includedir}/ckm/ckm/ckm-manager.h
 %{_includedir}/ckm/ckm/ckm-certificate.h
 %{_includedir}/ckm/ckm/ckm-control.h

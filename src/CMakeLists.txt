@@ -2,8 +2,10 @@ PKG_CHECK_MODULES(KEY_MANAGER_DEP
     dlog
     openssl
     libsmack
+    libcrypto
     libsystemd-daemon
     capi-base-common
+    db-util
     REQUIRED
     )
 
@@ -56,8 +58,6 @@ TARGET_LINK_LIBRARIES(${TARGET_KEY_MANAGER}
     ${TARGET_KEY_MANAGER_KEY_PROVIDER}
     )
 
-
-
 ################################################################################
 
 SET(KEY_MANAGER_CLIENT_VERSION_MAJOR 1)
@@ -82,6 +82,28 @@ SET(KEY_MANAGER_CLIENT_SOURCES
     ${KEY_MANAGER_CLIENT_CAPI_SRC_PATH}/ckmc-type.cpp
     ${KEY_MANAGER_CLIENT_CAPI_SRC_PATH}/ckmc-error.cpp
     ${KEY_MANAGER_CLIENT_CAPI_SRC_PATH}/ckmc-manager.cpp
+    ${KEY_MANAGER_PATH}/common/base64.cpp
+    ${KEY_MANAGER_PATH}/common/digest.cpp
+    ${KEY_MANAGER_PATH}/common/protocols.cpp
+    ${KEY_MANAGER_PATH}/common/message-buffer.cpp
+    ${KEY_MANAGER_PATH}/common/smack-check.cpp
+    ${KEY_MANAGER_PATH}/common/certificate-impl.cpp
+    ${KEY_MANAGER_PATH}/common/certificate-store.cpp
+    ${KEY_MANAGER_PATH}/common/generic-key.cpp
+    ${KEY_MANAGER_PATH}/dpl/log/src/abstract_log_provider.cpp
+    ${KEY_MANAGER_PATH}/dpl/log/src/dlog_log_provider.cpp
+    ${KEY_MANAGER_PATH}/dpl/log/src/log.cpp
+    ${KEY_MANAGER_PATH}/dpl/log/src/old_style_log_provider.cpp
+    ${KEY_MANAGER_PATH}/dpl/core/src/assert.cpp
+    ${KEY_MANAGER_PATH}/dpl/core/src/binary_queue.cpp
+    ${KEY_MANAGER_PATH}/dpl/core/src/colors.cpp
+    ${KEY_MANAGER_PATH}/dpl/core/src/exception.cpp
+    ${KEY_MANAGER_PATH}/dpl/core/src/noncopyable.cpp
+    ${KEY_MANAGER_PATH}/dpl/core/src/serialization.cpp
+    ${KEY_MANAGER_PATH}/dpl/core/src/singleton.cpp
+    ${KEY_MANAGER_PATH}/dpl/core/src/string.cpp
+    ${KEY_MANAGER_PATH}/dpl/core/src/TransitoryString.cpp
+    ${KEY_MANAGER_PATH}/dpl/core/src/errno_string.cpp
     )
 
 ADD_LIBRARY(${TARGET_KEY_MANAGER_CLIENT} SHARED ${KEY_MANAGER_CLIENT_SOURCES})
@@ -96,7 +118,6 @@ SET_TARGET_PROPERTIES(
 
 TARGET_LINK_LIBRARIES(${TARGET_KEY_MANAGER_CLIENT}
     ${KEY_MANAGER_DEP_LIBRARIES}
-    ${TARGET_KEY_MANAGER_COMMON}
     )
 
 ################################################################################
@@ -118,6 +139,28 @@ SET(KEY_MANAGER_CONTROL_CLIENT_SOURCES
     ${KEY_MANAGER_CONTROL_CLIENT_SRC_PATH}/client-control.cpp
     ${KEY_MANAGER_CONTROL_CLIENT_SRC_PATH}/client-common.cpp
     ${KEY_MANAGER_CONTROL_CLIENT_CAPI_SRC_PATH}/ckmc-control.cpp
+    ${KEY_MANAGER_PATH}/common/base64.cpp
+    ${KEY_MANAGER_PATH}/common/digest.cpp
+    ${KEY_MANAGER_PATH}/common/protocols.cpp
+    ${KEY_MANAGER_PATH}/common/message-buffer.cpp
+    ${KEY_MANAGER_PATH}/common/smack-check.cpp
+    ${KEY_MANAGER_PATH}/common/certificate-impl.cpp
+    ${KEY_MANAGER_PATH}/common/certificate-store.cpp
+    ${KEY_MANAGER_PATH}/common/generic-key.cpp
+    ${KEY_MANAGER_PATH}/dpl/log/src/abstract_log_provider.cpp
+    ${KEY_MANAGER_PATH}/dpl/log/src/dlog_log_provider.cpp
+    ${KEY_MANAGER_PATH}/dpl/log/src/log.cpp
+    ${KEY_MANAGER_PATH}/dpl/log/src/old_style_log_provider.cpp
+    ${KEY_MANAGER_PATH}/dpl/core/src/assert.cpp
+    ${KEY_MANAGER_PATH}/dpl/core/src/binary_queue.cpp
+    ${KEY_MANAGER_PATH}/dpl/core/src/colors.cpp
+    ${KEY_MANAGER_PATH}/dpl/core/src/exception.cpp
+    ${KEY_MANAGER_PATH}/dpl/core/src/noncopyable.cpp
+    ${KEY_MANAGER_PATH}/dpl/core/src/serialization.cpp
+    ${KEY_MANAGER_PATH}/dpl/core/src/singleton.cpp
+    ${KEY_MANAGER_PATH}/dpl/core/src/string.cpp
+    ${KEY_MANAGER_PATH}/dpl/core/src/TransitoryString.cpp
+    ${KEY_MANAGER_PATH}/dpl/core/src/errno_string.cpp
     )
 
 ADD_LIBRARY(${TARGET_KEY_MANAGER_CONTROL_CLIENT} SHARED ${KEY_MANAGER_CONTROL_CLIENT_SOURCES})
@@ -132,7 +175,6 @@ SET_TARGET_PROPERTIES(
 
 TARGET_LINK_LIBRARIES(${TARGET_KEY_MANAGER_CONTROL_CLIENT}
     ${KEY_MANAGER_DEP_LIBRARIES}
-    ${TARGET_KEY_MANAGER_COMMON}
     )
 
 ################################################################################
