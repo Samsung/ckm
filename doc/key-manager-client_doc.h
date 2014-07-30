@@ -21,7 +21,7 @@
  * @brief    It provides APIs accessing on the secure repository and additional secure cryptographic operations.
  *
  * @section CAPI_KEY_MANAGER_CLIENT_MODULE_HEADER Required Header
- * \#include <ckmc/ckmc_manager.h>
+ * \#include <ckmc/ckmc-manager.h>
  *
  * @section CAPI_KEY_MANAGER_CLIENT_MODULE_OVERVIEW Overview
  * It provides APIs storing, getting, and removing APIs for keys, certificates, and sensitive data on/from Key Manager secure repository which is protected by a user’s passwords.

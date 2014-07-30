@@ -22,7 +22,7 @@
  * @brief    These APIs controls the key manager state(Unlocked/Locked) and reflects the user's password change.
  *
  * @section CAPI_KEY_MANAGER_CONTROL_MODULE_HEADER Required Header
- * \#include <ckmc/ckmc_control.h>
+ * \#include <ckmc/ckmc-control.h>
  *
  * @section CAPI_KEY_MANAGER_CONTROL_MODULE_OVERVIEW Overview
  * It provides APIs encrypting, decrypting, and re-encrypting a DKEK(with which a user's data file is encrypted).

@@ -21,7 +21,7 @@
  * @brief    It defines a data types used in this APIs and provides utility methods handling them.
  *
  * @section CAPI_KEY_MANAGER_TYPES_MODULE_HEADER Required Header
- * \#include <ckmc/ckmc_type.h>
+ * \#include <ckmc/ckmc-type.h>
  *
  * @section CAPI_KEY_MANAGER_TYPES_MODULE_OVERVIEW Overview
  * It defines data types for key, certificate,raw buffer, and linked list used in this APIs.
