@@ -322,6 +322,8 @@ int ckmc_load_from_pkcs12_file(const char *file_path, const char *passphrase, ck
 
 	};
 
+	OpenSSL_add_all_algorithms();
+
 	int ret = CKMC_ERROR_NONE;
 
 	Pkcs12Converter converter;
