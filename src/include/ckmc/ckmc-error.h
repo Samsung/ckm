@@ -60,7 +60,8 @@ typedef enum{
 	CKMC_ERROR_VERIFICATION_FAILED      = KEY_MANAGER_ERROR_CLASS | 0x0D, /**< CA certificate(s) were unknown and chain could not be created */
 	CKMC_ERROR_INVALID_FORMAT           = KEY_MANAGER_ERROR_CLASS | 0x0E, /**< A provided file or binary has not a valid format */
 	CKMC_ERROR_FILE_ACCESS_DENIED       = KEY_MANAGER_ERROR_CLASS | 0x0F, /**< A provided file or binary has not a valid format */
-	CKMC_ERROR_UNKNOWN                  = KEY_MANAGER_ERROR_CLASS | 0x10, /**< A provided file or binary has not a valid format */
+    CKMC_ERROR_NOT_EXPORTABLE           = KEY_MANAGER_ERROR_CLASS | 0x10, /**< Key is not exportable. It could not be returned to client */
+	CKMC_ERROR_UNKNOWN                  = KEY_MANAGER_ERROR_CLASS | 0x11, /**< A provided file or binary has not a valid format */
 } key_manager_error_e;
 
 

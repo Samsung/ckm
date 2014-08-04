@@ -87,6 +87,9 @@ extern "C" {
 /*! \brief   indicating that provided file doesn't exists or cannot be accessed in the file system */
 #define CKM_API_ERROR_FILE_ACCESS_DENIED -18
 
+/*! \brief   indicating that keys are not exportable and could not be returned to client */
+#define CKM_API_ERROR_NOT_EXPORTABLE -19
+
 #define CKM_API_OCSP_STATUS_GOOD                (1<<0)
 #define CKM_API_OCSP_STATUS_UNSUPPORTED         (1<<1)
 #define CKM_API_OCSP_STATUS_UNKNOWN             (1<<2)

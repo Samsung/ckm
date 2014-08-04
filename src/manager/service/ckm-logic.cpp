@@ -348,6 +348,11 @@ RawBuffer CKMLogic::getData(
         row.dataType = dataType;
     }
 
+    if ((CKM_API_SUCCESS == retCode) && (row.exportable == 0)) {
+        row.data.clear();
+        retCode = CKM_API_ERROR_NOT_EXPORTABLE;
+    }
+
     MessageBuffer response;
     Serialization::Serialize(response, static_cast<int>(LogicCommand::GET));
     Serialization::Serialize(response, commandId);
