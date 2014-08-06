@@ -122,7 +122,7 @@ int ckmc_remove_key(const char *alias);
  * @retval #CKMC_ERROR_DB_ERROR failed due to the error with unknown reason
  * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN alias doesn't exists.
  * @retval #CKMC_ERROR_PERMISSION_DENIED failed to access key manager
- *
+ * @retval #CKMC_ERROR_NOT_EXPORTABLE a key is not exportable and could not be returned to client
  * @pre User must be already logged in and his user key is already loaded into memory in plain text form.
  *
  * @see ckmc_save_key()
@@ -239,6 +239,7 @@ int ckmc_remove_cert(const char *alias);
  * @retval #CKMC_ERROR_DB_ERROR failed due to the error with unknown reason
  * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN alias doesn't exists.
  * @retval #CKMC_ERROR_PERMISSION_DENIED failed to access key manager
+ * @retval #CKMC_ERROR_NOT_EXPORTABLE a certification is not exportable and could not be returned to client
  *
  * @pre User must be already logged in and his user key is already loaded into memory in plain text form.
  *
@@ -355,6 +356,7 @@ int ckmc_remove_data(const char *alias);
  * @retval #CKMC_ERROR_DB_ERROR failed due to the error with unknown reason
  * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN alias doesn't exists.
  * @retval #CKMC_ERROR_PERMISSION_DENIED failed to access key manager
+ * @retval #CKMC_ERROR_NOT_EXPORTABLE data is not exportable and could not be returned to client
  *
  * @pre User must be already logged in and his user key is already loaded into memory in plain text form.
  *

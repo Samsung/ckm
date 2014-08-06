@@ -31,6 +31,7 @@ extern "C" {
 #endif
 
 int to_ckmc_error(int ckm_error);
+int to_ckm_error(int ckmc_error);
 
 #ifdef __cplusplus
 }
