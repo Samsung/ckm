@@ -25,6 +25,7 @@
 #include <generic-socket-manager.h>
 #include <connection-info.h>
 #include <message-buffer.h>
+#include <dpl/exception.h>
 
 namespace CKM {
 
@@ -54,6 +55,12 @@ public:
     void process(const ReadEvent &event);
     void close(const CloseEvent &event);
 private:
+    class Exception {
+    public:
+        DECLARE_EXCEPTION_TYPE(CKM::Exception, Base)
+        DECLARE_EXCEPTION_TYPE(Base, BrokenProtocol)
+    };
+
     bool processOne(
         const ConnectionID &conn,
         ConnectionInfo &info);

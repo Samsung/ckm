@@ -36,20 +36,18 @@ public:
     ControlImpl& operator=(const ControlImpl &) = delete;
     ControlImpl& operator=(ControlImpl &&) = delete;
 
-    virtual int unlockUserKey(uid_t user, const Password &password) const {
+    virtual int unlockUserKey(uid_t user, const Password &password) {
         return try_catch([&] {
+            if((int)user < 0) {
+                return CKM_API_ERROR_INPUT_PARAM;
+            }
+
             MessageBuffer send, recv;
             Serialization::Serialize(send, static_cast<int>(ControlCommand::UNLOCK_USER_KEY));
             Serialization::Serialize(send, user);
             Serialization::Serialize(send, password);
-            int retCode;
 
-            if((int)user < 0) {
-                retCode = CKM_API_ERROR_INPUT_PARAM;
-                return retCode;
-            }
-
-            retCode = sendToServer(
+            int retCode = sendToServer(
                 SERVICE_SOCKET_CKM_CONTROL,
                 send.Pop(),
                 recv);
@@ -64,19 +62,17 @@ public:
         });
     }
 
-    virtual int lockUserKey(uid_t user) const {
+    virtual int lockUserKey(uid_t user) {
         return try_catch([&] {
+            if((int)user < 0) {
+                return CKM_API_ERROR_INPUT_PARAM;
+            }
+
             MessageBuffer send, recv;
             Serialization::Serialize(send, static_cast<int>(ControlCommand::LOCK_USER_KEY));
             Serialization::Serialize(send, user);
-            int retCode;
 
-            if((int)user < 0) {
-                retCode = CKM_API_ERROR_INPUT_PARAM;
-                return retCode;
-            }
-
-            retCode = sendToServer(
+            int retCode = sendToServer(
                 SERVICE_SOCKET_CKM_CONTROL,
                 send.Pop(),
                 recv);
@@ -91,19 +87,17 @@ public:
         });
     }
 
-    virtual int removeUserData(uid_t user) const {
+    virtual int removeUserData(uid_t user) {
         return try_catch([&] {
+            if((int)user < 0) {
+                return CKM_API_ERROR_INPUT_PARAM;
+            }
+
             MessageBuffer send, recv;
             Serialization::Serialize(send, static_cast<int>(ControlCommand::REMOVE_USER_DATA));
             Serialization::Serialize(send, user);
-            int retCode;
 
-            if((int)user < 0) {
-                retCode = CKM_API_ERROR_INPUT_PARAM;
-                return retCode;
-            }
-
-            retCode = sendToServer(
+            int retCode = sendToServer(
                 SERVICE_SOCKET_CKM_CONTROL,
                 send.Pop(),
                 recv);
@@ -118,21 +112,19 @@ public:
         });
     }
 
-    virtual int changeUserPassword(uid_t user, const Password &oldPassword, const Password &newPassword) const {
+    virtual int changeUserPassword(uid_t user, const Password &oldPassword, const Password &newPassword) {
         return try_catch([&] {
+            if((int)user < 0) {
+                return CKM_API_ERROR_INPUT_PARAM;
+            }
+
             MessageBuffer send, recv;
             Serialization::Serialize(send, static_cast<int>(ControlCommand::CHANGE_USER_PASSWORD));
             Serialization::Serialize(send, user);
             Serialization::Serialize(send, oldPassword);
             Serialization::Serialize(send, newPassword);
-            int retCode;
 
-            if((int)user < 0) {
-                retCode = CKM_API_ERROR_INPUT_PARAM;
-                return retCode;
-            }
-
-            retCode = sendToServer(
+            int retCode = sendToServer(
                 SERVICE_SOCKET_CKM_CONTROL,
                 send.Pop(),
                 recv);
@@ -147,16 +139,23 @@ public:
         });
     }
 
-    virtual int resetUserPassword(uid_t user, const Password &newPassword) const {
+    virtual int resetUserPassword(uid_t user, const Password &newPassword) {
         return try_catch([&] {
+            if((int)user < 0) {
+                return CKM_API_ERROR_INPUT_PARAM;
+            }
+
             MessageBuffer send, recv;
             Serialization::Serialize(send, static_cast<int>(ControlCommand::RESET_USER_PASSWORD));
             Serialization::Serialize(send, user);
             Serialization::Serialize(send, newPassword);
-            int retCode;
 
-            if((int)user < 0) {
-                retCode = CKM_API_ERROR_INPUT_PARAM;
+            int retCode = sendToServer(
+                SERVICE_SOCKET_CKM_CONTROL,
+                send.Pop(),
+                recv);
+
+            if (CKM_API_SUCCESS != retCode) {
                 return retCode;
             }
 

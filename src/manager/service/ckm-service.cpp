@@ -93,6 +93,8 @@ bool CKMService::processOne(
         return true;
     } Catch (MessageBuffer::Exception::Base) {
         LogError("Broken protocol. Closing socket.");
+    } Catch (Exception::BrokenProtocol) {
+        LogError("Broken protocol. Closing socket.");
     } catch (const std::string &e) {
         LogError("String exception(" << e << "). Closing socket");
     } catch (...) {
@@ -132,8 +134,7 @@ RawBuffer CKMService::processControl(MessageBuffer &buffer) {
         Deserialization::Deserialize(buffer, newPass);
         return m_logic->resetUserPassword(user, newPass);
     default:
-        // TODO
-        throw 1; // broken protocol
+        Throw(Exception::BrokenProtocol);
     }
 }
 
@@ -310,8 +311,7 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer){
                 static_cast<const RSAPaddingAlgorithm>(padding));
         }
         default:
-        // TODO
-            throw 1; // broken protocol
+            Throw(Exception::BrokenProtocol);
     }
 }
 
