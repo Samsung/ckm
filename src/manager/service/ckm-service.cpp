@@ -110,9 +110,9 @@ RawBuffer CKMService::processControl(MessageBuffer &buffer) {
     uid_t user;
     ControlCommand cc;
     Password newPass, oldPass;
+    std::string smackLabel;
 
     Deserialization::Deserialize(buffer, command);
-    Deserialization::Deserialize(buffer, user);
 
     LogDebug("Process control. Command: " << command);
 
@@ -120,19 +120,27 @@ RawBuffer CKMService::processControl(MessageBuffer &buffer) {
 
     switch(cc) {
     case ControlCommand::UNLOCK_USER_KEY:
+        Deserialization::Deserialize(buffer, user);
         Deserialization::Deserialize(buffer, newPass);
         return m_logic->unlockUserKey(user, newPass);
     case ControlCommand::LOCK_USER_KEY:
+        Deserialization::Deserialize(buffer, user);
         return m_logic->lockUserKey(user);
     case ControlCommand::REMOVE_USER_DATA:
+        Deserialization::Deserialize(buffer, user);
         return m_logic->removeUserData(user);
     case ControlCommand::CHANGE_USER_PASSWORD:
+        Deserialization::Deserialize(buffer, user);
         Deserialization::Deserialize(buffer, oldPass);
         Deserialization::Deserialize(buffer, newPass);
         return m_logic->changeUserPassword(user, oldPass, newPass);
     case ControlCommand::RESET_USER_PASSWORD:
+        Deserialization::Deserialize(buffer, user);
         Deserialization::Deserialize(buffer, newPass);
         return m_logic->resetUserPassword(user, newPass);
+    case ControlCommand::REMOVE_APP_DATA:
+        Deserialization::Deserialize(buffer, smackLabel);
+        return m_logic->removeApplicationData(smackLabel);
     default:
         Throw(Exception::BrokenProtocol);
     }

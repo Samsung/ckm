@@ -165,6 +165,31 @@ public:
         });
     }
 
+    virtual int removeApplicationData(const std::string &smackLabel) {
+        return try_catch([&] {
+            if (smackLabel.empty()) {
+                return CKM_API_ERROR_INPUT_PARAM;
+            }
+
+            MessageBuffer send,recv;
+            Serialization::Serialize(send, static_cast<int>(ControlCommand::REMOVE_APP_DATA));
+            Serialization::Serialize(send, smackLabel);
+
+            int retCode = sendToServer(
+                SERVICE_SOCKET_CKM_CONTROL,
+                send.Pop(),
+                recv);
+
+            if (CKM_API_SUCCESS != retCode) {
+                return retCode;
+            }
+
+            Deserialization::Deserialize(recv, retCode);
+
+            return retCode;
+        });
+    }
+
     virtual ~ControlImpl(){}
 };
 

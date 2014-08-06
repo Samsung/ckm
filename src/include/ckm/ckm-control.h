@@ -56,6 +56,12 @@ public:
     // The service will use DKEK in plain text and encrypt it in encrypted form (using new password).
     virtual int resetUserPassword(uid_t user, const Password &newPassword) = 0;
 
+    // Required for tizen 2.3.
+    // It will remove all application data owned by application identified
+    // by smackLabel. This function will remove application data from unlocked
+    // database only. This function may be used during application uninstallation.
+    virtual int removeApplicationData(const std::string &smackLabel) = 0;
+
     virtual ~Control(){}
 
     static ControlShPtr create();

@@ -80,7 +80,6 @@ namespace CKM {
             int deleteDBRow(
                     const Alias& alias,
                     const std::string &label);
-
             void saveKey(const std::string& label, const RawBuffer &key);
             RawBufferOptional getKey(
                     const std::string& label);

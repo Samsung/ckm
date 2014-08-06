@@ -164,6 +164,32 @@ RawBuffer CKMLogic::resetUserPassword(
     return response.Pop();
 }
 
+RawBuffer CKMLogic::removeApplicationData(const std::string &smackLabel) {
+    int retCode = CKM_API_SUCCESS;
+
+    try {
+
+        if (smackLabel.empty()) {
+            retCode = CKM_API_ERROR_INPUT_PARAM;
+        } else {
+            for(auto &handler: m_userDataMap) {
+                handler.second.database.deleteKey(smackLabel);
+            }
+        }
+
+    } catch (const DBCrypto::Exception::InternalError &e) {
+        LogError("DBCrypto couldn't remove data: " << e.GetMessage());
+        retCode = CKM_API_ERROR_DB_ERROR;
+    } catch (const DBCrypto::Exception::TransactionError &e) {
+        LogError("DBCrypto transaction failed with message " << e.GetMessage());
+        retCode = CKM_API_ERROR_DB_ERROR;
+    }
+
+    MessageBuffer response;
+    Serialization::Serialize(response, retCode);
+    return response.Pop();
+}
+
 int CKMLogic::saveDataHelper(
     Credentials &cred,
     DBDataType dataType,

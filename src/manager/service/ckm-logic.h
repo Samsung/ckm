@@ -65,6 +65,8 @@ public:
         uid_t user,
         const Password &newPassword);
 
+    RawBuffer removeApplicationData(const std::string &smackLabel);
+
     RawBuffer saveData(
         Credentials &cred,
         int commandId,

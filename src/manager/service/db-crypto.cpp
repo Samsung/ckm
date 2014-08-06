@@ -110,6 +110,10 @@ namespace {
             //                                 1           2
             "DELETE FROM CKM_TABLE WHERE alias=? AND label=?;";
 
+    const char *delete_data_with_key_cmd =
+            //                                 1
+            "DELETE FROM CKM_TABLE WHERE label=?;";
+
 // KEY_TABLE (label TEXT, key BLOB)
 
     const char *db_create_key_cmd =
@@ -508,10 +512,17 @@ using namespace DB;
     void DBCrypto::deleteKey(const std::string& label) {
         Try {
             Transaction transaction(this);
+
             SqlConnection::DataCommandUniquePtr deleteCommand =
                     m_connection->PrepareDataCommand(delete_key_cmd);
             deleteCommand->BindString(1, label.c_str());
             deleteCommand->Step();
+
+            SqlConnection::DataCommandUniquePtr deleteData =
+                m_connection->PrepareDataCommand(delete_data_with_key_cmd);
+            deleteData->BindString(1, label.c_str());
+            deleteData->Step();
+
             transaction.commit();
             return;
         } Catch (SqlConnection::Exception::SyntaxError) {
