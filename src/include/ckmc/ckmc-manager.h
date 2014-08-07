@@ -292,7 +292,7 @@ int ckmc_get_cert_alias_list(ckmc_alias_list_s** ppalias_list);
  *
  * @return 0 on success, otherwise a negative error value
  * @retval #CKMC_ERROR_NONE Successful
- * @retval #CKMC_ERROR_INVALID_PARAMETER input parameter is invalid
+ * @retval #CKMC_ERROR_INVALID_PARAMETER input parameter is invalid. Extractable flag in policy should be true.
  * @retval #CKMC_ERROR_DB_LOCKED a user key is not loaded in memory(a user is not logged in)
  * @retval #CKMC_ERROR_DB_ALIAS_EXISTS alias already exists.
  * @retval #CKMC_ERROR_DB_ERROR failed due to other DB transaction unexpectedly.
@@ -356,7 +356,6 @@ int ckmc_remove_data(const char *alias);
  * @retval #CKMC_ERROR_DB_ERROR failed due to the error with unknown reason
  * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN alias doesn't exists.
  * @retval #CKMC_ERROR_PERMISSION_DENIED failed to access key manager
- * @retval #CKMC_ERROR_NOT_EXPORTABLE data is not exportable and could not be returned to client
  *
  * @pre User must be already logged in and his user key is already loaded into memory in plain text form.
  *
@@ -534,7 +533,7 @@ int ckmc_verify_signature(const char *public_key_alias, const char *password, co
  *
  * @since_tizen 2.3
  * @privlevel public
- * @privilege %http://tizen.orckmc_buffer_freeg/privilege/keymanager
+ * @privilege %http://tizen.org/privilege/keymanager
  *
  * @remarks The trusted root certificate of the chain should exist in the system's certificate storage.
  * @remarks A newly created ppcert_chain_list should be destroyed by calling ckmc_cert_list_all_free() if it is no longer needed.
