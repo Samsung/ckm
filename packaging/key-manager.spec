@@ -13,6 +13,8 @@ BuildRequires: libattr-devel
 BuildRequires: pkgconfig(libsmack)
 BuildRequires: pkgconfig(libsystemd-daemon)
 BuildRequires: pkgconfig(db-util)
+BuildRequires: pkgconfig(capi-appfw-package-manager)
+BuildRequires: pkgconfig(glib-2.0)
 BuildRequires: boost-devel
 Requires: boost-test
 %{?systemd_requires}
@@ -123,6 +125,7 @@ fi
 %files -n key-manager
 %manifest %{_datadir}/key-manager.manifest
 %attr(755,root,root) /usr/bin/key-manager
+%attr(755,root,root) /usr/bin/key-manager-listener
 %{_libdir}/libkey-manager-commons.so*
 %{_libdir}/libkey-manager-key-provider.so*
 %attr(-,root,root) /usr/lib/systemd/system/multi-user.target.wants/central-key-manager.service
