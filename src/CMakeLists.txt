@@ -82,6 +82,7 @@ SET(KEY_MANAGER_CLIENT_SOURCES
     ${KEY_MANAGER_CLIENT_CAPI_SRC_PATH}/ckmc-type.cpp
     ${KEY_MANAGER_CLIENT_CAPI_SRC_PATH}/ckmc-error.cpp
     ${KEY_MANAGER_CLIENT_CAPI_SRC_PATH}/ckmc-manager.cpp
+    ${KEY_MANAGER_CLIENT_CAPI_SRC_PATH}/ckmc-type-converter.cpp
     ${KEY_MANAGER_PATH}/common/base64.cpp
     ${KEY_MANAGER_PATH}/common/digest.cpp
     ${KEY_MANAGER_PATH}/common/protocols.cpp
@@ -139,6 +140,7 @@ SET(KEY_MANAGER_CONTROL_CLIENT_SOURCES
     ${KEY_MANAGER_CONTROL_CLIENT_SRC_PATH}/client-control.cpp
     ${KEY_MANAGER_CONTROL_CLIENT_SRC_PATH}/client-common.cpp
     ${KEY_MANAGER_CONTROL_CLIENT_CAPI_SRC_PATH}/ckmc-control.cpp
+    ${KEY_MANAGER_CONTROL_CLIENT_CAPI_SRC_PATH}/ckmc-type-converter.cpp
     ${KEY_MANAGER_PATH}/common/base64.cpp
     ${KEY_MANAGER_PATH}/common/digest.cpp
     ${KEY_MANAGER_PATH}/common/protocols.cpp
