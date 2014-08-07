@@ -159,15 +159,6 @@ public:
                 return retCode;
             }
 
-            retCode = sendToServer(
-                SERVICE_SOCKET_CKM_CONTROL,
-                send.Pop(),
-                recv);
-
-            if (CKM_API_SUCCESS != retCode) {
-                return retCode;
-            }
-
             Deserialization::Deserialize(recv, retCode);
 
             return retCode;
