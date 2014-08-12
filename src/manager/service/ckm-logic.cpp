@@ -86,6 +86,12 @@ RawBuffer CKMLogic::unlockUserKey(uid_t user, const Password &password) {
         retCode = CKM_API_ERROR_SERVER_ERROR;
     }
 
+    if(retCode != CKM_API_SUCCESS) {
+        // When not successful, UserData in m_userDataMap should be erased.
+        // Because other operations make decision based on the existence of UserData in m_userDataMap.
+        m_userDataMap.erase(user);
+    }
+
     MessageBuffer response;
     Serialization::Serialize(response, retCode);
     return response.Pop();

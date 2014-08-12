@@ -26,11 +26,18 @@
 #include <ckmc-type-converter.h>
 #include <ckm/ckm-type.h>
 
+CKM::Password _toPasswordStr(const char *str)
+{
+	if(str == NULL)
+		return CKM::Password();
+	return CKM::Password(str);
+}
+
 KEY_MANAGER_CAPI
 int ckmc_unlock_user_key(uid_t user, const char *password)
 {
 	auto control = CKM::Control::create();
-	int ret = control->unlockUserKey(user, CKM::Password(password));
+	int ret = control->unlockUserKey(user, _toPasswordStr(password));
 	return to_ckmc_error(ret);
 }
 
@@ -54,7 +61,7 @@ KEY_MANAGER_CAPI
 int ckmc_change_user_password(uid_t user, const char *oldPassword, const char *newPassword)
 {
 	auto control = CKM::Control::create();
-	int ret =  control->changeUserPassword(user, CKM::Password(oldPassword), CKM::Password(newPassword));
+	int ret =  control->changeUserPassword(user, _toPasswordStr(oldPassword), _toPasswordStr(newPassword));
 	return to_ckmc_error(ret);
 }
 
@@ -62,7 +69,7 @@ KEY_MANAGER_CAPI
 int ckmc_reset_user_password(uid_t user, const char *newPassword)
 {
 	auto control = CKM::Control::create();
-	int ret =  control->resetUserPassword(user, CKM::Password(newPassword));
+	int ret =  control->resetUserPassword(user, _toPasswordStr(newPassword));
 	return to_ckmc_error(ret);
 }
 
