@@ -33,7 +33,6 @@
 
 #include <socket-manager.h>
 
-#include <echo.h>
 #include <ckm-service.h>
 #include <ocsp-service.h>
 
@@ -100,7 +99,6 @@ int main(void) {
             LogInfo("Start!");
             CKM::SocketManager manager;
 
-            REGISTER_SOCKET_SERVICE(manager, CKM::EchoService);
             REGISTER_SOCKET_SERVICE(manager, CKM::CKMService);
             REGISTER_SOCKET_SERVICE(manager, CKM::OCSPService);
 

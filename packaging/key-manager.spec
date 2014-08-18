@@ -81,7 +81,6 @@ mkdir -p %{buildroot}/etc/security/
 mkdir -p %{buildroot}/usr/lib/systemd/system/multi-user.target.wants
 mkdir -p %{buildroot}/usr/lib/systemd/system/sockets.target.wants
 ln -s ../central-key-manager.service %{buildroot}/usr/lib/systemd/system/multi-user.target.wants/central-key-manager.service
-ln -s ../central-key-manager-echo.socket %{buildroot}/usr/lib/systemd/system/sockets.target.wants/central-key-manager-echo.socket
 ln -s ../central-key-manager-api-control.socket %{buildroot}/usr/lib/systemd/system/sockets.target.wants/central-key-manager-api-control.socket
 ln -s ../central-key-manager-api-storage.socket %{buildroot}/usr/lib/systemd/system/sockets.target.wants/central-key-manager-api-storage.socket
 ln -s ../central-key-manager-api-ocsp.socket %{buildroot}/usr/lib/systemd/system/sockets.target.wants/central-key-manager-api-ocsp.socket
@@ -131,8 +130,6 @@ fi
 %attr(-,root,root) /usr/lib/systemd/system/multi-user.target.wants/central-key-manager.service
 %attr(-,root,root) /usr/lib/systemd/system/central-key-manager.service
 %attr(-,root,root) /usr/lib/systemd/system/central-key-manager.target
-%attr(-,root,root) /usr/lib/systemd/system/sockets.target.wants/central-key-manager-echo.socket
-%attr(-,root,root) /usr/lib/systemd/system/central-key-manager-echo.socket
 %attr(-,root,root) /usr/lib/systemd/system/sockets.target.wants/central-key-manager-api-control.socket
 %attr(-,root,root) /usr/lib/systemd/system/central-key-manager-api-control.socket
 %attr(-,root,root) /usr/lib/systemd/system/sockets.target.wants/central-key-manager-api-storage.socket
@@ -159,7 +156,6 @@ fi
 %{_includedir}/ckm/ckm/ckm-certificate.h
 %{_includedir}/ckm/ckm/ckm-control.h
 %{_includedir}/ckm/ckm/ckm-error.h
-%{_includedir}/ckm/ckm/ckm-echo.h
 %{_includedir}/ckm/ckm/ckm-key.h
 %{_includedir}/ckm/ckm/ckm-password.h
 %{_includedir}/ckm/ckm/ckm-raw-buffer.h

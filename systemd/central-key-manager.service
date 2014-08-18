@@ -4,7 +4,6 @@ Description=Start the Central Key Manager
 [Service]
 Type=notify
 ExecStart=/usr/bin/key-manager
-Sockets=central-key-manager-echo.socket
 Sockets=central-key-manager-api-storage.socket
 Sockets=central-key-manager-api-control.socket
 Sockets=central-key-manager-api-ocsp.socket

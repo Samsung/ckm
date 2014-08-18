@@ -17,7 +17,6 @@ SET(KEY_MANAGER_SOURCES
     ${KEY_MANAGER_PATH}/main/generic-socket-manager.cpp
     ${KEY_MANAGER_PATH}/main/socket-manager.cpp
     ${KEY_MANAGER_PATH}/main/key-manager-main.cpp
-    ${KEY_MANAGER_PATH}/service/echo.cpp
     ${KEY_MANAGER_PATH}/service/ckm-service.cpp
     ${KEY_MANAGER_PATH}/service/ckm-logic.cpp
     ${KEY_MANAGER_PATH}/service/key-provider.cpp
@@ -76,7 +75,6 @@ INCLUDE_DIRECTORIES(
 
 SET(KEY_MANAGER_CLIENT_SOURCES
     ${KEY_MANAGER_CLIENT_SRC_PATH}/client-common.cpp
-    ${KEY_MANAGER_CLIENT_SRC_PATH}/client-echo.cpp
     ${KEY_MANAGER_CLIENT_SRC_PATH}/client-error.cpp
     ${KEY_MANAGER_CLIENT_SRC_PATH}/client-manager-impl.cpp
     ${KEY_MANAGER_CLIENT_CAPI_SRC_PATH}/ckmc-type.cpp
@@ -190,7 +188,6 @@ INSTALL(FILES
     ${KEY_MANAGER_SRC_PATH}/include/ckm/ckm-certificate.h
     ${KEY_MANAGER_SRC_PATH}/include/ckm/ckm-control.h
     ${KEY_MANAGER_SRC_PATH}/include/ckm/ckm-error.h
-    ${KEY_MANAGER_SRC_PATH}/include/ckm/ckm-echo.h
     ${KEY_MANAGER_SRC_PATH}/include/ckm/ckm-key.h
     ${KEY_MANAGER_SRC_PATH}/include/ckm/ckm-password.h
     ${KEY_MANAGER_SRC_PATH}/include/ckm/ckm-raw-buffer.h
