@@ -6,7 +6,8 @@ Type=notify
 ExecStart=/usr/bin/key-manager
 Sockets=central-key-manager-echo.socket
 Sockets=central-key-manager-api-storage.socket
-Seckets=central-key-manager-api-control.socket
+Sockets=central-key-manager-api-control.socket
+Sockets=central-key-manager-api-ocsp.socket
 
 [Install]
 WantedBy=multi-user.target
