@@ -8,6 +8,7 @@ Source0:    %{name}-%{version}.tar.gz
 Source1001: key-manager.manifest
 Source1002: key-manager-listener.manifest
 Source1003: libkey-manager-client.manifest
+Source1004: libkey-manager-common.manifest
 BuildRequires: cmake
 BuildRequires: zip
 BuildRequires: pkgconfig(dlog)
@@ -20,6 +21,7 @@ BuildRequires: pkgconfig(capi-appfw-package-manager)
 BuildRequires: pkgconfig(glib-2.0)
 BuildRequires: boost-devel
 Requires: boost-test
+Requires: libkey-manager-common = %{version}-%{release}
 %{?systemd_requires}
 
 %description
@@ -34,6 +36,15 @@ Requires:   libkey-manager-client = %{version}-%{release}
 Listener for central key manager. This daemon is responsible for
 receive notification from dbus about uninstall application
 and notify central key manager about it.
+
+%package -n libkey-manager-common
+Summary:    Central Key Manager (common libraries)
+Group:      Development/Libraries
+Requires(post): /sbin/ldconfig
+Requires(postun): /sbin/ldconfig
+
+%description -n libkey-manager-common
+Central Key Manager package (common library)
 
 %package -n libkey-manager-client
 Summary:    Central Key Manager (client)
@@ -68,6 +79,7 @@ Internal test for key-manager
 cp -a %{SOURCE1001} .
 cp -a %{SOURCE1002} .
 cp -a %{SOURCE1003} .
+cp -a %{SOURCE1004} .
 
 %build
 %if 0%{?sec_build_binary_debug_enable}
@@ -158,38 +170,40 @@ fi
 
 %files -n key-manager
 %manifest key-manager.manifest
-%attr(755,root,root) /usr/bin/key-manager
-%{_libdir}/libkey-manager-commons.so*
-%attr(-,root,root) /usr/lib/systemd/system/multi-user.target.wants/central-key-manager.service
-%attr(-,root,root) /usr/lib/systemd/system/central-key-manager.service
-%attr(-,root,root) /usr/lib/systemd/system/central-key-manager.target
-%attr(-,root,root) /usr/lib/systemd/system/sockets.target.wants/central-key-manager-api-control.socket
-%attr(-,root,root) /usr/lib/systemd/system/central-key-manager-api-control.socket
-%attr(-,root,root) /usr/lib/systemd/system/sockets.target.wants/central-key-manager-api-storage.socket
-%attr(-,root,root) /usr/lib/systemd/system/central-key-manager-api-storage.socket
-%attr(-,root,root) /usr/lib/systemd/system/sockets.target.wants/central-key-manager-api-ocsp.socket
-%attr(-,root,root) /usr/lib/systemd/system/central-key-manager-api-ocsp.socket
+%{_bindir}/key-manager
+%{_libdir}/systemd/system/multi-user.target.wants/central-key-manager.service
+%{_libdir}/systemd/system/central-key-manager.service
+%{_libdir}/systemd/system/central-key-manager.target
+%{_libdir}/systemd/system/sockets.target.wants/central-key-manager-api-control.socket
+%{_libdir}/systemd/system/central-key-manager-api-control.socket
+%{_libdir}/systemd/system/sockets.target.wants/central-key-manager-api-storage.socket
+%{_libdir}/systemd/system/central-key-manager-api-storage.socket
+%{_libdir}/systemd/system/sockets.target.wants/central-key-manager-api-ocsp.socket
+%{_libdir}/systemd/system/central-key-manager-api-ocsp.socket
 %{_datadir}/license/%{name}
 
 %files -n key-manager-listener
 %manifest key-manager-listener.manifest
-%attr(755,root,root) /usr/bin/key-manager-listener
-%attr(-,root,root) /usr/lib/systemd/system/multi-user.target.wants/central-key-manager-listener.service
-%attr(-,root,root) /usr/lib/systemd/system/central-key-manager-listener.service
+%{_bindir}/key-manager-listener
+%{_libdir}/systemd/system/multi-user.target.wants/central-key-manager-listener.service
+%{_libdir}/systemd/system/central-key-manager-listener.service
+
+%files -n libkey-manager-common
+%manifest libkey-manager-common.manifest
+%{_libdir}/libkey-manager-common.so.*
 
 %files -n libkey-manager-client
 %manifest libkey-manager-client.manifest
-%defattr(-,root,root,-)
 %{_libdir}/libkey-manager-client.so.*
 %{_libdir}/libkey-manager-control-client.so.*
 %{_datadir}/license/libkey-manager-client
 %{_datadir}/license/libkey-manager-control-client
 
-
 %files -n libkey-manager-client-devel
 %defattr(-,root,root,-)
 %{_libdir}/libkey-manager-client.so
 %{_libdir}/libkey-manager-control-client.so
+%{_libdir}/libkey-manager-common.so
 %{_includedir}/ckm/ckm/ckm-manager.h
 %{_includedir}/ckm/ckm/ckm-certificate.h
 %{_includedir}/ckm/ckm/ckm-control.h
