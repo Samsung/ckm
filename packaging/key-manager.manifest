@@ -1,5 +1,20 @@
 <manifest>
+	<define>
+		<domain name="key-manager"/>
+		<request>
+			<smack request="system::use_internet" type="w"/>
+		</request>
+		<permit>
+			<smack permit="system::use_internet" type="w"/>
+		</permit>
+	</define>
+	<assign>
+		<filesystem path="/usr/lib/libkey-manager-control-client.so.1.0.1" label="_"/>
+		<filesystem path="/usr/lib/libkey-manager-control-client.so.1" label="_"/>
+		<filesystem path="/usr/lib/libkey-manager-client.so.1.0.1" label="_"/>
+		<filesystem path="/usr/lib/libkey-manager-client.so.1" label="_"/>
+	</assign>
 	<request>
-		<domain name="_" />
+		<domain name="key-manager" />
 	</request>
 </manifest>
