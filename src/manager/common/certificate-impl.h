@@ -33,7 +33,7 @@ namespace CKM {
 class CertificateImpl : public Certificate {
 public:
     CertificateImpl(){}
-    CertificateImpl(X509* x509);
+    explicit CertificateImpl(X509* x509, bool duplicate = true);
     CertificateImpl(const RawBuffer &data, DataFormat format);
     CertificateImpl(const CertificateImpl &);
     CertificateImpl(CertificateImpl &&);

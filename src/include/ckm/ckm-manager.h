@@ -33,32 +33,6 @@
 // Central Key Manager namespace
 namespace CKM {
 
-/*
-class Pkcs12 {
-public:
-	Pkcs12();
-	Pkcs12(const RawBuffer &rawData, const RawBuffer &password = RawBuffer());
-
-	Pkcs12(const Pkcs12 &pkcs);
-	Pkcs12(Pkcs12 &&pkcs);
-	Pkcs12& operator=(const Pkcs12 &pkcs);
-	Pkcs12& operator=(Pkcs12 &&pkcs);
-
-	Key getKey(const RawBuffer &password = RawBuffer());
-	Certificate getCertificate(); // this is connected with Key
-
-	// check the API in openssl and translate it 1 to 1.
-
-	CertificateShPtrVector getCertificateShPtrVector();
-
-	bool empty();
-	virtual ~Pkcs12();
-private:
-	class Pkcs12Impl;
-	Pkcs12Impl *m_impl;
-};
-*/
-
 class Manager;
 typedef std::shared_ptr<Manager> ManagerShPtr;
 

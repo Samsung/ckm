@@ -89,6 +89,7 @@ SET(KEY_MANAGER_CLIENT_SOURCES
     ${KEY_MANAGER_PATH}/common/certificate-impl.cpp
     ${KEY_MANAGER_PATH}/common/certificate-store.cpp
     ${KEY_MANAGER_PATH}/common/generic-key.cpp
+    ${KEY_MANAGER_PATH}/common/pkcs12-impl.cpp
     ${KEY_MANAGER_PATH}/dpl/log/src/abstract_log_provider.cpp
     ${KEY_MANAGER_PATH}/dpl/log/src/dlog_log_provider.cpp
     ${KEY_MANAGER_PATH}/dpl/log/src/log.cpp
@@ -190,6 +191,7 @@ INSTALL(FILES
     ${KEY_MANAGER_SRC_PATH}/include/ckm/ckm-error.h
     ${KEY_MANAGER_SRC_PATH}/include/ckm/ckm-key.h
     ${KEY_MANAGER_SRC_PATH}/include/ckm/ckm-password.h
+    ${KEY_MANAGER_SRC_PATH}/include/ckm/ckm-pkcs12.h
     ${KEY_MANAGER_SRC_PATH}/include/ckm/ckm-raw-buffer.h
     ${KEY_MANAGER_SRC_PATH}/include/ckm/ckm-type.h
     DESTINATION /usr/include/ckm/ckm

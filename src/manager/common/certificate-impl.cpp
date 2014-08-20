@@ -70,9 +70,13 @@ CertificateImpl::CertificateImpl(const RawBuffer &der, DataFormat format)
     }
 }
 
-CertificateImpl::CertificateImpl(X509 *x509)
-  : m_x509(X509_dup(x509))
-{}
+CertificateImpl::CertificateImpl(X509 *x509, bool duplicate)
+{
+    if (duplicate)
+        m_x509 = X509_dup(x509);
+    else
+        m_x509 = x509;
+}
 
 CertificateImpl::CertificateImpl(const CertificateImpl &second){
     m_x509 = X509_dup(second.m_x509);
