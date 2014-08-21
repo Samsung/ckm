@@ -7,6 +7,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <systemd/sd-daemon.h>
 
 #include <glib.h>
 #include <package_manager.h>
@@ -66,9 +67,19 @@ int main(void) {
 //    for (result = getdtablesize(); result>=0; --result)
 //        close(result);
 
-//    result = open("/dev/null", O_RDWR); // open stdin
-//    dup(result); // stdout
-//    dup(result); // stderr
+    close(0);
+    close(1);
+    close(2);
+
+    result = open("/dev/null", O_RDWR); // open stdin
+
+    int fd_stdout = 0;
+    int fd_stderr = 0;
+    fd_stdout = dup(result); // stdout
+    fd_stderr = dup(result); // stderr
+    SLOG(LOG_DEBUG, CKM_TAG, "%d : %s", fd_stdout, "stdout file descriptor");
+    SLOG(LOG_DEBUG, CKM_TAG, "%d : %s", fd_stderr, "stderr file descriptor");
+
 
     umask(027);
 

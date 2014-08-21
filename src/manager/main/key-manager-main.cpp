@@ -68,11 +68,6 @@ void registerSocketService(CKM::SocketManager &manager, const std::string& servi
 }
 
 int main(void) {
-
-    int ret;
-    ret = system("/usr/bin/key-manager-listener");
-    LogInfo("system return val : " << ret);
-
     UNHANDLED_EXCEPTION_HANDLER_BEGIN
     {
         CKM::Singleton<CKM::Log::LogSystem>::Instance().SetTag("CKM");

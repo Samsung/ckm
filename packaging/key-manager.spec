@@ -91,6 +91,7 @@ mkdir -p %{buildroot}/etc/security/
 mkdir -p %{buildroot}/usr/lib/systemd/system/multi-user.target.wants
 mkdir -p %{buildroot}/usr/lib/systemd/system/sockets.target.wants
 ln -s ../central-key-manager.service %{buildroot}/usr/lib/systemd/system/multi-user.target.wants/central-key-manager.service
+ln -s ../central-key-manager-listener.service %{buildroot}/usr/lib/systemd/system/multi-user.target.wants/central-key-manager-listener.service
 ln -s ../central-key-manager-api-control.socket %{buildroot}/usr/lib/systemd/system/sockets.target.wants/central-key-manager-api-control.socket
 ln -s ../central-key-manager-api-storage.socket %{buildroot}/usr/lib/systemd/system/sockets.target.wants/central-key-manager-api-storage.socket
 ln -s ../central-key-manager-api-ocsp.socket %{buildroot}/usr/lib/systemd/system/sockets.target.wants/central-key-manager-api-ocsp.socket
@@ -131,6 +132,29 @@ fi
 
 %postun -n libkey-manager-client -p /sbin/ldconfig
 
+%post -n key-manager-listener
+systemctl daemon-reload
+if [ $1 = 1 ]; then
+    # installation
+    systemctl start central-key-manager-listener.service
+fi
+if [ $1 = 2 ]; then
+    # update
+    systemctl restart central-key-manager-listener.service
+fi
+
+%preun -n key-manager-listener
+if [ $1 = 0 ]; then
+    # unistall
+    systemctl stop central-key-manager-listener.service
+fi
+
+%postun -n key-manager-listener
+if [ $1 = 0 ]; then
+    # unistall
+    systemctl daemon-reload
+fi
+
 %files -n key-manager
 %manifest %{_datadir}/key-manager.manifest
 %attr(755,root,root) /usr/bin/key-manager
@@ -150,6 +174,8 @@ fi
 %files -n key-manager-listener
 %manifest %{_datadir}/key-manager-listener.manifest
 %attr(755,root,root) /usr/bin/key-manager-listener
+%attr(-,root,root) /usr/lib/systemd/system/multi-user.target.wants/central-key-manager-listener.service
+%attr(-,root,root) /usr/lib/systemd/system/central-key-manager-listener.service
 
 %files -n libkey-manager-client
 %manifest %{_datadir}/libkey-manager-client.manifest
