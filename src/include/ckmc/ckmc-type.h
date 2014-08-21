@@ -91,76 +91,60 @@ typedef enum __ckmc_rsa_padding_algo {
 
 /**
  * @brief Binary buffer used in key manager CAPI
- * @details @a data is byte array containing some binary data
- *          @a size is the size of the binary data
  * @since_tizen 2.3
  */
 typedef struct __ckmc_raw_buff {
-	unsigned char* data;
-	size_t size;
+	unsigned char* data; /**< byte array containing binary data */
+	size_t size;         /**< the size of the binary data */
 } ckmc_raw_buffer_s;
 
 /**
  * @brief A policy for storing key/certificate/binary data
- * @details if @a password is not null, the data(or key, or certificate) is stored encrypted with this password inside key manager
- *          if @a extractable true, key may be extracted from storage
- *          if @a restricted true, only key owner can see data
  * @since_tizen 2.3
  */
 typedef struct __ckmc_policy {
-	char* password; // byte array used to encrypt data inside CKM
-	bool extractable; // if true key may be extracted from storage
-	bool restricted; // if true only key owner may see data
+	char* password;   /**< byte array used to encrypt data inside CKM. if it is not null, the data(or key, or certificate) is stored encrypted with this password inside key manager */
+	bool extractable; /**< if true key may be extracted from storage */
+	bool restricted;  /**< if true only key owner may see data */
 } ckmc_policy_s;
 
 /**
  * @brief Key structure used in key manager CAPI
- * @details @a raw_key is byte array of key. raw_key may be encrypted with password.
- *          @a key_size is the byte size of raw_key
- *          @a key_type is the raw_key's type
- *          if @a password is byte array used to decrypt raw_key inside key manager.
  * @since_tizen 2.3
  */
 typedef struct __ckmc_key {
-	unsigned char* raw_key;
-	size_t key_size;
-	ckmc_key_type_e key_type;
-	char* password; // byte array used to decrypt data raw_key inside key manager
+	unsigned char* raw_key;   /**< byte array of key. raw_key may be encrypted with password */
+	size_t key_size;          /**< the byte size of raw_key */
+	ckmc_key_type_e key_type; /**< the raw_key's type */
+	char* password;           /**< byte array used to decrypt data raw_key inside key manager. */
 } ckmc_key_s;
 
 /**
  * @brief Certificate structure used in key manager CAPI
- * @details @a raw_cert is byte array of certificate.
- *          @a cert_size is the byte size of raw_cert
- *          @a data_format is the raw_cert's encoding format
  * @since_tizen 2.3
  */
 typedef struct __ckmc_cert {
-	unsigned char* raw_cert;
-	size_t cert_size;
-	ckmc_data_format_e data_format;
+	unsigned char* raw_cert;  /**< byte array of certificate */
+	size_t cert_size;         /**< byte size of raw_cert */
+	ckmc_data_format_e data_format; /**< raw_cert's encoding format */
 } ckmc_cert_s;
 
 /**
  * @brief Linked list structure of alias
- * @details @a alias is a name of key, certificate or data stored in key manager.
- *          @a next is a pointer pointing to the next ckmc_alias_list_s
  * @since_tizen 2.3
  */
 typedef struct __ckmc_alias_list {
-	char *alias;
-	struct __ckmc_alias_list *next;
+	char *alias;  /**< the name of key, certificate or data stored in key manager */
+	struct __ckmc_alias_list *next; /**< the pointer pointing to the next ckmc_alias_list_s */
 } ckmc_alias_list_s;
 
 /**
  * @brief Linked list structure of ckmc_cert_s
- * @details @a cert is a pointer of ckmc_cert_s.
- *          @a next is a pointer pointing to the next ckmc_cert_list_s
  * @since_tizen 2.3
  */
 typedef struct __ckmc_cert_list {
-	ckmc_cert_s *cert;
-	struct __ckmc_cert_list *next;
+	ckmc_cert_s *cert; /**< the pointer of ckmc_cert_s */
+	struct __ckmc_cert_list *next; /**< the pointer pointing to the next ckmc_cert_list_s */
 } ckmc_cert_list_s;
 
 /**
