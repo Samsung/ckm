@@ -22,6 +22,16 @@ Requires: boost-test
 %description
 Central Key Manager and utilities
 
+%package -n key-manager-listener
+Summary:    Package with listener daemon
+Group:      System/Security
+Requires:   libkey-manager-client = %{version}-%{release}
+
+%description -n key-manager-listener
+Listener for central key manager. This daemon is responsible for
+receive notification from dbus about uninstall application
+and notify central key manager about it.
+
 %package -n libkey-manager-client
 Summary:    Central Key Manager (client)
 Group:      Development/Libraries
@@ -124,7 +134,6 @@ fi
 %files -n key-manager
 %manifest %{_datadir}/key-manager.manifest
 %attr(755,root,root) /usr/bin/key-manager
-%attr(755,root,root) /usr/bin/key-manager-listener
 %{_libdir}/libkey-manager-commons.so*
 %{_libdir}/libkey-manager-key-provider.so*
 %attr(-,root,root) /usr/lib/systemd/system/multi-user.target.wants/central-key-manager.service
@@ -137,6 +146,10 @@ fi
 %attr(-,root,root) /usr/lib/systemd/system/sockets.target.wants/central-key-manager-api-ocsp.socket
 %attr(-,root,root) /usr/lib/systemd/system/central-key-manager-api-ocsp.socket
 %{_datadir}/license/%{name}
+
+%files -n key-manager-listener
+%manifest %{_datadir}/key-manager-listener.manifest
+%attr(755,root,root) /usr/bin/key-manager-listener
 
 %files -n libkey-manager-client
 %manifest %{_datadir}/libkey-manager-client.manifest

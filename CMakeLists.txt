@@ -71,6 +71,7 @@ INSTALL(FILES
     ${CMAKE_SOURCE_DIR}/packaging/libkey-manager-client.manifest
     ${CMAKE_SOURCE_DIR}/packaging/libkey-manager-control-client.manifest
     ${CMAKE_SOURCE_DIR}/packaging/key-manager.manifest
+    ${CMAKE_SOURCE_DIR}/packaging/key-manager-listener.manifest
     DESTINATION
     /usr/share
 )
