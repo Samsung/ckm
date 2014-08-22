@@ -205,10 +205,17 @@ RawBuffer GenericKey::getDER() const {
 }
 
 KeyShPtr Key::create(const RawBuffer &raw, const Password &password) {
-    KeyShPtr output(new GenericKey(raw, password));
-    if (output->empty())
-        output.reset();
-    return output;
+    try {
+        KeyShPtr output = std::make_shared<GenericKey>(raw, password);
+        if (output->empty())
+            output.reset();
+        return output;
+    } catch (const std::bad_alloc &) {
+        LogDebug("Bad alloc was catch during GenericKey creation");
+    } catch (...) {
+        LogError("Critical error: Unknown exception was caught during GenericKey creation");
+    }
+    return KeyShPtr();
 }
 
 } // namespace CKM

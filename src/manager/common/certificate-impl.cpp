@@ -253,10 +253,17 @@ CertificateImpl::~CertificateImpl() {
 }
 
 CertificateShPtr Certificate::create(const RawBuffer &rawBuffer, DataFormat format) {
-    CertificateShPtr output(new CertificateImpl(rawBuffer, format));
-    if (output.get() == NULL)
-        output.reset();
-    return output;
+    try {
+        CertificateShPtr output = std::make_shared<CertificateImpl>(rawBuffer, format);
+        if (output->empty())
+            output.reset();
+        return output;
+    } catch (const std::bad_alloc &) {
+        LogDebug("Bad alloc was caught during CertificateImpl creation");
+    } catch (...) {
+        LogError("Critical error: Unknown exception was caught during CertificateImpl creation!");
+    }
+    return CertificateShPtr();
 }
 
 } // namespace CKM

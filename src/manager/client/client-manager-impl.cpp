@@ -644,7 +644,14 @@ int ManagerImpl::ocspCheck(const CertificateShPtrVector &certChain, int &ocspSta
 }
 
 ManagerShPtr Manager::create() {
-    return ManagerShPtr(new ManagerImpl());
+    try {
+        return std::make_shared<ManagerImpl>();
+    } catch (const std::bad_alloc &) {
+        LogDebug("Bad alloc was caught during ManagerImpl creation.");
+    } catch (...) {
+        LogError("Critical error: Unknown exception was caught during ManagerImpl creation!");
+    }
+    return ManagerShPtr();
 }
 
 } // namespace CKM

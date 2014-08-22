@@ -20,6 +20,8 @@
  * @version     1.0
  * @brief       This file is implementation of client-common functions.
  */
+#include <dpl/log/log.h>
+
 #include <client-common.h>
 #include <message-buffer.h>
 #include <protocols.h>
@@ -194,7 +196,14 @@ public:
 };
 
 ControlShPtr Control::create() {
-    return ControlShPtr(new ControlImpl());
+    try {
+        return std::make_shared<ControlImpl>();
+    } catch (const std::bad_alloc &) {
+        LogDebug("Bad alloc was caught during ControlImpl creation.");
+    } catch (...) {
+        LogError("Critical error: Unknown exception was caught druing ControlImpl creation!");
+    }
+    return ControlShPtr();
 }
 
 } // namespace CKM
