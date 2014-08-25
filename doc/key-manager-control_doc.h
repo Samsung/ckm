@@ -19,13 +19,13 @@
  * @internal
  * @ingroup CAPI_KEY_MANAGER_MODULE
  * @defgroup CAPI_KEY_MANAGER_CONTROL_MODULE Key Manager Control
- * @brief    These APIs controls the key manager state(Unlocked/Locked) and reflects the user's password change.
+ * @brief    These APIs control the key manager state (Unlocked/Locked) and reflects the user's password change.
  *
  * @section CAPI_KEY_MANAGER_CONTROL_MODULE_HEADER Required Header
  * \#include <ckmc/ckmc-control.h>
  *
  * @section CAPI_KEY_MANAGER_CONTROL_MODULE_OVERVIEW Overview
- * It provides APIs encrypting, decrypting, and re-encrypting a DKEK(with which a user's data file is encrypted).
+ * It provides APIs encrypting, decrypting, and re-encrypting a DKEK (with which a user's data file is encrypted).
  * When a user logs in for the first time, the DKEK will be generated randomly.
  */
 

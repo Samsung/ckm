@@ -18,14 +18,14 @@
 /**
  * @ingroup CAPI_KEY_MANAGER_MODULE
  * @defgroup CAPI_KEY_MANAGER_TYPES_MODULE Key Manager Data Types
- * @brief    It defines a data types used in this APIs and provides utility methods handling them.
+ * @brief    It defines data types used in these APIs and provides utility methods handling them.
  *
  * @section CAPI_KEY_MANAGER_TYPES_MODULE_HEADER Required Header
  * \#include <ckmc/ckmc-type.h>
  *
  * @section CAPI_KEY_MANAGER_TYPES_MODULE_OVERVIEW Overview
- * It defines data types for key, certificate,raw buffer, and linked list used in this APIs.
- * And it also provides new and free methods for them.
+ * It defines data types for key, certificate,raw buffer, and linked list used in these APIs.
+ * It also provides new and free methods for them.
  *
  */
 

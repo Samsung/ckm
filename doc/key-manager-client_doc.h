@@ -24,7 +24,7 @@
  * \#include <ckmc/ckmc-manager.h>
  *
  * @section CAPI_KEY_MANAGER_CLIENT_MODULE_OVERVIEW Overview
- * It provides APIs storing, getting, and removing APIs for keys, certificates, and sensitive data on/from Key Manager secure repository which is protected by a user’s passwords.
+ * It provides APIs for storing, getting, and removing APIs for keys, certificates, and sensitive data on/from the Key Manager secure repository which is protected by a user’s passwords.
  * Additionally, it provides secure cryptographic operations for non-exportable keys without revealing key values to clients.
  */
 

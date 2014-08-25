@@ -15,8 +15,8 @@
  *
  * @file    ckmc-error.h
  * @version 1.0
- * @brief   This file contains error codes of the Key Manager
- */
+ * @brief   This file contains error codes of the Key Manager.
+*/
 #ifndef __TIZEN_CORE_CKMC_ERROR_H_
 #define __TIZEN_CORE_CKMC_ERROR_H_
 
