@@ -67,6 +67,88 @@ int waitForSocket(int sock, int event, int timeout) {
     return retval;
 }
 
+} // namespace anonymous
+
+namespace CKM {
+
+
+int connectSocket(int& sock, char const * const interface) {
+    sockaddr_un clientAddr;
+    int flags;
+
+    if (sock != -1) // guard
+        close(sock);
+
+    sock = socket(AF_UNIX, SOCK_STREAM, 0);
+    if (sock < 0) {
+        int err = errno;
+        LogError("Error creating socket: " << strerror(err));
+        return CKM_API_ERROR_SOCKET;
+    }
+
+    if ((flags = fcntl(sock, F_GETFL, 0)) < 0 ||
+        fcntl(sock, F_SETFL, flags | O_NONBLOCK) < 0)
+    {
+        int err = errno;
+        LogError("Error in fcntl: " << strerror(err));
+        return CKM_API_ERROR_SOCKET;
+    }
+
+    memset(&clientAddr, 0, sizeof(clientAddr));
+
+    clientAddr.sun_family = AF_UNIX;
+
+    if (strlen(interface) >= sizeof(clientAddr.sun_path)) {
+        LogError("Error: interface name " << interface << "is too long. Max len is:" <<
+                 sizeof(clientAddr.sun_path));
+        return CKM_API_ERROR_SOCKET;
+    }
+
+    strcpy(clientAddr.sun_path, interface);
+
+    LogDebug("ClientAddr.sun_path = " << interface);
+
+    int retval = TEMP_FAILURE_RETRY(
+        connect(sock, (struct sockaddr*)&clientAddr, SUN_LEN(&clientAddr)));
+    if ((retval == -1) && (errno == EINPROGRESS)) {
+        if (0 >= waitForSocket(sock, POLLOUT, POLL_TIMEOUT)) {
+            LogError("Error in waitForSocket.");
+            return CKM_API_ERROR_SOCKET;
+        }
+        int error = 0;
+        size_t len = sizeof(error);
+        retval = getsockopt(sock, SOL_SOCKET, SO_ERROR, &error, &len);
+
+        if (-1 == retval) {
+            int err = errno;
+            LogError("Error in getsockopt: " << strerror(err));
+            return CKM_API_ERROR_SOCKET;
+        }
+
+        if (error == EACCES) {
+            LogError("Access denied");
+            return CKM_API_ERROR_ACCESS_DENIED;
+        }
+
+        if (error != 0) {
+            LogError("Error in connect: " << strerror(error));
+            return CKM_API_ERROR_SOCKET;
+        }
+
+        return CKM_API_SUCCESS;
+    }
+
+    if (-1 == retval) {
+        int err = errno;
+        LogError("Error connecting socket: " << strerror(err));
+        if (err == EACCES)
+            return CKM_API_ERROR_ACCESS_DENIED;
+        return CKM_API_ERROR_SOCKET;
+    }
+
+    return CKM_API_SUCCESS;
+}
+
 class SockRAII {
 public:
     SockRAII()
@@ -79,91 +161,16 @@ public:
     }
 
     int Connect(char const * const interface) {
-        sockaddr_un clientAddr;
-        int flags;
-
-        if (m_sock != -1) // guard
-            close(m_sock);
-
-        m_sock = socket(AF_UNIX, SOCK_STREAM, 0);
-        if (m_sock < 0) {
-            int err = errno;
-            LogError("Error creating socket: " << strerror(err));
-            return CKM_API_ERROR_SOCKET;
-        }
-
-        if ((flags = fcntl(m_sock, F_GETFL, 0)) < 0 ||
-            fcntl(m_sock, F_SETFL, flags | O_NONBLOCK) < 0)
-        {
-            int err = errno;
-            LogError("Error in fcntl: " << strerror(err));
-            return CKM_API_ERROR_SOCKET;
-        }
-
-        memset(&clientAddr, 0, sizeof(clientAddr));
-
-        clientAddr.sun_family = AF_UNIX;
-
-        if (strlen(interface) >= sizeof(clientAddr.sun_path)) {
-            LogError("Error: interface name " << interface << "is too long. Max len is:" << sizeof(clientAddr.sun_path));
-            return CKM_API_ERROR_SOCKET;
-        }
-
-        strcpy(clientAddr.sun_path, interface);
-
-        LogDebug("ClientAddr.sun_path = " << interface);
-
-        int retval = TEMP_FAILURE_RETRY(connect(m_sock, (struct sockaddr*)&clientAddr, SUN_LEN(&clientAddr)));
-        if ((retval == -1) && (errno == EINPROGRESS)) {
-            if (0 >= waitForSocket(m_sock, POLLOUT, POLL_TIMEOUT)) {
-                LogError("Error in waitForSocket.");
-                return CKM_API_ERROR_SOCKET;
-            }
-            int error = 0;
-            size_t len = sizeof(error);
-            retval = getsockopt(m_sock, SOL_SOCKET, SO_ERROR, &error, &len);
-
-            if (-1 == retval) {
-                int err = errno;
-                LogError("Error in getsockopt: " << strerror(err));
-                return CKM_API_ERROR_SOCKET;
-            }
-
-            if (error == EACCES) {
-                LogError("Access denied");
-                return CKM_API_ERROR_ACCESS_DENIED;
-            }
-
-            if (error != 0) {
-                LogError("Error in connect: " << strerror(error));
-                return CKM_API_ERROR_SOCKET;
-            }
-
-            return CKM_API_SUCCESS;
-        }
-
-        if (-1 == retval) {
-            int err = errno;
-            LogError("Error connecting socket: " << strerror(err));
-            if (err == EACCES)
-                return CKM_API_ERROR_ACCESS_DENIED;
-            return CKM_API_ERROR_SOCKET;
-        }
-
-        return CKM_API_SUCCESS;
+        return CKM::connectSocket(m_sock, interface);
     }
 
-    int Get() {
+    int Get() const {
         return m_sock;
     }
 
 private:
     int m_sock;
 };
-
-} // namespace anonymous
-
-namespace CKM {
 
 
 int sendToServer(char const * const interface, const RawBuffer &send, MessageBuffer &recv) {

@@ -39,6 +39,8 @@ extern "C" {
 
 namespace CKM {
 
+int connectSocket(int& sock, char const * const interface);
+
 int sendToServer(char const * const interface, const RawBuffer &send, MessageBuffer &recv);
 
 /*
