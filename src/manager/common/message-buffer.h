@@ -49,6 +49,9 @@ public:
       : m_bytesLeft(0)
     {}
 
+    MessageBuffer(MessageBuffer&&) = default;
+    MessageBuffer& operator=(MessageBuffer&&) = default;
+
     void Push(const RawBuffer &data);
 
     RawBuffer Pop();

@@ -127,6 +127,13 @@ class BinaryQueue
     BinaryQueue(const BinaryQueue &other);
 
     /**
+     * Construct binary queue by moving data from other binary queue
+     *
+     * @param[in] other Other binary queue to move from
+     */
+    BinaryQueue(BinaryQueue&&) = default;
+
+    /**
      * Destructor
      */
     virtual ~BinaryQueue();
@@ -138,6 +145,13 @@ class BinaryQueue
      * @warning One cannot assume that bucket structure is preserved during copy
      */
     const BinaryQueue &operator=(const BinaryQueue &other);
+
+    /**
+     * Assign data from other binary queue using move semantics
+     *
+     * @param[in] other Other binary queue to move from
+     */
+    BinaryQueue &operator=(BinaryQueue&&) = default;
 
     /**
      * Append copy of @a bufferSize bytes from memory pointed by @a buffer
