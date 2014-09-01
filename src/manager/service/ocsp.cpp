@@ -254,6 +254,8 @@ int OCSPModule::ocsp_verify(X509 *cert, X509 *issuer, STACK_OF(X509) *systemCert
         /* free stuff */
         OCSP_REQUEST_free(req);
         OCSP_RESPONSE_free(resp);
+
+        LogDebug("Error in OCSP_response_get1_basic");
         return CKM_API_OCSP_STATUS_INVALID_RESPONSE;
     }
 
@@ -276,6 +278,7 @@ int OCSPModule::ocsp_verify(X509 *cert, X509 *issuer, STACK_OF(X509) *systemCert
         char errStr[100];
         ERR_error_string(err,errStr);
         // printf("OCSP_basic_verify fail.error = %s\n", errStr);
+        LogDebug("Error in OCSP_basic_verify.");
         return CKM_API_OCSP_STATUS_INVALID_RESPONSE;
     }
 
@@ -290,6 +293,7 @@ int OCSPModule::ocsp_verify(X509 *cert, X509 *issuer, STACK_OF(X509) *systemCert
             OCSP_RESPONSE_free(resp);
             OCSP_BASICRESP_free(bs);
             X509_STORE_free(trustedStore);
+            LogDebug("Error in OCSP_check_nonce");
             return CKM_API_OCSP_STATUS_INVALID_RESPONSE;
         }
     }
@@ -305,6 +309,7 @@ int OCSPModule::ocsp_verify(X509 *cert, X509 *issuer, STACK_OF(X509) *systemCert
         OCSP_BASICRESP_free(bs);
         X509_STORE_free(trustedStore);
 
+        LogDebug("Error in OCSP_resp_find_status");
         return CKM_API_OCSP_STATUS_INVALID_RESPONSE;
     }
 
@@ -322,6 +327,7 @@ int OCSPModule::ocsp_verify(X509 *cert, X509 *issuer, STACK_OF(X509) *systemCert
         OCSP_BASICRESP_free(bs);
         X509_STORE_free(trustedStore);
 
+        LogDebug("Error in OCSP_check_validity");
         return CKM_API_OCSP_STATUS_INVALID_RESPONSE;
     }
 
