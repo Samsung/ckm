@@ -67,15 +67,6 @@ SET(TARGET_LISTENER "key-manager-listener")
 
 SET(TARGET_TEST_MERGED "ckm-tests-internal")
 
-INSTALL(FILES
-    ${CMAKE_SOURCE_DIR}/packaging/libkey-manager-client.manifest
-    ${CMAKE_SOURCE_DIR}/packaging/libkey-manager-control-client.manifest
-    ${CMAKE_SOURCE_DIR}/packaging/key-manager.manifest
-    ${CMAKE_SOURCE_DIR}/packaging/key-manager-listener.manifest
-    DESTINATION
-    /usr/share
-)
-
 ADD_SUBDIRECTORY(src)
 ADD_SUBDIRECTORY(build)
 ADD_SUBDIRECTORY(systemd)

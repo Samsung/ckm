@@ -8,12 +8,6 @@
 			<smack permit="system::use_internet" type="w"/>
 		</permit>
 	</define>
-	<assign>
-		<filesystem path="/usr/lib/libkey-manager-control-client.so.1.0.1" label="_"/>
-		<filesystem path="/usr/lib/libkey-manager-control-client.so.1" label="_"/>
-		<filesystem path="/usr/lib/libkey-manager-client.so.1.0.1" label="_"/>
-		<filesystem path="/usr/lib/libkey-manager-client.so.1" label="_"/>
-	</assign>
 	<request>
 		<domain name="key-manager" />
 	</request>

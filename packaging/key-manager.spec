@@ -5,6 +5,9 @@ Release:    1
 Group:      System/Security
 License:    Apache License, Version 2.0
 Source0:    %{name}-%{version}.tar.gz
+Source1001: key-manager.manifest
+Source1002: key-manager-listener.manifest
+Source1003: libkey-manager-client.manifest
 BuildRequires: cmake
 BuildRequires: zip
 BuildRequires: pkgconfig(dlog)
@@ -62,7 +65,9 @@ Internal test for key-manager
 
 %prep
 %setup -q
-
+cp -a %{SOURCE1001} .
+cp -a %{SOURCE1002} .
+cp -a %{SOURCE1003} .
 
 %build
 %if 0%{?sec_build_binary_debug_enable}
@@ -156,7 +161,7 @@ if [ $1 = 0 ]; then
 fi
 
 %files -n key-manager
-%manifest %{_datadir}/key-manager.manifest
+%manifest key-manager.manifest
 %attr(755,root,root) /usr/bin/key-manager
 %{_libdir}/libkey-manager-commons.so*
 %{_libdir}/libkey-manager-key-provider.so*
@@ -172,14 +177,13 @@ fi
 %{_datadir}/license/%{name}
 
 %files -n key-manager-listener
-%manifest %{_datadir}/key-manager-listener.manifest
+%manifest key-manager-listener.manifest
 %attr(755,root,root) /usr/bin/key-manager-listener
 %attr(-,root,root) /usr/lib/systemd/system/multi-user.target.wants/central-key-manager-listener.service
 %attr(-,root,root) /usr/lib/systemd/system/central-key-manager-listener.service
 
 %files -n libkey-manager-client
-%manifest %{_datadir}/libkey-manager-client.manifest
-%manifest %{_datadir}/libkey-manager-control-client.manifest
+%manifest libkey-manager-client.manifest
 %defattr(-,root,root,-)
 %{_libdir}/libkey-manager-client.so.*
 %{_libdir}/libkey-manager-control-client.so.*
