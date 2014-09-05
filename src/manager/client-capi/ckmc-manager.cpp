@@ -140,37 +140,39 @@ int ckmc_get_key(const char *alias, const char *password, ckmc_key_s **key)
 KEY_MANAGER_CAPI
 int ckmc_get_key_alias_list(ckmc_alias_list_s** alias_list)
 {
-	int ret;
+    int ret;
 
-	if(alias_list == NULL) {
-		return CKMC_ERROR_INVALID_PARAMETER;
-	}
+    if (alias_list == NULL) {
+        return CKMC_ERROR_INVALID_PARAMETER;
+    }
 
-	CKM::AliasVector aliasVector;
-	CKM::ManagerShPtr mgr = CKM::Manager::create();
-	if( (ret = mgr->getKeyAliasVector(aliasVector)) != CKM_API_SUCCESS) {
-		return to_ckmc_error(ret);
-	}
+    CKM::AliasVector aliasVector;
+    CKM::ManagerShPtr mgr = CKM::Manager::create();
 
-	ckmc_alias_list_s *plist = NULL;
-	CKM::AliasVector::iterator it;
-	for(it = aliasVector.begin(); it != aliasVector.end(); it++) {
-		char *alias = (char *)malloc(it->size() + 1);
-		memset(alias, 0, it->size() +1 );
-		memcpy(alias, it->c_str(), it->size());
-		if(plist == NULL) { // first
-			ret  = ckmc_alias_list_new(alias, &plist);
-			*alias_list = plist; // save the pointer of the first element
-		}else {
-			ret = ckmc_alias_list_add(plist, alias, &plist);
-		}
-		if(ret != CKMC_ERROR_NONE) {
-			ckmc_alias_list_all_free(*alias_list);
-			return ret;
-		}
-	}
+    if ((ret = mgr->getKeyAliasVector(aliasVector)) != CKM_API_SUCCESS) {
+        return to_ckmc_error(ret);
+    }
 
-	return CKMC_ERROR_NONE;
+    ckmc_alias_list_s *plist = NULL;
+
+    for (auto it = aliasVector.begin(); it != aliasVector.end(); it++) {
+        char *alias = strndup(it->c_str(), it->size());
+
+        if (plist == NULL) { // first
+            ret = ckmc_alias_list_new(alias, &plist);
+            *alias_list = plist; // save the pointer of the first element
+        } else {
+            ret = ckmc_alias_list_add(plist, alias, &plist);
+        }
+
+        if (ret != CKMC_ERROR_NONE) {
+            free(alias);
+            ckmc_alias_list_all_free(*alias_list);
+            return ret;
+        }
+    }
+
+    return CKMC_ERROR_NONE;
 }
 
 KEY_MANAGER_CAPI
@@ -235,39 +237,40 @@ int ckmc_get_cert(const char *alias, const char *password, ckmc_cert_s **cert)
 
 KEY_MANAGER_CAPI
 int ckmc_get_cert_alias_list(ckmc_alias_list_s** alias_list) {
-	int ret;
+    int ret;
 
-	if(alias_list == NULL) {
-		return CKMC_ERROR_INVALID_PARAMETER;
-	}
+    if (alias_list == NULL) {
+        return CKMC_ERROR_INVALID_PARAMETER;
+    }
 
-	CKM::AliasVector aliasVector;
-	CKM::ManagerShPtr mgr = CKM::Manager::create();
-	if( (ret = mgr->getCertificateAliasVector(aliasVector)) != CKM_API_SUCCESS) {
-		return to_ckmc_error(ret);
-	}
+    *alias_list = NULL;
 
-	ckmc_alias_list_s *plist = NULL;
-	CKM::AliasVector::iterator it;
-	for(it = aliasVector.begin(); it != aliasVector.end(); it++) {
-		char *alias = (char *)malloc(it->size() + 1);
-		memset(alias, 0, it->size() +1 );
-		memcpy(alias, it->c_str(), it->size());
+    CKM::AliasVector aliasVector;
+    CKM::ManagerShPtr mgr = CKM::Manager::create();
+    if ((ret = mgr->getCertificateAliasVector(aliasVector)) != CKM_API_SUCCESS) {
+        return to_ckmc_error(ret);
+    }
 
-		if(plist == NULL) { // first
-			ret  = ckmc_alias_list_new(alias, &plist);
-			*alias_list = plist; // save the pointer of the first element
-		}else {
-			ret = ckmc_alias_list_add(plist, alias, &plist);
+    ckmc_alias_list_s *plist = NULL;
 
-		}
-		if(ret != CKMC_ERROR_NONE) {
-			ckmc_alias_list_all_free(*alias_list);
-			return ret;
-		}
-	}
+    for (auto it = aliasVector.begin(); it != aliasVector.end(); it++) {
+        char *alias = strndup(it->c_str(), it->size());
 
-	return CKMC_ERROR_NONE;
+        if (plist == NULL) { // first
+            ret  = ckmc_alias_list_new(alias, &plist);
+            *alias_list = plist; // save the pointer of the first element
+        } else {
+            ret = ckmc_alias_list_add(plist, alias, &plist);
+        }
+
+        if (ret != CKMC_ERROR_NONE) {
+            free(alias);
+            ckmc_alias_list_all_free(*alias_list);
+            return ret;
+        }
+    }
+
+    return CKMC_ERROR_NONE;
 }
 
 KEY_MANAGER_CAPI
@@ -328,37 +331,40 @@ int ckmc_get_data(const char *alias, const char *password, ckmc_raw_buffer_s **d
 
 KEY_MANAGER_CAPI
 int ckmc_get_data_alias_list(ckmc_alias_list_s** alias_list){
-	int ret;
+    int ret;
 
-	if(alias_list == NULL) {
-		return CKMC_ERROR_INVALID_PARAMETER;
-	}
+    if(alias_list == NULL) {
+        return CKMC_ERROR_INVALID_PARAMETER;
+    }
 
-	CKM::AliasVector aliasVector;
-	CKM::ManagerShPtr mgr = CKM::Manager::create();
-	if( (ret = mgr->getDataAliasVector(aliasVector)) != CKM_API_SUCCESS) {
-		return to_ckmc_error(ret);
-	}
+    *alias_list = NULL;
 
-	ckmc_alias_list_s *plist = NULL;
-	CKM::AliasVector::iterator it;
-	for(it = aliasVector.begin(); it != aliasVector.end(); it++) {
-		char *alias = (char *)malloc(it->size() + 1);
-		memset(alias, 0, it->size() +1 );
-		memcpy(alias, it->c_str(), it->size());
-		if(plist == NULL) { // first
-			ret  = ckmc_alias_list_new(alias, &plist);
-			*alias_list = plist; // save the pointer of the first element
-		}else {
-			ret = ckmc_alias_list_add(plist, alias, &plist);
-		}
-		if(ret != CKMC_ERROR_NONE) {
-			ckmc_alias_list_all_free(*alias_list);
-			return ret;
-		}
-	}
+    CKM::AliasVector aliasVector;
+    CKM::ManagerShPtr mgr = CKM::Manager::create();
+    if( (ret = mgr->getDataAliasVector(aliasVector)) != CKM_API_SUCCESS) {
+        return to_ckmc_error(ret);
+    }
 
-	return CKMC_ERROR_NONE;
+    ckmc_alias_list_s *plist = NULL;
+
+    for(auto it = aliasVector.begin(); it != aliasVector.end(); it++) {
+        char *alias = strndup(it->c_str(), it->size());
+
+        if (plist == NULL) { // first
+            ret = ckmc_alias_list_new(alias, &plist);
+            *alias_list = plist; // save the pointer of the first element
+        } else {
+            ret = ckmc_alias_list_add(plist, alias, &plist);
+        }
+
+        if (ret != CKMC_ERROR_NONE) {
+            free(alias);
+            ckmc_alias_list_all_free(*alias_list);
+            return ret;
+        }
+    }
+
+    return CKMC_ERROR_NONE;
 }
 
 KEY_MANAGER_CAPI
