@@ -58,16 +58,23 @@ RawBuffer CKMLogic::unlockUserKey(uid_t user, const Password &password) {
         if (0 == m_userDataMap.count(user) || !(m_userDataMap[user].keyProvider.isInitialized())) {
             auto &handle = m_userDataMap[user];
             FileSystem fs(user);
-            auto wrappedDomainKEK = fs.getDomainKEK();
+            auto wrappedDomainKEK = fs.getDKEK();
 
             if (wrappedDomainKEK.empty()) {
                 wrappedDomainKEK = KeyProvider::generateDomainKEK(std::to_string(user), password);
-                fs.saveDomainKEK(wrappedDomainKEK);
+                fs.saveDKEK(wrappedDomainKEK);
             }
 
             handle.keyProvider = KeyProvider(wrappedDomainKEK, password);
 
-            RawBuffer key = handle.keyProvider.getPureDomainKEK();
+            auto wrappedDatabaseDEK = fs.getDBDEK();
+
+            if (wrappedDatabaseDEK.empty()) {
+                wrappedDatabaseDEK = handle.keyProvider.generateDEK(std::to_string(user));
+                fs.saveDBDEK(wrappedDatabaseDEK);
+            }
+
+            RawBuffer key = handle.keyProvider.getPureDEK(wrappedDatabaseDEK);
             handle.database = DBCrypto(fs.getDBPath(), key);
             handle.crypto = CryptoLogic();
             // TODO wipe key
@@ -128,12 +135,12 @@ RawBuffer CKMLogic::changeUserPassword(
     int retCode = CKM_API_SUCCESS;
     try {
         FileSystem fs(user);
-        auto wrappedDomainKEK = fs.getDomainKEK();
+        auto wrappedDomainKEK = fs.getDKEK();
         if (wrappedDomainKEK.empty()) {
             retCode = CKM_API_ERROR_BAD_REQUEST;
         } else {
             wrappedDomainKEK = KeyProvider::reencrypt(wrappedDomainKEK, oldPassword, newPassword);
-            fs.saveDomainKEK(wrappedDomainKEK);
+            fs.saveDKEK(wrappedDomainKEK);
         }
     } catch (const KeyProvider::Exception::PassWordError &e) {
         LogError("Incorrect Password " << e.GetMessage());
@@ -162,7 +169,7 @@ RawBuffer CKMLogic::resetUserPassword(
     } else {
         auto &handler = m_userDataMap[user];
         FileSystem fs(user);
-        fs.saveDomainKEK(handler.keyProvider.getWrappedDomainKEK(newPassword));
+        fs.saveDKEK(handler.keyProvider.getWrappedDomainKEK(newPassword));
     }
 
     MessageBuffer response;

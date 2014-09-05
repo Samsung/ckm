@@ -31,8 +31,15 @@ public:
     FileSystem(uid_t uid);
 
     std::string getDBPath() const;
-    RawBuffer getDomainKEK() const;
-    bool saveDomainKEK(const RawBuffer &buffer) const;
+
+    // Domain Key Encryption Key
+    RawBuffer getDKEK() const;
+    bool saveDKEK(const RawBuffer &buffer) const;
+
+    // Database Data Encryption Key
+    RawBuffer getDBDEK() const;
+    bool saveDBDEK(const RawBuffer &buffer) const;
+
     int removeUserData() const;
 
     static int init();
@@ -40,6 +47,9 @@ public:
     virtual ~FileSystem(){}
 protected:
     std::string getDKEKPath() const;
+    std::string getDBDEKPath() const;
+    RawBuffer loadFile(const std::string &path) const;
+    bool saveFile(const std::string &path, const RawBuffer &buffer) const;
 
     uid_t m_uid;
 };

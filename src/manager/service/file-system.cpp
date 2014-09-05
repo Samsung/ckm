@@ -36,6 +36,7 @@ namespace {
 
 static const std::string CKM_DATA_PATH = "/opt/data/ckm/";
 static const std::string CKM_KEY_PREFIX = "key-";
+static const std::string CKM_DB_KEY_PREFIX = "db-key-";
 static const std::string CKM_DB_PREFIX = "db-";
 
 } // namespace anonymous
@@ -59,9 +60,18 @@ std::string FileSystem::getDKEKPath() const {
     return ss.str();
 }
 
-RawBuffer FileSystem::getDomainKEK() const
-{
-    std::ifstream is(getDKEKPath());
+std::string FileSystem::getDBDEKPath() const {
+    std::stringstream ss;
+    ss << CKM_DATA_PATH << CKM_DB_KEY_PREFIX << m_uid;
+    return ss.str();
+}
+
+RawBuffer FileSystem::loadFile(const std::string &path) const {
+    std::ifstream is(path);
+
+    if (is.fail())
+        return RawBuffer();
+
     std::istreambuf_iterator<char> begin(is),end;
     std::vector<char> buff(begin,end); // This trick does not work with boost vector
 
@@ -70,11 +80,28 @@ RawBuffer FileSystem::getDomainKEK() const
     return buffer;
 }
 
-bool FileSystem::saveDomainKEK(const RawBuffer &buffer) const
+RawBuffer FileSystem::getDKEK() const
 {
-    std::ofstream os(getDKEKPath(), std::ios::out | std::ofstream::binary);
+    return loadFile(getDKEKPath());
+}
+
+RawBuffer FileSystem::getDBDEK() const
+{
+    return loadFile(getDBDEKPath());
+}
+
+bool FileSystem::saveFile(const std::string &path, const RawBuffer &buffer) const {
+    std::ofstream os(path, std::ios::out | std::ofstream::binary);
     std::copy(buffer.begin(), buffer.end(), std::ostreambuf_iterator<char>(os));
     return !os.fail();
+}
+
+bool FileSystem::saveDKEK(const RawBuffer &buffer) const {
+    return saveFile(getDKEKPath(), buffer);
+}
+
+bool FileSystem::saveDBDEK(const RawBuffer &buffer) const {
+    return saveFile(getDBDEKPath(), buffer);
 }
 
 int FileSystem::init() {
@@ -90,18 +117,28 @@ int FileSystem::init() {
 
 int FileSystem::removeUserData() const {
     int err, retCode = 0;
+
     if (unlink(getDBPath().c_str())) {
         retCode = -1;
         err = errno;
         LogError("Error in unlink user database: " << getDBPath()
             << "Errno: " << errno << " " << strerror(err));
     }
+
     if (unlink(getDKEKPath().c_str())) {
         retCode = -1;
         err = errno;
         LogError("Error in unlink user DKEK: " << getDKEKPath()
             << "Errno: " << errno << " " << strerror(err));
     }
+
+    if (unlink(getDBDEKPath().c_str())) {
+        retCode = -1;
+        err = errno;
+        LogError("Error in unlink user DBDEK: " << getDBDEKPath()
+            << "Errno: " << errno << " " << strerror(err));
+    }
+
     return retCode;
 }
 
