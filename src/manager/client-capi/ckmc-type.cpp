@@ -44,7 +44,7 @@ int ckmc_key_new(unsigned char *raw_key, size_t key_size, ckmc_key_type_e key_ty
 		return CKMC_ERROR_INVALID_PARAMETER;
 	}
 
-	pkey = new ckmc_key_s;
+	pkey = static_cast<ckmc_key_s*>(malloc(sizeof(ckmc_key_s)));
 	if(pkey == NULL) {
 		return CKMC_ERROR_OUT_OF_MEMORY;
 	}
@@ -101,7 +101,7 @@ int ckmc_buffer_new(unsigned char *data, size_t size,ckmc_raw_buffer_s **ppbuffe
 		return CKMC_ERROR_INVALID_PARAMETER;
 	}
 
-	pbuff = new ckmc_raw_buffer_s;
+	pbuff = static_cast<ckmc_raw_buffer_s*>(malloc(sizeof(ckmc_raw_buffer_s)));
 	if(pbuff == NULL)
 			return CKMC_ERROR_OUT_OF_MEMORY;
 
@@ -140,7 +140,7 @@ int ckmc_cert_new(unsigned char *raw_cert, size_t cert_size, ckmc_data_format_e 
 		return CKMC_ERROR_INVALID_PARAMETER;
 	}
 
-	pcert = new ckmc_cert_s;
+	pcert = static_cast<ckmc_cert_s*>(malloc(sizeof(ckmc_cert_s)));
 	if(pcert == NULL) {
 		return CKMC_ERROR_OUT_OF_MEMORY;
 	}
@@ -376,7 +376,7 @@ int ckmc_alias_list_add(ckmc_alias_list_s *previous, char *alias, ckmc_alias_lis
 		return CKMC_ERROR_INVALID_PARAMETER;
 	}
 
-	plist = new ckmc_alias_list_s;
+	plist = static_cast<ckmc_alias_list_s*>(malloc(sizeof(ckmc_alias_list_s)));
 	if(plist == NULL) {
 		return CKMC_ERROR_OUT_OF_MEMORY;
 	}
@@ -395,33 +395,24 @@ int ckmc_alias_list_add(ckmc_alias_list_s *previous, char *alias, ckmc_alias_lis
 KEY_MANAGER_CAPI
 void ckmc_alias_list_free(ckmc_alias_list_s *first)
 {
-	if(first == NULL)
-		return;
-
-	ckmc_alias_list_s *current = NULL;
 	ckmc_alias_list_s *next = first;
-	do {
-		current = next;
+	while (next) {
+		ckmc_alias_list_s *current = next;
 		next = current->next;
 		free(current);
-	}while(next != NULL);
+	}
 }
 
 KEY_MANAGER_CAPI
 void ckmc_alias_list_all_free(ckmc_alias_list_s *first)
 {
-	if(first == NULL)
-		return;
-	ckmc_alias_list_s *current = NULL;
 	ckmc_alias_list_s *next = first;
-	do {
-		current = next;
+	while (next) {
+        ckmc_alias_list_s *current = next;
 		next = current->next;
-		if((current->alias)!=NULL) {
-			free(current->alias);
-		}
+		free(current->alias);
 		free(current);
-	}while(next != NULL);
+	}
 }
 
 KEY_MANAGER_CAPI
@@ -440,7 +431,7 @@ int ckmc_cert_list_add(ckmc_cert_list_s *previous, ckmc_cert_s *cert, ckmc_cert_
 		return CKMC_ERROR_INVALID_PARAMETER;
 	}
 
-	plist = new ckmc_cert_list_s;
+	plist = static_cast<ckmc_cert_list_s*>(malloc(sizeof(ckmc_cert_list_s)));
 	if(plist == NULL) {
 		return CKMC_ERROR_OUT_OF_MEMORY;
 	}
@@ -459,34 +450,24 @@ int ckmc_cert_list_add(ckmc_cert_list_s *previous, ckmc_cert_s *cert, ckmc_cert_
 KEY_MANAGER_CAPI
 void ckmc_cert_list_free(ckmc_cert_list_s *first)
 {
-	if(first == NULL)
-		return;
-
-	ckmc_cert_list_s *current = NULL;
-	ckmc_cert_list_s *next = first;
-	do {
-		current = next;
-		next = current->next;
-		free(current);
-	}while(next != NULL);
+    ckmc_cert_list_s *next = first;
+    while (next) {
+        ckmc_cert_list_s *current = next;
+        next = current->next;
+        free(current);
+    }
 }
 
 KEY_MANAGER_CAPI
 void ckmc_cert_list_all_free(ckmc_cert_list_s *first)
 {
-	if(first == NULL)
-		return;
-
-	ckmc_cert_list_s *current = NULL;
-	ckmc_cert_list_s *next = first;
-	do {
-		current = next;
-		next = current->next;
-		if((current->cert)!=NULL) {
-			ckmc_cert_free(current->cert);
-		}
-		free(current);
-	}while(next != NULL);
+    ckmc_cert_list_s *next = first;
+    while (next) {
+        ckmc_cert_list_s *current = next;
+        next = current->next;
+        ckmc_cert_free(current->cert);
+        free(current);
+    }
 }
 
 int _ckmc_load_cert_from_x509(X509 *xCert, ckmc_cert_s **cert)
