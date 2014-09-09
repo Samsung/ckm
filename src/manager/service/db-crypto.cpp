@@ -47,6 +47,7 @@ namespace {
             "   iv BLOB NOT NULL,"
             "   dataSize INTEGER NOT NULL,"
             "   data BLOB NOT NULL,"
+            "   tag BLOB NOT NULL,"
             "   PRIMARY KEY(alias, label),"
             "   UNIQUE(alias, restricted)"
             ");";
@@ -58,10 +59,10 @@ namespace {
             "   alias, label, restricted, exportable,"
             //      5           6           7
             "   dataType, algorithmType, encryptionScheme,"
-            //  8       9       10
-            "   iv, dataSize, data) "
+            //  8       9      10   11
+            "   iv, dataSize, data, tag) "
             "VALUES("
-            "   ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
+            "   ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
 
     const char *select_alias_cmd =
             //                                   1              2                            3
@@ -258,6 +259,7 @@ using namespace DB;
             insertCommand->BindBlob(8, row.iv);
             insertCommand->BindInteger(9, row.dataSize);
             insertCommand->BindBlob(10, row.data);
+            insertCommand->BindBlob(11, row.tag);
 
             insertCommand->Step();
             transaction.commit();
@@ -284,6 +286,7 @@ using namespace DB;
         row.iv = selectCommand->GetColumnBlob(7);
         row.dataSize = selectCommand->GetColumnInteger(8);
         row.data = selectCommand->GetColumnBlob(9);
+        row.tag = selectCommand->GetColumnBlob(10);
         return row;
     }
 

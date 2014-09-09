@@ -215,7 +215,7 @@ int CKMLogic::saveDataHelper(
 
     DBRow row = { alias, cred.smackLabel, policy.restricted,
          policy.extractable, dataType, DBCMAlgType::NONE,
-         0, RawBuffer(), static_cast<int>(key.size()), key };
+         0, RawBuffer(), static_cast<int>(key.size()), key, RawBuffer() };
 
     auto &handler = m_userDataMap[cred.uid];
     DBCrypto::Transaction transaction(&handler.database);

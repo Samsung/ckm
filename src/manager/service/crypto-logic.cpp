@@ -75,37 +75,7 @@ void CryptoLogic::pushKey(const std::string &smackLabel,
     m_keyMap[smackLabel] = applicationKey;
 }
 
-std::size_t CryptoLogic::insertDigest(RawBuffer &data, const int dataSize)
-{
-    RawBuffer digest;
-
-    try {
-        Digest dig;
-        dig.append(data, dataSize);
-        digest = dig.finalize();
-    } catch (Digest::Exception::Base &e) {
-        LogError("Failed to calculate digest in insertDigest: " <<
-                 e.DumpToString());
-        ThrowMsg(Exception::InternalError, e.GetMessage());
-    }
-    data.insert(data.begin(), digest.begin(), digest.end());
-    return digest.size();
-}
-
-void CryptoLogic::removeDigest(RawBuffer &data, RawBuffer &digest)
-{
-    unsigned int dlen = Digest().length();
-
-    if (data.size() < dlen) {
-        ThrowMsg(Exception::InternalError,
-                 "Cannot remove digest: data size mismatch.");
-    }
-
-    digest.assign(data.begin(), data.begin() + dlen);
-    data.erase(data.begin(), data.begin() + dlen);
-}
-
-RawBuffer CryptoLogic::encryptData(
+RawBuffer CryptoLogic::encryptDataAesCbc(
     const RawBuffer &data,
     const RawBuffer &key,
     const RawBuffer &iv) const
@@ -117,12 +87,51 @@ RawBuffer CryptoLogic::encryptData(
     return result;
 }
 
-RawBuffer CryptoLogic::decryptData(
+RawBuffer CryptoLogic::decryptDataAesCbc(
     const RawBuffer &data,
     const RawBuffer &key,
     const RawBuffer &iv) const
 {
     Crypto::Cipher::AesCbcDecryption dec(key, iv);
+    RawBuffer result = dec.Append(data);
+    RawBuffer tmp = dec.Finalize();
+    std::copy(tmp.begin(), tmp.end(), std::back_inserter(result));
+    return result;
+}
+
+std::pair<RawBuffer,RawBuffer> CryptoLogic::encryptDataAesGcm(
+    const RawBuffer &data,
+    const RawBuffer &key,
+    const RawBuffer &iv) const
+{
+    RawBuffer tag(AES_GCM_TAG_SIZE);
+    Crypto::Cipher::AesGcmEncryption enc(key, iv);
+    RawBuffer result = enc.Append(data);
+    RawBuffer tmp = enc.Finalize();
+    std::copy(tmp.begin(), tmp.end(), std::back_inserter(result));
+    if (0 == enc.Control(EVP_CTRL_GCM_GET_TAG, AES_GCM_TAG_SIZE, tag.data())) {
+        LogError("Error in aes control function. Get tag failed.");
+        ThrowMsg(Exception::EncryptDBRowError, "Error in aes control function. Get tag failed.");
+    }
+    return std::make_pair(result, tag);
+}
+
+RawBuffer CryptoLogic::decryptDataAesGcm(
+    const RawBuffer &data,
+    const RawBuffer &key,
+    const RawBuffer &iv,
+    const RawBuffer &tag) const
+{
+    Crypto::Cipher::AesGcmDecryption dec(key, iv);
+    if (tag.size() < AES_GCM_TAG_SIZE) {
+        LogError("Error in decryptDataAesGcm. Tag is too short.");
+        ThrowMsg(Exception::DecryptDBRowError, "Error in decryptDataAesGcm. Tag is too short");
+    }
+    void *ptr = (void*)tag.data();
+    if (0 == dec.Control(EVP_CTRL_GCM_SET_TAG, AES_GCM_TAG_SIZE, ptr)) {
+        LogError("Error in aes control function. Set tag failed.");
+        ThrowMsg(Exception::DecryptDBRowError, "Error in aes control function. Set tag failed.");
+    }
     RawBuffer result = dec.Append(data);
     RawBuffer tmp = dec.Finalize();
     std::copy(tmp.begin(), tmp.end(), std::back_inserter(result));
@@ -169,7 +178,8 @@ void CryptoLogic::encryptRow(const Password &password, DBRow &row)
         RawBuffer result1;
         RawBuffer result2;
 
-        crow.algorithmType = DBCMAlgType::AES_CBC_256;
+        crow.algorithmType = DBCMAlgType::AES_GCM_256;
+        crow.dataSize = crow.data.size();
 
         if (crow.dataSize <= 0) {
             ThrowMsg(Exception::EncryptDBRowError, "Invalid dataSize.");
@@ -187,12 +197,13 @@ void CryptoLogic::encryptRow(const Password &password, DBRow &row)
         key = m_keyMap[row.smackLabel];
         crow.encryptionScheme = ENCR_APPKEY;
 
-        insertDigest(crow.data, crow.dataSize);
-        crow.data = encryptData(crow.data, key, crow.iv);
+        auto dataPair = encryptDataAesGcm(crow.data, key, crow.iv);
+        crow.data = dataPair.first;
+        crow.tag = dataPair.second;
 
         if (!password.empty()) {
             key = passwordToKey(password, crow.iv, AES_CBC_KEY_SIZE);
-            crow.data = encryptData(crow.data, key, crow.iv);
+            crow.data = encryptDataAesCbc(crow.data, key, crow.iv);
             crow.encryptionScheme |= ENCR_PASSWORD;
         }
 
@@ -220,7 +231,7 @@ void CryptoLogic::decryptRow(const Password &password, DBRow &row)
         RawBuffer key;
         RawBuffer digest, dataDigest;
 
-        if (row.algorithmType != DBCMAlgType::AES_CBC_256) {
+        if (row.algorithmType != DBCMAlgType::AES_GCM_256) {
             ThrowMsg(Exception::DecryptDBRowError, "Invalid algorithm type.");
         }
 
@@ -242,29 +253,24 @@ void CryptoLogic::decryptRow(const Password &password, DBRow &row)
 
         if (crow.encryptionScheme & ENCR_PASSWORD) {
             key = passwordToKey(password, crow.iv, AES_CBC_KEY_SIZE);
-            crow.data = decryptData(crow.data, key, crow.iv);
+            crow.data = decryptDataAesCbc(crow.data, key, crow.iv);
         }
 
         if (crow.encryptionScheme & ENCR_APPKEY) {
             key = m_keyMap[crow.smackLabel];
-            crow.data = decryptData(crow.data, key, crow.iv);
+            crow.data = decryptDataAesGcm(crow.data, key, crow.iv, crow.tag);
         }
 
-        removeDigest(crow.data, digest);
-
-        if (static_cast<std::size_t>(crow.dataSize) != crow.data.size()) {
+        if (static_cast<int>(crow.data.size()) < crow.dataSize) {
             ThrowMsg(Exception::DecryptDBRowError,
-              "Decrypted db row data size mismatch.");
+                "Decrypted row size mismatch");
+            LogError("Decryption row size mismatch");
         }
 
-        Digest dig;
-        dig.append(crow.data);
-        dataDigest = dig.finalize();
-
-        if (not equalDigests(digest, dataDigest)) {
-            ThrowMsg(Exception::DecryptDBRowError,
-              "Decrypted db row data digest mismatch.");
+        if (static_cast<int>(crow.data.size()) > crow.dataSize) {
+            crow.data.resize(crow.dataSize);
         }
+
         row = crow;
     } catch(const CKM::Base64Encoder::Exception::Base &e) {
         LogDebug("Base64Encoder error: " << e.GetMessage());

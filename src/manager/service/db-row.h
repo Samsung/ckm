@@ -17,7 +17,7 @@ namespace CKM {
         RawBuffer iv;               // encoded in base64
         int dataSize;               // size of information without hash and padding
         RawBuffer data;
+        RawBuffer tag;              // tag for Aes Gcm algorithm
     };
 } // namespace CKM
-
 

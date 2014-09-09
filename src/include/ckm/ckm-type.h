@@ -91,7 +91,7 @@ enum class RSAPaddingAlgorithm : int {
 
 enum class DBCMAlgType : int {
     NONE,
-    AES_CBC_256,
+    AES_GCM_256,
     COUNT
 };
 

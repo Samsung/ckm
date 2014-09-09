@@ -67,21 +67,30 @@ private:
                             const RawBuffer &salt,
                             size_t keySize) const;
 
-    RawBuffer encryptData(
+    RawBuffer encryptDataAesCbc(
         const RawBuffer &data,
         const RawBuffer &key,
         const RawBuffer &iv) const;
 
-    RawBuffer decryptData(
+    RawBuffer decryptDataAesCbc(
         const RawBuffer &data,
         const RawBuffer &key,
         const RawBuffer &iv) const;
+
+    std::pair<RawBuffer, RawBuffer> encryptDataAesGcm(
+        const RawBuffer &data,
+        const RawBuffer &key,
+        const RawBuffer &iv) const;
+
+    RawBuffer decryptDataAesGcm(
+        const RawBuffer &data,
+        const RawBuffer &key,
+        const RawBuffer &iv,
+        const RawBuffer &tag) const;
 
     void decBase64(RawBuffer &data);
     void encBase64(RawBuffer &data);
     bool equalDigests(RawBuffer &dig1, RawBuffer &dig2);
-    std::size_t insertDigest(RawBuffer &data, const int dataSize);
-    void removeDigest(RawBuffer &data, RawBuffer &digest);
 };
 
 } // namespace CKM

@@ -27,6 +27,9 @@
 #include <vector>
 #include <dpl/raw-buffer.h>
 
+// TODO move it to static const int
+#define AES_GCM_TAG_SIZE 16
+
 namespace CKM {
 
 namespace Crypto {
@@ -51,6 +54,12 @@ struct Base {
     Base(Base &&) = delete;
     Base<T>& operator=(const Base&) = delete;
     Base<T>& operator=(Base &&) = delete;
+
+    // Low level api.
+    // Allows various cipher specific parameters to be determined and set.
+    int Control(int type, int arg, void *ptr) {
+        return EVP_CIPHER_CTX_ctrl(m_ctx, type, arg, ptr);
+    }
 
     virtual T Append(const T&) = 0;
     virtual T Finalize() = 0;
@@ -124,6 +133,8 @@ public:                                                               \
 
 DEFINE_CIPHER(AesCbcEncryption, RawBuffer, EVP_aes_256_cbc(), true);
 DEFINE_CIPHER(AesCbcDecryption, RawBuffer, EVP_aes_256_cbc(), false);
+DEFINE_CIPHER(AesGcmEncryption, RawBuffer, EVP_aes_256_gcm(), true);
+DEFINE_CIPHER(AesGcmDecryption, RawBuffer, EVP_aes_256_gcm(), false);
 
 #undef DEFINE_CIPHER
 
