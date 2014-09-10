@@ -9,7 +9,6 @@ namespace CKM {
     struct DBRow {
         std::string alias;
         std::string smackLabel;
-        int restricted;
         int exportable;
         DBDataType dataType;        // cert/key/data
         DBCMAlgType algorithmType;  // Algorithm type used for row data encryption

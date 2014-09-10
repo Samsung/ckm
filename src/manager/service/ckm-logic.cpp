@@ -213,7 +213,7 @@ int CKMLogic::saveDataHelper(
     if (0 == m_userDataMap.count(cred.uid))
         return CKM_API_ERROR_DB_LOCKED;
 
-    DBRow row = { alias, cred.smackLabel, policy.restricted,
+    DBRow row = { alias, cred.smackLabel,
          policy.extractable, dataType, DBCMAlgType::NONE,
          0, RawBuffer(), static_cast<int>(key.size()), key, RawBuffer() };
 

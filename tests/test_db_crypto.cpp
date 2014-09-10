@@ -20,13 +20,11 @@ const char* crypto_db = "/tmp/testme.db";
 const int restricted_local = 1;
 const int restricted_global = 0;
 
-DBRow createDefaultRow(int restricted = restricted_local,
-        DBDataType type = DBDataType::BINARY_DATA) {
+DBRow createDefaultRow(DBDataType type = DBDataType::BINARY_DATA) {
     DBRow row;
     row.alias = default_alias;
     row.smackLabel = default_label;
     row.exportable = 1;
-    row.restricted = restricted;
     row.algorithmType = DBCMAlgType::AES_GCM_256;
     row.dataType = type;
     row.iv = createDefaultPass();
@@ -44,10 +42,6 @@ void compareDBRow(const DBRow &lhs, const DBRow &rhs) {
     BOOST_CHECK_MESSAGE(lhs.smackLabel == rhs.smackLabel,
             "smackLabel didn't match! Got: " << rhs.smackLabel
                 << " , expected : " << lhs.smackLabel);
-
-    BOOST_CHECK_MESSAGE(lhs.restricted == rhs.restricted,
-            "restricted didn't match! Got: " << rhs.restricted
-                << " , expected : " << lhs.restricted);
 
     BOOST_CHECK_MESSAGE(lhs.exportable == rhs.exportable,
             "exportable didn't match! Got: " << rhs.exportable
@@ -115,7 +109,7 @@ BOOST_AUTO_TEST_CASE(DBtestGlobal) {
     DBCrypto db;
     BOOST_REQUIRE_NO_THROW(db = DBCrypto(crypto_db, defaultPass));
 
-    DBRow rowPattern = createDefaultRow(restricted_global);
+    DBRow rowPattern = createDefaultRow();
     rowPattern.data = RawBuffer(1024, 2);
     rowPattern.dataSize = rowPattern.data.size();
 
@@ -132,7 +126,7 @@ BOOST_AUTO_TEST_CASE(DBtestTransaction) {
     DBCrypto db;
     BOOST_REQUIRE_NO_THROW(db = DBCrypto(crypto_db, defaultPass));
 
-    DBRow rowPattern = createDefaultRow(0);
+    DBRow rowPattern = createDefaultRow();
     rowPattern.data = RawBuffer(100, 20);
     rowPattern.dataSize = rowPattern.data.size();
     DBCrypto::Transaction transaction(&db);

@@ -39,7 +39,6 @@ namespace {
             "CREATE TABLE CKM_TABLE("
             "   alias TEXT NOT NULL,"
             "   label TEXT NOT NULL,"
-            "   restricted INTEGER NOT NULL,"
             "   exportable INTEGER NOT NULL,"
             "   dataType INTEGER NOT NULL,"
             "   algorithmType INTEGER NOT NULL,"
@@ -49,35 +48,32 @@ namespace {
             "   data BLOB NOT NULL,"
             "   tag BLOB NOT NULL,"
             "   PRIMARY KEY(alias, label),"
-            "   UNIQUE(alias, restricted)"
+            "   UNIQUE(alias)"
             ");";
 
 
     const char *insert_main_cmd =
             "INSERT INTO CKM_TABLE("
-            //      1   2       3           4
-            "   alias, label, restricted, exportable,"
-            //      5           6           7
+            //      1   2       3
+            "   alias, label, exportable,"
+            //      4           5           6
             "   dataType, algorithmType, encryptionScheme,"
-            //  8       9      10   11
+            //  7       8       9    10
             "   iv, dataSize, data, tag) "
             "VALUES("
-            "   ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
+            "   ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
 
     const char *select_alias_cmd =
-            //                                   1              2                            3
-            "SELECT * FROM CKM_TABLE WHERE alias=? AND dataType=? AND restricted=1 AND label=? "
-            " UNION ALL "
-            //                                    4              5
-            " SELECT * FROM CKM_TABLE WHERE alias=? AND dataType=?  AND restricted=0;";
+            //                                   1              2        3
+            "SELECT * FROM CKM_TABLE WHERE alias=? AND dataType=? AND label=?; ";
 
     const char *select_check_alias_cmd =
             //                                          1           2
-            "SELECT dataType FROM CKM_TABLE WHERE alias=? AND label=? AND restricted=1; ";
+            "SELECT dataType FROM CKM_TABLE WHERE alias=? AND label=?; ";
 
     const char *select_check_global_alias_cmd =
             //                                       1
-            "SELECT label FROM CKM_TABLE WHERE alias=? AND restricted=0;";
+            "SELECT label FROM CKM_TABLE WHERE alias=? ;";
 
     const char *select_count_rows_cmd =
             //                                   1           2
@@ -88,8 +84,8 @@ namespace {
             "SELECT * FROM CKM_TABLE WHERE alias=?"
             //                     2     3
             " AND dataType BETWEEN ? AND ? "
-            //                           4
-            " AND (restricted=0 OR label=?);";
+            //          4
+            " AND label=? ;";
 
     const char *select_key_type_cmd =
             "SELECT alias FROM CKM_TABLE WHERE "
@@ -97,15 +93,12 @@ namespace {
                 " dataType >= ? AND "
             //                2
                 " dataType <= ? AND "
-            //                           3
-                " (restricted=0 OR label=?)";
+            //        3
+                " label=?;";
 
     const char *select_type_cmd =
-            //                                          1
-            "SELECT alias FROM CKM_TABLE WHERE dataType=? AND restricted=0 "
-            "UNION ALL "
-            //                                          2                            3
-            "SELECT alias FROM CKM_TABLE WHERE dataType=? AND restricted=1 AND label=?;";
+            //                                     1            2
+            "SELECT alias FROM CKM_TABLE WHERE dataType=? AND label=?;";
 
     const char *delete_alias_cmd =
             //                                 1           2
@@ -240,8 +233,7 @@ using namespace DB;
             //Sqlite does not support partial index in our version,
             //so we do it by hand
             Transaction transaction(this);
-            if((row.restricted == 1 && checkAliasExist(row.alias, row.smackLabel)) ||
-                    (row.restricted == 0 && checkGlobalAliasExist(row.alias))) {
+            if(checkAliasExist(row.alias, row.smackLabel)) {
                 ThrowMsg(DBCrypto::Exception::AliasExists,
                         "Alias exists for alias: " << row.alias
                         << ", label: " << row.smackLabel);
@@ -251,15 +243,14 @@ using namespace DB;
                     m_connection->PrepareDataCommand(insert_main_cmd);
             insertCommand->BindString(1, row.alias.c_str());
             insertCommand->BindString(2, row.smackLabel.c_str());
-            insertCommand->BindInteger(3, row.restricted);
-            insertCommand->BindInteger(4, row.exportable);
-            insertCommand->BindInteger(5, static_cast<int>(row.dataType));
-            insertCommand->BindInteger(6, static_cast<int>(row.algorithmType));
-            insertCommand->BindInteger(7, row.encryptionScheme);
-            insertCommand->BindBlob(8, row.iv);
-            insertCommand->BindInteger(9, row.dataSize);
-            insertCommand->BindBlob(10, row.data);
-            insertCommand->BindBlob(11, row.tag);
+            insertCommand->BindInteger(3, row.exportable);
+            insertCommand->BindInteger(4, static_cast<int>(row.dataType));
+            insertCommand->BindInteger(5, static_cast<int>(row.algorithmType));
+            insertCommand->BindInteger(6, row.encryptionScheme);
+            insertCommand->BindBlob(7, row.iv);
+            insertCommand->BindInteger(8, row.dataSize);
+            insertCommand->BindBlob(9, row.data);
+            insertCommand->BindBlob(10, row.tag);
 
             insertCommand->Step();
             transaction.commit();
@@ -278,15 +269,14 @@ using namespace DB;
         DBRow row;
         row.alias = selectCommand->GetColumnString(0);
         row.smackLabel = selectCommand->GetColumnString(1);
-        row.restricted = selectCommand->GetColumnInteger(2);
-        row.exportable = selectCommand->GetColumnInteger(3);
-        row.dataType = static_cast<DBDataType>(selectCommand->GetColumnInteger(4));
-        row.algorithmType = static_cast<DBCMAlgType>(selectCommand->GetColumnInteger(5));
-        row.encryptionScheme = selectCommand->GetColumnInteger(6);
-        row.iv = selectCommand->GetColumnBlob(7);
-        row.dataSize = selectCommand->GetColumnInteger(8);
-        row.data = selectCommand->GetColumnBlob(9);
-        row.tag = selectCommand->GetColumnBlob(10);
+        row.exportable = selectCommand->GetColumnInteger(2);
+        row.dataType = static_cast<DBDataType>(selectCommand->GetColumnInteger(3));
+        row.algorithmType = static_cast<DBCMAlgType>(selectCommand->GetColumnInteger(4));
+        row.encryptionScheme = selectCommand->GetColumnInteger(5);
+        row.iv = selectCommand->GetColumnBlob(6);
+        row.dataSize = selectCommand->GetColumnInteger(7);
+        row.data = selectCommand->GetColumnBlob(8);
+        row.tag = selectCommand->GetColumnBlob(9);
         return row;
     }
 
@@ -302,8 +292,6 @@ using namespace DB;
             selectCommand->BindString(1, alias.c_str());
             selectCommand->BindInteger(2, static_cast<int>(type));
             selectCommand->BindString(3, label.c_str());
-            selectCommand->BindString(4, alias.c_str());
-            selectCommand->BindInteger(5, static_cast<int>(type));
 
             if(selectCommand->Step()) {
                 transaction.commit();
@@ -363,8 +351,7 @@ using namespace DB;
             SqlConnection::DataCommandUniquePtr selectCommand =
                             m_connection->PrepareDataCommand(select_type_cmd);
             selectCommand->BindInteger(1, static_cast<int>(type));
-            selectCommand->BindInteger(2, static_cast<int>(type));
-            selectCommand->BindString(3, label.c_str());
+            selectCommand->BindString(2, label.c_str());
 
             while(selectCommand->Step()) {
                 Alias alias;

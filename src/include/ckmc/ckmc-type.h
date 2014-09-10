@@ -105,7 +105,6 @@ typedef struct __ckmc_raw_buff {
 typedef struct __ckmc_policy {
 	char* password;   /**< Byte array used to encrypt data inside CKM. If it is not null, the data(or key, or certificate) is stored encrypted with this password inside key manager */
 	bool extractable; /**< If true key may be extracted from storage */
-	bool restricted;  /**< If true only key owner may see data */
 } ckmc_policy_s;
 
 /**

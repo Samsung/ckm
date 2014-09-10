@@ -61,15 +61,13 @@ enum class CertificateFieldId : int {
 };
 
 struct Policy {
-    Policy(const Password &pass = Password(), bool extract = true, bool rest = false)
+    Policy(const Password &pass = Password(), bool extract = true)
       : password(pass)
       , extractable(extract)
-      , restricted(rest)
     {}
     virtual ~Policy(){}
     Password password;  // byte array used to encrypt data inside CKM
-    bool extractable;  // if true key may be extracted from storage
-    bool restricted;   // if true only key owner may see data
+    bool extractable;   // if true key may be extracted from storage
 };
 
 // Added by Dongsun Lee

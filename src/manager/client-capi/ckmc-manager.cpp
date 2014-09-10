@@ -94,7 +94,7 @@ int ckmc_save_key(const char *alias, const ckmc_key_s key, const ckmc_policy_s p
         return CKMC_ERROR_INVALID_FORMAT;
     }
 
-    CKM::Policy storePolicy(_tostring(policy.password), policy.extractable, policy.restricted);
+    CKM::Policy storePolicy(_tostring(policy.password), policy.extractable);
 
     int ret =  mgr->saveKey(ckmAlias, ckmKey, storePolicy);
     return to_ckmc_error(ret);
@@ -193,7 +193,7 @@ int ckmc_save_cert(const char *alias, const ckmc_cert_s cert, const ckmc_policy_
         return CKMC_ERROR_INVALID_FORMAT;
     }
 
-    CKM::Policy storePolicy(_tostring(policy.password), policy.extractable, policy.restricted);
+    CKM::Policy storePolicy(_tostring(policy.password), policy.extractable);
 
     CKM::ManagerShPtr mgr = CKM::Manager::create();
     int ret = mgr->saveCertificate(ckmAlias, ckmCert, storePolicy);
@@ -288,7 +288,7 @@ int ckmc_save_data(const char *alias, ckmc_raw_buffer_s data, const ckmc_policy_
     }
     CKM::RawBuffer buffer(data.data, data.data + data.size);
 
-    CKM::Policy storePolicy(_tostring(policy.password), policy.extractable, policy.restricted);
+    CKM::Policy storePolicy(_tostring(policy.password), policy.extractable);
 
     CKM::ManagerShPtr mgr = CKM::Manager::create();
     int ret = mgr->saveData(ckmAlias, buffer, storePolicy);
@@ -385,8 +385,8 @@ int ckmc_create_key_pair_rsa(const size_t size,
 
     CKM::Alias ckmPrivakeKeyAlias(private_key_alias);
     CKM::Alias ckmPublicKeyAlias(public_key_alias);
-    CKM::Policy ckmPrivateKeyPolicy(_tostring(policy_private_key.password), policy_private_key.extractable, policy_private_key.restricted);
-    CKM::Policy ckmPublicKeyPolicy(_tostring(policy_public_key.password), policy_public_key.extractable, policy_public_key.restricted);
+    CKM::Policy ckmPrivateKeyPolicy(_tostring(policy_private_key.password), policy_private_key.extractable);
+    CKM::Policy ckmPublicKeyPolicy(_tostring(policy_public_key.password), policy_public_key.extractable);
 
     ret = mgr->createKeyPairRSA(size, ckmPrivakeKeyAlias, ckmPublicKeyAlias, ckmPrivateKeyPolicy, ckmPublicKeyPolicy);
     return to_ckmc_error(ret);
@@ -408,8 +408,8 @@ int ckmc_create_key_pair_ecdsa(const ckmc_ec_type_e type,
     CKM::ElipticCurve ckmType = static_cast<CKM::ElipticCurve>(static_cast<int>(type));
     CKM::Alias ckmPrivakeKeyAlias(private_key_alias);
     CKM::Alias ckmPublicKeyAlias(public_key_alias);
-    CKM::Policy ckmPrivateKeyPolicy(_tostring(policy_private_key.password), policy_private_key.extractable, policy_private_key.restricted);
-    CKM::Policy ckmPublicKeyPolicy(_tostring(policy_public_key.password), policy_public_key.extractable, policy_public_key.restricted);
+    CKM::Policy ckmPrivateKeyPolicy(_tostring(policy_private_key.password), policy_private_key.extractable);
+    CKM::Policy ckmPublicKeyPolicy(_tostring(policy_public_key.password), policy_public_key.extractable);
 
     int ret = mgr->createKeyPairECDSA(ckmType, ckmPrivakeKeyAlias, ckmPublicKeyAlias, ckmPrivateKeyPolicy, ckmPublicKeyPolicy);
     return to_ckmc_error(ret);
