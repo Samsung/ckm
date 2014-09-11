@@ -30,6 +30,8 @@ DBRow createDefaultRow(int restricted = restricted_local,
     row.algorithmType = DBCMAlgType::AES_CBC_256;
     row.dataType = type;
     row.iv = createDefaultPass();
+    row.encryptionScheme = 0;
+    row.dataSize = 0;
 
     return row;
 }
