@@ -105,10 +105,6 @@ ln -s ../central-key-manager-api-ocsp.socket %{buildroot}/usr/lib/systemd/system
 rm -rf %{buildroot}
 
 %post
-%if "%{sec_product_feature_security_mdfpp_enable}" == "1"
-rm %{_libdir}/libkey-manager-key-provider.so.1.0.0
-ln -s %{_libdir}/libskmm.so %{_libdir}/libkey-manager-key-provider.so.1.0.0
-%endif
 systemctl daemon-reload
 if [ $1 = 1 ]; then
     # installation
@@ -164,7 +160,6 @@ fi
 %manifest key-manager.manifest
 %attr(755,root,root) /usr/bin/key-manager
 %{_libdir}/libkey-manager-commons.so*
-%{_libdir}/libkey-manager-key-provider.so*
 %attr(-,root,root) /usr/lib/systemd/system/multi-user.target.wants/central-key-manager.service
 %attr(-,root,root) /usr/lib/systemd/system/central-key-manager.service
 %attr(-,root,root) /usr/lib/systemd/system/central-key-manager.target

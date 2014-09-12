@@ -54,7 +54,6 @@ ADD_EXECUTABLE(${TARGET_KEY_MANAGER} ${KEY_MANAGER_SOURCES})
 TARGET_LINK_LIBRARIES(${TARGET_KEY_MANAGER}
     ${KEY_MANAGER_DEP_LIBRARIES}
     ${TARGET_KEY_MANAGER_COMMON}
-    ${TARGET_KEY_MANAGER_KEY_PROVIDER}
     )
 
 ################################################################################

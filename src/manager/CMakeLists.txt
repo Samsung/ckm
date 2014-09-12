@@ -6,11 +6,6 @@ PKG_CHECK_MODULES(COMMON_DEP
     libsmack
     libcrypto
     )
-PKG_CHECK_MODULES(KEY_PROVIDER_DEP
-    dlog
-    openssl
-    REQUIRED
-    )
 
 SET(KEY_MANAGER_COMMON_VERSION_MAJOR 1)
 SET(KEY_MANAGER_COMMON_VERSION ${KEY_MANAGER_COMMON_VERSION_MAJOR}.0.1)
@@ -54,7 +49,7 @@ INCLUDE_DIRECTORIES(
     ${COMMON_PATH}/dpl/log/include
     ${COMMON_PATH}/dpl/db/include
     ${COMMON_PATH}/sqlcipher
-	${COMMON_PATH}/service
+    ${COMMON_PATH}/service
     )
 
 ADD_LIBRARY(${TARGET_KEY_MANAGER_COMMON} SHARED ${COMMON_SOURCES})
@@ -71,28 +66,6 @@ TARGET_LINK_LIBRARIES(${TARGET_KEY_MANAGER_COMMON}
     ${COMMON_DEP_LIBRARIES}
     )
 
-###########################################################################
-SET(KEY_PROVIDER_SOURCES
-    ${COMMON_PATH}/service/ckm-key-provider-dummy.c
-    )
-
-ADD_LIBRARY(${TARGET_KEY_MANAGER_KEY_PROVIDER} SHARED ${KEY_PROVIDER_SOURCES})
-SET_TARGET_PROPERTIES(
-    ${TARGET_KEY_MANAGER_KEY_PROVIDER}
-    PROPERTIES
-        COMPILE_FLAGS "-fPIC -c"
-        SOVERSION 1.0.0
-        VERSION 1.0.0
-    )
-TARGET_LINK_LIBRARIES(${TARGET_KEY_MANAGER_KEY_PROVIDER}
-    ${KEY_PROVIDER_DEP_LIBRARIES}
-    )
-
-##########################################################################
-
 ################################################################################
 
 INSTALL(TARGETS ${TARGET_KEY_MANAGER_COMMON} DESTINATION lib)
-
-INSTALL(TARGETS ${TARGET_KEY_MANAGER_KEY_PROVIDER} DESTINATION lib)
-
