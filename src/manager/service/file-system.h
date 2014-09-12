@@ -26,6 +26,9 @@
 
 namespace CKM {
 
+typedef std::vector<std::string> AppLabelVector;
+typedef std::vector<uid_t> UidVector;
+
 class FileSystem {
 public:
     FileSystem(uid_t uid);
@@ -40,9 +43,14 @@ public:
     RawBuffer getDBDEK() const;
     bool saveDBDEK(const RawBuffer &buffer) const;
 
+    // Remove all ckm data related to user
     int removeUserData() const;
 
+    bool addRemovedApp(const std::string &smackLabel) const;
+    AppLabelVector clearRemovedsApps() const;
+
     static int init();
+    static UidVector getUIDsFromDBFile();
 
     virtual ~FileSystem(){}
 protected:
@@ -50,6 +58,7 @@ protected:
     std::string getDBDEKPath() const;
     RawBuffer loadFile(const std::string &path) const;
     bool saveFile(const std::string &path, const RawBuffer &buffer) const;
+    std::string getRemovedAppsPath() const;
 
     uid_t m_uid;
 };

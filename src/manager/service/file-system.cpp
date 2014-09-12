@@ -23,7 +23,9 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <dirent.h>
 
+#include <cstdlib>
 #include <string>
 #include <sstream>
 #include <fstream>
@@ -38,6 +40,7 @@ static const std::string CKM_DATA_PATH = "/opt/data/ckm/";
 static const std::string CKM_KEY_PREFIX = "key-";
 static const std::string CKM_DB_KEY_PREFIX = "db-key-";
 static const std::string CKM_DB_PREFIX = "db-";
+static const std::string CKM_REMOVED_APP_PREFIX = "removed-app-";
 
 } // namespace anonymous
 
@@ -63,6 +66,12 @@ std::string FileSystem::getDKEKPath() const {
 std::string FileSystem::getDBDEKPath() const {
     std::stringstream ss;
     ss << CKM_DATA_PATH << CKM_DB_KEY_PREFIX << m_uid;
+    return ss.str();
+}
+
+std::string FileSystem::getRemovedAppsPath() const {
+    std::stringstream ss;
+    ss << CKM_DATA_PATH << CKM_REMOVED_APP_PREFIX << m_uid;
     return ss.str();
 }
 
@@ -104,6 +113,36 @@ bool FileSystem::saveDBDEK(const RawBuffer &buffer) const {
     return saveFile(getDBDEKPath(), buffer);
 }
 
+bool FileSystem::addRemovedApp(const std::string &smackLabel) const
+{
+    std::ofstream outfile;
+    outfile.open(getRemovedAppsPath(), std::ios_base::app);
+    outfile << smackLabel << std::endl;
+    outfile.close();
+    return !outfile.fail();
+}
+
+AppLabelVector FileSystem::clearRemovedsApps() const
+{
+    // read the contents
+    AppLabelVector removedApps;
+    std::string line;
+    std::ifstream removedAppsFile(getRemovedAppsPath());
+    if (removedAppsFile.is_open()) {
+        while (! removedAppsFile.eof() ) {
+            getline (removedAppsFile,line);
+            if(line.size() > 0)
+                removedApps.push_back(line);
+        }
+        removedAppsFile.close();
+    }
+    // truncate the contents
+    std::ofstream truncateFile;
+    truncateFile.open(getRemovedAppsPath(), std::ofstream::out | std::ofstream::trunc);
+    truncateFile.close();
+    return removedApps;
+}
+
 int FileSystem::init() {
     errno = 0;
     if ((mkdir(CKM_DATA_PATH.c_str(), 0700)) && (errno != EEXIST)) {
@@ -113,6 +152,44 @@ int FileSystem::init() {
         return -1; // TODO set up some error code
     }
     return 0;
+}
+
+UidVector FileSystem::getUIDsFromDBFile() {
+    UidVector uids;
+    DIR *dirp = NULL;
+    errno = 0;
+
+    if((dirp = opendir(CKM_DATA_PATH.c_str())) == NULL) {
+        int err = errno;
+        LogError("Error in opendir. Data directory could not be read. Errno: "
+                << err << " (" << strerror(err) << ")");
+        return UidVector();
+    }
+
+    struct dirent pPrevDirEntry;
+    struct dirent* pDirEntry = NULL;
+
+    while ((!readdir_r(dirp, &pPrevDirEntry, &pDirEntry)) && pDirEntry && (pDirEntry->d_name)) {
+
+        // Ignore files with diffrent prefix
+        if (strncmp(pDirEntry->d_name, CKM_KEY_PREFIX.c_str(), CKM_KEY_PREFIX.size())) {
+            continue;
+        }
+
+        // We find database. Let's extract user id.
+        try {
+            uids.push_back(static_cast<uid_t>(std::stoi((pDirEntry->d_name)+CKM_KEY_PREFIX.size())));
+        } catch (const std::invalid_argument) {
+            LogError("Error in extracting uid from db file. Error=std::invalid_argument."
+                "This will be ignored.File=" << pDirEntry->d_name << "");
+        } catch(const std::out_of_range) {
+            LogError("Error in extracting uid from db file. Error=std::out_of_range."
+                "This will be ignored. File="<< pDirEntry->d_name << "");
+        }
+    }
+
+    closedir(dirp);
+    return uids;
 }
 
 int FileSystem::removeUserData() const {
@@ -136,6 +213,13 @@ int FileSystem::removeUserData() const {
         retCode = -1;
         err = errno;
         LogError("Error in unlink user DBDEK: " << getDBDEKPath()
+            << "Errno: " << errno << " " << strerror(err));
+    }
+
+    if (unlink(getRemovedAppsPath().c_str())) {
+        retCode = -1;
+        err = errno;
+        LogError("Error in unlink user's Removed Apps File: " << getRemovedAppsPath()
             << "Errno: " << errno << " " << strerror(err));
     }
 

@@ -77,6 +77,13 @@ RawBuffer CKMLogic::unlockUserKey(uid_t user, const Password &password) {
             RawBuffer key = handle.keyProvider.getPureDEK(wrappedDatabaseDEK);
             handle.database = DBCrypto(fs.getDBPath(), key);
             handle.crypto = CryptoLogic();
+
+            // remove data of removed apps during locked state
+            AppLabelVector removedApps = fs.clearRemovedsApps();
+            for(auto& appSmackLabel : removedApps) {
+                handle.database.deleteKey(appSmackLabel);
+            }
+
             // TODO wipe key
         }
     } catch (const KeyProvider::Exception::PassWordError &e) {
@@ -185,8 +192,15 @@ RawBuffer CKMLogic::removeApplicationData(const std::string &smackLabel) {
         if (smackLabel.empty()) {
             retCode = CKM_API_ERROR_INPUT_PARAM;
         } else {
-            for(auto &handler: m_userDataMap) {
-                handler.second.database.deleteKey(smackLabel);
+            UidVector uids = FileSystem::getUIDsFromDBFile();
+            for (auto userId : uids) {
+                if (0 == m_userDataMap.count(userId)) {
+                    FileSystem fs(userId);
+                    fs.addRemovedApp(smackLabel);
+                } else {
+                    auto &handle = m_userDataMap[userId];
+                    handle.database.deleteKey(smackLabel);
+                }
             }
         }
 
