@@ -50,6 +50,7 @@ Central Key Manager package (common library)
 Summary:    Central Key Manager (client)
 Group:      Development/Libraries
 Requires:   key-manager = %{version}-%{release}
+Requires:   libkey-manager-common = %{version}-%{release}
 Requires(post): /sbin/ldconfig
 Requires(postun): /sbin/ldconfig
 
