@@ -46,7 +46,7 @@ extern "C" {
  * @privlevel public
  * @privilege %http://tizen.org/privilege/keymanager
  *
- * @remarks Currently only four types of keys are supported for this API. These are RSA public/private key and ECDSA /private key.
+ * @remarks Currently only four types of keys are supported for this API. These are RSA public/private key and ECDSA public/private key.
  * @remarks key_type in key may be set to #CKMC_KEY_NONE as an input. key_type is determined inside key manager during storing keys.
  * @remarks Some private key files are protected by a password. If raw_key in key read from those encrypted files is encrypted with a password, the password should be provided in the #ckmc_key_s structure.
  * @remarks If password in policy is provided, the key is additionally encrypted with the password in policy.
@@ -112,7 +112,7 @@ int ckmc_remove_key(const char *alias);
  * @privlevel public
  * @privilege %http://tizen.org/privilege/keymanager
  *
- * @remarks A client can access only data stored by the client and non-restricted data stored by other clients.
+ * @remarks A client can access only data stored by the client.
  * @remarks You must destroy the newly created @a ppkey by calling ckmc_key_free() if it is no longer needed.
  *
  * @param[in] alias     The name of a key to retrieve
@@ -145,7 +145,7 @@ int ckmc_get_key(const char *alias, const char *password, ckmc_key_s **ppkey);
  * @privlevel public
  * @privilege %http://tizen.org/privilege/keymanager
  *
- * @remarks A client can access only data stored by the client and non-restricted data stored by other clients.
+ * @remarks A client can access only data stored by the client.
  * @remarks You must destroy the newly created @a ppalias_list by calling ckmc_alias_list_all_free() if it is no longer needed.
  *
  * @param[out] ppalias_list  The pointer to a newly created ckmc_alias_list_s handle containing all available alias of keys \n
@@ -239,7 +239,7 @@ int ckmc_remove_cert(const char *alias);
  * @privlevel public
  * @privilege %http://tizen.org/privilege/keymanager
  *
- * @remarks A client can access only certificate stored by the client and non-restricted certificate stored by other clients.
+ * @remarks A client can access only certificate stored by the client.
  * @remarks You must destroy the newly created @a ppcert by calling ckmc_cert_free() if it is no longer needed.
  *
  * @param[in] alias    The name of a certificate to retrieve
@@ -272,7 +272,7 @@ int ckmc_get_cert(const char *alias, const char *password, ckmc_cert_s **ppcert)
  * @privlevel public
  * @privilege %http://tizen.org/privilege/keymanager
  *
- * @remarks A client can access only data stored by the client and non-restricted data stored by other clients.
+ * @remarks A client can access only data stored by the client.
  * @remarks You must destroy the newly created @a ppalias_list by calling ckmc_alias_list_all_free() if it is no longer needed.
  *
  * @param[out] ppalias_list The pointer to a newly created ckmc_alias_list_s handle containing all available alias of keys \n
@@ -365,7 +365,7 @@ int ckmc_remove_data(const char *alias);
  * @privlevel public
  * @privilege %http://tizen.org/privilege/keymanager
  *
- * @remarks A client can access only data stored by the client and non-restricted data stored by other clients.
+ * @remarks A client can access only data stored by the client.
  * @remarks You must destroy the newly created @a ppdata by calling ckmc_buffer_free() if it is no longer needed.
  *
  * @param[in]  alias     The name of a data to retrieve
@@ -398,7 +398,7 @@ int ckmc_get_data(const char *alias, const char *password, ckmc_raw_buffer_s **p
  * @privlevel public
  * @privilege %http://tizen.org/privilege/keymanager
  *
- * @remarks A client can access only data stored by the client and non-restricted data stored by other clients.
+ * @remarks A client can access only data stored by the client.
  * @remarks You must destroy the newly created @a ppalias_list by calling ckmc_alias_list_all_free() if it is no longer needed.
  *
  * @param[out] ppalias_list The pointer to a newly created ckmc_alias_list_s handle containing all available alias of keys \n

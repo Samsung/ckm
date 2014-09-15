@@ -45,9 +45,6 @@
  *
  * Data Store Policy:
  *   A client can specify simple access rules when storing a data in Key Manager.
- *   - Restricted/Non-Restricted:
- *     Data stored in Key Manager can be accessed only by its owner if the data is tagged as restricted.
- *     For data tagged as non-restricted, all clients can access the data.
  *   - Exportable/Non-Exportable:
  *     Only for data tagged as exportable, Key Manager returns the raw value of the data.
  *     If data is tagged as non-exportable, Key Manager does not return its raw value. 
