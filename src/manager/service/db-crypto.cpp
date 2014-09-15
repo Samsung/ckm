@@ -133,6 +133,7 @@ using namespace DB;
         Try {
             m_connection = new SqlConnection(path, SqlConnection::Flag::Option::CRW);
             m_connection->SetKey(rawPass);
+            m_connection->ExecCommand("VACUUM;");
             initDatabase();
         } Catch(SqlConnection::Exception::ConnectionBroken) {
             LogError("Couldn't connect to database: " << path);
