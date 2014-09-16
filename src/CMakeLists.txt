@@ -84,6 +84,8 @@ SET(KEY_MANAGER_CLIENT_SOURCES
     ${KEY_MANAGER_CLIENT_ASYNC_SRC_PATH}/client-manager-async-impl.cpp
     ${KEY_MANAGER_CLIENT_ASYNC_SRC_PATH}/connection-thread.cpp
     ${KEY_MANAGER_CLIENT_ASYNC_SRC_PATH}/async-request.cpp
+    ${KEY_MANAGER_CLIENT_ASYNC_SRC_PATH}/service.cpp
+    ${KEY_MANAGER_CLIENT_ASYNC_SRC_PATH}/receiver.cpp
     ${KEY_MANAGER_CLIENT_CAPI_SRC_PATH}/ckmc-type.cpp
     ${KEY_MANAGER_CLIENT_CAPI_SRC_PATH}/ckmc-error.cpp
     ${KEY_MANAGER_CLIENT_CAPI_SRC_PATH}/ckmc-manager.cpp

@@ -29,6 +29,7 @@
 #include <client-common.h>
 #include <async-request.h>
 #include <descriptor-set.h>
+#include <service.h>
 
 namespace CKM {
 
@@ -56,6 +57,8 @@ private:
     // reads notification pipe
     void readPipe(int pipe, short revents);
 
+    Service& getService(const std::string& interface);
+
     // Helper class that creates a pipe before thread is started
     class Pipe {
     public:
@@ -81,6 +84,7 @@ private:
     std::thread m_thread;
 
     // child thread vars
+    std::map<std::string, Service> m_services;
     DescriptorSet m_descriptors;
 };
 

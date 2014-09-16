@@ -93,6 +93,11 @@ void ConnectionThread::threadLoop()
         LogError("Unknown exception occured");
     }
 
+    // cleanup services
+    for(auto& it: m_services)
+        it.second.serviceError(CKM_API_ERROR_UNKNOWN);
+    m_services.clear();
+
     // close all descriptors (including pipe)
     m_descriptors.purge();
 
@@ -120,6 +125,17 @@ void ConnectionThread::readPipe(int pipe, short revents)
     }
 }
 
+Service& ConnectionThread::getService(const std::string& interface)
+{
+    auto it = m_services.find(interface);
+    if (it != m_services.end())
+        return it->second;
+
+    // create new service, insert it and return
+    return m_services.insert(
+            std::make_pair(interface,Service(m_descriptors, interface))).first->second;
+}
+
 void ConnectionThread::newRequest(int pipe, short revents)
 {
     readPipe(pipe, revents);
@@ -138,8 +154,8 @@ void ConnectionThread::newRequest(int pipe, short revents)
 
     lock.unlock();
 
-    // TODO handle request here
-    req.observer->ReceivedError(CKM_API_ERROR_UNKNOWN);
+    Service& srv = getService(req.interface);
+    srv.addRequest(std::move(req));
 }
 
 } /* namespace CKM */
