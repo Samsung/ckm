@@ -76,6 +76,8 @@ private:
  */
 int try_catch(const std::function<int()>& func);
 
+void try_catch_async(const std::function<void()>& func, const std::function<void(int)>& error);
+
 } // namespace CKM
 
 #endif // _KEY_MANAGER_CLIENT_

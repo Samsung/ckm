@@ -213,6 +213,22 @@ int try_catch(const std::function<int()>& func)
     return CKM_API_ERROR_UNKNOWN;
 }
 
+void try_catch_async(const std::function<void()>& func, const std::function<void(int)>& error)
+{
+    try {
+        func();
+    } catch (const MessageBuffer::Exception::Base& e) {
+        LogError("CKM::MessageBuffer::Exception " << e.DumpToString());
+        error(CKM_API_ERROR_BAD_REQUEST);
+    } catch (const std::exception& e) {
+        LogError("STD exception " << e.what());
+        error(CKM_API_ERROR_UNKNOWN);
+    } catch (...) {
+        LogError("Unknown exception occured");
+        error(CKM_API_ERROR_UNKNOWN);
+    }
+}
+
 } // namespace CKM
 
 static void init_lib(void) __attribute__ ((constructor));
