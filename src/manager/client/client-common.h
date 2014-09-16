@@ -29,6 +29,7 @@
 #include <vector>
 #include <functional>
 
+#include <noncopyable.h>
 #include <message-buffer.h>
 
 #define KEY_MANAGER_API __attribute__((visibility("default")))
@@ -42,6 +43,32 @@ namespace CKM {
 int connectSocket(int& sock, char const * const interface);
 
 int sendToServer(char const * const interface, const RawBuffer &send, MessageBuffer &recv);
+
+
+class SockRAII {
+public:
+    SockRAII()
+      : m_sock(-1)
+    {}
+
+    NONCOPYABLE(SockRAII);
+
+    virtual ~SockRAII() {
+        if (m_sock > -1)
+            close(m_sock);
+    }
+
+    int Connect(char const * const interface) {
+        return CKM::connectSocket(m_sock, interface);
+    }
+
+    int Get() const {
+        return m_sock;
+    }
+
+private:
+    int m_sock;
+};
 
 /*
  * Decorator function that performs frequently repeated exception handling in

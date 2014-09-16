@@ -37,6 +37,8 @@
 
 #include <ckm/ckm-error.h>
 
+#include <client-common.h>
+
 IMPLEMENT_SAFE_SINGLETON(CKM::Log::LogSystem);
 
 namespace {
@@ -148,30 +150,6 @@ int connectSocket(int& sock, char const * const interface) {
 
     return CKM_API_SUCCESS;
 }
-
-class SockRAII {
-public:
-    SockRAII()
-      : m_sock(-1)
-    {}
-
-    virtual ~SockRAII() {
-        if (m_sock > -1)
-            close(m_sock);
-    }
-
-    int Connect(char const * const interface) {
-        return CKM::connectSocket(m_sock, interface);
-    }
-
-    int Get() const {
-        return m_sock;
-    }
-
-private:
-    int m_sock;
-};
-
 
 int sendToServer(char const * const interface, const RawBuffer &send, MessageBuffer &recv) {
     int ret;
