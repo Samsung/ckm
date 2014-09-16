@@ -207,6 +207,7 @@ fi
 %{_libdir}/libkey-manager-control-client.so
 %{_libdir}/libkey-manager-common.so
 %{_includedir}/ckm/ckm/ckm-manager.h
+%{_includedir}/ckm/ckm/ckm-manager-async.h
 %{_includedir}/ckm/ckm/ckm-certificate.h
 %{_includedir}/ckm/ckm/ckm-control.h
 %{_includedir}/ckm/ckm/ckm-error.h

@@ -64,10 +64,12 @@ SET(KEY_MANAGER_CLIENT_VERSION_MAJOR 1)
 SET(KEY_MANAGER_CLIENT_VERSION ${KEY_MANAGER_CLIENT_VERSION_MAJOR}.0.1)
 
 SET(KEY_MANAGER_CLIENT_SRC_PATH ${KEY_MANAGER_PATH}/client)
+SET(KEY_MANAGER_CLIENT_ASYNC_SRC_PATH ${KEY_MANAGER_PATH}/client-async)
 SET(KEY_MANAGER_CLIENT_CAPI_SRC_PATH ${KEY_MANAGER_PATH}/client-capi)
 
 INCLUDE_DIRECTORIES(
     ${KEY_MANAGER_PATH}/client
+    ${KEY_MANAGER_PATH}/client-async
     ${KEY_MANAGER_PATH}/client-capi
     ${KEY_MANAGER_PATH}/common
     ${KEY_MANAGER_PATH}/dpl/core/include
@@ -78,6 +80,10 @@ SET(KEY_MANAGER_CLIENT_SOURCES
     ${KEY_MANAGER_CLIENT_SRC_PATH}/client-common.cpp
     ${KEY_MANAGER_CLIENT_SRC_PATH}/client-error.cpp
     ${KEY_MANAGER_CLIENT_SRC_PATH}/client-manager-impl.cpp
+    ${KEY_MANAGER_CLIENT_ASYNC_SRC_PATH}/client-manager-async.cpp
+    ${KEY_MANAGER_CLIENT_ASYNC_SRC_PATH}/client-manager-async-impl.cpp
+    ${KEY_MANAGER_CLIENT_ASYNC_SRC_PATH}/connection-thread.cpp
+    ${KEY_MANAGER_CLIENT_ASYNC_SRC_PATH}/async-request.cpp
     ${KEY_MANAGER_CLIENT_CAPI_SRC_PATH}/ckmc-type.cpp
     ${KEY_MANAGER_CLIENT_CAPI_SRC_PATH}/ckmc-error.cpp
     ${KEY_MANAGER_CLIENT_CAPI_SRC_PATH}/ckmc-manager.cpp
@@ -146,6 +152,7 @@ INSTALL(TARGETS ${TARGET_KEY_MANAGER} DESTINATION bin)
 
 INSTALL(FILES
     ${KEY_MANAGER_SRC_PATH}/include/ckm/ckm-manager.h
+    ${KEY_MANAGER_SRC_PATH}/include/ckm/ckm-manager-async.h
     ${KEY_MANAGER_SRC_PATH}/include/ckm/ckm-certificate.h
     ${KEY_MANAGER_SRC_PATH}/include/ckm/ckm-control.h
     ${KEY_MANAGER_SRC_PATH}/include/ckm/ckm-error.h

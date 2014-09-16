@@ -36,7 +36,7 @@ public:
     typedef std::function<void(int, short)> Callback;
 
     virtual void add(int fd, short events, Callback&& callback) = 0;
-    virtual void remove(int fd) = 0;
+    virtual void remove(int fd, bool close_fd = true) = 0;
 protected:
     // I don't want anyone to manage object lifetime via interface.
     IDescriptorSet() {}
@@ -69,7 +69,7 @@ public:
      *
      * @param fd       descriptor to be removed and closed
      */
-    virtual void remove(int fd);
+    virtual void remove(int fd, bool close_fd = true);
 
     /*
      * Wait for descriptor events using poll().

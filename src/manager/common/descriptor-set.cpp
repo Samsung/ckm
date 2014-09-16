@@ -51,9 +51,10 @@ void DescriptorSet::add(int fd, short events, Callback&& callback) {
     m_dirty = true;
 }
 
-void DescriptorSet::remove(int fd) {
+void DescriptorSet::remove(int fd, bool close_fd) {
     if (0 != m_descriptors.erase(fd)) {
-        close(fd);
+        if (close_fd)
+            close(fd);
         m_dirty = true;
     }
 }
