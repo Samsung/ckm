@@ -174,6 +174,11 @@ int ckmc_get_key_alias_list(ckmc_alias_list_s** alias_list)
         }
     }
 
+    if(plist == NULL) { // if the alias_list size is zero
+              return CKMC_ERROR_DB_ALIAS_UNKNOWN ;
+    }
+
+
     return CKMC_ERROR_NONE;
 }
 
@@ -272,6 +277,11 @@ int ckmc_get_cert_alias_list(ckmc_alias_list_s** alias_list) {
         }
     }
 
+    if(plist == NULL) { // if the alias_list size is zero
+            return CKMC_ERROR_DB_ALIAS_UNKNOWN ;
+    }
+
+
     return CKMC_ERROR_NONE;
 }
 
@@ -364,6 +374,10 @@ int ckmc_get_data_alias_list(ckmc_alias_list_s** alias_list){
             ckmc_alias_list_all_free(*alias_list);
             return ret;
         }
+    }
+
+    if(plist == NULL) { // if the alias_list size is zero
+            return CKMC_ERROR_DB_ALIAS_UNKNOWN ;
     }
 
     return CKMC_ERROR_NONE;

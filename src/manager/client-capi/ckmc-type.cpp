@@ -222,7 +222,6 @@ int ckmc_load_from_pkcs12_file(const char *file_path, const char *passphrase, ck
                 EVP_PKEY_free(pkey);
             if(ca != NULL)
                 sk_X509_pop_free(ca, X509_free);
-            EVP_cleanup();
 
             if(ret != CKMC_ERROR_NONE) {
                 if(retPrivateKey != NULL){
