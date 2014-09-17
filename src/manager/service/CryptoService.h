@@ -1,7 +1,7 @@
 #pragma once
 
 #include <iostream>
-#include <generic-key.h>
+#include <key-impl.h>
 #include <certificate-impl.h>
 #include <ckm/ckm-type.h>
 #include <vector>
@@ -53,20 +53,20 @@ class CryptoService {
      static int initialize();
 
      static int createKeyPairRSA(const int size,      // size in bits [1024, 2048, 4096]
-                         GenericKey &createdPrivateKey,  // returned value ==> Key &createdPrivateKey,
-                         GenericKey &createdPublicKey);  // returned value ==> Key &createdPublicKey
+                         KeyImpl &createdPrivateKey,  // returned value ==> Key &createdPrivateKey,
+                         KeyImpl &createdPublicKey);  // returned value ==> Key &createdPublicKey
 
      static int createKeyPairECDSA(ElipticCurve type1,
-    		 	 	 	 GenericKey &createdPrivateKey,  // returned value
-    		 	 	 	 GenericKey &createdPublicKey);  // returned value
+    		 	 	 	 KeyImpl &createdPrivateKey,  // returned value
+    		 	 	 	 KeyImpl &createdPublicKey);  // returned value
 
-     int createSignature(const GenericKey &privateKey,
+     int createSignature(const KeyImpl &privateKey,
                          const RawBuffer &message,
                          const HashAlgorithm hashAlgo,
                          const RSAPaddingAlgorithm padAlgo,
                          RawBuffer &signature);
 
-     int verifySignature(const GenericKey &publicKey,
+     int verifySignature(const KeyImpl &publicKey,
                          const RawBuffer &message,
                          const RawBuffer &signature,
                          const HashAlgorithm hashAlgo,
@@ -75,7 +75,7 @@ class CryptoService {
      int verifyCertificateChain(const CertificateImpl &certificate,
  	                    const CertificateImplVector &untrustedCertificates,
  	                    const CertificateImplVector &userTrustedCertificates,
- 	                   CertificateImplVector &certificateChainVector);
+ 	                    CertificateImplVector &certificateChainVector);
 
  private:
      std::vector<X509 *> verifyCertChain(X509 *cert,

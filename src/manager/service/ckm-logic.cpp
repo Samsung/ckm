@@ -27,7 +27,7 @@
 #include <file-system.h>
 #include <CryptoService.h>
 #include <ckm-logic.h>
-#include <generic-key.h>
+#include <key-impl.h>
 
 namespace {
 const char * const CERT_SYSTEM_DIR = "/etc/ssl/certs";
@@ -446,7 +446,7 @@ int CKMLogic::createKeyPairRSAHelper(
         return CKM_API_ERROR_DB_LOCKED;
 
     auto &handler = m_userDataMap[cred.uid];
-    GenericKey prv, pub;
+    KeyImpl prv, pub;
     int retCode;
 
     if (CKM_CRYPTO_CREATEKEY_SUCCESS !=
@@ -534,7 +534,7 @@ int CKMLogic::createKeyPairECDSAHelper(
         return CKM_API_ERROR_DB_LOCKED;
 
     auto &handler = m_userDataMap[cred.uid];
-    GenericKey prv, pub;
+    KeyImpl prv, pub;
     int retCode;
 
     if (CKM_CRYPTO_CREATEKEY_SUCCESS !=
@@ -721,7 +721,7 @@ RawBuffer CKMLogic::createSignature(
                 break;
             }
 
-            GenericKey keyParsed(row.data, Password());
+            KeyImpl keyParsed(row.data, Password());
             if (keyParsed.empty())
                 retCode = CKM_API_ERROR_SERVER_ERROR;
             else
@@ -765,18 +765,18 @@ RawBuffer CKMLogic::verifySignature(
         do {
             CryptoService cs;
             DBRow row;
-            GenericKey key;
+            KeyImpl key;
 
             retCode = getDataHelper(cred, DBDataType::DB_KEY_FIRST, publicKeyOrCertAlias, password, row);
 
             if (retCode == CKM_API_SUCCESS) {
-                key = GenericKey(row.data);
+                key = KeyImpl(row.data);
             } else if (retCode == CKM_API_ERROR_DB_ALIAS_UNKNOWN) {
                 retCode = getDataHelper(cred, DBDataType::CERTIFICATE, publicKeyOrCertAlias, password, row);
                 if (retCode != CKM_API_SUCCESS)
                     break;
                 CertificateImpl cert(row.data, DataFormat::FORM_DER);
-                key = cert.getGenericKey();
+                key = cert.getKeyImpl();
             } else {
                 break;
             }

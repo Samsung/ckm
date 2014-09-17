@@ -89,7 +89,7 @@ SET(KEY_MANAGER_CLIENT_SOURCES
     ${KEY_MANAGER_PATH}/common/smack-check.cpp
     ${KEY_MANAGER_PATH}/common/certificate-impl.cpp
     ${KEY_MANAGER_PATH}/common/certificate-store.cpp
-    ${KEY_MANAGER_PATH}/common/generic-key.cpp
+    ${KEY_MANAGER_PATH}/common/key-impl.cpp
     ${KEY_MANAGER_PATH}/common/pkcs12-impl.cpp
     ${KEY_MANAGER_PATH}/dpl/log/src/abstract_log_provider.cpp
     ${KEY_MANAGER_PATH}/dpl/log/src/dlog_log_provider.cpp
@@ -148,7 +148,7 @@ SET(KEY_MANAGER_CONTROL_CLIENT_SOURCES
     ${KEY_MANAGER_PATH}/common/smack-check.cpp
     ${KEY_MANAGER_PATH}/common/certificate-impl.cpp
     ${KEY_MANAGER_PATH}/common/certificate-store.cpp
-    ${KEY_MANAGER_PATH}/common/generic-key.cpp
+    ${KEY_MANAGER_PATH}/common/key-impl.cpp
     ${KEY_MANAGER_PATH}/dpl/log/src/abstract_log_provider.cpp
     ${KEY_MANAGER_PATH}/dpl/log/src/dlog_log_provider.cpp
     ${KEY_MANAGER_PATH}/dpl/log/src/log.cpp

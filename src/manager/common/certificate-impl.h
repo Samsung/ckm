@@ -26,7 +26,7 @@
 #include <ckm/ckm-type.h>
 #include <ckm/ckm-certificate.h>
 
-#include <generic-key.h>
+#include <key-impl.h>
 
 namespace CKM {
 
@@ -44,8 +44,8 @@ public:
     virtual bool empty() const;
     virtual X509* getX509() const;
 
-    GenericKey::EvpShPtr getEvpShPtr() const;
-    GenericKey getGenericKey() const;
+    KeyImpl::EvpShPtr getEvpShPtr() const;
+    KeyImpl getKeyImpl() const;
 
     std::string getOneLine(CertificateFieldId type) const;
     std::string getField(CertificateFieldId type, int fieldNid) const;

@@ -13,7 +13,7 @@
  *  limitations under the License
  *
  *
- * @file        generic-key.cpp
+ * @file        key-impl.cpp
  * @author      Bartlomiej Grzelewski (b.grzelewski@samsung.com)
  * @version     1.0
  * @brief       Key implementation.
@@ -33,7 +33,7 @@
 #include <dpl/log/log.h>
 
 #include <ckm/ckm-type.h>
-#include <generic-key.h>
+#include <key-impl.h>
 
 namespace CKM {
 namespace {
@@ -88,17 +88,17 @@ CKM::RawBuffer i2d(I2D_CONV fun, EVP_PKEY* pkey) {
 
 } // anonymous namespace
 
-GenericKey::GenericKey()
+KeyImpl::KeyImpl()
   : m_pkey(NULL, EVP_PKEY_free)
   , m_type(KeyType::KEY_NONE)
 {}
 
-GenericKey::GenericKey(const GenericKey &second) {
+KeyImpl::KeyImpl(const KeyImpl &second) {
     m_pkey = second.m_pkey;
     m_type = second.m_type;
 }
 
-GenericKey::GenericKey(const RawBuffer &buf, const Password &password)
+KeyImpl::KeyImpl(const RawBuffer &buf, const Password &password)
   : m_pkey(NULL, EVP_PKEY_free)
   , m_type(KeyType::KEY_NONE)
 {
@@ -159,7 +159,7 @@ GenericKey::GenericKey(const RawBuffer &buf, const Password &password)
     LogDebug("KeyType is: " << (int)m_type << " isPrivate: " << isPrivate);
 }
 
-GenericKey::GenericKey(EvpShPtr pkey, KeyType type)
+KeyImpl::KeyImpl(EvpShPtr pkey, KeyType type)
   : m_pkey(pkey)
   , m_type(type)
 {
@@ -175,27 +175,27 @@ GenericKey::GenericKey(EvpShPtr pkey, KeyType type)
         }
 }
 
-bool GenericKey::empty() const {
+bool KeyImpl::empty() const {
     return m_pkey.get() == NULL;
 }
 
-GenericKey::EvpShPtr GenericKey::getEvpShPtr() const {
+KeyImpl::EvpShPtr KeyImpl::getEvpShPtr() const {
     return m_pkey;
 }
 
-KeyType GenericKey::getType() const {
+KeyType KeyImpl::getType() const {
     return m_type;
 }
 
-RawBuffer GenericKey::getDERPRV() const {
+RawBuffer KeyImpl::getDERPRV() const {
     return i2d(i2d_PrivateKey_bio, m_pkey.get());
 }
 
-RawBuffer GenericKey::getDERPUB() const {
+RawBuffer KeyImpl::getDERPUB() const {
     return i2d(i2d_PUBKEY_bio, m_pkey.get());
 }
 
-RawBuffer GenericKey::getDER() const {
+RawBuffer KeyImpl::getDER() const {
     if (m_type == KeyType::KEY_ECDSA_PRIVATE || m_type == KeyType::KEY_RSA_PRIVATE) {
         return getDERPRV();
     } else if (m_type == KeyType::KEY_RSA_PUBLIC || m_type == KeyType::KEY_ECDSA_PUBLIC) {
@@ -206,14 +206,14 @@ RawBuffer GenericKey::getDER() const {
 
 KeyShPtr Key::create(const RawBuffer &raw, const Password &password) {
     try {
-        KeyShPtr output = std::make_shared<GenericKey>(raw, password);
+        KeyShPtr output = std::make_shared<KeyImpl>(raw, password);
         if (output->empty())
             output.reset();
         return output;
     } catch (const std::bad_alloc &) {
-        LogDebug("Bad alloc was catch during GenericKey creation");
+        LogDebug("Bad alloc was catch during KeyImpl creation");
     } catch (...) {
-        LogError("Critical error: Unknown exception was caught during GenericKey creation");
+        LogError("Critical error: Unknown exception was caught during KeyImpl creation");
     }
     return KeyShPtr();
 }

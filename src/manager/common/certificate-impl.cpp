@@ -24,7 +24,7 @@
 
 #include <dpl/log/log.h>
 
-#include <generic-key.h>
+#include <key-impl.h>
 #include <certificate-impl.h>
 #include <base64.h>
 
@@ -129,18 +129,18 @@ bool CertificateImpl::empty() const {
     return m_x509 == NULL;
 }
 
-GenericKey::EvpShPtr CertificateImpl::getEvpShPtr() const {
-    return GenericKey::EvpShPtr(X509_get_pubkey(m_x509), EVP_PKEY_free);
+KeyImpl::EvpShPtr CertificateImpl::getEvpShPtr() const {
+    return KeyImpl::EvpShPtr(X509_get_pubkey(m_x509), EVP_PKEY_free);
 }
 
-GenericKey CertificateImpl::getGenericKey() const {
-    GenericKey::EvpShPtr evp(X509_get_pubkey(m_x509), EVP_PKEY_free);
+KeyImpl CertificateImpl::getKeyImpl() const {
+    KeyImpl::EvpShPtr evp(X509_get_pubkey(m_x509), EVP_PKEY_free);
     if (EVP_PKEY_type(evp->type) == EVP_PKEY_RSA)
-        return GenericKey(evp, KeyType::KEY_RSA_PUBLIC);
+        return KeyImpl(evp, KeyType::KEY_RSA_PUBLIC);
     if (EVP_PKEY_type(evp->type) == EVP_PKEY_EC)
-        return GenericKey(evp, KeyType::KEY_ECDSA_PUBLIC);
+        return KeyImpl(evp, KeyType::KEY_ECDSA_PUBLIC);
     LogError("Unsupported key type in certificate.");
-    return GenericKey();
+    return KeyImpl();
 }
 
 X509_NAME *getX509Name(X509 *x509, CertificateFieldId type) {

@@ -20,7 +20,7 @@
 #include <openssl/obj_mac.h>
 #include <ckm/ckm-error.h>
 #include <ckm/ckm-type.h>
-#include <generic-key.h>
+#include <key-impl.h>
 #include <CryptoService.h>
 #include <key-manager-util.h>
 #include <assert.h>
@@ -80,8 +80,8 @@ int CryptoService::initialize() {
 
 
 int CryptoService::createKeyPairRSA(const int size, // size in bits [1024, 2048, 4096]
-		GenericKey &createdPrivateKey,  // returned value
-		GenericKey &createdPublicKey)  // returned value
+		KeyImpl &createdPrivateKey,  // returned value
+		KeyImpl &createdPublicKey)  // returned value
 {
 	EVP_PKEY_CTX *ctx = NULL;
 	EVP_PKEY *pkey = NULL;
@@ -141,10 +141,10 @@ int CryptoService::createKeyPairRSA(const int size, // size in bits [1024, 2048,
 		ReThrowMsg(CryptoService::Exception::opensslError,"Error in opensslError function !!");
 	}
 
-	GenericKey::EvpShPtr ptr(pkey, EVP_PKEY_free); // shared ptr will free pkey
+	KeyImpl::EvpShPtr ptr(pkey, EVP_PKEY_free); // shared ptr will free pkey
 
-	createdPrivateKey = GenericKey(ptr, KeyType::KEY_RSA_PRIVATE);
-	createdPublicKey = GenericKey(ptr, KeyType::KEY_RSA_PUBLIC);
+	createdPrivateKey = KeyImpl(ptr, KeyType::KEY_RSA_PRIVATE);
+	createdPublicKey = KeyImpl(ptr, KeyType::KEY_RSA_PUBLIC);
 
 	if(pparam) {
 		EVP_PKEY_free(pparam);
@@ -158,8 +158,8 @@ int CryptoService::createKeyPairRSA(const int size, // size in bits [1024, 2048,
 }
 
 int CryptoService::createKeyPairECDSA(ElipticCurve type,
-		GenericKey &createdPrivateKey,  // returned value
-		GenericKey &createdPublicKey)  // returned value
+		KeyImpl &createdPrivateKey,  // returned value
+		KeyImpl &createdPublicKey)  // returned value
 {
 	int ecCurve = NOT_DEFINED;
 	EVP_PKEY_CTX *pctx = NULL;
@@ -253,10 +253,10 @@ int CryptoService::createKeyPairECDSA(ElipticCurve type,
 		ReThrowMsg(CryptoService::Exception::opensslError,"Error in openssl function !!");
 	}
 
-	GenericKey::EvpShPtr ptr(pkey, EVP_PKEY_free); // shared ptr will free pkey
+	KeyImpl::EvpShPtr ptr(pkey, EVP_PKEY_free); // shared ptr will free pkey
 
-	createdPrivateKey = GenericKey(ptr, KeyType::KEY_ECDSA_PRIVATE);
-	createdPublicKey = GenericKey(ptr, KeyType::KEY_ECDSA_PUBLIC);
+	createdPrivateKey = KeyImpl(ptr, KeyType::KEY_ECDSA_PRIVATE);
+	createdPublicKey = KeyImpl(ptr, KeyType::KEY_ECDSA_PUBLIC);
 
 	if(pparam) {
 		EVP_PKEY_free(pparam);
@@ -273,7 +273,7 @@ int CryptoService::createKeyPairECDSA(ElipticCurve type,
 	return CKM_CRYPTO_CREATEKEY_SUCCESS;
 }
 
-int CryptoService::createSignature(const GenericKey &privateKey,
+int CryptoService::createSignature(const KeyImpl &privateKey,
 		const RawBuffer &message,
 		const HashAlgorithm hashAlgo,
 		const RSAPaddingAlgorithm padAlgo,
@@ -402,7 +402,7 @@ int CryptoService::createSignature(const GenericKey &privateKey,
 	return CKM_CREATE_SIGNATURE_SUCCESS;
 }
 
-int CryptoService::verifySignature(const GenericKey &publicKey,
+int CryptoService::verifySignature(const KeyImpl &publicKey,
 		const RawBuffer &message,
 		const RawBuffer &signature,
 		const HashAlgorithm hashAlgo,

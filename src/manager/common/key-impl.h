@@ -13,7 +13,7 @@
  *  limitations under the License
  *
  *
- * @file        generic-key.h
+ * @file        key-impl.h
  * @author      Bartlomiej Grzelewski (b.grzelewski@samsung.com)
  * @version     1.0
  * @brief       Key implementation.
@@ -28,14 +28,14 @@
 
 namespace CKM {
 
-class GenericKey : public Key {
+class KeyImpl : public Key {
 public:
     typedef std::shared_ptr<EVP_PKEY> EvpShPtr;
 
-    GenericKey();
-    GenericKey(const GenericKey &second);
-    GenericKey(const RawBuffer& buffer, const Password &password = Password());
-    GenericKey(EvpShPtr pkey, KeyType type);
+    KeyImpl();
+    KeyImpl(const KeyImpl &second);
+    KeyImpl(const RawBuffer& buffer, const Password &password = Password());
+    KeyImpl(EvpShPtr pkey, KeyType type);
 
     virtual KeyType getType() const;
     virtual RawBuffer getDER() const;
@@ -52,7 +52,7 @@ public:
     }
 
     virtual bool empty() const;
-    virtual ~GenericKey(){}
+    virtual ~KeyImpl(){}
 protected:
     EvpShPtr m_pkey;
     KeyType m_type;

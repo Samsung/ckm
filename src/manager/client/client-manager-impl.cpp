@@ -27,7 +27,7 @@
 #include <client-common.h>
 #include <message-buffer.h>
 #include <protocols.h>
-#include <generic-key.h>
+#include <key-impl.h>
 #include <certificate-impl.h>
 
 namespace {
@@ -231,7 +231,7 @@ int ManagerImpl::getKey(const Alias &alias, const Password &password, KeyShPtr &
     if (retCode != CKM_API_SUCCESS)
         return retCode;
 
-    KeyShPtr keyParsed(new GenericKey(rawData));
+    KeyShPtr keyParsed(new KeyImpl(rawData));
 
     if (keyParsed->empty()) {
         LogDebug("Key empty - failed to parse!");

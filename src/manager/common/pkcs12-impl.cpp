@@ -28,7 +28,7 @@
 #include <pkcs12-impl.h>
 
 #include <certificate-impl.h>
-#include <generic-key.h>
+#include <key-impl.h>
 
 namespace CKM {
 namespace {
@@ -71,11 +71,11 @@ PKCS12Impl::PKCS12Impl(const RawBuffer &buffer, const Password &password)
     }
 
     if (pkey) {
-        GenericKey::EvpShPtr ptr(pkey, EVP_PKEY_free);
+        KeyImpl::EvpShPtr ptr(pkey, EVP_PKEY_free);
         if (EVP_PKEY_type(pkey->type) == EVP_PKEY_RSA) {
-            m_pkey = std::make_shared<GenericKey>(ptr, KeyType::KEY_RSA_PRIVATE);
+            m_pkey = std::make_shared<KeyImpl>(ptr, KeyType::KEY_RSA_PRIVATE);
         } else if (EVP_PKEY_type(pkey->type) == EVP_PKEY_EC) {
-            m_pkey = std::make_shared<GenericKey>(ptr, KeyType::KEY_ECDSA_PRIVATE);
+            m_pkey = std::make_shared<KeyImpl>(ptr, KeyType::KEY_ECDSA_PRIVATE);
         } else {
             LogError("Unsupported private key type.");
             EVP_PKEY_free(pkey);

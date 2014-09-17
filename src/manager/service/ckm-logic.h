@@ -178,7 +178,7 @@ private:
         Credentials &cred,
         const Alias &publicKeyOrCertAlias,
         const Password &password,           // password for public_key (optional)
-        const GenericKey &genericKey);
+        const KeyImpl &genericKey);
 
     std::map<uid_t, UserData> m_userDataMap;
     CertificateStore m_certStore;
