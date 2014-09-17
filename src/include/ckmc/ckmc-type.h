@@ -151,8 +151,6 @@ typedef struct __ckmc_cert_list {
  * @brief Creates a new @a ckmc_key_s handle and returns it.
  *
  * @since_tizen 2.3
- * @privlevel platform
- * @privilege %http://tizen.org/privilege/keymanager.admin
  *
  * @remarks You must destroy the newly created @a ckmc_key_s by calling ckmc_key_free() if it is no longer needed.
  *
@@ -180,8 +178,6 @@ int ckmc_key_new(unsigned char *raw_key, size_t key_size,
  * @brief Destroys the @a ckmc_key_s handle and releases all its resources.
  *
  * @since_tizen 2.3
- * @privlevel public
- * @privilege %http://tizen.org/privilege/keymanager
  *
  * @param[in] key The @a ckmc_key_s handle to destroy
  *
@@ -194,8 +190,6 @@ void ckmc_key_free(ckmc_key_s *key);
  * @brief Creates a new @a ckmc_raw_buffer_s handle and returns it.
  *
  * @since_tizen 2.3
- * @privlevel platform
- * @privilege %http://tizen.org/privilege/keymanager.admin
  *
  * @remarks You must destroy the newly created @a ckmc_raw_buffer_s by calling ckmc_buffer_free() if it is no longer needed.
  *
@@ -218,8 +212,6 @@ int ckmc_buffer_new(unsigned char *data, size_t size,ckmc_raw_buffer_s **ppbuffe
  * @brief Destroys the @a ckmc_raw_buffer_s handle and releases all its resources.
  *
  * @since_tizen 2.3
- * @privlevel public
- * @privilege %http://tizen.org/privilege/keymanager
  *
  * @param[in] buffer The @a ckmc_raw_buffer_s handle to destroy
  *
@@ -232,8 +224,6 @@ void ckmc_buffer_free(ckmc_raw_buffer_s *buffer);
  * @brief Creates a new @a ckmc_cert_s handle and returns it.
  *
  * @since_tizen 2.3
- * @privlevel platform
- * @privilege %http://tizen.org/privilege/keymanager.admin
  *
  * @remarks You must destroy the newly created @a ckmc_cert_s by calling ckmc_cert_free() if it is no longer needed.
  *
@@ -260,8 +250,6 @@ int ckmc_cert_new(unsigned char *raw_cert, size_t cert_size,
  * @brief Destroys the @a ckmc_cert handle and releases all its resources.
  *
  * @since_tizen 2.3
- * @privlevel public
- * @privilege %http://tizen.org/privilege/keymanager
  *
  * @param[in] cert The @a ckmc_cert_s handle to destroy
  *
@@ -275,8 +263,6 @@ void ckmc_cert_free(ckmc_cert_s *cert);
  * @brief Creates a new @a ckmc_cert_s handle from a given file and returns it.
  *
  * @since_tizen 2.3
- * @privlevel public
- * @privilege %http://tizen.org/privilege/keymanager
  *
  * @remarks You must destroy the newly created @a ckmc_cert_s by calling ckmc_cert_free() if it is no longer needed.
  *
@@ -303,8 +289,6 @@ int ckmc_load_cert_from_file(const char *file_path, ckmc_cert_s **cert);
  * @brief Creates a new @a ckmc_key_s(private key), @a ckmc_cert_s(certificate), and @a ckmc_cert_list_s(CA certificates) handle from a given PKCS#12 file and returns them.
  *
  * @since_tizen 2.3
- * @privlevel public
- * @privilege %http://tizen.org/privilege/keymanager
  *
  * @remarks You must destroy the newly created @a ckmc_key_s, @a ckmc_cert_s, and @a ckmc_cert_list_s by calling ckmc_key_free(), ckmc_cert_free(), and ckmc_cert_list_all_free() if they are no longer needed.
  *
@@ -342,8 +326,6 @@ int ckmc_load_from_pkcs12_file(const char *file_path, const char *passphrase,
  *        The alias pointer in the returned @a ckmc_alias_list_s handle points to the provided characters and next is null.
  *
  * @since_tizen 2.3
- * @privlevel platform
- * @privilege %http://tizen.org/privilege/keymanager.admin
  *
  * @remarks You must destroy the newly created @a ckmc_alias_list_s by calling ckmc_alias_list_free() or ckmc_alias_list_all_free() if it is no longer needed.
  *
@@ -369,8 +351,6 @@ int ckmc_alias_list_new(char *alias, ckmc_alias_list_s **ppalias_list);
  *        The alias pointer in the returned @a ckmc_alias_list_s handle points to the provided characters and next is null.
  *
  * @since_tizen 2.3
- * @privlevel platform
- * @privilege %http://tizen.org/privilege/keymanager.admin
  *
  * @param[in]  previous  The last @a ckmc_alias_list_s handle to which a newly created @a ckmc_alias_list_s is added
  * @param[in]  alias     The item to be set in the newly created @a ckmc_alias_list_s
@@ -395,8 +375,6 @@ int ckmc_alias_list_add(ckmc_alias_list_s *previous,
  * @brief Destroys the @a ckmc_alias_list_s handle and releases resources of @a ckmc_alias_list_s from the provided first handle cascadingly.
  *
  * @since_tizen 2.3
- * @privlevel platform
- * @privilege %http://tizen.org/privilege/keymanager.admin
  *
  * @remarks It does not destroy an alias itself in @a ckmc_alias_list_s.
  *
@@ -413,8 +391,6 @@ void ckmc_alias_list_free(ckmc_alias_list_s *first);
  * @brief Destroys the @a ckmc_alias_list_s handle and releases all its resources from the provided first handle cascadingly.
  *
  * @since_tizen 2.3
- * @privlevel public
- * @privilege %http://tizen.org/privilege/keymanager
  *
  * @remarks It also destroys the alias in @a ckmc_alias_list_s.
  *
@@ -434,8 +410,6 @@ void ckmc_alias_list_all_free(ckmc_alias_list_s *first);
  *        The cert pointer in the returned @a ckmc_cert_list_s handle points to the provided @a ckmc_cert_s and next is null.
  *
  * @since_tizen 2.3
- * @privlevel platform
- * @privilege %http://tizen.org/privilege/keymanager.admin
  *
  * @remarks You must destroy the newly created @a ckmc_cert_list_s by calling ckmc_cert_list_free() or ckmc_cert_list_all_free() if it is no longer needed.
  *
@@ -461,8 +435,6 @@ int ckmc_cert_list_new(ckmc_cert_s *cert, ckmc_cert_list_s **ppalias_list);
  *        The cert pointer in the returned @a ckmc_alias_list_s handle points to the provided @a ckmc_cert_s and next is null.
  *
  * @since 2.3
- * @privlevel platform
- * @privilege %http://tizen.org/privilege/keymanager.admin
  *
  * @param[in]  previous  The last @a ckmc_cert_list_s handle to which a newly created @a ckmc_cert_list_s is added
  * @param[in]  cert      The item to be set in the newly created @a ckmc_cert_list_s
@@ -487,8 +459,6 @@ int ckmc_cert_list_add(ckmc_cert_list_s *previous,
  * @brief Destroys the @a ckmc_cert_list_s handle and releases resources of @a ckmc_cert_list_s from the provided first handle cascadingly.
  *
  * @since 2.3
- * @privlevel platform
- * @privilege %http://tizen.org/privilege/keymanager.admin
  *
  * @remarks It does not destroy @a ckmc_cert_s itself in @a ckmc_cert_list_s.
  *
@@ -505,8 +475,6 @@ void ckmc_cert_list_free(ckmc_cert_list_s *first);
  * @brief Destroys the @a ckmc_cert_list_s handle and releases all its resources from the provided first handle cascadingly.
  *
  * @since 2.3
- * @privlevel public
- * @privilege %http://tizen.org/privilege/keymanager
  *
  * @remarks It also destroys @a ckmc_cert_s in ckmc_cert_list_s.
  *
