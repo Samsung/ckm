@@ -181,7 +181,6 @@ int ckmc_key_new(unsigned char *raw_key, size_t key_size,
  *
  * @param[in] key The @a ckmc_key_s handle to destroy
  *
- * @see ckmc_key_new()
  */
 void ckmc_key_free(ckmc_key_s *key);
 
@@ -215,7 +214,6 @@ int ckmc_buffer_new(unsigned char *data, size_t size,ckmc_raw_buffer_s **ppbuffe
  *
  * @param[in] buffer The @a ckmc_raw_buffer_s handle to destroy
  *
- * @see ckmc_buffer_new()
  */
 void ckmc_buffer_free(ckmc_raw_buffer_s *buffer);
 
@@ -253,7 +251,6 @@ int ckmc_cert_new(unsigned char *raw_cert, size_t cert_size,
  *
  * @param[in] cert The @a ckmc_cert_s handle to destroy
  *
- * @see ckmc_cert_new()
  * @see ckmc_load_cert_from_file()
  * @see ckmc_load_from_pkcs12_file
  */
@@ -279,7 +276,6 @@ void ckmc_cert_free(ckmc_cert_s *cert);
  * @retval #CKMC_ERROR_FILE_ACCESS_DENIED  Provided file does not exist or cannot be accessed
  *
  * @see ckmc_cert_free()
- * @see ckmc_cert_new()
  * @see ckmc_load_from_pkcs12_file()
  * @see #ckmc_cert_s
  */
@@ -338,8 +334,6 @@ int ckmc_load_from_pkcs12_file(const char *file_path, const char *passphrase,
  * @retval #CKMC_ERROR_INVALID_PARAMETER Input parameter is invalid
  * @retval #CKMC_ERROR_OUT_OF_MEMORY     Not enough memory
  *
- * @see ckmc_alias_list_add()
- * @see ckmc_alias_list_free()
  * @see ckmc_alias_list_all_free()
  * @see #ckmc_alias_list_s
  */
@@ -362,8 +356,6 @@ int ckmc_alias_list_new(char *alias, ckmc_alias_list_s **ppalias_list);
  * @retval #CKMC_ERROR_INVALID_PARAMETER  Input parameter is invalid
  * @retval #CKMC_ERROR_OUT_OF_MEMORY      Not enough memory
  *
- * @see ckmc_alias_list_add()
- * @see ckmc_alias_list_free()
  * @see ckmc_alias_list_all_free()
  * @see #ckmc_alias_list_s
  */
@@ -380,8 +372,6 @@ int ckmc_alias_list_add(ckmc_alias_list_s *previous,
  *
  * @param[in] first The first @a ckmc_alias_list_s handle to destroy
  *
- * @see ckmc_alias_list_new()
- * @see ckmc_alias_list_add()
  * @see ckmc_alias_list_all_free()
  * @see #ckmc_alias_list_s
  */
@@ -396,13 +386,9 @@ void ckmc_alias_list_free(ckmc_alias_list_s *first);
  *
  * @param[in] first The first @a ckmc_alias_list_s handle to destroy
  *
- * @see ckmc_alias_list_new()
- * @see ckmc_alias_list_add()
- * @see ckmc_alias_list_free()
  * @see #ckmc_alias_list_s
  */
 void ckmc_alias_list_all_free(ckmc_alias_list_s *first);
-////////////////////////////////////////////////////////////////////////////////////// <- start
 
 /**
  * @internal
@@ -422,8 +408,6 @@ void ckmc_alias_list_all_free(ckmc_alias_list_s *first);
  * @retval #CKMC_ERROR_INVALID_PARAMETER  Input parameter is invalid
  * @retval #CKMC_ERROR_OUT_OF_MEMORY      Not enough memory
  *
- * @see ckmc_cert_list_add()
- * @see ckmc_cert_list_free()
  * @see ckmc_cert_list_all_free()
  * @see #ckmc_cert_list_s
  */
@@ -446,8 +430,6 @@ int ckmc_cert_list_new(ckmc_cert_s *cert, ckmc_cert_list_s **ppalias_list);
  * @retval #CKMC_ERROR_INVALID_PARAMETER  Input parameter is invalid
  * @retval #CKMC_ERROR_OUT_OF_MEMORY      Not enough memory
  *
- * @see ckmc_cert_list_add()
- * @see ckmc_cert_list_free()
  * @see ckmc_cert_list_all_free()
  * @see #ckmc_cert_list_s
  */
@@ -464,8 +446,6 @@ int ckmc_cert_list_add(ckmc_cert_list_s *previous,
  *
  * @param[in] first The first @a ckmc_cert_list_s handle to destroy
  *
- * @see ckmc_cert_list_new()
- * @see ckmc_cert_list_add()
  * @see ckmc_cert_list_all_free()
  * @see #ckmc_cert_list_s
  */
@@ -480,9 +460,6 @@ void ckmc_cert_list_free(ckmc_cert_list_s *first);
  *
  * @param[in] first The first @a ckmc_cert_list_s handle to destroy
  *
- * @see ckmc_cert_list_new()
- * @see ckmc_cert_list_add()
- * @see ckmc_cert_list_free()
  * @see #ckmc_cert_list_s
  */
 void ckmc_cert_list_all_free(ckmc_cert_list_s *first);
