@@ -42,5 +42,171 @@ void ManagerAsync::saveKey(const ObserverPtr& observer,
     m_impl->saveKey(observer, alias, key, policy);
 }
 
+void ManagerAsync::saveCertificate(const ObserverPtr& observer,
+                                   const Alias& alias,
+                                   const CertificateShPtr& cert,
+                                   const Policy& policy)
+{
+    m_impl->saveCertificate(observer, alias, cert, policy);
+}
+
+void ManagerAsync::saveData(const ObserverPtr& observer,
+                            const Alias& alias,
+                            const RawBuffer& data,
+                            const Policy& policy)
+{
+    m_impl->saveData(observer, alias, data, policy);
+}
+
+void ManagerAsync::removeKey(const ObserverPtr& observer, const Alias& alias)
+{
+    m_impl->removeKey(observer, alias);
+}
+
+void ManagerAsync::removeCertificate(const ObserverPtr& observer, const Alias& alias)
+{
+    m_impl->removeCertificate(observer, alias);
+}
+
+void ManagerAsync::removeData(const ObserverPtr& observer, const Alias& alias)
+{
+    m_impl->removeData(observer, alias);
+}
+
+void ManagerAsync::getKey(const ObserverPtr& observer, const Alias& alias, const Password& password)
+{
+    m_impl->getKey(observer, alias, password);
+}
+
+void ManagerAsync::getCertificate(const ObserverPtr& observer,
+                                  const Alias& alias,
+                                  const Password& password)
+{
+    m_impl->getCertificate(observer, alias, password);
+}
+
+void ManagerAsync::getData(const ObserverPtr& observer,
+                           const Alias& alias,
+                           const Password& password)
+{
+    m_impl->getData(observer, alias, password);
+}
+
+void ManagerAsync::getKeyAliasVector(const ObserverPtr& observer)
+{
+    m_impl->getKeyAliasVector(observer);
+}
+
+void ManagerAsync::getCertificateAliasVector(const ObserverPtr& observer)
+{
+    m_impl->getCertificateAliasVector(observer);
+}
+
+void ManagerAsync::getDataAliasVector(const ObserverPtr& observer)
+{
+    m_impl->getDataAliasVector(observer);
+}
+
+void ManagerAsync::createKeyPairRSA(const ObserverPtr& observer,
+                                    int size,
+                                    const Alias& privateKeyAlias,
+                                    const Alias& publicKeyAlias,
+                                    const Policy& policyPrivateKey,
+                                    const Policy& policyPublicKey)
+{
+    m_impl->createKeyPairRSA(observer,
+                             size,
+                             privateKeyAlias,
+                             publicKeyAlias,
+                             policyPrivateKey,
+                             policyPublicKey);
+}
+
+void ManagerAsync::createKeyPairDSA(const ObserverPtr& observer,
+                                    int size,
+                                    const Alias& privateKeyAlias,
+                                    const Alias& publicKeyAlias,
+                                    const Policy& policyPrivateKey,
+                                    const Policy& policyPublicKey)
+{
+    m_impl->createKeyPairDSA(observer,
+                             size,
+                             privateKeyAlias,
+                             publicKeyAlias,
+                             policyPrivateKey,
+                             policyPublicKey);
+}
+
+void ManagerAsync::createKeyPairECDSA(const ObserverPtr& observer,
+                                      const ElipticCurve type,
+                                      const Alias& privateKeyAlias,
+                                      const Alias& publicKeyAlias,
+                                      const Policy& policyPrivateKey,
+                                      const Policy& policyPublicKey)
+{
+    m_impl->createKeyPairECDSA(observer,
+                               type,
+                               privateKeyAlias,
+                               publicKeyAlias,
+                               policyPrivateKey,
+                               policyPublicKey);
+}
+
+void ManagerAsync::getCertificateChain(const ObserverPtr& observer,
+                                       const CertificateShPtr& certificate,
+                                       const CertificateShPtrVector& untrustedCertificates)
+{
+    m_impl->getCertificateChain(observer, certificate, untrustedCertificates);
+}
+
+void ManagerAsync::getCertificateChain(const ObserverPtr& observer,
+                                       const CertificateShPtr& certificate,
+                                       const AliasVector& untrustedCertificates)
+{
+    m_impl->getCertificateChain(observer, certificate, untrustedCertificates);
+}
+
+void ManagerAsync::createSignature(const ObserverPtr& observer,
+                                   const Alias& privateKeyAlias,
+                                   const Password& password,
+                                   const RawBuffer& message,
+                                   const HashAlgorithm hash,
+                                   const RSAPaddingAlgorithm padding)
+{
+    m_impl->createSignature(observer, privateKeyAlias, password, message, hash, padding);
+}
+
+void ManagerAsync::verifySignature(const ObserverPtr& observer,
+                                   const Alias& publicKeyOrCertAlias,
+                                   const Password& password,
+                                   const RawBuffer& message,
+                                   const RawBuffer& signature,
+                                   const HashAlgorithm hash,
+                                   const RSAPaddingAlgorithm padding)
+{
+    m_impl->verifySignature(observer, publicKeyOrCertAlias, password, message, signature, hash, padding);
+}
+
+void ManagerAsync::ocspCheck(const ObserverPtr& observer,
+                             const CertificateShPtrVector& certificateChainVector)
+{
+    m_impl->ocspCheck(observer, certificateChainVector);
+}
+
+void ManagerAsync::allowAccess(const ObserverPtr& observer,
+                               const std::string& alias,
+                               const std::string& accessor,
+                               AccessRight granted)
+{
+    m_impl->allowAccess(observer, alias, accessor, granted);
+}
+
+void ManagerAsync::denyAccess(const ObserverPtr& observer,
+                              const std::string& alias,
+                              const std::string& accessor)
+{
+    m_impl->denyAccess(observer, alias, accessor);
+}
+
 } // namespace CKM
 

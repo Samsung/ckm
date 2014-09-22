@@ -51,6 +51,171 @@ void ManagerAsync::Impl::saveKey(const ManagerAsync::ObserverPtr& observer,
     saveBinaryData(observer, alias, toDBDataType(key->getType()), key->getDER(), policy);
 }
 
+void ManagerAsync::Impl::saveCertificate(const ObserverPtr& observer,
+                                         const Alias& /*alias*/,
+                                         const CertificateShPtr& /*cert*/,
+                                         const Policy& /*policy*/)
+{
+    observerCheck(observer);
+    observer->ReceivedError(CKM_API_ERROR_UNKNOWN);
+}
+void ManagerAsync::Impl::saveData(const ObserverPtr& observer,
+                                  const Alias& /*alias*/,
+                                  const RawBuffer& /*data*/,
+                                  const Policy& /*policy*/)
+{
+    observerCheck(observer);
+    observer->ReceivedError(CKM_API_ERROR_UNKNOWN);
+}
+
+void ManagerAsync::Impl::removeKey(const ObserverPtr& observer, const Alias& /*alias*/)
+{
+    observerCheck(observer);
+    observer->ReceivedError(CKM_API_ERROR_UNKNOWN);
+}
+void ManagerAsync::Impl::removeCertificate(const ObserverPtr& observer, const Alias& /*alias*/)
+{
+    observerCheck(observer);
+    observer->ReceivedError(CKM_API_ERROR_UNKNOWN);
+}
+void ManagerAsync::Impl::removeData(const ObserverPtr& observer, const Alias& /*alias*/)
+{
+    observerCheck(observer);
+    observer->ReceivedError(CKM_API_ERROR_UNKNOWN);
+}
+
+void ManagerAsync::Impl::getKey(const ObserverPtr& observer,
+                                const Alias& /*alias*/,
+                                const Password& /*password*/)
+{
+    observerCheck(observer);
+    observer->ReceivedError(CKM_API_ERROR_UNKNOWN);
+}
+void ManagerAsync::Impl::getCertificate(const ObserverPtr& observer,
+                                        const Alias& /*alias*/,
+                                        const Password& /*password*/)
+{
+    observerCheck(observer);
+    observer->ReceivedError(CKM_API_ERROR_UNKNOWN);
+}
+void ManagerAsync::Impl::getData(const ObserverPtr& observer,
+                                 const Alias& /*alias*/,
+                                 const Password& /*password*/)
+{
+    observerCheck(observer);
+    observer->ReceivedError(CKM_API_ERROR_UNKNOWN);
+}
+
+void ManagerAsync::Impl::getKeyAliasVector(const ObserverPtr& observer)
+{
+    observerCheck(observer);
+    observer->ReceivedError(CKM_API_ERROR_UNKNOWN);
+}
+void ManagerAsync::Impl::getCertificateAliasVector(const ObserverPtr& observer)
+{
+    observerCheck(observer);
+    observer->ReceivedError(CKM_API_ERROR_UNKNOWN);
+}
+void ManagerAsync::Impl::getDataAliasVector(const ObserverPtr& observer)
+{
+    observerCheck(observer);
+    observer->ReceivedError(CKM_API_ERROR_UNKNOWN);
+}
+
+void ManagerAsync::Impl::createKeyPairRSA(const ObserverPtr& observer,
+                                          int /*size*/,
+                                          const Alias& /*privateKeyAlias*/,
+                                          const Alias& /*publicKeyAlias*/,
+                                          const Policy& /*policyPrivateKey*/,
+                                          const Policy& /*policyPublicKey*/)
+{
+    observerCheck(observer);
+    observer->ReceivedError(CKM_API_ERROR_UNKNOWN);
+}
+void ManagerAsync::Impl::createKeyPairDSA(const ObserverPtr& observer,
+                                          int /*size*/,
+                                          const Alias& /*privateKeyAlias*/,
+                                          const Alias& /*publicKeyAlias*/,
+                                          const Policy& /*policyPrivateKey*/,
+                                          const Policy& /*policyPublicKey*/)
+{
+    observerCheck(observer);
+    observer->ReceivedError(CKM_API_ERROR_UNKNOWN);
+}
+void ManagerAsync::Impl::createKeyPairECDSA(const ObserverPtr& observer,
+                                            const ElipticCurve /*type*/,
+                                            const Alias& /*privateKeyAlias*/,
+                                            const Alias& /*publicKeyAlias*/,
+                                            const Policy& /*policyPrivateKey*/,
+                                            const Policy& /*policyPublicKey*/)
+{
+    observerCheck(observer);
+    observer->ReceivedError(CKM_API_ERROR_UNKNOWN);
+}
+
+void ManagerAsync::Impl::getCertificateChain(const ObserverPtr& observer,
+                                             const CertificateShPtr& /*certificate*/,
+                                             const CertificateShPtrVector& /*untrustedCertificates*/)
+{
+    observerCheck(observer);
+    observer->ReceivedError(CKM_API_ERROR_UNKNOWN);
+}
+
+void ManagerAsync::Impl::getCertificateChain(const ObserverPtr& observer,
+                                             const CertificateShPtr& /*certificate*/,
+                                             const AliasVector& /*untrustedCertificates*/)
+{
+    observerCheck(observer);
+    observer->ReceivedError(CKM_API_ERROR_UNKNOWN);
+}
+
+void ManagerAsync::Impl::createSignature(const ObserverPtr& observer,
+                                         const Alias& /*privateKeyAlias*/,
+                                         const Password& /*password*/,
+                                         const RawBuffer& /*message*/,
+                                         const HashAlgorithm /*hash*/,
+                                         const RSAPaddingAlgorithm /*padding*/)
+{
+    observerCheck(observer);
+    observer->ReceivedError(CKM_API_ERROR_UNKNOWN);
+}
+
+void ManagerAsync::Impl::verifySignature(const ObserverPtr& observer,
+                                         const Alias& /*publicKeyOrCertAlias*/,
+                                         const Password& /*password*/,
+                                         const RawBuffer& /*message*/,
+                                         const RawBuffer& /*signature*/,
+                                         const HashAlgorithm /*hash*/,
+                                         const RSAPaddingAlgorithm /*padding*/)
+{
+    observerCheck(observer);
+    observer->ReceivedError(CKM_API_ERROR_UNKNOWN);
+}
+
+void ManagerAsync::Impl::ocspCheck(const ObserverPtr& observer,
+                                   const CertificateShPtrVector& /*certificateChainVector*/)
+{
+    observerCheck(observer);
+    observer->ReceivedError(CKM_API_ERROR_UNKNOWN);
+}
+
+void ManagerAsync::Impl::allowAccess(const ObserverPtr& observer,
+                                     const std::string& /*alias*/,
+                                     const std::string& /*accessor*/,
+                                     AccessRight /*granted*/)
+{
+    observerCheck(observer);
+    observer->ReceivedError(CKM_API_ERROR_UNKNOWN);
+}
+
+void ManagerAsync::Impl::denyAccess(const ObserverPtr& observer,
+                                    const std::string& /*alias*/,
+                                    const std::string& /*accessor*/)
+{
+    observerCheck(observer);
+    observer->ReceivedError(CKM_API_ERROR_UNKNOWN);
+}
+
 void ManagerAsync::Impl::saveBinaryData(const ManagerAsync::ObserverPtr& observer,
                                         const Alias& alias,
                                         DBDataType dataType,

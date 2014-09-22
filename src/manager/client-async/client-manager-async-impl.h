@@ -38,7 +38,94 @@ public:
 
     virtual ~Impl();
 
-    void saveKey(const ManagerAsync::ObserverPtr&, const Alias&, const KeyShPtr&, const Policy&);
+    void saveKey(
+            const ObserverPtr& observer,
+            const Alias& alias,
+            const KeyShPtr& key,
+            const Policy& policy);
+    void saveCertificate(
+            const ObserverPtr& observer,
+            const Alias& alias,
+            const CertificateShPtr& cert,
+            const Policy& policy);
+    void saveData(
+            const ObserverPtr& observer,
+            const Alias& alias,
+            const RawBuffer& data,
+            const Policy& policy);
+
+    void removeKey(const ObserverPtr& observer, const Alias& alias);
+    void removeCertificate(const ObserverPtr& observer, const Alias& alias);
+    void removeData(const ObserverPtr& observer, const Alias& alias);
+
+    void getKey(const ObserverPtr& observer, const Alias& alias, const Password& password);
+    void getCertificate(const ObserverPtr& observer, const Alias& alias, const Password& password);
+    void getData(const ObserverPtr& observer, const Alias& alias, const Password& password);
+
+    void getKeyAliasVector(const ObserverPtr& observer);
+    void getCertificateAliasVector(const ObserverPtr& observer);
+    void getDataAliasVector(const ObserverPtr& observer);
+
+    void createKeyPairRSA(
+            const ObserverPtr& observer,
+            int size,
+            const Alias& privateKeyAlias,
+            const Alias& publicKeyAlias,
+            const Policy& policyPrivateKey,
+            const Policy& policyPublicKey);
+    void createKeyPairDSA(
+            const ObserverPtr& observer,
+            int size,
+            const Alias& privateKeyAlias,
+            const Alias& publicKeyAlias,
+            const Policy& policyPrivateKey,
+            const Policy& policyPublicKey);
+    void createKeyPairECDSA(
+            const ObserverPtr& observer,
+            const ElipticCurve type,
+            const Alias& privateKeyAlias,
+            const Alias& publicKeyAlias,
+            const Policy& policyPrivateKey,
+            const Policy& policyPublicKey);
+
+    void getCertificateChain(
+            const ObserverPtr& observer,
+            const CertificateShPtr& certificate,
+            const CertificateShPtrVector& untrustedCertificates);
+    void getCertificateChain(
+            const ObserverPtr& observer,
+            const CertificateShPtr& certificate,
+            const AliasVector& untrustedCertificates);
+
+    void createSignature(
+            const ObserverPtr& observer,
+            const Alias& privateKeyAlias,
+            const Password& password,
+            const RawBuffer& message,
+            const HashAlgorithm hash,
+            const RSAPaddingAlgorithm padding);
+    void verifySignature(
+            const ObserverPtr& observer,
+            const Alias& publicKeyOrCertAlias,
+            const Password& password,
+            const RawBuffer& message,
+            const RawBuffer& signature,
+            const HashAlgorithm hash,
+            const RSAPaddingAlgorithm padding);
+
+    void ocspCheck(
+            const ObserverPtr& observer,
+            const CertificateShPtrVector& certificateChainVector);
+
+    void allowAccess(
+            const ObserverPtr& observer,
+            const std::string& alias,
+            const std::string& accessor,
+            AccessRight granted);
+    void denyAccess(
+            const ObserverPtr& observer,
+            const std::string& alias,
+            const std::string& accessor);
 
 private:
     void saveBinaryData(const ManagerAsync::ObserverPtr& observer,
