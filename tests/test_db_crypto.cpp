@@ -90,6 +90,7 @@ BOOST_AUTO_TEST_CASE(DBtestSimple) {
     DBRow rowPattern = createDefaultRow();
     rowPattern.data = RawBuffer(32, 1);
     rowPattern.dataSize = rowPattern.data.size();
+    rowPattern.tag = RawBuffer(16, 1);
 
     checkDBIntegrity(rowPattern, db);
 }
@@ -101,6 +102,7 @@ BOOST_AUTO_TEST_CASE(DBtestBIG) {
     DBRow rowPattern = createDefaultRow();
     rowPattern.data = createBigBlob(4096);
     rowPattern.dataSize = rowPattern.data.size();
+    rowPattern.tag = RawBuffer(16, 1);
 
     checkDBIntegrity(rowPattern, db);
 }
@@ -112,6 +114,7 @@ BOOST_AUTO_TEST_CASE(DBtestGlobal) {
     DBRow rowPattern = createDefaultRow();
     rowPattern.data = RawBuffer(1024, 2);
     rowPattern.dataSize = rowPattern.data.size();
+    rowPattern.tag = RawBuffer(16, 1);
 
     BOOST_REQUIRE_NO_THROW(db.saveDBRow(rowPattern));
 
@@ -129,6 +132,7 @@ BOOST_AUTO_TEST_CASE(DBtestTransaction) {
     DBRow rowPattern = createDefaultRow();
     rowPattern.data = RawBuffer(100, 20);
     rowPattern.dataSize = rowPattern.data.size();
+    rowPattern.tag = RawBuffer(16, 1);
     DBCrypto::Transaction transaction(&db);
 
     BOOST_REQUIRE_NO_THROW(db.saveDBRow(rowPattern));
