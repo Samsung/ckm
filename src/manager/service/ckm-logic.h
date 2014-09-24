@@ -93,21 +93,13 @@ public:
         int commandId,
         DBDataType dataType);
 
-    RawBuffer createKeyPairRSA(
+    RawBuffer createKeyPair(
         Credentials &cred,
+        LogicCommand protocol_cmd,
         int commandId,
-        int size,
+        const int additional_param,
         const Alias &aliasPrivate,
         const Alias &alaisPublic,
-        const PolicySerializable &policyPrivate,
-        const PolicySerializable &policyPublic);
-
-    RawBuffer createKeyPairECDSA(
-        Credentials &cred,
-        int commandId,
-        int type,
-        const Alias &aliasPrivate,
-        const Alias &aliasPublic,
         const PolicySerializable &policyPrivate,
         const PolicySerializable &policyPublic);
 
@@ -158,17 +150,10 @@ private:
         const Password &password,
         DBRow &row);
 
-    int createKeyPairRSAHelper(
+    int createKeyPairHelper(
         Credentials &cred,
-        int size,
-        const Alias &aliasPrivate,
-        const Alias &aliasPublic,
-        const PolicySerializable &policyPrivate,
-        const PolicySerializable &policyPublic);
-
-    int createKeyPairECDSAHelper(
-        Credentials &cred,
-        int type,
+        const KeyType key_type,
+        const int additional_param,
         const Alias &aliasPrivate,
         const Alias &aliasPublic,
         const PolicySerializable &policyPrivate,

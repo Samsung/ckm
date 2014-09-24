@@ -282,6 +282,9 @@ int ckmc_load_from_pkcs12_file(const char *file_path, const char *passphrase, ck
             case EVP_PKEY_RSA :
                 key_type = CKMC_KEY_RSA_PRIVATE;
                 break;
+            case EVP_PKEY_DSA :
+                key_type = CKMC_KEY_DSA_PRIVATE;
+                break;
             case EVP_PKEY_EC :
                 key_type = CKMC_KEY_ECDSA_PRIVATE;
                 break;

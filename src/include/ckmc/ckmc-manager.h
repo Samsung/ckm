@@ -46,7 +46,7 @@ extern "C" {
  * @privlevel public
  * @privilege %http://tizen.org/privilege/keymanager
  *
- * @remarks Currently only four types of keys are supported for this API. These are RSA public/private key and ECDSA public/private key.
+ * @remarks Currently only six types of keys are supported for this API. These are RSA public/private key, DSA public/private key and ECDSA public/private key.
  * @remarks key_type in key may be set to #CKMC_KEY_NONE as an input. key_type is determined inside key manager during storing keys.
  * @remarks Some private key files are protected by a password. If raw_key in key read from those encrypted files is encrypted with a password, the password should be provided in the #ckmc_key_s structure.
  * @remarks If password in policy is provided, the key is additionally encrypted with the password in policy.
@@ -452,11 +452,47 @@ int ckmc_get_data_alias_list(ckmc_alias_list_s** ppalias_list);
  *
  * @pre User is already logged in and the user key is already loaded into memory in plain text form.
  *
+ * @see ckmc_create_key_pair_dsa()
  * @see ckmc_create_key_pair_ecdsa()
  * @see ckmc_create_signature()
  * @see ckmc_verify_signature()
  */
 int ckmc_create_key_pair_rsa(const size_t size, const char *private_key_alias, const char *public_key_alias, const ckmc_policy_s policy_private_key, const ckmc_policy_s policy_public_key);
+
+/**
+ * @brief Creates DSA private/public key pair and stores them inside key manager based on each policy.
+ *
+ * @since_tizen 2.3
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/keymanager
+ *
+ * @remarks If password in policy is provided, the key is additionally encrypted with the password in policy.
+ *
+ * @param[in] size                The size of key strength to be created \n
+ *                                @c 1024, @c 2048, @c 3072 and @c 4096 are supported.
+ * @param[in] private_key_alias   The name of private key to be stored
+ * @param[in] public_key_alias    The name of public key to be stored
+ * @param[in] policy_private_key  The policy about how to store a private key securely
+ * @param[in] policy_public_key   The policy about how to store a public key securely
+ *
+ * @return @c 0 on success,
+ *         otherwise a negative error value
+ *
+ * @retval #CKMC_ERROR_NONE               Successful
+ * @retval #CKMC_ERROR_INVALID_PARAMETER  Input parameter is invalid
+ * @retval #CKMC_ERROR_DB_LOCKED          A user key is not loaded in memory (a user is not logged in)
+ * @retval #CKMC_ERROR_DB_ALIAS_EXISTS    Alias already exists
+ * @retval #CKMC_ERROR_DB_ERROR           Failed due to other DB transaction unexpectedly
+ * @retval #CKMC_ERROR_PERMISSION_DENIED  Failed to access key manager
+ *
+ * @pre User is already logged in and the user key is already loaded into memory in plain text form.
+ *
+ * @see ckmc_create_key_pair_rsa()
+ * @see ckmc_create_key_pair_ecdsa()
+ * @see ckmc_create_signature()
+ * @see ckmc_verify_signature()
+ */
+int ckmc_create_key_pair_dsa(const size_t size, const char *private_key_alias, const char *public_key_alias, const ckmc_policy_s policy_private_key, const ckmc_policy_s policy_public_key);
 
 /**
  * @brief Creates ECDSA private/public key pair and stores them inside key manager based on each policy.
@@ -486,6 +522,7 @@ int ckmc_create_key_pair_rsa(const size_t size, const char *private_key_alias, c
  * @pre User is already logged in and the user key is already loaded into memory in plain text form.
  *
  * @see ckmc_create_key_pair_rsa()
+ * @see ckmc_create_key_pair_dsa()
  * @see ckmc_create_signature()
  * @see ckmc_verify_signature()
  * @see #ckmc_ec_type_e

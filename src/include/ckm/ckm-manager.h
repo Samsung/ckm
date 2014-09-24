@@ -72,6 +72,13 @@ public:
         const Policy &policyPrivateKey = Policy(),
         const Policy &policyPublicKey = Policy()) = 0;
 
+    virtual int createKeyPairDSA(
+        const int size,              // size in bits [1024, 2048, 3072, 4096]
+        const Alias &privateKeyAlias,
+        const Alias &publicKeyAlias,
+        const Policy &policyPrivateKey = Policy(),
+        const Policy &policyPublicKey = Policy()) = 0;
+
     virtual int createKeyPairECDSA(
         const ElipticCurve type,
         const Alias &privateKeyAlias,

@@ -147,32 +147,59 @@ KeyImpl::KeyImpl(const RawBuffer &buf, const Password &password)
 
     m_pkey.reset(pkey, EVP_PKEY_free);
 
-    int type = EVP_PKEY_type(pkey->type);
+    switch(EVP_PKEY_type(pkey->type))
+    {
+        case EVP_PKEY_RSA:
+            m_type = isPrivate ? KeyType::KEY_RSA_PRIVATE : KeyType::KEY_RSA_PUBLIC;
+            break;
 
-    if (type == EVP_PKEY_RSA) {
-        m_type = isPrivate ? KeyType::KEY_RSA_PRIVATE : KeyType::KEY_RSA_PUBLIC;
-    }
+        case EVP_PKEY_DSA:
+            m_type = isPrivate ? KeyType::KEY_DSA_PRIVATE : KeyType::KEY_DSA_PUBLIC;
+            break;
 
-    if (type == EVP_PKEY_EC) {
-        m_type = isPrivate ? KeyType::KEY_ECDSA_PRIVATE : KeyType::KEY_ECDSA_PUBLIC;
+        case EVP_PKEY_EC:
+            m_type = isPrivate ? KeyType::KEY_ECDSA_PRIVATE : KeyType::KEY_ECDSA_PUBLIC;
+            break;
     }
     LogDebug("KeyType is: " << (int)m_type << " isPrivate: " << isPrivate);
 }
 
-KeyImpl::KeyImpl(EvpShPtr pkey, KeyType type)
-  : m_pkey(pkey)
-  , m_type(type)
+KeyImpl::KeyImpl(EvpShPtr pkey, KeyType type) : m_pkey(pkey), m_type(type)
 {
-    if (type == KeyType::KEY_RSA_PRIVATE || type == KeyType::KEY_RSA_PUBLIC)
-        if (EVP_PKEY_RSA != EVP_PKEY_type(pkey->type)) {
-            m_pkey.reset();
-            m_type = KeyType::KEY_NONE;
-        }
-    if (type == KeyType::KEY_ECDSA_PRIVATE || type == KeyType::KEY_ECDSA_PUBLIC)
-        if (EVP_PKEY_EC != EVP_PKEY_type(pkey->type)) {
-            m_pkey.reset();
-            m_type = KeyType::KEY_NONE;
-        }
+    int expected_type = EVP_PKEY_NONE;
+    switch(type)
+    {
+        case KeyType::KEY_RSA_PRIVATE:
+        case KeyType::KEY_RSA_PUBLIC:
+            expected_type = EVP_PKEY_RSA;
+            break;
+
+        case KeyType::KEY_DSA_PRIVATE:
+        case KeyType::KEY_DSA_PUBLIC:
+            expected_type = EVP_PKEY_DSA;
+            break;
+
+        case KeyType::KEY_AES:
+            LogError("Error, AES keys are not supported yet.");
+            break;
+
+        case KeyType::KEY_ECDSA_PRIVATE:
+        case KeyType::KEY_ECDSA_PUBLIC:
+            expected_type = EVP_PKEY_EC;
+            break;
+
+        default:
+            LogError("Unknown key type provided.");
+            break;
+    }
+
+    // verify if actual key type matches the expected tpe
+    int given_key_type = EVP_PKEY_type(pkey->type);
+    if(given_key_type==EVP_PKEY_NONE || expected_type!=given_key_type)
+    {
+        m_pkey.reset();
+        m_type = KeyType::KEY_NONE;
+    }
 }
 
 bool KeyImpl::empty() const {
@@ -196,10 +223,20 @@ RawBuffer KeyImpl::getDERPUB() const {
 }
 
 RawBuffer KeyImpl::getDER() const {
-    if (m_type == KeyType::KEY_ECDSA_PRIVATE || m_type == KeyType::KEY_RSA_PRIVATE) {
-        return getDERPRV();
-    } else if (m_type == KeyType::KEY_RSA_PUBLIC || m_type == KeyType::KEY_ECDSA_PUBLIC) {
-        return getDERPUB();
+    switch(m_type)
+    {
+        case KeyType::KEY_RSA_PRIVATE:
+        case KeyType::KEY_DSA_PRIVATE:
+        case KeyType::KEY_ECDSA_PRIVATE:
+            return getDERPRV();
+
+        case KeyType::KEY_RSA_PUBLIC:
+        case KeyType::KEY_DSA_PUBLIC:
+        case KeyType::KEY_ECDSA_PUBLIC:
+            return getDERPUB();
+
+        default:
+            break;
     }
     return RawBuffer();
 }

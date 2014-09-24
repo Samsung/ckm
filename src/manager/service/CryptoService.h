@@ -20,8 +20,8 @@
 #define DEV_HW_RANDOM_FILE	"/dev/hwrng"
 #define DEV_URANDOM_FILE	"/dev/urandom"
 
-#define EVP_SUCCESS	1	// DO NOTCHANGE THIS VALUE
-#define EVP_FAIL	0	// DO NOTCHANGE THIS VALUE
+#define EVP_SUCCESS 1	// DO NOTCHANGE THIS VALUE
+#define EVP_FAIL    0	// DO NOTCHANGE THIS VALUE
 
 #define CKM_CRYPTO_INIT_SUCCESS 1
 #define CKM_CRYPTO_CREATEKEY_SUCCESS 2
@@ -35,53 +35,57 @@ namespace CKM {
  // typedef std::vector<unsigned char> RawData; this must be defined in common header.
  // This is internal api so all functions should throw exception on errors.
 class CryptoService {
- public:
-     CryptoService();
-     virtual ~CryptoService();
+public:
+    CryptoService();
+    virtual ~CryptoService();
 
-     class Exception {
-     	public:
-     	     DECLARE_EXCEPTION_TYPE(CKM::Exception, Base)
-        	 DECLARE_EXCEPTION_TYPE(Base, Crypto_internal);
-     	     DECLARE_EXCEPTION_TYPE(Base, opensslError);
-     };
+    class Exception {
+        public:
+            DECLARE_EXCEPTION_TYPE(CKM::Exception, Base)
+            DECLARE_EXCEPTION_TYPE(Base, Crypto_internal);
+            DECLARE_EXCEPTION_TYPE(Base, opensslError);
+    };
 
-     // During initialization, FIPS_MODE and the antropy source are set.
-     // And system certificates are loaded in the memory during initialization.
-     //    FIPS_MODE - ON, OFF(Default)
-     //    antropy source - /dev/random,/dev/urandom(Default)
-     static int initialize();
+    // During initialization, FIPS_MODE and the antropy source are set.
+    // And system certificates are loaded in the memory during initialization.
+    //    FIPS_MODE - ON, OFF(Default)
+    //    antropy source - /dev/random,/dev/urandom(Default)
+    static int initialize();
 
-     static int createKeyPairRSA(const int size,      // size in bits [1024, 2048, 4096]
-                         KeyImpl &createdPrivateKey,  // returned value ==> Key &createdPrivateKey,
-                         KeyImpl &createdPublicKey);  // returned value ==> Key &createdPublicKey
+    static int createKeyPairRSA(const int size,      // size in bits [1024, 2048, 4096]
+                        KeyImpl &createdPrivateKey,  // returned value ==> Key &createdPrivateKey,
+                        KeyImpl &createdPublicKey);  // returned value ==> Key &createdPublicKey
 
-     static int createKeyPairECDSA(ElipticCurve type1,
-    		 	 	 	 KeyImpl &createdPrivateKey,  // returned value
-    		 	 	 	 KeyImpl &createdPublicKey);  // returned value
+    static int createKeyPairDSA(const int size,      // size in bits [1024, 2048, 3072, 4096]
+                        KeyImpl &createdPrivateKey,  // returned value ==> Key &createdPrivateKey,
+                        KeyImpl &createdPublicKey);  // returned value ==> Key &createdPublicKey
 
-     int createSignature(const KeyImpl &privateKey,
-                         const RawBuffer &message,
-                         const HashAlgorithm hashAlgo,
-                         const RSAPaddingAlgorithm padAlgo,
-                         RawBuffer &signature);
+    static int createKeyPairECDSA(ElipticCurve type1,
+                        KeyImpl &createdPrivateKey,  // returned value
+                        KeyImpl &createdPublicKey);  // returned value
 
-     int verifySignature(const KeyImpl &publicKey,
-                         const RawBuffer &message,
-                         const RawBuffer &signature,
-                         const HashAlgorithm hashAlgo,
-                         const RSAPaddingAlgorithm padAlgo);
+    int createSignature(const KeyImpl &privateKey,
+                        const RawBuffer &message,
+                        const HashAlgorithm hashAlgo,
+                        const RSAPaddingAlgorithm padAlgo,
+                        RawBuffer &signature);
 
-     int verifyCertificateChain(const CertificateImpl &certificate,
- 	                    const CertificateImplVector &untrustedCertificates,
- 	                    const CertificateImplVector &userTrustedCertificates,
- 	                    CertificateImplVector &certificateChainVector);
+    int verifySignature(const KeyImpl &publicKey,
+                        const RawBuffer &message,
+                        const RawBuffer &signature,
+                        const HashAlgorithm hashAlgo,
+                        const RSAPaddingAlgorithm padAlgo);
 
- private:
-     std::vector<X509 *> verifyCertChain(X509 *cert,
-		     std::vector<X509 *> &trustedCerts,
-		     std::vector<X509 *> &userTrustedCerts,
-		     std::vector<X509 *> &untrustedchain);
+    int verifyCertificateChain(const CertificateImpl &certificate,
+                               const CertificateImplVector &untrustedCertificates,
+                               const CertificateImplVector &userTrustedCertificates,
+                               CertificateImplVector &certificateChainVector);
+
+private:
+    std::vector<X509 *> verifyCertChain(X509 *cert,
+                                        std::vector<X509 *> &trustedCerts,
+                                        std::vector<X509 *> &userTrustedCerts,
+                                        std::vector<X509 *> &untrustedchain);
 
     bool hasValidCAFlag(std::vector<X509 *> &certChain);
 };

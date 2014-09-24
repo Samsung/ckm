@@ -40,6 +40,8 @@ enum class KeyType : int {
     KEY_RSA_PRIVATE,
     KEY_ECDSA_PUBLIC,
     KEY_ECDSA_PRIVATE,
+    KEY_DSA_PUBLIC,
+    KEY_DSA_PRIVATE,
     KEY_AES
 };
 

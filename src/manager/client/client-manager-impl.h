@@ -55,6 +55,13 @@ public:
         const Policy &policyPrivateKey = Policy(),
         const Policy &policyPublicKey = Policy());
 
+    int createKeyPairDSA(
+        const int size,              // size in bits [1024, 2048, 3072, 4096]
+        const Alias &privateKeyAlias,
+        const Alias &publicKeyAlias,
+        const Policy &policyPrivateKey = Policy(),
+        const Policy &policyPublicKey = Policy());
+
     int createKeyPairECDSA(
         ElipticCurve type,
         const Alias &privateKeyAlias,
@@ -111,6 +118,14 @@ protected:
     int getBinaryDataAliasVector(
         DBDataType sendDataType,
         AliasVector &aliasVector);
+
+    int createKeyPair(
+        const KeyType key_type,
+        const int     additional_param, // key size for [RSA|DSA], elliptic curve type for ECDSA
+        const Alias  &privateKeyAlias,
+        const Alias  &publicKeyAlias,
+        const Policy &policyPrivateKey,
+        const Policy &policyPublicKey);
 
     int m_counter;
     static bool s_isInit;

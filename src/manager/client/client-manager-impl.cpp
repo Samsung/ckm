@@ -327,7 +327,9 @@ int ManagerImpl::getBinaryDataAliasVector(DBDataType dataType, AliasVector &alia
 }
 
 int ManagerImpl::getKeyAliasVector(AliasVector &aliasVector) {
-    return getBinaryDataAliasVector(DBDataType::KEY_RSA_PUBLIC, aliasVector);
+    // in fact datatype has no meaning here - if not certificate or binary data
+    // then manager decides to list all between DB_KEY_FIRST and DB_KEY_LAST
+    return getBinaryDataAliasVector(DBDataType::DB_KEY_LAST, aliasVector);
 }
 
 int ManagerImpl::getCertificateAliasVector(AliasVector &aliasVector) {
@@ -339,46 +341,23 @@ int ManagerImpl::getDataAliasVector(AliasVector &aliasVector) {
 }
 
 int ManagerImpl::createKeyPairRSA(
-    const int size,              // size in bits [1024, 2048, 4096]
+    const int size,
     const Alias &privateKeyAlias,
     const Alias &publicKeyAlias,
     const Policy &policyPrivateKey,
     const Policy &policyPublicKey)
 {
-    m_counter++;
-    int my_counter = m_counter;
-    return try_catch([&] {
+    return this->createKeyPair(CKM::KeyType::KEY_RSA_PUBLIC, size, privateKeyAlias, publicKeyAlias, policyPrivateKey, policyPublicKey);
+}
 
-        MessageBuffer send, recv;
-        Serialization::Serialize(send, static_cast<int>(LogicCommand::CREATE_KEY_PAIR_RSA));
-        Serialization::Serialize(send, my_counter);
-        Serialization::Serialize(send, static_cast<int>(size));
-        Serialization::Serialize(send, PolicySerializable(policyPrivateKey));
-        Serialization::Serialize(send, PolicySerializable(policyPublicKey));
-        Serialization::Serialize(send, privateKeyAlias);
-        Serialization::Serialize(send, publicKeyAlias);
-
-        int retCode = sendToServer(
-            SERVICE_SOCKET_CKM_STORAGE,
-            send.Pop(),
-            recv);
-
-        if (CKM_API_SUCCESS != retCode) {
-            return retCode;
-        }
-
-        int command;
-        int counter;
-
-        Deserialization::Deserialize(recv, command);
-        Deserialization::Deserialize(recv, counter);
-        Deserialization::Deserialize(recv, retCode);
-        if (counter != my_counter) {
-            return CKM_API_ERROR_UNKNOWN;
-        }
-
-        return retCode;
-    });
+int ManagerImpl::createKeyPairDSA(
+    const int size,
+    const Alias &privateKeyAlias,
+    const Alias &publicKeyAlias,
+    const Policy &policyPrivateKey,
+    const Policy &policyPublicKey)
+{
+    return this->createKeyPair(CKM::KeyType::KEY_DSA_PUBLIC, size, privateKeyAlias, publicKeyAlias, policyPrivateKey, policyPublicKey);
 }
 
 int ManagerImpl::createKeyPairECDSA(
@@ -388,14 +367,49 @@ int ManagerImpl::createKeyPairECDSA(
     const Policy &policyPrivateKey,
     const Policy &policyPublicKey)
 {
+    return this->createKeyPair(CKM::KeyType::KEY_ECDSA_PUBLIC, static_cast<int>(type), privateKeyAlias, publicKeyAlias, policyPrivateKey, policyPublicKey);
+}
+
+int ManagerImpl::createKeyPair(
+    const KeyType key_type,
+    const int     additional_param,
+    const Alias  &privateKeyAlias,
+    const Alias  &publicKeyAlias,
+    const Policy &policyPrivateKey,
+    const Policy &policyPublicKey)
+{
+    // input type check
+    LogicCommand cmd_type;
+    switch(key_type)
+    {
+        case KeyType::KEY_RSA_PUBLIC:
+        case KeyType::KEY_RSA_PRIVATE:
+            cmd_type = LogicCommand::CREATE_KEY_PAIR_RSA;
+            break;
+
+        case KeyType::KEY_DSA_PUBLIC:
+        case KeyType::KEY_DSA_PRIVATE:
+            cmd_type = LogicCommand::CREATE_KEY_PAIR_DSA;
+            break;
+
+        case KeyType::KEY_ECDSA_PUBLIC:
+        case KeyType::KEY_ECDSA_PRIVATE:
+            cmd_type = LogicCommand::CREATE_KEY_PAIR_ECDSA;
+            break;
+
+        default:
+            return CKM_API_ERROR_INPUT_PARAM;
+    }
+
+    // proceed with sending request
     m_counter++;
     int my_counter = m_counter;
     return try_catch([&] {
 
         MessageBuffer send, recv;
-        Serialization::Serialize(send, static_cast<int>(LogicCommand::CREATE_KEY_PAIR_ECDSA));
+        Serialization::Serialize(send, static_cast<int>(cmd_type));
         Serialization::Serialize(send, my_counter);
-        Serialization::Serialize(send, static_cast<unsigned int>(type));
+        Serialization::Serialize(send, static_cast<int>(additional_param));
         Serialization::Serialize(send, PolicySerializable(policyPrivateKey));
         Serialization::Serialize(send, PolicySerializable(policyPublicKey));
         Serialization::Serialize(send, privateKeyAlias);
@@ -416,7 +430,6 @@ int ManagerImpl::createKeyPairECDSA(
         Deserialization::Deserialize(recv, command);
         Deserialization::Deserialize(recv, counter);
         Deserialization::Deserialize(recv, retCode);
-
         if (counter != my_counter) {
             return CKM_API_ERROR_UNKNOWN;
         }
@@ -424,6 +437,7 @@ int ManagerImpl::createKeyPairECDSA(
         return retCode;
     });
 }
+
 
 template <class T>
 int getCertChain(

@@ -215,42 +215,24 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer){
                 static_cast<DBDataType>(tmpDataType));
         }
         case LogicCommand::CREATE_KEY_PAIR_RSA:
-        {
-            int size;
-            Alias privateKeyAlias;
-            Alias publicKeyAlias;
-            PolicySerializable policyPrivateKey;
-            PolicySerializable policyPublicKey;
-            Deserialization::Deserialize(buffer, size);
-            Deserialization::Deserialize(buffer, policyPrivateKey);
-            Deserialization::Deserialize(buffer, policyPublicKey);
-            Deserialization::Deserialize(buffer, privateKeyAlias);
-            Deserialization::Deserialize(buffer, publicKeyAlias);
-            return m_logic->createKeyPairRSA(
-                cred,
-                commandId,
-                size,
-                privateKeyAlias,
-                publicKeyAlias,
-                policyPrivateKey,
-                policyPublicKey);
-        }
+        case LogicCommand::CREATE_KEY_PAIR_DSA:
         case LogicCommand::CREATE_KEY_PAIR_ECDSA:
         {
-            unsigned int type;
+            int additional_param;
             Alias privateKeyAlias;
             Alias publicKeyAlias;
             PolicySerializable policyPrivateKey;
             PolicySerializable policyPublicKey;
-            Deserialization::Deserialize(buffer, type);
+            Deserialization::Deserialize(buffer, additional_param);
             Deserialization::Deserialize(buffer, policyPrivateKey);
             Deserialization::Deserialize(buffer, policyPublicKey);
             Deserialization::Deserialize(buffer, privateKeyAlias);
             Deserialization::Deserialize(buffer, publicKeyAlias);
-            return m_logic->createKeyPairECDSA(
+            return m_logic->createKeyPair(
                 cred,
+                static_cast<LogicCommand>(command),
                 commandId,
-                type,
+                additional_param,
                 privateKeyAlias,
                 publicKeyAlias,
                 policyPrivateKey,

@@ -402,7 +402,30 @@ int ckmc_create_key_pair_rsa(const size_t size,
     CKM::Policy ckmPrivateKeyPolicy(_tostring(policy_private_key.password), policy_private_key.extractable);
     CKM::Policy ckmPublicKeyPolicy(_tostring(policy_public_key.password), policy_public_key.extractable);
 
-    ret = mgr->createKeyPairRSA(size, ckmPrivakeKeyAlias, ckmPublicKeyAlias, ckmPrivateKeyPolicy, ckmPublicKeyPolicy);
+    ret = mgr->createKeyPairRSA(static_cast<int>(size), ckmPrivakeKeyAlias, ckmPublicKeyAlias, ckmPrivateKeyPolicy, ckmPublicKeyPolicy);
+    return to_ckmc_error(ret);
+}
+
+KEY_MANAGER_CAPI
+int ckmc_create_key_pair_dsa(const size_t size,
+                            const char *private_key_alias,
+                            const char *public_key_alias,
+                            const ckmc_policy_s policy_private_key,
+                            const ckmc_policy_s policy_public_key)
+{
+    int ret;
+    CKM::ManagerShPtr mgr = CKM::Manager::create();
+
+    if(private_key_alias == NULL || public_key_alias == NULL) {
+        return CKMC_ERROR_INVALID_PARAMETER;
+    }
+
+    CKM::Alias ckmPrivakeKeyAlias(private_key_alias);
+    CKM::Alias ckmPublicKeyAlias(public_key_alias);
+    CKM::Policy ckmPrivateKeyPolicy(_tostring(policy_private_key.password), policy_private_key.extractable);
+    CKM::Policy ckmPublicKeyPolicy(_tostring(policy_public_key.password), policy_public_key.extractable);
+
+    ret = mgr->createKeyPairDSA(static_cast<int>(size), ckmPrivakeKeyAlias, ckmPublicKeyAlias, ckmPrivateKeyPolicy, ckmPublicKeyPolicy);
     return to_ckmc_error(ret);
 }
 

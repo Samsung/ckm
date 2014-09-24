@@ -157,6 +157,116 @@ int CryptoService::createKeyPairRSA(const int size, // size in bits [1024, 2048,
 	return CKM_CRYPTO_CREATEKEY_SUCCESS;
 }
 
+
+int CryptoService::createKeyPairDSA(const int size, // size in bits [1024, 2048, 3072, 4096]
+		KeyImpl &createdPrivateKey,  // returned value
+		KeyImpl &createdPublicKey)  // returned value
+{
+	EVP_PKEY_CTX *pctx = NULL;
+	EVP_PKEY_CTX *kctx = NULL;
+	EVP_PKEY *pkey = NULL;
+	EVP_PKEY *pparam = NULL;
+
+	// check the parameters of functions
+	if(size != 1024 && size !=2048 && size !=3072 && size != 4096) {
+		LogError("Error in DSA input size");
+		ThrowMsg(CryptoService::Exception::Crypto_internal, "Error in DSA input size");
+	}
+
+	// check the parameters of functions
+	if(&createdPrivateKey == NULL) {
+		LogError("Error in createdPrivateKey value");
+		ThrowMsg(CryptoService::Exception::Crypto_internal, "Error in createdPrivateKey value");
+	}
+
+	// check the parameters of functions
+	if(&createdPublicKey == NULL) {
+		LogError("Error in createdPrivateKey value");
+		ThrowMsg(CryptoService::Exception::Crypto_internal, "Error in createdPublicKey value");
+	}
+
+	Try {
+		/* Create the context for generating the parameters */
+		if(!(pctx = EVP_PKEY_CTX_new_id(EVP_PKEY_DSA, NULL))) {
+			LogError("Error in EVP_PKEY_CTX_new_id function");
+			ThrowMsg(CryptoService::Exception::opensslError, "Error in EVP_PKEY_CTX_new_id function");
+		}
+
+		if(EVP_SUCCESS != EVP_PKEY_paramgen_init(pctx)) {
+			LogError("Error in EVP_PKEY_paramgen_init function");
+			ThrowMsg(CryptoService::Exception::opensslError, "Error in EVP_PKEY_paramgen_init function");
+		}
+
+		if(EVP_SUCCESS != EVP_PKEY_CTX_set_dsa_paramgen_bits(pctx, size)) {
+			LogError("Error in EVP_PKEY_CTX_set_dsa_paramgen_bits(" << size << ") function");
+			ThrowMsg(CryptoService::Exception::opensslError, "Error in EVP_PKEY_CTX_set_dsa_paramgen_bits(" << size << ") function");
+		}
+
+		/* Generate parameters */
+		if(EVP_SUCCESS != EVP_PKEY_paramgen(pctx, &pparam)) {
+			LogError("Error in EVP_PKEY_paramgen function");
+			ThrowMsg(CryptoService::Exception::opensslError, "Error in EVP_PKEY_paramgen function");
+		}
+
+		// Start to generate key
+		if(!(kctx = EVP_PKEY_CTX_new(pparam, NULL))) {
+			LogError("Error in EVP_PKEY_CTX_new function");
+			ThrowMsg(CryptoService::Exception::opensslError, "Error in EVP_PKEY_CTX_new function");
+		}
+
+		if(EVP_SUCCESS != EVP_PKEY_keygen_init(kctx)) {
+			LogError("Error in EVP_PKEY_keygen_init function");
+			ThrowMsg(CryptoService::Exception::opensslError, "Error in EVP_PKEY_keygen_init function");
+		}
+
+		/* Generate the key */
+		if(EVP_SUCCESS != EVP_PKEY_keygen(kctx, &pkey)) {
+			LogError("Error in EVP_PKEY_keygen function");
+			ThrowMsg(CryptoService::Exception::opensslError, "Error in EVP_PKEY_keygen function");
+		}
+	}
+	Catch(CryptoService::Exception::opensslError)
+	{
+		if(pkey) {
+			EVP_PKEY_free(pkey);
+		}
+
+		if(pparam) {
+			EVP_PKEY_free(pparam);
+		}
+
+		if(pctx) {
+			EVP_PKEY_CTX_free(pctx);
+		}
+
+		if(kctx) {
+			EVP_PKEY_CTX_free(kctx);
+		}
+
+		ReThrowMsg(CryptoService::Exception::opensslError,"Error in openssl function !!");
+	}
+
+	KeyImpl::EvpShPtr ptr(pkey, EVP_PKEY_free); // shared ptr will free pkey
+
+	createdPrivateKey = KeyImpl(ptr, KeyType::KEY_DSA_PRIVATE);
+	createdPublicKey = KeyImpl(ptr, KeyType::KEY_DSA_PUBLIC);
+
+	if(pparam) {
+		EVP_PKEY_free(pparam);
+	}
+
+	if(pctx) {
+		EVP_PKEY_CTX_free(pctx);
+	}
+
+	if(kctx) {
+		EVP_PKEY_CTX_free(kctx);
+	}
+
+	return CKM_CRYPTO_CREATEKEY_SUCCESS;
+}
+
+
 int CryptoService::createKeyPairECDSA(ElipticCurve type,
 		KeyImpl &createdPrivateKey,  // returned value
 		KeyImpl &createdPublicKey)  // returned value
@@ -314,7 +424,10 @@ int CryptoService::createSignature(const KeyImpl &privateKey,
 		ThrowMsg(CryptoService::Exception::Crypto_internal, "Error in hashAlgorithm value");
 	}
 
-	if((privateKey.getType() != KeyType::KEY_RSA_PRIVATE) && (privateKey.getType() != KeyType::KEY_ECDSA_PRIVATE)) {
+	if((privateKey.getType() != KeyType::KEY_RSA_PRIVATE) &&
+	   (privateKey.getType() != KeyType::KEY_DSA_PRIVATE) &&
+	   (privateKey.getType() != KeyType::KEY_ECDSA_PRIVATE))
+	{
 		LogError("Error in private key type");
 		ThrowMsg(CryptoService::Exception::Crypto_internal, "Error in private key type");
 	}
@@ -447,7 +560,10 @@ int CryptoService::verifySignature(const KeyImpl &publicKey,
 		ThrowMsg(CryptoService::Exception::Crypto_internal, "Error in hashAlgorithm value");
 	}
 
-	if((publicKey.getType() != KeyType::KEY_RSA_PUBLIC) && (publicKey.getType() != KeyType::KEY_ECDSA_PUBLIC)) {
+	if((publicKey.getType() != KeyType::KEY_RSA_PUBLIC) &&
+	   (publicKey.getType() != KeyType::KEY_DSA_PUBLIC) &&
+	   (publicKey.getType() != KeyType::KEY_ECDSA_PUBLIC))
+	{
 		LogError("Error in private key type");
 		ThrowMsg(CryptoService::Exception::Crypto_internal, "Error in private key type");
 	}

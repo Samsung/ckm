@@ -72,13 +72,24 @@ PKCS12Impl::PKCS12Impl(const RawBuffer &buffer, const Password &password)
 
     if (pkey) {
         KeyImpl::EvpShPtr ptr(pkey, EVP_PKEY_free);
-        if (EVP_PKEY_type(pkey->type) == EVP_PKEY_RSA) {
-            m_pkey = std::make_shared<KeyImpl>(ptr, KeyType::KEY_RSA_PRIVATE);
-        } else if (EVP_PKEY_type(pkey->type) == EVP_PKEY_EC) {
-            m_pkey = std::make_shared<KeyImpl>(ptr, KeyType::KEY_ECDSA_PRIVATE);
-        } else {
-            LogError("Unsupported private key type.");
-            EVP_PKEY_free(pkey);
+        switch(EVP_PKEY_type(pkey->type))
+        {
+            case EVP_PKEY_RSA:
+                m_pkey = std::make_shared<KeyImpl>(ptr, KeyType::KEY_RSA_PRIVATE);
+                break;
+
+            case EVP_PKEY_DSA:
+                m_pkey = std::make_shared<KeyImpl>(ptr, KeyType::KEY_DSA_PRIVATE);
+                break;
+
+            case EVP_PKEY_EC:
+                m_pkey = std::make_shared<KeyImpl>(ptr, KeyType::KEY_ECDSA_PRIVATE);
+                break;
+
+            default:
+                LogError("Unsupported private key type.");
+                EVP_PKEY_free(pkey);
+                break;
         }
     }
 

@@ -448,9 +448,11 @@ RawBuffer CKMLogic::getDataList(
     return response.Pop();
 }
 
-int CKMLogic::createKeyPairRSAHelper(
+
+int CKMLogic::createKeyPairHelper(
     Credentials &cred,
-    int size,
+    const KeyType key_type,
+    const int additional_param,
     const Alias &aliasPrivate,
     const Alias &aliasPublic,
     const PolicySerializable &policyPrivate,
@@ -462,9 +464,28 @@ int CKMLogic::createKeyPairRSAHelper(
     auto &handler = m_userDataMap[cred.uid];
     KeyImpl prv, pub;
     int retCode;
+    switch(key_type)
+    {
+        case KeyType::KEY_RSA_PUBLIC:
+        case KeyType::KEY_RSA_PRIVATE:
+            retCode = CryptoService::createKeyPairRSA(additional_param, prv, pub);
+            break;
 
-    if (CKM_CRYPTO_CREATEKEY_SUCCESS !=
-        (retCode = CryptoService::createKeyPairRSA(size, prv, pub)))
+        case KeyType::KEY_DSA_PUBLIC:
+        case KeyType::KEY_DSA_PRIVATE:
+            retCode = CryptoService::createKeyPairDSA(additional_param, prv, pub);
+            break;
+
+        case KeyType::KEY_ECDSA_PUBLIC:
+        case KeyType::KEY_ECDSA_PRIVATE:
+            retCode = CryptoService::createKeyPairECDSA(static_cast<ElipticCurve>(additional_param), prv, pub);
+            break;
+
+        default:
+            return CKM_API_ERROR_INPUT_PARAM;
+    }
+
+    if (CKM_CRYPTO_CREATEKEY_SUCCESS != retCode)
     {
         LogDebug("CryptoService error with code: " << retCode);
         return CKM_API_ERROR_SERVER_ERROR; // TODO error code
@@ -494,10 +515,11 @@ int CKMLogic::createKeyPairRSAHelper(
     return retCode;
 }
 
-RawBuffer CKMLogic::createKeyPairRSA(
+RawBuffer CKMLogic::createKeyPair(
     Credentials &cred,
+    LogicCommand protocol_cmd,
     int commandId,
-    int size,
+    const int additional_param,
     const Alias &aliasPrivate,
     const Alias &aliasPublic,
     const PolicySerializable &policyPrivate,
@@ -505,10 +527,27 @@ RawBuffer CKMLogic::createKeyPairRSA(
 {
     int retCode = CKM_API_SUCCESS;
 
+    KeyType key_type = KeyType::KEY_NONE;
+    switch(protocol_cmd)
+    {
+        case LogicCommand::CREATE_KEY_PAIR_RSA:
+            key_type = KeyType::KEY_RSA_PUBLIC;
+            break;
+        case LogicCommand::CREATE_KEY_PAIR_DSA:
+            key_type = KeyType::KEY_DSA_PUBLIC;
+            break;
+        case LogicCommand::CREATE_KEY_PAIR_ECDSA:
+            key_type = KeyType::KEY_ECDSA_PUBLIC;
+            break;
+        default:
+            break;
+    }
+
     try {
-        retCode = createKeyPairRSAHelper(
+        retCode = createKeyPairHelper(
                         cred,
-                        size,
+                        key_type,
+                        additional_param,
                         aliasPrivate,
                         aliasPublic,
                         policyPrivate,
@@ -529,95 +568,7 @@ RawBuffer CKMLogic::createKeyPairRSA(
     }
 
     MessageBuffer response;
-    Serialization::Serialize(response, static_cast<int>(LogicCommand::CREATE_KEY_PAIR_RSA));
-    Serialization::Serialize(response, commandId);
-    Serialization::Serialize(response, retCode);
-
-    return response.Pop();
-}
-
-int CKMLogic::createKeyPairECDSAHelper(
-    Credentials &cred,
-    int type,
-    const Alias &aliasPrivate,
-    const Alias &aliasPublic,
-    const PolicySerializable &policyPrivate,
-    const PolicySerializable &policyPublic)
-{
-    if (0 >= m_userDataMap.count(cred.uid))
-        return CKM_API_ERROR_DB_LOCKED;
-
-    auto &handler = m_userDataMap[cred.uid];
-    KeyImpl prv, pub;
-    int retCode;
-
-    if (CKM_CRYPTO_CREATEKEY_SUCCESS !=
-        (retCode = CryptoService::createKeyPairECDSA(static_cast<ElipticCurve>(type), prv, pub)))
-    {
-        LogError("CryptoService failed with code: " << retCode);
-        return CKM_API_ERROR_SERVER_ERROR; // TODO error code
-    }
-
-    DBCrypto::Transaction transaction(&handler.database);
-
-    retCode = saveDataHelper(cred,
-                            toDBDataType(prv.getType()),
-                            aliasPrivate,
-                            prv.getDER(),
-                            policyPrivate);
-
-    if (CKM_API_SUCCESS != retCode)
-        return retCode;
-
-    retCode = saveDataHelper(cred,
-                            toDBDataType(pub.getType()),
-                            aliasPublic,
-                            pub.getDER(),
-                            policyPublic);
-
-    if (CKM_API_SUCCESS != retCode)
-        return retCode;
-
-    transaction.commit();
-
-    return retCode;
-}
-
-RawBuffer CKMLogic::createKeyPairECDSA(
-    Credentials &cred,
-    int commandId,
-    int type,
-    const Alias &aliasPrivate,
-    const Alias &aliasPublic,
-    const PolicySerializable &policyPrivate,
-    const PolicySerializable &policyPublic)
-{
-    int retCode = CKM_API_SUCCESS;
-
-    try {
-        retCode = createKeyPairECDSAHelper(
-                        cred,
-                        type,
-                        aliasPrivate,
-                        aliasPublic,
-                        policyPrivate,
-                        policyPublic);
-    } catch (const DBCrypto::Exception::AliasExists &e) {
-        LogDebug("DBCrypto error: alias exists: " << e.GetMessage());
-        retCode = CKM_API_ERROR_DB_ALIAS_EXISTS;
-    } catch (const DBCrypto::Exception::TransactionError &e) {
-        LogDebug("DBCrypto error: transaction error: " << e.GetMessage());
-        retCode = CKM_API_ERROR_DB_ERROR;
-    } catch (const CKM::CryptoLogic::Exception::Base &e) {
-        LogDebug("CryptoLogic error: " << e.GetMessage());
-        retCode = CKM_API_ERROR_SERVER_ERROR;
-    } catch (const DBCrypto::Exception::InternalError &e) {
-        LogDebug("DBCrypto internal error: " << e.GetMessage());
-        retCode = CKM_API_ERROR_DB_ERROR;
-    }
-
-    MessageBuffer response;
-    Serialization::Serialize(response, static_cast<int>(LogicCommand::CREATE_KEY_PAIR_RSA));
+    Serialization::Serialize(response, static_cast<int>(protocol_cmd));
     Serialization::Serialize(response, commandId);
     Serialization::Serialize(response, retCode);
 

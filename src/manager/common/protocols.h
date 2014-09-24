@@ -52,7 +52,9 @@ enum class LogicCommand : int {
     GET_CHAIN_CERT,
     GET_CHAIN_ALIAS,
     CREATE_SIGNATURE,
-    VERIFY_SIGNATURE
+    VERIFY_SIGNATURE,
+    CREATE_KEY_PAIR_DSA
+    // for backward compatibility append new on the end
 };
 
 // Do not use DB_KEY_FIRST and DB_KEY_LAST in the code.
@@ -63,10 +65,12 @@ enum class DBDataType : int {
     KEY_RSA_PRIVATE,
     KEY_ECDSA_PUBLIC,
     KEY_ECDSA_PRIVATE,
+    KEY_DSA_PUBLIC,
+    KEY_DSA_PRIVATE,
     KEY_AES,
     DB_KEY_LAST = KEY_AES,
     CERTIFICATE,
-    BINARY_DATA
+    BINARY_DATA,
 };
 
 DBDataType toDBDataType(KeyType key);

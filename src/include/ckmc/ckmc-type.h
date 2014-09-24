@@ -47,6 +47,9 @@ typedef enum __ckmc_key_type {
     CKMC_KEY_RSA_PRIVATE,    /**< RSA private key */
     CKMC_KEY_ECDSA_PUBLIC,   /**< ECDSA public key */
     CKMC_KEY_ECDSA_PRIVATE,  /**< ECDSA private key */
+    CKMC_KEY_DSA_PUBLIC,     /**< DSA public key */
+    CKMC_KEY_DSA_PRIVATE,    /**< DSA private key */
+    CKMC_KEY_AES,            /**< AES key, MJK: kept for binary compatibility with ckm-type.h::KeyType::KEY_AES*/
 } ckmc_key_type_e;
 
 /**
