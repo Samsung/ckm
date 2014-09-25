@@ -418,7 +418,7 @@ int ckmc_cert_list_new(ckmc_cert_s *cert, ckmc_cert_list_s **ppalias_list);
  * @brief Creates a new @a ckmc_cert_list_s handle, adds it to a previous @a ckmc_cert_list_s and returns it.
  *        The cert pointer in the returned @a ckmc_alias_list_s handle points to the provided @a ckmc_cert_s and next is null.
  *
- * @since 2.3
+ * @since_tizen 2.3
  *
  * @param[in]  previous  The last @a ckmc_cert_list_s handle to which a newly created @a ckmc_cert_list_s is added
  * @param[in]  cert      The item to be set in the newly created @a ckmc_cert_list_s
@@ -440,7 +440,7 @@ int ckmc_cert_list_add(ckmc_cert_list_s *previous,
  * @internal
  * @brief Destroys the @a ckmc_cert_list_s handle and releases resources of @a ckmc_cert_list_s from the provided first handle cascadingly.
  *
- * @since 2.3
+ * @since_tizen 2.3
  *
  * @remarks It does not destroy @a ckmc_cert_s itself in @a ckmc_cert_list_s.
  *
@@ -454,7 +454,7 @@ void ckmc_cert_list_free(ckmc_cert_list_s *first);
 /**
  * @brief Destroys the @a ckmc_cert_list_s handle and releases all its resources from the provided first handle cascadingly.
  *
- * @since 2.3
+ * @since_tizen 2.3
  *
  * @remarks It also destroys @a ckmc_cert_s in ckmc_cert_list_s.
  *
