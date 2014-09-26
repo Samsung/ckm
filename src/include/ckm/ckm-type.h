@@ -35,7 +35,7 @@ typedef std::string Alias;
 typedef std::vector<Alias> AliasVector;
 
 enum class KeyType : int {
-    KEY_NONE,
+    KEY_NONE = 0,
     KEY_RSA_PUBLIC,
     KEY_RSA_PRIVATE,
     KEY_ECDSA_PUBLIC,
@@ -46,19 +46,19 @@ enum class KeyType : int {
 };
 
 enum class DataFormat : int {
-    FORM_DER_BASE64,
+    FORM_DER_BASE64 = 0,
     FORM_DER,
     FORM_PEM
 };
 
 enum class ElipticCurve : int {
-    prime192v1,
+    prime192v1 = 0,
     prime256v1,
     secp384r1
 };
 
 enum class CertificateFieldId : int {
-    ISSUER,
+    ISSUER = 0,
     SUBJECT
 };
 
@@ -72,25 +72,22 @@ struct Policy {
     bool extractable;   // if true key may be extracted from storage
 };
 
-// Added by Dongsun Lee
 enum class HashAlgorithm : int {
+    NONE = 0,
     SHA1,
     SHA256,
     SHA384,
     SHA512
 };
 
-// Added by Dongsun Lee
 enum class RSAPaddingAlgorithm : int {
+    NONE = 0,
     PKCS1,
-//  SSLV23, // not supported
-//  NONE, // not supported
-//  PKCS1_OAEP, // not supported
     X931
 };
 
 enum class DBCMAlgType : int {
-    NONE,
+    NONE = 0,
     AES_GCM_256,
     COUNT
 };

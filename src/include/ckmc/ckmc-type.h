@@ -77,7 +77,8 @@ typedef enum __ckmc_ec_type {
  * @since_tizen 2.3
  */
 typedef enum __ckmc_hash_algo {
-    CKMC_HASH_SHA1 = 0, /**< Hash Algorithm SHA1  */
+    CKMC_HASH_NONE = 0, /**< No Hash Algorithm  */
+    CKMC_HASH_SHA1,     /**< Hash Algorithm SHA1  */
     CKMC_HASH_SHA256,   /**< Hash Algorithm SHA256  */
     CKMC_HASH_SHA384,   /**< Hash Algorithm SHA384  */
     CKMC_HASH_SHA512    /**< Hash Algorithm SHA512  */
@@ -88,7 +89,8 @@ typedef enum __ckmc_hash_algo {
  * @since_tizen 2.3
  */
 typedef enum __ckmc_rsa_padding_algo {
-    CKMC_PKCS1_PADDING = 0, /**< PKCS#1 Padding */
+    CKMC_NONE_PADDING = 0,  /**< No Padding */
+    CKMC_PKCS1_PADDING,     /**< PKCS#1 Padding */
     CKMC_X931_PADDING       /**< X9.31 padding */
 } ckmc_rsa_padding_algo_e;
 
@@ -97,8 +99,8 @@ typedef enum __ckmc_rsa_padding_algo {
  * @since_tizen 2.3
  */
 typedef struct __ckmc_raw_buff {
-	unsigned char* data; /**< Byte array containing binary data */
-	size_t size;         /**< The size of the binary data */
+    unsigned char* data; /**< Byte array containing binary data */
+    size_t size;         /**< The size of the binary data */
 } ckmc_raw_buffer_s;
 
 /**
@@ -106,8 +108,8 @@ typedef struct __ckmc_raw_buff {
  * @since_tizen 2.3
  */
 typedef struct __ckmc_policy {
-	char* password;   /**< Byte array used to encrypt data inside CKM. If it is not null, the data(or key, or certificate) is stored encrypted with this password inside key manager */
-	bool extractable; /**< If true key may be extracted from storage */
+    char* password;   /**< Byte array used to encrypt data inside CKM. If it is not null, the data(or key, or certificate) is stored encrypted with this password inside key manager */
+    bool extractable; /**< If true key may be extracted from storage */
 } ckmc_policy_s;
 
 /**
@@ -115,10 +117,10 @@ typedef struct __ckmc_policy {
  * @since_tizen 2.3
  */
 typedef struct __ckmc_key {
-	unsigned char* raw_key;   /**< Byte array of key. raw_key may be encrypted with password */
-	size_t key_size;          /**< The byte size of raw_key */
-	ckmc_key_type_e key_type; /**< The raw_key's type */
-	char* password;           /**< Byte array used to decrypt data raw_key inside key manager. */
+    unsigned char* raw_key;   /**< Byte array of key. raw_key may be encrypted with password */
+    size_t key_size;          /**< The byte size of raw_key */
+    ckmc_key_type_e key_type; /**< The raw_key's type */
+    char* password;           /**< Byte array used to decrypt data raw_key inside key manager. */
 } ckmc_key_s;
 
 /**
@@ -126,9 +128,9 @@ typedef struct __ckmc_key {
  * @since_tizen 2.3
  */
 typedef struct __ckmc_cert {
-	unsigned char* raw_cert;  /**< Byte array of certificate */
-	size_t cert_size;         /**< Byte size of raw_cert */
-	ckmc_data_format_e data_format; /**< Raw_cert's encoding format */
+    unsigned char* raw_cert;  /**< Byte array of certificate */
+    size_t cert_size;         /**< Byte size of raw_cert */
+    ckmc_data_format_e data_format; /**< Raw_cert's encoding format */
 } ckmc_cert_s;
 
 /**
@@ -136,8 +138,8 @@ typedef struct __ckmc_cert {
  * @since_tizen 2.3
  */
 typedef struct __ckmc_alias_list {
-	char *alias;  /**< The name of key, certificate or data stored in key manager */
-	struct __ckmc_alias_list *next; /**< The pointer pointing to the next ckmc_alias_list_s */
+    char *alias;  /**< The name of key, certificate or data stored in key manager */
+    struct __ckmc_alias_list *next; /**< The pointer pointing to the next ckmc_alias_list_s */
 } ckmc_alias_list_s;
 
 /**
@@ -145,8 +147,8 @@ typedef struct __ckmc_alias_list {
  * @since_tizen 2.3
  */
 typedef struct __ckmc_cert_list {
-	ckmc_cert_s *cert; /**< The pointer of ckmc_cert_s */
-	struct __ckmc_cert_list *next; /**< The pointer pointing to the next ckmc_cert_list_s */
+    ckmc_cert_s *cert; /**< The pointer of ckmc_cert_s */
+    struct __ckmc_cert_list *next; /**< The pointer pointing to the next ckmc_cert_list_s */
 } ckmc_cert_list_s;
 
 /**

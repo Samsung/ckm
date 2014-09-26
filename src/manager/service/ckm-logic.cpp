@@ -680,7 +680,7 @@ RawBuffer CKMLogic::createSignature(
 
     try {
         do {
-            retCode = getDataHelper(cred, DBDataType::KEY_RSA_PUBLIC, privateKeyAlias, password, row);
+            retCode = getDataHelper(cred, DBDataType::DB_KEY_FIRST, privateKeyAlias, password, row);
             if (CKM_API_SUCCESS != retCode) {
                 LogError("getDataHelper return error");
                 break;
@@ -690,7 +690,7 @@ RawBuffer CKMLogic::createSignature(
             if (keyParsed.empty())
                 retCode = CKM_API_ERROR_SERVER_ERROR;
             else
-                cs.createSignature(keyParsed, message, hash, padding, signature);
+                retCode = cs.createSignature(keyParsed, message, hash, padding, signature);
         } while(0);
     } catch (const KeyProvider::Exception::Base &e) {
         LogError("KeyProvider failed with message: " << e.GetMessage());

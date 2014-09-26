@@ -17,16 +17,14 @@
 #include <openssl/err.h>
 #include <dpl/exception.h>
 
-#define DEV_HW_RANDOM_FILE	"/dev/hwrng"
-#define DEV_URANDOM_FILE	"/dev/urandom"
+#define DEV_HW_RANDOM_FILE    "/dev/hwrng"
+#define DEV_URANDOM_FILE    "/dev/urandom"
 
 #define EVP_SUCCESS 1	// DO NOTCHANGE THIS VALUE
 #define EVP_FAIL    0	// DO NOTCHANGE THIS VALUE
 
 #define CKM_CRYPTO_INIT_SUCCESS 1
 #define CKM_CRYPTO_CREATEKEY_SUCCESS 2
-#define CKM_CREATE_SIGNATURE_SUCCESS 3
-#define CKM_VERIFY_SIGNATURE_SUCCESS 4
 #define CKM_VERIFY_CHAIN_SUCCESS 5
 #define NOT_DEFINED -1
 
@@ -88,6 +86,29 @@ private:
                                         std::vector<X509 *> &untrustedchain);
 
     bool hasValidCAFlag(std::vector<X509 *> &certChain);
+
+    const EVP_MD *getMdAlgo(const HashAlgorithm hashAlgo);
+    int getRsaPadding(const RSAPaddingAlgorithm padAlgo);
+
+    int signMessage(EVP_PKEY *privKey,
+            const RawBuffer &message,
+            const int rsa_padding,
+            RawBuffer &signature);
+    int digestSignMessage(EVP_PKEY *privKey,
+            const RawBuffer &message,
+            const EVP_MD *md_algo,
+            const int rsa_padding,
+            RawBuffer &signature);
+
+    int verifyMessage(EVP_PKEY *pubKey,
+            const RawBuffer &message,
+            const RawBuffer &signature,
+            const int rsa_padding);
+    int digestVerifyMessage(EVP_PKEY *pubKey,
+            const RawBuffer &message,
+            const RawBuffer &signature,
+            const EVP_MD *md_algo,
+            const int rsa_padding);
 };
 }
 
