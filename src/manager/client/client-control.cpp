@@ -192,6 +192,31 @@ public:
         });
     }
 
+    virtual int setCCMode(CCModeState mode) {
+        return try_catch([&] {
+            if(((mode != CCModeState::CC_MODE_OFF)) && (mode != CCModeState::CC_MODE_ON)) {
+                return CKM_API_ERROR_INPUT_PARAM;
+            }
+
+            MessageBuffer send, recv;
+            Serialization::Serialize(send, static_cast<int>(ControlCommand::SET_CC_MODE));
+            Serialization::Serialize(send, static_cast<int>(mode));
+
+            int retCode = sendToServer(
+                SERVICE_SOCKET_CKM_CONTROL,
+                send.Pop(),
+                recv);
+
+            if (CKM_API_SUCCESS != retCode) {
+                return retCode;
+            }
+
+            Deserialization::Deserialize(recv, retCode);
+
+            return retCode;
+        });
+    }
+
     virtual ~ControlImpl(){}
 };
 

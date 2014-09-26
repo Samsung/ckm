@@ -39,7 +39,8 @@ enum class ControlCommand : int {
     REMOVE_USER_DATA,
     CHANGE_USER_PASSWORD,
     RESET_USER_PASSWORD,
-    REMOVE_APP_DATA
+    REMOVE_APP_DATA,
+    SET_CC_MODE
 };
 
 enum class LogicCommand : int {

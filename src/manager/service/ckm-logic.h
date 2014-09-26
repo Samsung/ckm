@@ -134,6 +134,8 @@ public:
         const HashAlgorithm hash,
         const RSAPaddingAlgorithm padding);
 
+    RawBuffer setCCModeStatus(CCModeState mode_status);
+
 private:
 
     int saveDataHelper(
@@ -167,6 +169,7 @@ private:
 
     std::map<uid_t, UserData> m_userDataMap;
     CertificateStore m_certStore;
+    CCModeState cc_mode_status;
 };
 
 } // namespace CKM

@@ -30,6 +30,7 @@ Central Key Manager and utilities
 %package -n key-manager-listener
 Summary:    Package with listener daemon
 Group:      System/Security
+BuildRequires: pkgconfig(vconf)
 Requires:   libkey-manager-client = %{version}-%{release}
 
 %description -n key-manager-listener

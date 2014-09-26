@@ -92,6 +92,11 @@ enum class DBCMAlgType : int {
     COUNT
 };
 
+enum class CCModeState : int {
+    CC_MODE_OFF = 0,
+    CC_MODE_ON
+};
+
 const char * ErrorToString(int error);
 
 } // namespace CKM

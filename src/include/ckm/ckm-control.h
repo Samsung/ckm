@@ -62,6 +62,8 @@ public:
     // database only. This function may be used during application uninstallation.
     virtual int removeApplicationData(const std::string &smackLabel) = 0;
 
+    virtual int setCCMode(CCModeState mode) = 0;
+
     virtual ~Control(){}
 
     static ControlShPtr create();

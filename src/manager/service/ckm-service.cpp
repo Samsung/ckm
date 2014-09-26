@@ -107,6 +107,7 @@ bool CKMService::processOne(
 
 RawBuffer CKMService::processControl(MessageBuffer &buffer) {
     int command;
+    int cc_mode_status;
     uid_t user;
     ControlCommand cc;
     Password newPass, oldPass;
@@ -141,6 +142,9 @@ RawBuffer CKMService::processControl(MessageBuffer &buffer) {
     case ControlCommand::REMOVE_APP_DATA:
         Deserialization::Deserialize(buffer, smackLabel);
         return m_logic->removeApplicationData(smackLabel);
+    case ControlCommand::SET_CC_MODE:
+        Deserialization::Deserialize(buffer, cc_mode_status);
+        return m_logic->setCCModeStatus(static_cast<CCModeState>(cc_mode_status));
     default:
         Throw(Exception::BrokenProtocol);
     }

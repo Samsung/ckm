@@ -46,6 +46,8 @@ CKMLogic::CKMLogic()
     if (CKM_API_SUCCESS != m_certStore.setSystemCertificateDir(CERT_SYSTEM_DIR)) {
         LogError("Fatal error in CertificateStore::setSystemCertificateDir. Chain creation will not work");
     }
+
+    cc_mode_status = CCModeState::CC_MODE_OFF;
 }
 
 CKMLogic::~CKMLogic(){}
@@ -105,6 +107,21 @@ RawBuffer CKMLogic::unlockUserKey(uid_t user, const Password &password) {
         // Because other operations make decision based on the existence of UserData in m_userDataMap.
         m_userDataMap.erase(user);
     }
+
+    MessageBuffer response;
+    Serialization::Serialize(response, retCode);
+    return response.Pop();
+}
+
+RawBuffer CKMLogic::setCCModeStatus(CCModeState mode_status) {
+
+    int retCode = CKM_API_SUCCESS;
+
+    if((mode_status != CCModeState:: CC_MODE_OFF) && (mode_status != CCModeState:: CC_MODE_ON)) {
+        retCode = CKM_API_ERROR_INPUT_PARAM;
+    }
+
+    cc_mode_status = mode_status;
 
     MessageBuffer response;
     Serialization::Serialize(response, retCode);
@@ -249,7 +266,14 @@ int CKMLogic::saveDataHelper(
         key = handler.keyProvider.getPureDEK(key);
         handler.crypto.pushKey(cred.smackLabel, key);
     }
-    handler.crypto.encryptRow(policy.password, row);
+
+    // Do not encrypt data with password during cc_mode on
+    if(cc_mode_status == CCModeState::CC_MODE_ON) {
+        handler.crypto.encryptRow("", row);
+    } else {
+        handler.crypto.encryptRow(policy.password, row);
+    }
+
     handler.database.saveDBRow(row);
     transaction.commit();
     return CKM_API_SUCCESS;
@@ -404,6 +428,12 @@ RawBuffer CKMLogic::getData(
     if ((CKM_API_SUCCESS == retCode) && (row.exportable == 0)) {
         row.data.clear();
         retCode = CKM_API_ERROR_NOT_EXPORTABLE;
+    }
+
+    // Prevent extracting private keys during cc-mode on
+    if((cc_mode_status == CCModeState::CC_MODE_ON) && (row.dataType == DBDataType::KEY_RSA_PRIVATE || row.dataType == DBDataType::KEY_ECDSA_PRIVATE ||  row.dataType == DBDataType::KEY_DSA_PRIVATE)) {
+        row.data.clear();
+        retCode = CKM_API_ERROR_BAD_REQUEST;
     }
 
     MessageBuffer response;

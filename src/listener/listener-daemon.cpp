@@ -12,11 +12,106 @@
 #include <glib.h>
 #include <package_manager.h>
 #include <ckm/ckm-control.h>
+#include <ckm/ckm-type.h>
+#include <vconf/vconf.h>
 #include <dlog.h>
 
-#define CKM_TAG "CKM_LISTENER"
+#define CKM_LISTENER_TAG "CKM_LISTENER"
 
-void eventCallback(
+#ifndef MDPP_MODE_ENFORCING
+#define MDPP_MODE_ENFORCING "Enforcing"
+#endif
+
+#ifndef MDPP_MODE_ENABLED
+#define MDPP_MODE_ENABLED   "Enabled"
+#endif
+
+#ifndef VCONFKEY_SECURITY_MDPP_STATE
+#define VCONFKEY_SECURITY_MDPP_STATE "file/security_mdpp/security_mdpp_state"
+#endif
+
+void daemonize()
+{
+    // Let's operate in background
+    int result = fork();
+    if (result < 0){
+        SLOG(LOG_ERROR, CKM_LISTENER_TAG, "%s", "Error in fork!");
+        exit(1);
+    }
+
+    if (result > 0)
+        exit(0);
+
+    // Let's disconnect from terminal
+    if (-1 == setsid()) {
+        SLOG(LOG_ERROR, CKM_LISTENER_TAG, "%s", "Error in fork!");
+        exit(1);
+    }
+
+    // Let's close all descriptors
+//    for (result = getdtablesize(); result>=0; --result)
+//    close(result);
+
+    close(0);
+    close(1);
+    close(2);
+
+    result = open("/dev/null", O_RDWR); // open stdin
+
+    int fd_stdout = 0;
+    int fd_stderr = 0;
+    fd_stdout = dup(result); // stdout
+    fd_stderr = dup(result); // stderr
+    SLOG(LOG_DEBUG, CKM_LISTENER_TAG, "%d : %s", fd_stdout, "stdout file descriptor");
+    SLOG(LOG_DEBUG, CKM_LISTENER_TAG, "%d : %s", fd_stderr, "stderr file descriptor");
+
+
+    umask(027);
+
+    // Let's change current directory
+    if (-1 == chdir("/")) {
+        SLOG(LOG_ERROR, CKM_LISTENER_TAG, "%s", "Error in chdir!");
+        exit(1);
+    }
+
+    // Let's create lock file
+    result = open("/tmp/ckm-listener.lock", O_RDWR | O_CREAT, 0640);
+    if (result < 0) {
+        SLOG(LOG_ERROR, CKM_LISTENER_TAG, "%s", "Error in opening lock file!");
+        exit(1);
+    }
+
+    if (lockf(result, F_TLOCK, 0) < 0) {
+        SLOG(LOG_ERROR, CKM_LISTENER_TAG, "%s", "Daemon already working!");
+        exit(0);
+    }
+
+    char str[100];
+    sprintf(str, "%d\n", getpid());
+    result = write(result, str, strlen(str));
+
+    SLOG(LOG_DEBUG, CKM_LISTENER_TAG, "%s", str);
+}
+
+void callSetCCMode(const char *mdpp_state)
+{
+    auto control = CKM::Control::create();
+    int ret = CKM_API_SUCCESS;
+    if ( !strcmp(mdpp_state, MDPP_MODE_ENABLED) ||
+            !strcmp(mdpp_state, MDPP_MODE_ENFORCING) )
+        ret = control->setCCMode(CKM::CCModeState::CC_MODE_ON);
+    else
+        ret = control->setCCMode(CKM::CCModeState::CC_MODE_OFF);
+
+    SLOG(LOG_DEBUG, CKM_LISTENER_TAG, "Callback caller process id : %d\n", getpid());
+
+    if ( ret != CKM_API_SUCCESS )
+        SLOG(LOG_ERROR, CKM_LISTENER_TAG, "CKM::Control::setCCMode error. ret : %d\n", ret);
+    else
+        SLOG(LOG_DEBUG, CKM_LISTENER_TAG, "CKM::Control::setCCMode success. mdpp_state : %s", mdpp_state);
+}
+
+void packageUninstalledEventCallback(
     const char *type,
     const char *package,
     package_manager_event_type_e eventType,
@@ -30,96 +125,71 @@ void eventCallback(
     (void) error;
     (void) userData;
 
-    if (eventType != PACKAGE_MANAGER_EVENT_TYPE_UNINSTALL)
-        return;
+    if (eventType != PACKAGE_MANAGER_EVENT_TYPE_UNINSTALL ||
+            eventState != PACKAGE_MANAGER_EVENT_STATE_STARTED ||
+            package == NULL) {
+        SLOG(LOG_DEBUG, CKM_LISTENER_TAG, "PackageUninstalled Callback error of Invalid Param");
+    }
+    else {
+        SLOG(LOG_DEBUG, CKM_LISTENER_TAG, "PackageUninstalled Callback. Uninstalation of: %s", package);
+        auto control = CKM::Control::create();
+        int ret = 0;
+        if ( CKM_API_SUCCESS != (ret = control->removeApplicationData(std::string(package))) ) {
+            SLOG(LOG_ERROR, CKM_LISTENER_TAG, "CKM::Control::removeApplicationData error. ret : %d\n", ret);
+        }
+        else {
+            SLOG(LOG_DEBUG, CKM_LISTENER_TAG,
+                "CKM::Control::removeApplicationData success. Uninstallation package : %s\n", package);
+        }
+    }
+}
 
-    if (eventState != PACKAGE_MANAGER_EVENT_STATE_STARTED)
-        return;
+void ccModeChangedEventCallback(
+    keynode_t *key,
+    void *userData)
+{
+    (void) key;
+    (void) userData;
 
-    if (package == NULL)
-        return;
-
-    SLOG(LOG_DEBUG, CKM_TAG, "Get callback. Uninstalation of: %s", package);
-    auto control = CKM::Control::create();
-    control->removeApplicationData(std::string(package));
+    char *mdpp_state = vconf_get_str(VCONFKEY_SECURITY_MDPP_STATE);
+    callSetCCMode(mdpp_state);
 }
 
 int main(void) {
-    SLOG(LOG_DEBUG, CKM_TAG, "%s", "Start!");
+    SLOG(LOG_DEBUG, CKM_LISTENER_TAG, "%s", "Start!");
 
-    // Let's operate in background
-    int result = fork();
-    if (result < 0){
-        SLOG(LOG_DEBUG, CKM_TAG, "%s", "Error in fork!");
-        exit(1);
-    }
-
-    if (result > 0)
-        exit(0);
-
-    // Let's disconnect from terminal
-    if (-1 == setsid()) {
-        SLOG(LOG_DEBUG, CKM_TAG, "%s", "Error in fork!");
-        exit(1);
-    }
-
-    // Let's close all descriptors
-//    for (result = getdtablesize(); result>=0; --result)
-//        close(result);
-
-    close(0);
-    close(1);
-    close(2);
-
-    result = open("/dev/null", O_RDWR); // open stdin
-
-    int fd_stdout = 0;
-    int fd_stderr = 0;
-    fd_stdout = dup(result); // stdout
-    fd_stderr = dup(result); // stderr
-    SLOG(LOG_DEBUG, CKM_TAG, "%d : %s", fd_stdout, "stdout file descriptor");
-    SLOG(LOG_DEBUG, CKM_TAG, "%d : %s", fd_stderr, "stderr file descriptor");
-
-
-    umask(027);
-
-    // Let's change current directory
-    if (-1 == chdir("/")) {
-        SLOG(LOG_DEBUG, CKM_TAG, "%s", "Error in chdir!");
-        exit(1);
-    }
-
-    // Let's create lock file
-    result = open("/tmp/ckm-listener.lock", O_RDWR | O_CREAT, 0640);
-    if (result < 0) {
-        SLOG(LOG_DEBUG, CKM_TAG, "%s", "Error in opening lock file!");
-        exit(1);
-    }
-
-    if (lockf(result, F_TLOCK, 0) < 0) {
-        SLOG(LOG_DEBUG, CKM_TAG, "%s", "Daemon already working!");
-        exit(0);
-    }
-
-    char str[100];
-    sprintf(str, "%d\n", getpid());
-    result = write(result, str, strlen(str));
-
-    SLOG(LOG_DEBUG, CKM_TAG, "%s", str);
+    daemonize();
 
     // Let's start to listen
     GMainLoop *main_loop = g_main_loop_new(NULL, FALSE);
-    package_manager_h request;
 
+    package_manager_h request;
     package_manager_create(&request);
-    if (0 != package_manager_set_event_cb(request, eventCallback, NULL)) {
-        SLOG(LOG_DEBUG, CKM_TAG, "%s", "Error in package_manager_set_event_cb");
+
+    SLOG(LOG_DEBUG, CKM_LISTENER_TAG, "register uninstalledApp event callback start");
+    if (0 != package_manager_set_event_cb(request, packageUninstalledEventCallback, NULL)) {
+        SLOG(LOG_ERROR, CKM_LISTENER_TAG, "%s", "Error in package_manager_set_event_cb");
         exit(-1);
     }
+    SLOG(LOG_DEBUG, CKM_LISTENER_TAG, "register uninstalledApp event callback success");
 
-    /* Change file mode mask */
+    int ret = 0;
+    char *mdpp_state = vconf_get_str(VCONFKEY_SECURITY_MDPP_STATE);
+    if ( mdpp_state ) { // set CC mode and register event callback only when mdpp vconf key exists
+        callSetCCMode(mdpp_state);
 
-    SLOG(LOG_DEBUG, CKM_TAG, "%s", "Ready to listen!");
+        SLOG(LOG_DEBUG, CKM_LISTENER_TAG, "register vconfCCModeChanged event callback start");
+        if ( 0 != (ret = vconf_notify_key_changed(VCONFKEY_SECURITY_MDPP_STATE, ccModeChangedEventCallback, NULL)) ) {
+            SLOG(LOG_ERROR, CKM_LISTENER_TAG, "Error in vconf_notify_key_changed. ret : %d", ret);
+            exit(-1);
+        }
+        SLOG(LOG_DEBUG, CKM_LISTENER_TAG, "register vconfCCModeChanged event callback success");
+    }
+    else
+        SLOG(LOG_DEBUG, CKM_LISTENER_TAG,
+            "vconfCCModeChanged event callback is not registered. No vconf key exists : %s", VCONFKEY_SECURITY_MDPP_STATE);
+
+    SLOG(LOG_DEBUG, CKM_LISTENER_TAG, "%s", "Ready to listen!");
     g_main_loop_run(main_loop);
     return 0;
 }
