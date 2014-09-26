@@ -54,7 +54,7 @@ void Base64Encoder::finalize()
         ThrowMsg(Exception::AlreadyFinalized, "Already finalized.");
     }
     m_finalized = true;
-    BIO_flush(m_b64);
+    (void)BIO_flush(m_b64);
 }
 
 RawBuffer Base64Encoder::get()

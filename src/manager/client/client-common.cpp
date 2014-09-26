@@ -116,7 +116,7 @@ int connectSocket(int& sock, char const * const interface) {
             return CKM_API_ERROR_SOCKET;
         }
         int error = 0;
-        size_t len = sizeof(error);
+        socklen_t len = sizeof(error);
         retval = getsockopt(sock, SOL_SOCKET, SO_ERROR, &error, &len);
 
         if (-1 == retval) {
