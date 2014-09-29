@@ -64,6 +64,17 @@ public:
 
     virtual int setCCMode(CCModeState mode) = 0;
 
+    virtual int allowAccess(uid_t user,
+                            const std::string &owner,
+                            const std::string &alias,
+                            const std::string &accessor,
+                            AccessRight granted) = 0;
+
+    virtual int denyAccess(uid_t user,
+                           const std::string &owner,
+                           const std::string &alias,
+                           const std::string &accessor) = 0;
+
     virtual ~Control(){}
 
     static ControlShPtr create();

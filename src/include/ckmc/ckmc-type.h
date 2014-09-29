@@ -95,6 +95,15 @@ typedef enum __ckmc_rsa_padding_algo {
 } ckmc_rsa_padding_algo_e;
 
 /**
+ * @brief Enumeration for database access rights.
+ * @since_tizen 2.3
+ */
+typedef enum __ckmc_access_right{
+    CKMC_AR_READ = 0,       /**< access right for read*/
+    CKMC_AR_READ_REMOVE     /**< access right for read and remove*/
+} ckmc_access_right_e;
+
+/**
  * @brief the structure for binary buffer used in key manager CAPI.
  * @since_tizen 2.3
  */

@@ -169,6 +169,68 @@ int ckmc_change_user_password(uid_t user, const char *old_password, const char *
  */
 int ckmc_reset_user_password(uid_t user, const char *new_password);
 
+/**
+ * @brief Allows another application to access client's application data
+ *
+ * @since_tizen 2.3
+ * @privlevel platform
+ * @privilege %http://tizen.org/privilege/keymanager.admin
+ *
+ * @remarks Data identified by @a alias should exist
+ *
+ * @param[in] user        User ID of a user whose data will be affected
+ * @param[in] owner       Package id (smack label) of the data owner
+ * @param[in] alias       Data alias for which access will be granted
+ * @param[in] accessor    Package id (smack label) of the application that will gain access rights
+ * @param[in] granted     Rights granted for @a accessor application
+ *
+ * @return @c 0 on success, otherwise a negative error value
+ *
+ * @retval #CKMC_ERROR_NONE                 Successful
+ * @retval #CKMC_ERROR_INVALID_PARAMETER    Input parameter is invalid
+ * @retval #CKMC_ERROR_DB_LOCKED            A user key is not loaded in memory (a user is not logged in)
+ * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN     Alias does not exist
+ * @retval #CKMC_ERROR_PERMISSION_DENIED    Failed to access key manager
+ *
+ * @pre User is already logged in and the user key is already loaded into memory in plain text form.
+ *
+ * @see ckmc_allow_access()
+ * @see ckmc_deny_access()
+ * @see ckmc_deny_access_by_adm()
+ */
+int ckmc_allow_access_by_adm(uid_t user, const char *owner, const char *alias, const char *accessor, ckmc_access_right_e granted);
+
+/**
+ * @brief Revokes another application's access to client's application data
+ *
+ * @since_tizen 2.3
+ * @privlevel platform
+ * @privilege %http://tizen.org/privilege/keymanager.admin
+ *
+ * @remarks Data identified by @a alias should exist
+ * @remarks Only access previously granted with ckmc_allow_access can be revoked.
+ *
+ * @param[in] user        User ID of a user whose data will be affected
+ * @param[in] owner       Package id (smack label) of the data owner
+ * @param[in] alias       Data alias for which access will be revoked
+ * @param[in] accessor    Package id (smack label) of the application that will lose access rights
+ *
+ * @return @c 0 on success, otherwise a negative error value
+ *
+ * @retval #CKMC_ERROR_NONE                 Successful
+ * @retval #CKMC_ERROR_INVALID_PARAMETER    Input parameter is invalid or the @a accessor doesn't
+ *                                          have access to @a alias
+ * @retval #CKMC_ERROR_DB_LOCKED            A user key is not loaded in memory (a user is not logged in)
+ * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN     Alias does not exist
+ * @retval #CKMC_ERROR_PERMISSION_DENIED    Failed to access key manager
+ *
+ * @pre User is already logged in and the user key is already loaded into memory in plain text form.
+ *
+ * @see ckmc_allow_access()
+ * @see ckmc_deny_access()
+ * @see ckmc_allow_access_by_adm()
+ */
+int ckmc_deny_access_by_adm(uid_t user, const char *owner, const char *alias, const char *accessor);
 
 /**
  * @}

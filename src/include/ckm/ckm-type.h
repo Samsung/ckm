@@ -97,6 +97,11 @@ enum class CCModeState : int {
     CC_MODE_ON
 };
 
+enum class AccessRight: int {
+    AR_READ = 0,
+    AR_READ_REMOVE
+};
+
 const char * ErrorToString(int error);
 
 } // namespace CKM

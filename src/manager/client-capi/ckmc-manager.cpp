@@ -604,3 +604,26 @@ int ckmc_get_cert_chain_with_alias(const ckmc_cert_s *cert, const ckmc_alias_lis
 
     return CKMC_ERROR_NONE;
 }
+
+KEY_MANAGER_CAPI
+int ckmc_allow_access(const char *alias, const char *accessor, ckmc_access_right_e granted)
+{
+    if (!alias || !accessor)
+        return CKMC_ERROR_INVALID_PARAMETER;
+
+    CKM::ManagerShPtr mgr = CKM::Manager::create();
+
+    CKM::AccessRight ar = static_cast<CKM::AccessRight>(static_cast<int>(granted));
+    return to_ckmc_error(mgr->allowAccess(alias, accessor, ar));
+}
+
+KEY_MANAGER_CAPI
+int ckmc_deny_access(const char *alias, const char *accessor)
+{
+    if (!alias || !accessor)
+        return CKMC_ERROR_INVALID_PARAMETER;
+
+    CKM::ManagerShPtr mgr = CKM::Manager::create();
+
+    return to_ckmc_error(mgr->denyAccess(alias, accessor));
+}

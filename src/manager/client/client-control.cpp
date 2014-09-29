@@ -217,6 +217,23 @@ public:
         });
     }
 
+    virtual int allowAccess(uid_t /*user*/,
+                            const std::string &/*owner*/,
+                            const std::string &/*alias*/,
+                            const std::string &/*accessor*/,
+                            AccessRight /*granted*/)
+    {
+        return CKM_API_ERROR_UNKNOWN;
+    }
+
+    virtual int denyAccess(uid_t /*user*/,
+                           const std::string &/*owner*/,
+                           const std::string &/*alias*/,
+                           const std::string &/*accessor*/)
+    {
+        return CKM_API_ERROR_UNKNOWN;
+    }
+
     virtual ~ControlImpl(){}
 };
 

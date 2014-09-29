@@ -28,48 +28,72 @@
 
 CKM::Password _toPasswordStr(const char *str)
 {
-	if(str == NULL)
-		return CKM::Password();
-	return CKM::Password(str);
+    if (str == NULL)
+        return CKM::Password();
+    return CKM::Password(str);
 }
 
 KEY_MANAGER_CAPI
 int ckmc_unlock_user_key(uid_t user, const char *password)
 {
-	auto control = CKM::Control::create();
-	int ret = control->unlockUserKey(user, _toPasswordStr(password));
-	return to_ckmc_error(ret);
+    auto control = CKM::Control::create();
+    int ret = control->unlockUserKey(user, _toPasswordStr(password));
+    return to_ckmc_error(ret);
 }
 
 KEY_MANAGER_CAPI
 int ckmc_lock_user_key(uid_t user)
 {
-	auto control = CKM::Control::create();
-	int ret =  control->lockUserKey(user);
-	return to_ckmc_error(ret);
+    auto control = CKM::Control::create();
+    int ret = control->lockUserKey(user);
+    return to_ckmc_error(ret);
 }
 
 KEY_MANAGER_CAPI
 int ckmc_remove_user_data(uid_t user)
 {
-	auto control = CKM::Control::create();
-	int ret =  control->removeUserData(user);
-	return to_ckmc_error(ret);
+    auto control = CKM::Control::create();
+    int ret = control->removeUserData(user);
+    return to_ckmc_error(ret);
 }
 
 KEY_MANAGER_CAPI
 int ckmc_change_user_password(uid_t user, const char *oldPassword, const char *newPassword)
 {
-	auto control = CKM::Control::create();
-	int ret =  control->changeUserPassword(user, _toPasswordStr(oldPassword), _toPasswordStr(newPassword));
-	return to_ckmc_error(ret);
+    auto control = CKM::Control::create();
+    int ret = control->changeUserPassword(user,
+                                          _toPasswordStr(oldPassword),
+                                          _toPasswordStr(newPassword));
+    return to_ckmc_error(ret);
 }
 
 KEY_MANAGER_CAPI
 int ckmc_reset_user_password(uid_t user, const char *newPassword)
 {
-	auto control = CKM::Control::create();
-	int ret =  control->resetUserPassword(user, _toPasswordStr(newPassword));
-	return to_ckmc_error(ret);
+    auto control = CKM::Control::create();
+    int ret = control->resetUserPassword(user, _toPasswordStr(newPassword));
+    return to_ckmc_error(ret);
 }
 
+KEY_MANAGER_CAPI
+int ckmc_allow_access_by_adm(uid_t user, const char* owner, const char *alias, const char *accessor, ckmc_access_right_e granted)
+{
+    if (!owner || !alias || !accessor)
+        return CKMC_ERROR_INVALID_PARAMETER;
+
+    auto control = CKM::Control::create();
+
+    CKM::AccessRight ar = static_cast<CKM::AccessRight>(static_cast<int>(granted));
+    return to_ckmc_error(control->allowAccess(user, owner, alias, accessor, ar));
+}
+
+KEY_MANAGER_CAPI
+int ckmc_deny_access_by_adm(uid_t user, const char* owner, const char *alias, const char *accessor)
+{
+    if (!owner || !alias || !accessor)
+        return CKMC_ERROR_INVALID_PARAMETER;
+
+    auto control = CKM::Control::create();
+
+    return to_ckmc_error(control->denyAccess(user, owner, alias, accessor));
+}

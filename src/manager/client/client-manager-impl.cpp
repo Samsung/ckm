@@ -657,6 +657,18 @@ int ManagerImpl::ocspCheck(const CertificateShPtrVector &certChain, int &ocspSta
     });
 }
 
+int ManagerImpl::allowAccess(const std::string &/*alias*/,
+                             const std::string &/*accessor*/,
+                             AccessRight /*granted*/)
+{
+    return CKM_API_ERROR_UNKNOWN;
+}
+
+int ManagerImpl::denyAccess(const std::string &/*alias*/, const std::string &/*accessor*/)
+{
+    return CKM_API_ERROR_UNKNOWN;
+}
+
 ManagerShPtr Manager::create() {
     try {
         return std::make_shared<ManagerImpl>();

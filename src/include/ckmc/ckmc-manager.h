@@ -670,6 +670,61 @@ int ckmc_get_cert_chain(const ckmc_cert_s *cert, const ckmc_cert_list_s *untrust
  */
 int ckmc_get_cert_chain_with_alias(const ckmc_cert_s *cert, const ckmc_alias_list_s *untrustedcerts, ckmc_cert_list_s **ppcert_chain_list);
 
+/**
+ * @brief Allows another application to access client's application data
+ *
+ * @since_tizen 2.3
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/keymanager
+ *
+ * @remarks Data identified by @a alias should exist
+ *
+ * @param[in] alias       Data alias for which access will be granted
+ * @param[in] accessor    Package id (smack label) of the application that will gain access rights
+ * @param[in] granted     Rights granted for @a accessor application
+ *
+ * @return @c 0 on success, otherwise a negative error value
+ *
+ * @retval #CKMC_ERROR_NONE                 Successful
+ * @retval #CKMC_ERROR_INVALID_PARAMETER    Input parameter is invalid
+ * @retval #CKMC_ERROR_DB_LOCKED            A user key is not loaded in memory (a user is not logged in)
+ * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN     Alias does not exist
+ * @retval #CKMC_ERROR_PERMISSION_DENIED    Failed to access key manager
+ *
+ * @pre User is already logged in and the user key is already loaded into memory in plain text form.
+ *
+ * @see ckmc_deny_access()
+ */
+int ckmc_allow_access(const char *alias, const char *accessor, ckmc_access_right_e granted);
+
+/**
+ * @brief Revokes another application's access to client's application data
+ *
+ * @since_tizen 2.3
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/keymanager
+ *
+ * @remarks Data identified by @a alias should exist
+ * @remarks Only access previously granted with ckmc_allow_access can be revoked.
+ *
+ * @param[in] alias       Data alias for which access will be revoked
+ * @param[in] accessor    Package id (smack label) of the application that will lose access rights
+ *
+ * @return @c 0 on success, otherwise a negative error value
+ *
+ * @retval #CKMC_ERROR_NONE                 Successful
+ * @retval #CKMC_ERROR_INVALID_PARAMETER    Input parameter is invalid or the @a accessor doesn't
+ *                                          have access to @a alias
+ * @retval #CKMC_ERROR_DB_LOCKED            A user key is not loaded in memory (a user is not logged in)
+ * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN     Alias does not exist
+ * @retval #CKMC_ERROR_PERMISSION_DENIED    Failed to access key manager
+ *
+ * @pre User is already logged in and the user key is already loaded into memory in plain text form.
+ *
+ * @see ckmc_allow_access()
+ */
+int ckmc_deny_access(const char *alias, const char *accessor);
+
 
 #ifdef __cplusplus
 }
