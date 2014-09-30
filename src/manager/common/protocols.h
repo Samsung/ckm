@@ -54,7 +54,9 @@ enum class LogicCommand : int {
     GET_CHAIN_ALIAS,
     CREATE_SIGNATURE,
     VERIFY_SIGNATURE,
-    CREATE_KEY_PAIR_DSA
+    CREATE_KEY_PAIR_DSA,
+    ALLOW_ACCESS,
+    DENY_ACCESS,
     // for backward compatibility append new on the end
 };
 
@@ -76,6 +78,7 @@ enum class DBDataType : int {
 
 DBDataType toDBDataType(KeyType key);
 KeyType toKeyType(DBDataType dbDataType);
+const char* toDBAccessRight(AccessRight access_right_type);
 
 class IStream;
 

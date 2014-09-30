@@ -47,6 +47,8 @@ namespace CKM {
                 DECLARE_EXCEPTION_TYPE(Base, AliasExists)
                 DECLARE_EXCEPTION_TYPE(Base, InternalError)
                 DECLARE_EXCEPTION_TYPE(Base, TransactionError)
+                DECLARE_EXCEPTION_TYPE(Base, PermissionDenied)
+                DECLARE_EXCEPTION_TYPE(Base, InvalidArgs)
             };
             DBCrypto() :
                 m_connection(NULL),
@@ -65,25 +67,33 @@ namespace CKM {
             void saveDBRow(const DBRow &row);
             DBRowOptional getDBRow(
                     const Alias &alias,
-                    const std::string &label,
+                    const std::string &clnt_label,
                     DBDataType type);
             DBRowOptional getKeyDBRow(
                     const Alias &alias,
-                    const std::string &label);
+                    const std::string &clnt_label);
             void getAliases(
                     DBDataType dataType,
-                    const std::string &label,
                     AliasVector &aliases);
-            void getKeyAliases(
-                    const std::string &label,
-                    AliasVector &aliases);
-            int deleteDBRow(
+            void getKeyAliases(AliasVector &aliases);
+            bool deleteDBRow(
                     const Alias& alias,
-                    const std::string &label);
+                    const std::string &clnt_label);
+
+            // keys
             void saveKey(const std::string& label, const RawBuffer &key);
             RawBufferOptional getKey(
                     const std::string& label);
             void deleteKey(const std::string& label);
+
+            // permissions
+            int setAccessRights(const std::string& clnt_label,
+                                const Alias& alias,
+                                const std::string& accessor_label,
+                                const AccessRight value_to_set);
+            int clearAccessRights(const std::string& clnt_label,
+                                  const Alias& alias,
+                                  const std::string& accessor_label);
 
             int beginTransaction();
             int commitTransaction();
@@ -162,20 +172,42 @@ namespace CKM {
 
             void initDatabase();
             DBRow getRow(const DB::SqlConnection::DataCommandUniquePtr &selectCommand);
+
+            enum DBOperationType : char {
+                DB_OPERATION_READ       = 'R',            ///< read DB row
+                DB_OPERATION_WRITE      = 'W',            ///< modify DB row
+                DB_OPERATION_REMOVE     = 'D'             ///< delete DB row
+            };
+
+            /**
+             * read PERMISSION_TABLE entry for pair <alias, label>
+             *
+             * @return permission string (consisting with DBOperationType chars), may be empty
+             */
+            std::string getPermissionsForAliasAndLabel(const Alias &alias, const std::string &label) const;
+
+            /**
+             * check if current requesting alias has permissions
+             * to perform operation on the given DB entry
+             *
+             * @return true if permission granted, false otherwise
+             */
+            bool  rowAccessControlCheck(const DBRow & input_row,
+                                        const std::string &clnt_label,
+                                        DBOperationType access_type) const;
+            // helper
+            bool  rowAccessControlCheck(const Alias &alias,
+                                        const std::string &owner_label,
+                                        const std::string &clnt_label,
+                                        DBOperationType access_type) const;
+
             void createTable(
                     const char *create_cmd,
                     const char *table_name);
-            bool checkAliasExist(
-                    const std::string &alias,
-                    const std::string &label);
-            bool checkGlobalAliasExist(const std::string& alias);
-            int countRows(
-                    const std::string &alias,
-                    const std::string &label);
-            void getSingleType(
-                    DBDataType type,
-                    const std::string& label,
-                    AliasVector& aliases);
+            bool checkAliasExist(const std::string &alias) const;
+            std::string getLabelForAlias(const std::string& alias) const;
+            bool checkGlobalAliasExist(const std::string& alias) const;
+            void getSingleType(DBDataType type, AliasVector& aliases) const;
    };
 } // namespace CKM
 

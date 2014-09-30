@@ -63,6 +63,16 @@ KeyType toKeyType(DBDataType dbtype) {
     }
 }
 
+const char* toDBAccessRight(AccessRight access_right_type) {
+    switch(access_right_type) {
+    case AccessRight::AR_READ:          return "R";
+    case AccessRight::AR_READ_REMOVE:   return "RD";
+    default:
+        // TODO
+        throw 1;
+    }
+}
+
 PolicySerializable::PolicySerializable()
 {}
 

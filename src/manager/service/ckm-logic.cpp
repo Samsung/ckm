@@ -333,6 +333,9 @@ RawBuffer CKMLogic::removeData(
                 LogError("No row for given alias and label");
                 retCode = CKM_API_ERROR_DB_ALIAS_UNKNOWN;
             }
+        } Catch (DBCrypto::Exception::PermissionDenied) {
+            LogError("Error: not enough permissions!");
+            retCode = CKM_API_ERROR_ACCESS_DENIED;
         } Catch (CKM::Exception) {
             LogError("Error in deleting row!");
             retCode = CKM_API_ERROR_DB_ERROR;
@@ -357,7 +360,6 @@ int CKMLogic::getDataHelper(
     const Password &password,
     DBRow &row)
 {
-
     if (0 == m_userDataMap.count(cred.uid))
         return CKM_API_ERROR_DB_LOCKED;
 
@@ -415,6 +417,9 @@ RawBuffer CKMLogic::getData(
     } catch (const CryptoLogic::Exception::Base &e) {
         LogError("CryptoLogic failed with message: " << e.GetMessage());
         retCode = CKM_API_ERROR_SERVER_ERROR;
+    } catch (const DBCrypto::Exception::PermissionDenied &e) {
+        LogError("DBCrypto failed with message: " << e.GetMessage());
+        retCode = CKM_API_ERROR_ACCESS_DENIED;
     } catch (const DBCrypto::Exception::Base &e) {
         LogError("DBCrypto failed with message: " << e.GetMessage());
         retCode = CKM_API_ERROR_DB_ERROR;
@@ -457,9 +462,9 @@ RawBuffer CKMLogic::getDataList(
         auto &handler = m_userDataMap[cred.uid];
         Try {
             if (dataType == DBDataType::CERTIFICATE || dataType == DBDataType::BINARY_DATA) {
-                handler.database.getAliases(dataType, cred.smackLabel, aliasVector);
+                handler.database.getAliases(dataType, aliasVector);
             } else {
-                handler.database.getKeyAliases(cred.smackLabel, aliasVector);
+                handler.database.getKeyAliases(aliasVector);
             }
         } Catch (CKM::Exception) {
             LogError("Failed to get aliases");
@@ -677,6 +682,9 @@ RawBuffer CKMLogic::getCertificateChain(
     } catch (const CryptoLogic::Exception::Base &e) {
         LogError("DBCyptorModule failed with message: " << e.GetMessage());
         retCode = CKM_API_ERROR_SERVER_ERROR;
+    } catch (const DBCrypto::Exception::PermissionDenied &e) {
+        LogError("DBCrypto failed with message: " << e.GetMessage());
+        retCode = CKM_API_ERROR_ACCESS_DENIED;
     } catch (const DBCrypto::Exception::Base &e) {
         LogError("DBCrypto failed with message: " << e.GetMessage());
         retCode = CKM_API_ERROR_DB_ERROR;
@@ -728,6 +736,9 @@ RawBuffer CKMLogic::createSignature(
     } catch (const CryptoLogic::Exception::Base &e) {
         LogError("CryptoLogic failed with message: " << e.GetMessage());
         retCode = CKM_API_ERROR_SERVER_ERROR;
+    } catch (const DBCrypto::Exception::PermissionDenied &e) {
+        LogError("DBCrypto failed with message: " << e.GetMessage());
+        retCode = CKM_API_ERROR_ACCESS_DENIED;
     } catch (const DBCrypto::Exception::Base &e) {
         LogError("DBCrypto failed with message: " << e.GetMessage());
         retCode = CKM_API_ERROR_DB_ERROR;
@@ -795,6 +806,9 @@ RawBuffer CKMLogic::verifySignature(
     } catch (const CryptoLogic::Exception::Base &e) {
         LogError("CryptoLogic failed with message: " << e.GetMessage());
         retCode = CKM_API_ERROR_SERVER_ERROR;
+    } catch (const DBCrypto::Exception::PermissionDenied &e) {
+        LogError("DBCrypto failed with message: " << e.GetMessage());
+        retCode = CKM_API_ERROR_ACCESS_DENIED;
     } catch (const DBCrypto::Exception::Base &e) {
         LogError("DBCrypto failed with message: " << e.GetMessage());
         retCode = CKM_API_ERROR_DB_ERROR;
@@ -810,5 +824,75 @@ RawBuffer CKMLogic::verifySignature(
 
     return response.Pop();
 }
+
+RawBuffer CKMLogic::allowAccess(
+        Credentials &cred,
+        int commandId,
+        const Alias &item_alias,
+        const std::string &accessor_label,
+        const AccessRight req_rights)
+{
+    int retCode = CKM_API_ERROR_VERIFICATION_FAILED;
+
+    if (0 < m_userDataMap.count(cred.uid))
+    {
+        Try {
+            retCode = m_userDataMap[cred.uid].database.setAccessRights(cred.smackLabel, item_alias, accessor_label, req_rights);
+        } Catch (DBCrypto::Exception::InvalidArgs) {
+            LogError("Error: invalid args!");
+            retCode = CKM_API_ERROR_INPUT_PARAM;
+        } Catch (DBCrypto::Exception::PermissionDenied) {
+            LogError("Error: not enough permissions!");
+            retCode = CKM_API_ERROR_ACCESS_DENIED;
+        } Catch (CKM::Exception) {
+            LogError("Error in set row!");
+            retCode = CKM_API_ERROR_DB_ERROR;
+        }
+    } else {
+        retCode = CKM_API_ERROR_DB_LOCKED;
+    }
+
+    MessageBuffer response;
+    Serialization::Serialize(response, static_cast<int>(LogicCommand::ALLOW_ACCESS));
+    Serialization::Serialize(response, commandId);
+    Serialization::Serialize(response, retCode);
+
+    return response.Pop();
+}
+
+RawBuffer CKMLogic::denyAccess(
+        Credentials &cred,
+        int commandId,
+        const Alias &item_alias,
+        const std::string &accessor_label)
+{
+    int retCode = CKM_API_ERROR_VERIFICATION_FAILED;
+
+    if (0 < m_userDataMap.count(cred.uid))
+    {
+        Try {
+            retCode = m_userDataMap[cred.uid].database.clearAccessRights(cred.smackLabel, item_alias, accessor_label);
+        } Catch (DBCrypto::Exception::PermissionDenied) {
+            LogError("Error: not enough permissions!");
+            retCode = CKM_API_ERROR_ACCESS_DENIED;
+        } Catch (DBCrypto::Exception::InvalidArgs) {
+            LogError("Error: permission not found!");
+            retCode = CKM_API_ERROR_INPUT_PARAM;
+        } Catch (CKM::Exception) {
+            LogError("Error in deleting row!");
+            retCode = CKM_API_ERROR_DB_ERROR;
+        }
+    } else {
+        retCode = CKM_API_ERROR_DB_LOCKED;
+    }
+
+    MessageBuffer response;
+    Serialization::Serialize(response, static_cast<int>(LogicCommand::DENY_ACCESS));
+    Serialization::Serialize(response, commandId);
+    Serialization::Serialize(response, retCode);
+
+    return response.Pop();
+}
+
 } // namespace CKM
 

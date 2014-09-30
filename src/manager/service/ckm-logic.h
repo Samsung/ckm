@@ -136,6 +136,19 @@ public:
 
     RawBuffer setCCModeStatus(CCModeState mode_status);
 
+    RawBuffer allowAccess(
+        Credentials &cred,
+        int commandId,
+        const Alias &item_alias,
+        const std::string &accessor_label,
+        const AccessRight req_rights);
+
+    RawBuffer denyAccess(
+        Credentials &cred,
+        int commandId,
+        const Alias &item_alias,
+        const std::string &accessor_label);
+
 private:
 
     int saveDataHelper(

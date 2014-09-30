@@ -312,6 +312,33 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer){
                 static_cast<const HashAlgorithm>(hash),
                 static_cast<const RSAPaddingAlgorithm>(padding));
         }
+        case LogicCommand::ALLOW_ACCESS:
+        {
+            Alias item_alias;
+            std::string accessor_label;
+            int req_rights;
+            Deserialization::Deserialize(buffer, item_alias);
+            Deserialization::Deserialize(buffer, accessor_label);
+            Deserialization::Deserialize(buffer, req_rights);
+            return m_logic->allowAccess(
+                cred,
+                commandId,
+                item_alias,
+                accessor_label,
+                static_cast<AccessRight>(req_rights));
+        }
+        case LogicCommand::DENY_ACCESS:
+        {
+            Alias item_alias;
+            std::string accessor_label;
+            Deserialization::Deserialize(buffer, item_alias);
+            Deserialization::Deserialize(buffer, accessor_label);
+            return m_logic->denyAccess(
+                cred,
+                commandId,
+                item_alias,
+                accessor_label);
+        }
         default:
             Throw(Exception::BrokenProtocol);
     }

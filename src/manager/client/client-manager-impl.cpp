@@ -657,16 +657,75 @@ int ManagerImpl::ocspCheck(const CertificateShPtrVector &certChain, int &ocspSta
     });
 }
 
-int ManagerImpl::allowAccess(const std::string &/*alias*/,
-                             const std::string &/*accessor*/,
-                             AccessRight /*granted*/)
+int ManagerImpl::allowAccess(const std::string &alias,
+                             const std::string &accessor,
+                             AccessRight granted)
 {
-    return CKM_API_ERROR_UNKNOWN;
+    m_counter++;
+    int my_counter = m_counter;
+    return try_catch([&] {
+        MessageBuffer send, recv;
+        Serialization::Serialize(send, static_cast<int>(LogicCommand::ALLOW_ACCESS));
+        Serialization::Serialize(send, my_counter);
+        Serialization::Serialize(send, alias);
+        Serialization::Serialize(send, accessor);
+        Serialization::Serialize(send, static_cast<int>(granted));
+
+        int retCode = sendToServer(
+            SERVICE_SOCKET_CKM_STORAGE,
+            send.Pop(),
+            recv);
+
+        if (CKM_API_SUCCESS != retCode) {
+            return retCode;
+        }
+
+        int command;
+        int counter;
+        Deserialization::Deserialize(recv, command);
+        Deserialization::Deserialize(recv, counter);
+        Deserialization::Deserialize(recv, retCode);
+
+        if (my_counter != counter) {
+            return CKM_API_ERROR_UNKNOWN;
+        }
+
+        return retCode;
+    });
 }
 
-int ManagerImpl::denyAccess(const std::string &/*alias*/, const std::string &/*accessor*/)
+int ManagerImpl::denyAccess(const std::string &alias, const std::string &accessor)
 {
-    return CKM_API_ERROR_UNKNOWN;
+    m_counter++;
+    int my_counter = m_counter;
+    return try_catch([&] {
+        MessageBuffer send, recv;
+        Serialization::Serialize(send, static_cast<int>(LogicCommand::DENY_ACCESS));
+        Serialization::Serialize(send, my_counter);
+        Serialization::Serialize(send, alias);
+        Serialization::Serialize(send, accessor);
+
+        int retCode = sendToServer(
+            SERVICE_SOCKET_CKM_STORAGE,
+            send.Pop(),
+            recv);
+
+        if (CKM_API_SUCCESS != retCode) {
+            return retCode;
+        }
+
+        int command;
+        int counter;
+        Deserialization::Deserialize(recv, command);
+        Deserialization::Deserialize(recv, counter);
+        Deserialization::Deserialize(recv, retCode);
+
+        if (my_counter != counter) {
+            return CKM_API_ERROR_UNKNOWN;
+        }
+
+        return retCode;
+    });
 }
 
 ManagerShPtr Manager::create() {
@@ -681,4 +740,3 @@ ManagerShPtr Manager::create() {
 }
 
 } // namespace CKM
-
