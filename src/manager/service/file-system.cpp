@@ -169,7 +169,7 @@ UidVector FileSystem::getUIDsFromDBFile() {
     struct dirent pPrevDirEntry;
     struct dirent* pDirEntry = NULL;
 
-    while ((!readdir_r(dirp, &pPrevDirEntry, &pDirEntry)) && pDirEntry && (pDirEntry->d_name)) {
+    while ( (!readdir_r(dirp, &pPrevDirEntry, &pDirEntry)) && pDirEntry ) {
 
         // Ignore files with diffrent prefix
         if (strncmp(pDirEntry->d_name, CKM_KEY_PREFIX.c_str(), CKM_KEY_PREFIX.size())) {
