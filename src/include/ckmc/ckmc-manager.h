@@ -158,6 +158,7 @@ int ckmc_get_key(const char *alias, const char *password, ckmc_key_s **ppkey);
  * @retval #CKMC_ERROR_INVALID_PARAMETER Input parameter is invalid
  * @retval #CKMC_ERROR_DB_LOCKED         A user key is not loaded in memory (a user is not logged in)
  * @retval #CKMC_ERROR_DB_ERROR          Failed due to the error with unknown reason
+ * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN  Alias does not exist
  * @retval #CKMC_ERROR_PERMISSION_DENIED Failed to access key manager
  *
  * @pre User is already logged in and the user key is already loaded into memory in plain text form.
@@ -285,6 +286,7 @@ int ckmc_get_cert(const char *alias, const char *password, ckmc_cert_s **ppcert)
  * @retval #CKMC_ERROR_INVALID_PARAMETER  Input parameter is invalid
  * @retval #CKMC_ERROR_DB_LOCKED          A user key is not loaded in memory (a user is not logged in)
  * @retval #CKMC_ERROR_DB_ERROR           Failed due to the error with unknown reason
+ * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN   Alias does not exist
  * @retval #CKMC_ERROR_PERMISSION_DENIED  Failed to access key manager
  *
  * @pre User is already logged in and the user key is already loaded into memory in plain text form.
@@ -411,6 +413,7 @@ int ckmc_get_data(const char *alias, const char *password, ckmc_raw_buffer_s **p
  * @retval #CKMC_ERROR_INVALID_PARAMETER  Input parameter is invalid
  * @retval #CKMC_ERROR_DB_LOCKED          A user key is not loaded in memory (a user is not logged in)
  * @retval #CKMC_ERROR_DB_ERROR           Failed due to the error with unknown reason
+ * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN   Alias does not exist
  * @retval #CKMC_ERROR_PERMISSION_DENIED  Failed to access key manager
  *
  * @pre User is already logged in and the user key is already loaded into memory in plain text form.
