@@ -48,7 +48,7 @@
 
 namespace {
 
-const time_t SOCKET_TIMEOUT = 20;
+const time_t SOCKET_TIMEOUT = 1000;
 
 int getCredentialsFromSocket(int sock, CKM::Credentials &cred) {
     CKM::Credentials credentials;
