@@ -827,7 +827,8 @@ RawBuffer CKMLogic::verifySignature(
 
 RawBuffer CKMLogic::allowAccess(
         Credentials &cred,
-        int commandId,
+        int command,
+        int msgID,
         const Alias &item_alias,
         const std::string &accessor_label,
         const AccessRight req_rights)
@@ -853,8 +854,8 @@ RawBuffer CKMLogic::allowAccess(
     }
 
     MessageBuffer response;
-    Serialization::Serialize(response, static_cast<int>(LogicCommand::ALLOW_ACCESS));
-    Serialization::Serialize(response, commandId);
+    Serialization::Serialize(response, command);
+    Serialization::Serialize(response, msgID);
     Serialization::Serialize(response, retCode);
 
     return response.Pop();
@@ -862,7 +863,8 @@ RawBuffer CKMLogic::allowAccess(
 
 RawBuffer CKMLogic::denyAccess(
         Credentials &cred,
-        int commandId,
+        int command,
+        int msgID,
         const Alias &item_alias,
         const std::string &accessor_label)
 {
@@ -887,8 +889,8 @@ RawBuffer CKMLogic::denyAccess(
     }
 
     MessageBuffer response;
-    Serialization::Serialize(response, static_cast<int>(LogicCommand::DENY_ACCESS));
-    Serialization::Serialize(response, commandId);
+    Serialization::Serialize(response, command);
+    Serialization::Serialize(response, msgID);
     Serialization::Serialize(response, retCode);
 
     return response.Pop();

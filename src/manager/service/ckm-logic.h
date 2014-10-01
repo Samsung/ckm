@@ -138,14 +138,16 @@ public:
 
     RawBuffer allowAccess(
         Credentials &cred,
-        int commandId,
+        int command,
+        int msgID,
         const Alias &item_alias,
         const std::string &accessor_label,
         const AccessRight req_rights);
 
     RawBuffer denyAccess(
         Credentials &cred,
-        int commandId,
+        int command,
+        int msgID,
         const Alias &item_alias,
         const std::string &accessor_label);
 

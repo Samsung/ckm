@@ -40,7 +40,10 @@ enum class ControlCommand : int {
     CHANGE_USER_PASSWORD,
     RESET_USER_PASSWORD,
     REMOVE_APP_DATA,
-    SET_CC_MODE
+    SET_CC_MODE,
+    ALLOW_ACCESS,
+    DENY_ACCESS,
+    // for backward compatibility append new at the end
 };
 
 enum class LogicCommand : int {
@@ -57,7 +60,7 @@ enum class LogicCommand : int {
     CREATE_KEY_PAIR_DSA,
     ALLOW_ACCESS,
     DENY_ACCESS,
-    // for backward compatibility append new on the end
+    // for backward compatibility append new at the end
 };
 
 // Do not use DB_KEY_FIRST and DB_KEY_LAST in the code.

@@ -145,20 +145,68 @@ RawBuffer CKMService::processControl(MessageBuffer &buffer) {
     case ControlCommand::SET_CC_MODE:
         Deserialization::Deserialize(buffer, cc_mode_status);
         return m_logic->setCCModeStatus(static_cast<CCModeState>(cc_mode_status));
+    case ControlCommand::ALLOW_ACCESS:
+    {
+        std::string owner;
+        std::string item_alias;
+        std::string accessor_label;
+        int req_rights;
+
+        Deserialization::Deserialize(buffer, user);
+        Deserialization::Deserialize(buffer, owner);
+        Deserialization::Deserialize(buffer, item_alias);
+        Deserialization::Deserialize(buffer, accessor_label);
+        Deserialization::Deserialize(buffer, req_rights);
+        Credentials cred =
+            {
+                user,
+                owner
+            };
+        return m_logic->allowAccess(
+            cred,
+            command,
+            0, // dummy
+            item_alias,
+            accessor_label,
+            static_cast<AccessRight>(req_rights));
+    }
+    case ControlCommand::DENY_ACCESS:
+    {
+        std::string owner;
+        std::string item_alias;
+        std::string accessor_label;
+
+        Deserialization::Deserialize(buffer, user);
+        Deserialization::Deserialize(buffer, owner);
+        Deserialization::Deserialize(buffer, item_alias);
+        Deserialization::Deserialize(buffer, accessor_label);
+        Credentials cred =
+            {
+                user,
+                owner
+            };
+        return m_logic->denyAccess(
+            cred,
+            command,
+            0, // dummy
+            item_alias,
+            accessor_label);
+    }
     default:
         Throw(Exception::BrokenProtocol);
     }
 }
 
-RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer){
+RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer)
+{
     int command;
-    int commandId;
+    int msgID;
     int tmpDataType;
     Alias alias;
     std::string user;
 
     Deserialization::Deserialize(buffer, command);
-    Deserialization::Deserialize(buffer, commandId);
+    Deserialization::Deserialize(buffer, msgID);
 
     // This is a workaround solution for locktype=None in Tizen 2.2.1
     // When locktype is None, lockscreen app doesn't interfere with unlocking process.
@@ -181,7 +229,7 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer){
             Deserialization::Deserialize(buffer, policy);
             return m_logic->saveData(
                 cred,
-                commandId,
+                msgID,
                 static_cast<DBDataType>(tmpDataType),
                 alias,
                 rawData,
@@ -193,7 +241,7 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer){
             Deserialization::Deserialize(buffer, alias);
             return m_logic->removeData(
                 cred,
-                commandId,
+                msgID,
                 static_cast<DBDataType>(tmpDataType),
                 alias);
         }
@@ -205,7 +253,7 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer){
             Deserialization::Deserialize(buffer, password);
             return m_logic->getData(
                 cred,
-                commandId,
+                msgID,
                 static_cast<DBDataType>(tmpDataType),
                 alias,
                 password);
@@ -215,7 +263,7 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer){
             Deserialization::Deserialize(buffer, tmpDataType);
             return m_logic->getDataList(
                 cred,
-                commandId,
+                msgID,
                 static_cast<DBDataType>(tmpDataType));
         }
         case LogicCommand::CREATE_KEY_PAIR_RSA:
@@ -235,7 +283,7 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer){
             return m_logic->createKeyPair(
                 cred,
                 static_cast<LogicCommand>(command),
-                commandId,
+                msgID,
                 additional_param,
                 privateKeyAlias,
                 publicKeyAlias,
@@ -250,7 +298,7 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer){
             Deserialization::Deserialize(buffer, rawBufferVector);
             return m_logic->getCertificateChain(
                 cred,
-                commandId,
+                msgID,
                 certificate,
                 rawBufferVector);
         }
@@ -262,7 +310,7 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer){
             Deserialization::Deserialize(buffer, aliasVector);
             return m_logic->getCertificateChain(
                 cred,
-                commandId,
+                msgID,
                 certificate,
                 aliasVector);
         }
@@ -280,7 +328,7 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer){
 
             return m_logic->createSignature(
                   cred,
-                  commandId,
+                  msgID,
                   privateKeyAlias,
                   password,           // password for private_key
                   message,
@@ -304,7 +352,7 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer){
             Deserialization::Deserialize(buffer, padding);
             return m_logic->verifySignature(
                 cred,
-                commandId,
+                msgID,
                 publicKeyOrCertAlias,
                 password,           // password for public_key (optional)
                 message,
@@ -322,7 +370,8 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer){
             Deserialization::Deserialize(buffer, req_rights);
             return m_logic->allowAccess(
                 cred,
-                commandId,
+                command,
+                msgID,
                 item_alias,
                 accessor_label,
                 static_cast<AccessRight>(req_rights));
@@ -335,7 +384,8 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer){
             Deserialization::Deserialize(buffer, accessor_label);
             return m_logic->denyAccess(
                 cred,
-                commandId,
+                command,
+                msgID,
                 item_alias,
                 accessor_label);
         }
