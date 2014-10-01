@@ -73,9 +73,10 @@ namespace CKM {
                     const Alias &alias,
                     const std::string &clnt_label);
             void getAliases(
+                    const std::string &clnt_label,
                     DBDataType dataType,
                     AliasVector &aliases);
-            void getKeyAliases(AliasVector &aliases);
+            void getKeyAliases(const std::string &clnt_label, AliasVector &aliases);
             bool deleteDBRow(
                     const Alias& alias,
                     const std::string &clnt_label);
@@ -207,7 +208,7 @@ namespace CKM {
             bool checkAliasExist(const std::string &alias) const;
             std::string getLabelForAlias(const std::string& alias) const;
             bool checkGlobalAliasExist(const std::string& alias) const;
-            void getSingleType(DBDataType type, AliasVector& aliases) const;
+            void getSingleType(const std::string &clnt_label, DBDataType type, AliasVector& aliases) const;
    };
 } // namespace CKM
 

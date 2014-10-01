@@ -462,9 +462,9 @@ RawBuffer CKMLogic::getDataList(
         auto &handler = m_userDataMap[cred.uid];
         Try {
             if (dataType == DBDataType::CERTIFICATE || dataType == DBDataType::BINARY_DATA) {
-                handler.database.getAliases(dataType, aliasVector);
+                handler.database.getAliases(cred.smackLabel, dataType, aliasVector);
             } else {
-                handler.database.getKeyAliases(aliasVector);
+                handler.database.getKeyAliases(cred.smackLabel, aliasVector);
             }
         } Catch (CKM::Exception) {
             LogError("Failed to get aliases");

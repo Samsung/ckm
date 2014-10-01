@@ -81,17 +81,6 @@ namespace {
             //                     2     3
             " AND dataType BETWEEN ? AND ?;";
 
-    const char *select_key_type_cmd =
-            "SELECT alias FROM CKM_TABLE WHERE "
-            //                1
-                " dataType >= ? AND "
-            //                2
-                " dataType <= ?;";
-
-    const char *select_type_cmd =
-            //                                          1
-            "SELECT alias FROM CKM_TABLE WHERE dataType=?;";
-
     const char *delete_alias_cmd =
             //                                 1
             "DELETE FROM CKM_TABLE WHERE alias=?;";
@@ -137,6 +126,22 @@ namespace {
     const char *delete_permission_cmd =
             //                                        1           2
             "DELETE FROM PERMISSION_TABLE WHERE alias=? AND label=?;";
+
+
+// CKM_TABLE x PERMISSION_TABLE
+
+    const char *select_type_cross_cmd =
+            //                                                1              2                                                                     3
+            "SELECT c.alias FROM CKM_TABLE c WHERE c.dataType=? AND (c.label=? OR c.alias IN (SELECT p.alias FROM PERMISSION_TABLE p WHERE p.label=?));";
+
+    const char *select_key_type_cross_cmd =
+            "SELECT c.alias FROM CKM_TABLE c WHERE "
+            //                  1
+                " c.dataType >= ? AND "
+            //                  2
+                " c.dataType <= ? AND "
+            //             3                                                                     4
+                " (c.label=? OR c.alias IN (SELECT p.alias FROM PERMISSION_TABLE p WHERE p.label=?));";
 }
 
 namespace CKM {
@@ -435,13 +440,16 @@ using namespace DB;
     }
 
     void DBCrypto::getSingleType(
+            const std::string &clnt_label,
             DBDataType type,
             AliasVector& aliases) const
     {
         Try{
             SqlConnection::DataCommandUniquePtr selectCommand =
-                            m_connection->PrepareDataCommand(select_type_cmd);
+                            m_connection->PrepareDataCommand(select_type_cross_cmd);
             selectCommand->BindInteger(1, static_cast<int>(type));
+            selectCommand->BindString(2, clnt_label.c_str());
+            selectCommand->BindString(3, clnt_label.c_str());
 
             while(selectCommand->Step()) {
                 Alias alias;
@@ -461,21 +469,24 @@ using namespace DB;
     }
 
     void DBCrypto::getAliases(
+        const std::string &clnt_label,
         DBDataType type,
         AliasVector& aliases)
     {
-        getSingleType(type, aliases);
+        getSingleType(clnt_label, type, aliases);
     }
 
 
-    void DBCrypto::getKeyAliases(AliasVector &aliases)
+    void DBCrypto::getKeyAliases(const std::string &clnt_label, AliasVector &aliases)
     {
         Try{
             Transaction transaction(this);
             SqlConnection::DataCommandUniquePtr selectCommand =
-                            m_connection->PrepareDataCommand(select_key_type_cmd);
+                            m_connection->PrepareDataCommand(select_key_type_cross_cmd);
             selectCommand->BindInteger(1, static_cast<int>(DBDataType::DB_KEY_FIRST));
             selectCommand->BindInteger(2, static_cast<int>(DBDataType::DB_KEY_LAST));
+            selectCommand->BindString(3, clnt_label.c_str());
+            selectCommand->BindString(4, clnt_label.c_str());
 
             while(selectCommand->Step()) {
                 Alias alias;
