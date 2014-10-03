@@ -5,7 +5,7 @@ includedir=${prefix}/include
 
 Name: key-manager
 Description: Central Key Manager Package
-Version: 1.0.1
+Version: @VERSION@
 Requires: openssl libsmack
 Libs: -L${libdir} -lkey-manager-client -lkey-manager-common -lkey-manager-control-client
 Cflags: -I${includedir}/ckm
