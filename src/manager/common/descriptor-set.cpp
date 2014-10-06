@@ -22,6 +22,7 @@
 #include "descriptor-set.h"
 #include <dpl/log/log.h>
 #include <string.h>
+#include <unistd.h>
 
 namespace CKM {
 
