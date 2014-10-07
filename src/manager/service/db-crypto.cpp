@@ -49,8 +49,7 @@ namespace {
             "   data BLOB NOT NULL,"
             "   tag BLOB NOT NULL,"
             "   PRIMARY KEY(alias)"
-            ");";
-
+            "); CREATE INDEX alias_idx ON CKM_TABLE(alias);";
 
     const char *insert_main_cmd =
             "INSERT INTO CKM_TABLE("
@@ -114,7 +113,7 @@ namespace {
             "   accessFlags TEXT NOT NULL,"
             "   FOREIGN KEY(alias) REFERENCES CKM_TABLE(alias) ON DELETE CASCADE,"
             "   PRIMARY KEY(alias, label)"
-            ");";
+            "); CREATE INDEX alias_label_idx ON PERMISSION_TABLE(alias, label);";
 
     const char *set_permission_alias_cmd =
             "REPLACE INTO PERMISSION_TABLE(alias, label, accessFlags) VALUES (?, ?, ?);";
@@ -131,17 +130,12 @@ namespace {
 // CKM_TABLE x PERMISSION_TABLE
 
     const char *select_type_cross_cmd =
-            //                                                1              2                                                                     3
-            "SELECT c.alias FROM CKM_TABLE c WHERE c.dataType=? AND (c.label=? OR c.alias IN (SELECT p.alias FROM PERMISSION_TABLE p WHERE p.label=?));";
+            //                                                                                                        1              2             3
+            "SELECT C.alias FROM CKM_TABLE AS C LEFT JOIN PERMISSION_TABLE AS P ON C.alias = P.alias WHERE C.dataType=? AND (C.label=? OR (P.label=? AND P.accessFlags IS NOT NULL)) GROUP BY C.alias;";
 
     const char *select_key_type_cross_cmd =
-            "SELECT c.alias FROM CKM_TABLE c WHERE "
-            //                  1
-                " c.dataType >= ? AND "
-            //                  2
-                " c.dataType <= ? AND "
-            //             3                                                                     4
-                " (c.label=? OR c.alias IN (SELECT p.alias FROM PERMISSION_TABLE p WHERE p.label=?));";
+            //                                                                                                       1                 2              3             4
+            "SELECT C.alias FROM CKM_TABLE AS C LEFT JOIN PERMISSION_TABLE AS P ON C.alias=P.alias WHERE C.dataType>=? AND C.dataType<=? AND (C.label=? OR (P.label=? AND P.accessFlags IS NOT NULL)) GROUP BY C.alias;";
 }
 
 namespace CKM {

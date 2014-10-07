@@ -27,6 +27,7 @@ INCLUDE_DIRECTORIES(
 
 SET(TEST_MERGED_SOURCES
     ${KEY_MANAGER_TEST_MERGED_SRC}/test_common.cpp
+    ${KEY_MANAGER_TEST_MERGED_SRC}/DBFixture.cpp
     ${KEY_MANAGER_TEST_MERGED_SRC}/colour_log_formatter.cpp
     ${KEY_MANAGER_TEST_MERGED_SRC}/test_db_crypto.cpp
     ${KEY_MANAGER_TEST_MERGED_SRC}/test_sql.cpp

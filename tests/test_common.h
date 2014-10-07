@@ -16,6 +16,9 @@ struct TestConfig {
 private:
 };
 
+// mirrors the API-defined value
+#define AES_GCM_TAG_SIZE 16
+
 CKM::RawBuffer createDefaultPass();
 CKM::RawBuffer createBigBlob(std::size_t size);
 
