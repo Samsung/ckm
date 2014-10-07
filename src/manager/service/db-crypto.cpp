@@ -113,7 +113,7 @@ namespace {
             "   label TEXT NOT NULL,"
             "   accessFlags TEXT NOT NULL,"
             "   FOREIGN KEY(alias) REFERENCES CKM_TABLE(alias) ON DELETE CASCADE,"
-            "   PRIMARY KEY(label)"
+            "   PRIMARY KEY(alias, label)"
             ");";
 
     const char *set_permission_alias_cmd =
