@@ -179,9 +179,9 @@ int ckmc_reset_user_password(uid_t user, const char *new_password);
  * @remarks Data identified by @a alias should exist
  *
  * @param[in] user        User ID of a user whose data will be affected
- * @param[in] owner       Package id (smack label) of the data owner
+ * @param[in] owner       Package id of the data owner
  * @param[in] alias       Data alias for which access will be granted
- * @param[in] accessor    Package id (smack label) of the application that will gain access rights
+ * @param[in] accessor    Package id of the application that will gain access rights
  * @param[in] granted     Rights granted for @a accessor application
  *
  * @return @c 0 on success, otherwise a negative error value
@@ -211,9 +211,9 @@ int ckmc_allow_access_by_adm(uid_t user, const char *owner, const char *alias, c
  * @remarks Only access previously granted with ckmc_allow_access can be revoked.
  *
  * @param[in] user        User ID of a user whose data will be affected
- * @param[in] owner       Package id (smack label) of the data owner
+ * @param[in] owner       Package id of the data owner
  * @param[in] alias       Data alias for which access will be revoked
- * @param[in] accessor    Package id (smack label) of the application that will lose access rights
+ * @param[in] accessor    Package id of the application that will lose access rights
  *
  * @return @c 0 on success, otherwise a negative error value
  *

@@ -683,7 +683,7 @@ int ckmc_get_cert_chain_with_alias(const ckmc_cert_s *cert, const ckmc_alias_lis
  * @remarks Data identified by @a alias should exist
  *
  * @param[in] alias       Data alias for which access will be granted
- * @param[in] accessor    Package id (smack label) of the application that will gain access rights
+ * @param[in] accessor    Package id of the application that will gain access rights
  * @param[in] granted     Rights granted for @a accessor application
  *
  * @return @c 0 on success, otherwise a negative error value
@@ -711,7 +711,7 @@ int ckmc_allow_access(const char *alias, const char *accessor, ckmc_access_right
  * @remarks Only access previously granted with ckmc_allow_access can be revoked.
  *
  * @param[in] alias       Data alias for which access will be revoked
- * @param[in] accessor    Package id (smack label) of the application that will lose access rights
+ * @param[in] accessor    Package id of the application that will lose access rights
  *
  * @return @c 0 on success, otherwise a negative error value
  *
