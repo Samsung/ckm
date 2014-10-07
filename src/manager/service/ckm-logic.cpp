@@ -116,12 +116,31 @@ RawBuffer CKMLogic::unlockUserKey(uid_t user, const Password &password) {
 RawBuffer CKMLogic::setCCModeStatus(CCModeState mode_status) {
 
     int retCode = CKM_API_SUCCESS;
+    int fipsModeStatus = 0;
+    int rc = 0;
 
     if((mode_status != CCModeState:: CC_MODE_OFF) && (mode_status != CCModeState:: CC_MODE_ON)) {
         retCode = CKM_API_ERROR_INPUT_PARAM;
     }
 
     cc_mode_status = mode_status;
+    fipsModeStatus = FIPS_mode();
+
+    if(cc_mode_status == CCModeState:: CC_MODE_ON) {
+        if(fipsModeStatus == 0) { // If FIPS mode off
+            rc = FIPS_mode_set(1); // Change FIPS_mode from off to on
+            if(rc == 0) {
+                LogError("Error in FIPS_mode_set function");
+            }
+        }
+    } else {
+        if(fipsModeStatus == 1) { // If FIPS mode on
+            rc = FIPS_mode_set(0); // Change FIPS_mode from on to off
+            if(rc == 0) {
+                LogError("Error in FIPS_mode_set function");
+            }
+        }
+    }
 
     MessageBuffer response;
     Serialization::Serialize(response, retCode);

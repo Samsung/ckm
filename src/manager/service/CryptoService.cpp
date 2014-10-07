@@ -40,24 +40,12 @@ CryptoService::~CryptoService(){
 
 
 int CryptoService::initialize() {
-    int mode = 0;
-    int rc = 0;
-    int hw_rand_ret = 0, u_rand_ret = 0;
+    int hw_rand_ret = 0;
+    int u_rand_ret = 0;
 
     // try to initialize using ERR_load_crypto_strings and OpenSSL_add_all_algorithms
     ERR_load_crypto_strings();
     OpenSSL_add_all_algorithms();
-
-    // turn on FIPS_mode
-    mode = FIPS_mode();
-
-    if(mode == 0) {
-        rc = FIPS_mode_set(1);
-
-        if(rc == 0) {
-            LogError("Error in FIPS_mode_set function");
-        }
-    }
 
     // initialize entropy
     std::ifstream ifile(DEV_HW_RANDOM_FILE);
