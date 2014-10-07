@@ -1,5 +1,6 @@
 [Unit]
 Description=Start the Central Key Manager
+DefaultDependencies=no
 
 [Service]
 Type=notify

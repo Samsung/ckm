@@ -17,10 +17,7 @@ BuildRequires: libattr-devel
 BuildRequires: pkgconfig(libsmack)
 BuildRequires: pkgconfig(libsystemd-daemon)
 BuildRequires: pkgconfig(db-util)
-BuildRequires: pkgconfig(capi-appfw-package-manager)
-BuildRequires: pkgconfig(glib-2.0)
 BuildRequires: boost-devel
-Requires: boost-test
 Requires: libkey-manager-common = %{version}-%{release}
 %{?systemd_requires}
 
@@ -31,6 +28,8 @@ Central Key Manager and utilities
 Summary:    Package with listener daemon
 Group:      System/Security
 BuildRequires: pkgconfig(vconf)
+BuildRequires: pkgconfig(glib-2.0)
+BuildRequires: pkgconfig(capi-appfw-package-manager)
 Requires:   libkey-manager-client = %{version}-%{release}
 
 %description -n key-manager-listener
@@ -71,6 +70,7 @@ Central Key Manager package (client-devel)
 %package -n key-manager-tests
 Summary:    internal test for key-manager
 Group:      Development
+Requires:   boost-test
 Requires:   key-manager = %{version}-%{release}
 
 %description -n key-manager-tests
