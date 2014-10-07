@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE(KeyDomainKekInvalidPassword){
     BOOST_REQUIRE_NO_THROW(rb_test =
             CKM::KeyProvider::generateDomainKEK(USERNAME_LONG, PASSWORD));
     BOOST_REQUIRE_THROW(keyProvider = CKM::KeyProvider(rb_test, INCORRECT_PASSWORD),
-            CKM::KeyProvider::Exception::UnwrapFailed);
+            CKM::KeyProvider::Exception::PassWordError);
     BOOST_REQUIRE_MESSAGE(!keyProvider.isInitialized(),
             "KeyProvider not created, but initialized");
 }
@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE(KeyReencrypt_incorrect_password){
     BOOST_REQUIRE_NO_THROW(rb_test =
             CKM::KeyProvider::generateDomainKEK(USERNAME_LONG, PASSWORD));
     BOOST_REQUIRE_THROW((rb_test = CKM::KeyProvider::reencrypt(rb_test, INCORRECT_PASSWORD,
-            NEW_PASSWORD)), CKM::KeyProvider::Exception::UnwrapFailed);
+            NEW_PASSWORD)), CKM::KeyProvider::Exception::PassWordError);
 }
 
 BOOST_AUTO_TEST_CASE(KeyGetPureDEK_after_reencrypt){
