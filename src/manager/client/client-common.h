@@ -57,35 +57,47 @@ class AliasSupport
         Label m_label;
 };
 
-int connectSocket(int& sock, char const * const interface);
-
-int sendToServer(char const * const interface, const RawBuffer &send, MessageBuffer &recv);
-
-
 class SockRAII {
-public:
-    SockRAII()
-      : m_sock(-1)
-    {}
+    public:
+        SockRAII();
 
-    NONCOPYABLE(SockRAII);
+        NONCOPYABLE(SockRAII);
 
-    virtual ~SockRAII() {
-        if (m_sock > -1)
-            close(m_sock);
-    }
+        virtual ~SockRAII();
 
-    int Connect(char const * const interface) {
-        return CKM::connectSocket(m_sock, interface);
-    }
+        int Connect(char const * const interface);
+        void Disconnect();
+        bool isConnected() const;
+        int Get() const;
 
-    int Get() const {
-        return m_sock;
-    }
+    protected:
+        int WaitForSocket(int event, int timeout);
 
-private:
-    int m_sock;
+    private:
+        int m_sock;
 };
+
+class ServiceConnection : public SockRAII
+{
+    public:
+        ServiceConnection(char const * const service_interface);
+
+        // roundtrip: send and receive
+        int processRequest(const CKM::RawBuffer &send_buf,
+                           CKM::MessageBuffer &recv_buf);
+
+        // blocking
+        int send(const CKM::RawBuffer &send_buf);
+        int receive(CKM::MessageBuffer &recv_buf);
+
+        virtual ~ServiceConnection();
+
+    private:
+        std::string m_service_interface;
+
+        int Connect();
+};
+
 
 /*
  * Decorator function that performs frequently repeated exception handling in

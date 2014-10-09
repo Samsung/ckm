@@ -51,10 +51,127 @@ void centKeyClientEnableLogSystem(void) {
     CKM::Singleton<CKM::Log::LogSystem>::Instance().SetTag("CKM_CLIENT");
 }
 
-int waitForSocket(int sock, int event, int timeout) {
+} // namespace anonymous
+
+namespace CKM {
+
+SockRAII::SockRAII() : m_sock(-1) {}
+
+SockRAII::~SockRAII()
+{
+    Disconnect();
+}
+
+int SockRAII::Connect(char const * const interface)
+{
+    int sock = -1;
+    try
+    {
+        if(!interface) {
+            LogError("No valid interface address given.");
+            throw CKM_API_ERROR_INPUT_PARAM;
+        }
+
+        sock = socket(AF_UNIX, SOCK_STREAM, 0);
+        if(sock < 0) {
+            LogError("Error creating socket: " << CKM::GetErrnoString(errno));
+            throw CKM_API_ERROR_SOCKET;
+        }
+
+        // configure non-blocking mode
+        int flags;
+        if((flags = fcntl(sock, F_GETFL, 0)) < 0 || fcntl(sock, F_SETFL, flags | O_NONBLOCK) < 0)
+        {
+            LogError("Error in fcntl: " << CKM::GetErrnoString(errno));
+            throw CKM_API_ERROR_SOCKET;
+        }
+
+        sockaddr_un clientAddr;
+        memset(&clientAddr, 0, sizeof(clientAddr));
+        clientAddr.sun_family = AF_UNIX;
+        if(strlen(interface) >= sizeof(clientAddr.sun_path))
+        {
+            LogError("Error: interface name " << interface << "is too long. Max len is:" << sizeof(clientAddr.sun_path));
+            throw CKM_API_ERROR_INPUT_PARAM;
+        }
+
+        strcpy(clientAddr.sun_path, interface);
+        LogDebug("ClientAddr.sun_path = " << interface);
+
+        int retval = TEMP_FAILURE_RETRY(::connect(sock, (struct sockaddr*)&clientAddr, SUN_LEN(&clientAddr)));
+        if(-1 == retval)
+        {
+            switch(errno)
+            {
+                case EACCES:
+                    LogError("Access denied");
+                    throw CKM_API_ERROR_ACCESS_DENIED;
+                    break;
+
+                case EINPROGRESS:
+                {
+                    if( 0 >= WaitForSocket(POLLOUT, POLL_TIMEOUT))
+                    {
+                        LogError("Error in WaitForSocket.");
+                        throw CKM_API_ERROR_SOCKET;
+                    }
+
+                    int error = 0;
+                    size_t len = sizeof(error);
+                    retval = getsockopt(sock, SOL_SOCKET, SO_ERROR, &error, &len);
+                    if(-1 == retval)
+                    {
+                        LogError("Error in getsockopt: " << CKM::GetErrnoString(error));
+                        throw CKM_API_ERROR_SOCKET;
+                    }
+
+                    if(error == EACCES)
+                    {
+                        LogError("Access denied");
+                        throw CKM_API_ERROR_ACCESS_DENIED;
+                    }
+
+                    if(error != 0)
+                    {
+                        LogError("Error in connect: " << CKM::GetErrnoString(error));
+                        throw CKM_API_ERROR_SOCKET;
+                    }
+
+                    break;
+                }
+
+                default:
+                    LogError("Error connecting socket: " << CKM::GetErrnoString(errno));
+                    throw CKM_API_ERROR_SOCKET;
+                    break;
+            }
+        }
+    }
+    catch(int & error_code) {
+        if(sock > 0)
+            close(sock);
+        return error_code;
+    }
+
+    m_sock = sock;
+    return CKM_API_SUCCESS;
+}
+
+bool SockRAII::isConnected() const {
+    return (m_sock != -1);
+}
+
+void SockRAII::Disconnect() {
+    if( isConnected() )
+        close(m_sock);
+    m_sock = -1;
+}
+
+int SockRAII::WaitForSocket(int event, int timeout)
+{
     int retval;
     pollfd desc[1];
-    desc[0].fd = sock;
+    desc[0].fd = m_sock;
     desc[0].events = event;
 
     while((-1 == (retval = poll(desc, 1, timeout))) && (errno == EINTR)) {
@@ -64,11 +181,14 @@ int waitForSocket(int sock, int event, int timeout) {
 
     if (0 == retval) {
         LogDebug("Poll timeout");
-    } else if (-1 == retval) {
-        int err = errno;
-        LogError("Error in poll: " << CKM::GetErrnoString(err));
+    } else if(-1 == retval) {
+        LogError("Error in poll: " << CKM::GetErrnoString(errno));
     }
     return retval;
+}
+
+int SockRAII::Get() const {
+    return m_sock;
 }
 
 } // namespace anonymous
@@ -110,134 +230,117 @@ bool AliasSupport::isLabelEmpty() const {
     return m_label.empty();
 }
 
-
-int connectSocket(int& sock, char const * const interface) {
-    sockaddr_un clientAddr;
-    int flags;
-
-    if (sock != -1) // guard
-        close(sock);
-
-    sock = socket(AF_UNIX, SOCK_STREAM, 0);
-    if (sock < 0) {
-        int err = errno;
-        LogError("Error creating socket: " << GetErrnoString(err));
-        return CKM_API_ERROR_SOCKET;
-    }
-
-    if ((flags = fcntl(sock, F_GETFL, 0)) < 0 ||
-        fcntl(sock, F_SETFL, flags | O_NONBLOCK) < 0)
-    {
-        int err = errno;
-        LogError("Error in fcntl: " << GetErrnoString(err));
-        return CKM_API_ERROR_SOCKET;
-    }
-
-    memset(&clientAddr, 0, sizeof(clientAddr));
-
-    clientAddr.sun_family = AF_UNIX;
-
-    if (strlen(interface) >= sizeof(clientAddr.sun_path)) {
-        LogError("Error: interface name " << interface << "is too long. Max len is:" <<
-                 sizeof(clientAddr.sun_path));
-        return CKM_API_ERROR_SOCKET;
-    }
-
-    strcpy(clientAddr.sun_path, interface);
-
-    LogDebug("ClientAddr.sun_path = " << interface);
-
-    int retval = TEMP_FAILURE_RETRY(
-        connect(sock, (struct sockaddr*)&clientAddr, SUN_LEN(&clientAddr)));
-    if ((retval == -1) && (errno == EINPROGRESS)) {
-        if (0 >= waitForSocket(sock, POLLOUT, POLL_TIMEOUT)) {
-            LogError("Error in waitForSocket.");
-            return CKM_API_ERROR_SOCKET;
-        }
-        int error = 0;
-        socklen_t len = sizeof(error);
-        retval = getsockopt(sock, SOL_SOCKET, SO_ERROR, &error, &len);
-
-        if (-1 == retval) {
-            int err = errno;
-            LogError("Error in getsockopt: " << GetErrnoString(err));
-            return CKM_API_ERROR_SOCKET;
-        }
-
-        if (error == EACCES) {
-            LogError("Access denied");
-            return CKM_API_ERROR_ACCESS_DENIED;
-        }
-
-        if (error != 0) {
-            LogError("Error in connect: " << GetErrnoString(error));
-            return CKM_API_ERROR_SOCKET;
-        }
-
-        return CKM_API_SUCCESS;
-    }
-
-    if (-1 == retval) {
-        int err = errno;
-        LogError("Error connecting socket: " << GetErrnoString(err));
-        if (err == EACCES)
-            return CKM_API_ERROR_ACCESS_DENIED;
-        return CKM_API_ERROR_SOCKET;
-    }
-
-    return CKM_API_SUCCESS;
+ServiceConnection::ServiceConnection(char const * const service_interface) {
+    if(service_interface)
+        m_service_interface = std::string(service_interface);
 }
 
-int sendToServer(char const * const interface, const RawBuffer &send, MessageBuffer &recv) {
-    int ret;
-    SockRAII sock;
-    ssize_t done = 0;
-    char buffer[2048];
+int ServiceConnection::processRequest( const CKM::RawBuffer &send_buf,
+                                       CKM::MessageBuffer &recv_buf) {
+    int ec;
+    if(CKM_API_SUCCESS != (ec = send(send_buf)))
+        return ec;
 
-    if (CKM_API_SUCCESS != (ret = sock.Connect(interface))) {
-        LogError("Error in SockRAII");
-        return ret;
+    return receive(recv_buf);
+}
+
+int ServiceConnection::Connect()
+{
+    // cleanup
+    if( isConnected() )
+        Disconnect();
+
+    return SockRAII::Connect(m_service_interface.c_str());
+}
+
+int ServiceConnection::send(const CKM::RawBuffer &send_buf)
+{
+    if( ! isConnected() )
+    {
+        int ec;
+        if(CKM_API_SUCCESS != (ec = ServiceConnection::Connect()))
+        {
+            LogError("send failed, connect fail code: " << ec);
+            return ec;
+        }
     }
 
-    while ((send.size() - done) > 0) {
-        if (0 >= waitForSocket(sock.Get(), POLLOUT, POLL_TIMEOUT)) {
-            LogError("Error in poll(POLLOUT)");
-            return CKM_API_ERROR_SOCKET;
+    int ec = CKM_API_SUCCESS;
+    ssize_t done = 0;
+    while((send_buf.size() - done) > 0)
+    {
+        if( 0 >= WaitForSocket(POLLOUT, POLL_TIMEOUT)) {
+            LogError("Error in WaitForSocket.");
+            ec = CKM_API_ERROR_SOCKET;
+            break;
         }
-        ssize_t temp = TEMP_FAILURE_RETRY(write(sock.Get(), &send[done], send.size() - done));
-        if (-1 == temp) {
-            int err = errno;
-            LogError("Error in write: " << GetErrnoString(err));
-            return CKM_API_ERROR_SOCKET;
+
+        ssize_t temp = TEMP_FAILURE_RETRY(write(Get(), &send_buf[done], send_buf.size() - done));
+        if(-1 == temp) {
+            LogError("Error in write: " << CKM::GetErrnoString(errno));
+            ec = CKM_API_ERROR_SOCKET;
+            break;
         }
+
         done += temp;
     }
 
-    do {
-        if (0 >= waitForSocket(sock.Get(), POLLIN, POLL_TIMEOUT)) {
-            LogError("Error in poll(POLLIN)");
-            return CKM_API_ERROR_SOCKET;
+    if(ec != CKM_API_SUCCESS)
+        Disconnect();
+
+    return ec;
+}
+
+int ServiceConnection::receive(CKM::MessageBuffer &recv_buf)
+{
+    if( ! isConnected() )
+    {
+        LogError("Not connected!");
+        return CKM_API_ERROR_SOCKET;
+    }
+
+    int ec = CKM_API_SUCCESS;
+    const size_t c_recv_buf_len = 2048;
+    char buffer[c_recv_buf_len];
+    do
+    {
+        if( 0 >= WaitForSocket(POLLIN, POLL_TIMEOUT)) {
+            LogError("Error in WaitForSocket.");
+            ec = CKM_API_ERROR_SOCKET;
+            break;
         }
-        ssize_t temp = TEMP_FAILURE_RETRY(read(sock.Get(), buffer, 2048));
-        if (-1 == temp) {
-            int err = errno;
-            LogError("Error in read: " << GetErrnoString(err));
-            return CKM_API_ERROR_SOCKET;
+
+        ssize_t temp = TEMP_FAILURE_RETRY(read(Get(), buffer, sizeof(buffer)));
+        if(-1 == temp) {
+            LogError("Error in read: " << CKM::GetErrnoString(errno));
+            ec = CKM_API_ERROR_SOCKET;
+            break;
         }
 
         if (0 == temp) {
             LogError("Read return 0/Connection closed by server(?)");
-            return CKM_API_ERROR_SOCKET;
+            ec = CKM_API_ERROR_SOCKET;
+            break;
         }
 
-        RawBuffer raw(buffer, buffer+temp);
-        recv.Push(raw);
-    } while(!recv.Ready());
-    return CKM_API_SUCCESS;
+        CKM::RawBuffer raw(buffer, buffer+temp);
+        recv_buf.Push(raw);
+    }
+    while(!recv_buf.Ready());
+
+    if(ec != CKM_API_SUCCESS)
+        Disconnect();
+
+    return ec;
+}
+
+ServiceConnection::~ServiceConnection()
+{
 }
 
 int try_catch(const std::function<int()>& func)
 {
+    int retval = CKM_API_ERROR_UNKNOWN;
     try {
         return func();
     } catch (MessageBuffer::Exception::Base &e) {
@@ -247,7 +350,7 @@ int try_catch(const std::function<int()>& func)
     } catch (...) {
         LogError("Unknown exception occured");
     }
-    return CKM_API_ERROR_UNKNOWN;
+    return retval;
 }
 
 void try_catch_async(const std::function<void()>& func, const std::function<void(int)>& error)

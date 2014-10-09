@@ -45,14 +45,13 @@ namespace CKM {
 bool ManagerImpl::s_isInit = false;
 
 ManagerImpl::ManagerImpl()
-  : m_counter(0)
+  : m_counter(0), m_storageConnection(SERVICE_SOCKET_CKM_STORAGE), m_ocspConnection(SERVICE_SOCKET_OCSP)
 {
     // TODO secure with mutex
     if (!s_isInit) {
         s_isInit = true;
         clientInitialize();
     }
-
 }
 
 
@@ -76,14 +75,9 @@ int ManagerImpl::saveBinaryData(
                                              rawData,
                                              PolicySerializable(policy));
 
-        int retCode = sendToServer(
-            SERVICE_SOCKET_CKM_STORAGE,
-            send.Pop(),
-            recv);
-
-        if (CKM_API_SUCCESS != retCode) {
+        int retCode = m_storageConnection.processRequest(send.Pop(), recv);
+        if (CKM_API_SUCCESS != retCode)
             return retCode;
-        }
 
         int command;
         int counter;
@@ -133,14 +127,10 @@ int ManagerImpl::removeBinaryData(const Alias &alias, DBDataType dataType)
                                              static_cast<int>(dataType),
                                              helper.getName(),
                                              helper.getLabel());
-        int retCode = sendToServer(
-            SERVICE_SOCKET_CKM_STORAGE,
-            send.Pop(),
-            recv);
 
-        if (CKM_API_SUCCESS != retCode) {
+        int retCode = m_storageConnection.processRequest(send.Pop(), recv);
+        if (CKM_API_SUCCESS != retCode)
             return retCode;
-        }
 
         int command;
         int counter;
@@ -186,19 +176,15 @@ int ManagerImpl::getBinaryData(
                                              helper.getName(),
                                              helper.getLabel(),
                                              password);
-        int retCode = sendToServer(
-            SERVICE_SOCKET_CKM_STORAGE,
-            send.Pop(),
-            recv);
 
-        if (CKM_API_SUCCESS != retCode) {
+        int retCode = m_storageConnection.processRequest(send.Pop(), recv);
+        if (CKM_API_SUCCESS != retCode)
             return retCode;
-        }
 
         int command;
         int counter;
         int tmpDataType;
-        recv.Deserialize(command, counter, retCode, tmpDataType,rawData);
+        recv.Deserialize(command, counter, retCode, tmpDataType, rawData);
         recvDataType = static_cast<DBDataType>(tmpDataType);
 
         if (counter != m_counter) {
@@ -291,14 +277,10 @@ int ManagerImpl::getBinaryDataAliasVector(DBDataType dataType, AliasVector &alia
         auto send = MessageBuffer::Serialize(static_cast<int>(LogicCommand::GET_LIST),
                                              m_counter,
                                              static_cast<int>(dataType));
-        int retCode = sendToServer(
-            SERVICE_SOCKET_CKM_STORAGE,
-            send.Pop(),
-            recv);
 
-        if (CKM_API_SUCCESS != retCode) {
+        int retCode = m_storageConnection.processRequest(send.Pop(), recv);
+        if (CKM_API_SUCCESS != retCode)
             return retCode;
-        }
 
         int command;
         int counter;
@@ -404,14 +386,10 @@ int ManagerImpl::createKeyPair(
                                              PolicySerializable(policyPublicKey),
                                              privateKeyAlias,
                                              publicKeyAlias);
-        int retCode = sendToServer(
-            SERVICE_SOCKET_CKM_STORAGE,
-            send.Pop(),
-            recv);
 
-        if (CKM_API_SUCCESS != retCode) {
+        int retCode = m_storageConnection.processRequest(send.Pop(), recv);
+        if (CKM_API_SUCCESS != retCode)
             return retCode;
-        }
 
         int command;
         int counter;
@@ -431,7 +409,8 @@ int getCertChain(
     int counter,
     const CertificateShPtr &certificate,
     const T &sendData,
-    CertificateShPtrVector &certificateChainVector)
+    CertificateShPtrVector &certificateChainVector,
+    ServiceConnection & service_connection)
 {
     return try_catch([&] {
 
@@ -440,14 +419,10 @@ int getCertChain(
                                              counter,
                                              certificate->getDER(),
                                              sendData);
-        int retCode = sendToServer(
-            SERVICE_SOCKET_CKM_STORAGE,
-            send.Pop(),
-            recv);
 
-        if (CKM_API_SUCCESS != retCode) {
+        int retCode = service_connection.processRequest(send.Pop(), recv);
+        if (CKM_API_SUCCESS != retCode)
             return retCode;
-        }
 
         int retCommand;
         int retCounter;
@@ -490,7 +465,8 @@ int ManagerImpl::getCertificateChain(
         ++m_counter,
         certificate,
         rawBufferVector,
-        certificateChainVector);
+        certificateChainVector,
+        m_storageConnection);
 }
 
 int ManagerImpl::getCertificateChain(
@@ -503,7 +479,8 @@ int ManagerImpl::getCertificateChain(
         ++m_counter,
         certificate,
         untrustedCertificates,
-        certificateChainVector);
+        certificateChainVector,
+        m_storageConnection);
 }
 
 int ManagerImpl::createSignature(
@@ -528,18 +505,13 @@ int ManagerImpl::createSignature(
                                              message,
                                              static_cast<int>(hash),
                                              static_cast<int>(padding));
-        int retCode = sendToServer(
-            SERVICE_SOCKET_CKM_STORAGE,
-            send.Pop(),
-            recv);
 
-        if (CKM_API_SUCCESS != retCode) {
+        int retCode = m_storageConnection.processRequest(send.Pop(), recv);
+        if (CKM_API_SUCCESS != retCode)
             return retCode;
-        }
 
         int command;
         int counter;
-
         recv.Deserialize(command, counter, retCode, signature);
 
         if ((command != static_cast<int>(LogicCommand::CREATE_SIGNATURE))
@@ -575,18 +547,13 @@ int ManagerImpl::verifySignature(
                                              signature,
                                              static_cast<int>(hash),
                                              static_cast<int>(padding));
-        int retCode = sendToServer(
-            SERVICE_SOCKET_CKM_STORAGE,
-            send.Pop(),
-            recv);
 
-        if (CKM_API_SUCCESS != retCode) {
+        int retCode = m_storageConnection.processRequest(send.Pop(), recv);
+        if (CKM_API_SUCCESS != retCode)
             return retCode;
-        }
 
         int command;
         int counter;
-
         recv.Deserialize(command, counter, retCode);
 
         if ((command != static_cast<int>(LogicCommand::VERIFY_SIGNATURE))
@@ -612,17 +579,11 @@ int ManagerImpl::ocspCheck(const CertificateShPtrVector &certChain, int &ocspSta
 
         auto send = MessageBuffer::Serialize(my_counter, rawCertChain);
 
-        int retCode = sendToServer(
-            SERVICE_SOCKET_OCSP,
-            send.Pop(),
-            recv);
-
-        if (CKM_API_SUCCESS != retCode) {
+        int retCode = m_ocspConnection.processRequest(send.Pop(), recv);
+        if (CKM_API_SUCCESS != retCode)
             return retCode;
-        }
 
         int counter;
-
         recv.Deserialize(counter, retCode, ocspStatus);
 
         if (my_counter != counter) {
@@ -646,14 +607,10 @@ int ManagerImpl::allowAccess(const Alias &alias,
                                              alias,
                                              accessor,
                                              static_cast<int>(granted));
-        int retCode = sendToServer(
-            SERVICE_SOCKET_CKM_STORAGE,
-            send.Pop(),
-            recv);
 
-        if (CKM_API_SUCCESS != retCode) {
+        int retCode = m_storageConnection.processRequest(send.Pop(), recv);
+        if (CKM_API_SUCCESS != retCode)
             return retCode;
-        }
 
         int command;
         int counter;
@@ -677,14 +634,10 @@ int ManagerImpl::denyAccess(const Alias &alias, const Label &accessor)
                                              my_counter,
                                              alias,
                                              accessor);
-        int retCode = sendToServer(
-            SERVICE_SOCKET_CKM_STORAGE,
-            send.Pop(),
-            recv);
 
-        if (CKM_API_SUCCESS != retCode) {
+        int retCode = m_storageConnection.processRequest(send.Pop(), recv);
+        if (CKM_API_SUCCESS != retCode)
             return retCode;
-        }
 
         int command;
         int counter;

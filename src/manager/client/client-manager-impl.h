@@ -21,7 +21,7 @@
 #pragma once
 
 #include <protocols.h>
-
+#include <client-common.h>
 #include <ckm/ckm-type.h>
 #include <ckm/ckm-key.h>
 #include <ckm/ckm-manager.h>
@@ -132,6 +132,8 @@ protected:
 
     int m_counter;
     static bool s_isInit;
+    CKM::ServiceConnection m_storageConnection;
+    CKM::ServiceConnection m_ocspConnection;
 };
 
 } // namespace CKM

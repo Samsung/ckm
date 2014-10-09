@@ -32,7 +32,7 @@ namespace CKM {
 
 class ControlImpl : public Control {
 public:
-    ControlImpl(){}
+    ControlImpl() : m_controlConnection(SERVICE_SOCKET_CKM_CONTROL) {}
     ControlImpl(const ControlImpl &) = delete;
     ControlImpl(ControlImpl &&) = delete;
     ControlImpl& operator=(const ControlImpl &) = delete;
@@ -48,14 +48,10 @@ public:
             auto send = MessageBuffer::Serialize(static_cast<int>(ControlCommand::UNLOCK_USER_KEY),
                                                  user,
                                                  password);
-            int retCode = sendToServer(
-                SERVICE_SOCKET_CKM_CONTROL,
-                send.Pop(),
-                recv);
 
-            if (CKM_API_SUCCESS != retCode) {
+            int retCode = m_controlConnection.processRequest(send.Pop(), recv);
+            if (CKM_API_SUCCESS != retCode)
                 return retCode;
-            }
 
             recv.Deserialize(retCode);
 
@@ -70,16 +66,11 @@ public:
             }
 
             MessageBuffer recv;
-            auto send = MessageBuffer::Serialize(static_cast<int>(ControlCommand::LOCK_USER_KEY),
-                                                 user);
-            int retCode = sendToServer(
-                SERVICE_SOCKET_CKM_CONTROL,
-                send.Pop(),
-                recv);
+            auto send = MessageBuffer::Serialize(static_cast<int>(ControlCommand::LOCK_USER_KEY), user);
 
-            if (CKM_API_SUCCESS != retCode) {
+            int retCode = m_controlConnection.processRequest(send.Pop(), recv);
+            if (CKM_API_SUCCESS != retCode)
                 return retCode;
-            }
 
             recv.Deserialize(retCode);
 
@@ -94,16 +85,11 @@ public:
             }
 
             MessageBuffer recv;
-            auto send = MessageBuffer::Serialize(static_cast<int>(ControlCommand::REMOVE_USER_DATA),
-                                                 user);
-            int retCode = sendToServer(
-                SERVICE_SOCKET_CKM_CONTROL,
-                send.Pop(),
-                recv);
+            auto send = MessageBuffer::Serialize(static_cast<int>(ControlCommand::REMOVE_USER_DATA), user);
 
-            if (CKM_API_SUCCESS != retCode) {
+            int retCode = m_controlConnection.processRequest(send.Pop(), recv);
+            if (CKM_API_SUCCESS != retCode)
                 return retCode;
-            }
 
             recv.Deserialize(retCode);
 
@@ -124,14 +110,9 @@ public:
                     oldPassword,
                     newPassword);
 
-            int retCode = sendToServer(
-                SERVICE_SOCKET_CKM_CONTROL,
-                send.Pop(),
-                recv);
-
-            if (CKM_API_SUCCESS != retCode) {
+            int retCode = m_controlConnection.processRequest(send.Pop(), recv);
+            if (CKM_API_SUCCESS != retCode)
                 return retCode;
-            }
 
             recv.Deserialize(retCode);
 
@@ -151,14 +132,9 @@ public:
                     user,
                     newPassword);
 
-            int retCode = sendToServer(
-                SERVICE_SOCKET_CKM_CONTROL,
-                send.Pop(),
-                recv);
-
-            if (CKM_API_SUCCESS != retCode) {
+            int retCode = m_controlConnection.processRequest(send.Pop(), recv);
+            if (CKM_API_SUCCESS != retCode)
                 return retCode;
-            }
 
             recv.Deserialize(retCode);
 
@@ -173,16 +149,11 @@ public:
             }
 
             MessageBuffer recv;
-            auto send = MessageBuffer::Serialize(static_cast<int>(ControlCommand::REMOVE_APP_DATA),
-                                                 smackLabel);
-            int retCode = sendToServer(
-                SERVICE_SOCKET_CKM_CONTROL,
-                send.Pop(),
-                recv);
+            auto send = MessageBuffer::Serialize(static_cast<int>(ControlCommand::REMOVE_APP_DATA), smackLabel);
 
-            if (CKM_API_SUCCESS != retCode) {
+            int retCode = m_controlConnection.processRequest(send.Pop(), recv);
+            if (CKM_API_SUCCESS != retCode)
                 return retCode;
-            }
 
             recv.Deserialize(retCode);
 
@@ -194,14 +165,10 @@ public:
         return try_catch([&] {
             MessageBuffer recv;
             auto send = MessageBuffer::Serialize(static_cast<int>(ControlCommand::UPDATE_CC_MODE));
-            int retCode = sendToServer(
-                SERVICE_SOCKET_CKM_CONTROL,
-                send.Pop(),
-                recv);
 
-            if (CKM_API_SUCCESS != retCode) {
+            int retCode = m_controlConnection.processRequest(send.Pop(), recv);
+            if (CKM_API_SUCCESS != retCode)
                 return retCode;
-            }
 
             recv.Deserialize(retCode);
 
@@ -223,18 +190,15 @@ public:
                                                  alias,
                                                  accessor,
                                                  static_cast<int>(granted));
-            int retCode = sendToServer(
-                    SERVICE_SOCKET_CKM_CONTROL,
-                send.Pop(),
-                recv);
 
-            if (CKM_API_SUCCESS != retCode) {
+            int retCode = m_controlConnection.processRequest(send.Pop(), recv);
+            if (CKM_API_SUCCESS != retCode)
                 return retCode;
-            }
 
             int command;
             int counter;
             recv.Deserialize(command, counter, retCode);
+
             return retCode;
         });
     }
@@ -251,23 +215,22 @@ public:
                                                  owner,
                                                  alias,
                                                  accessor);
-            int retCode = sendToServer(
-                    SERVICE_SOCKET_CKM_CONTROL,
-                send.Pop(),
-                recv);
 
-            if (CKM_API_SUCCESS != retCode) {
+            int retCode = m_controlConnection.processRequest(send.Pop(), recv);
+            if (CKM_API_SUCCESS != retCode)
                 return retCode;
-            }
 
             int command;
             int counter;
             recv.Deserialize(command, counter, retCode);
+
             return retCode;
         });
     }
 
     virtual ~ControlImpl(){}
+private:
+    CKM::ServiceConnection m_controlConnection;
 };
 
 ControlShPtr Control::create() {
