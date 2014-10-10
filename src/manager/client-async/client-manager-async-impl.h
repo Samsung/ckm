@@ -54,49 +54,6 @@ public:
             const RawBuffer& data,
             const Policy& policy);
 
-    void removeKey(const ObserverPtr& observer, const Alias& alias);
-    void removeCertificate(const ObserverPtr& observer, const Alias& alias);
-    void removeData(const ObserverPtr& observer, const Alias& alias);
-
-    void getKey(const ObserverPtr& observer, const Alias& alias, const Password& password);
-    void getCertificate(const ObserverPtr& observer, const Alias& alias, const Password& password);
-    void getData(const ObserverPtr& observer, const Alias& alias, const Password& password);
-
-    void getKeyAliasVector(const ObserverPtr& observer);
-    void getCertificateAliasVector(const ObserverPtr& observer);
-    void getDataAliasVector(const ObserverPtr& observer);
-
-    void createKeyPairRSA(
-            const ObserverPtr& observer,
-            int size,
-            const Alias& privateKeyAlias,
-            const Alias& publicKeyAlias,
-            const Policy& policyPrivateKey,
-            const Policy& policyPublicKey);
-    void createKeyPairDSA(
-            const ObserverPtr& observer,
-            int size,
-            const Alias& privateKeyAlias,
-            const Alias& publicKeyAlias,
-            const Policy& policyPrivateKey,
-            const Policy& policyPublicKey);
-    void createKeyPairECDSA(
-            const ObserverPtr& observer,
-            const ElipticCurve type,
-            const Alias& privateKeyAlias,
-            const Alias& publicKeyAlias,
-            const Policy& policyPrivateKey,
-            const Policy& policyPublicKey);
-
-    void getCertificateChain(
-            const ObserverPtr& observer,
-            const CertificateShPtr& certificate,
-            const CertificateShPtrVector& untrustedCertificates);
-    void getCertificateChain(
-            const ObserverPtr& observer,
-            const CertificateShPtr& certificate,
-            const AliasVector& untrustedCertificates);
-
     void createSignature(
             const ObserverPtr& observer,
             const Alias& privateKeyAlias,
@@ -127,12 +84,72 @@ public:
             const std::string& alias,
             const std::string& accessor);
 
+    // generic methods
+    void saveBinaryData(
+            const ManagerAsync::ObserverPtr& observer,
+            const Alias& alias,
+            DBDataType dataType,
+            const RawBuffer& rawData,
+            const Policy& policy);
+
+    void removeBinaryData(
+            const ManagerAsync::ObserverPtr& observer,
+            const Alias &alias,
+            DBDataType dataType);
+
+    void getBinaryData(
+            const ManagerAsync::ObserverPtr& observer,
+            const Alias &alias,
+            DBDataType sendDataType,
+            const Password &password);
+
+    void getBinaryDataAliasVector(
+            const ManagerAsync::ObserverPtr& observer,
+            DBDataType dataType);
+
+    void createKeyPair(
+            const ManagerAsync::ObserverPtr& observer,
+            const KeyType key_type,
+            const int     additional_param,
+            const Alias  &privateKeyAlias,
+            const Alias  &publicKeyAlias,
+            const Policy &policyPrivateKey,
+            const Policy &policyPublicKey);
+
+    template <typename T>
+    void getCertChain(
+            const ManagerAsync::ObserverPtr& observer,
+            LogicCommand command,
+            const CertificateShPtr &certificate,
+            const T &sendData)
+    {
+        observerCheck(observer);
+        if (!certificate || sendData.empty()) {
+            observer->ReceivedError(CKM_API_ERROR_INPUT_PARAM);
+            return;
+        }
+        try_catch_async([&] {
+            sendToStorage(observer,
+                          static_cast<int>(command),
+                          m_counter,
+                          certificate->getDER(),
+                          sendData);
+        }, [&observer](int error){ observer->ReceivedError(error); } );
+    }
+
 private:
-    void saveBinaryData(const ManagerAsync::ObserverPtr& observer,
-                        const Alias& alias,
-                        DBDataType dataType,
-                        const RawBuffer& rawData,
-                        const Policy& policy);
+
+    template <typename... Args>
+    void sendToStorage(const ManagerAsync::ObserverPtr& observer, const Args&... args)
+    {
+        m_counter++; // yes, it changes m_counter argument passed in args
+
+        auto send = MessageBuffer::Serialize(args...);
+        thread()->sendMessage(AsyncRequest(observer,
+                                           SERVICE_SOCKET_CKM_STORAGE,
+                                           send.Pop(),
+                                           m_counter));
+    }
 
     void observerCheck(const ManagerAsync::ObserverPtr& observer);
 

@@ -14,21 +14,33 @@
  *  limitations under the License
  */
 /*
- * @file       receiver.h
+ * @file       ocsp-receiver.h
  * @author     Krzysztof Jackiewicz (k.jackiewicz@samsung.com)
  * @version    1.0
  */
 
 #pragma once
 
+#include <message-buffer.h>
+#include <noncopyable.h>
+#include <async-request.h>
+#include <receiver.h>
+
 namespace CKM {
 
-class IReceiver {
+class OcspReceiver : public IReceiver
+{
 public:
-    DECLARE_EXCEPTION_TYPE(CKM::Exception, BadResponse);
+    OcspReceiver(MessageBuffer& buffer, AsyncRequest::Map& reqMap);
+    virtual ~OcspReceiver() {}
 
-    virtual void parseResponse() = 0;
-    virtual ~IReceiver() {};
+    NONCOPYABLE(OcspReceiver);
+
+    void parseResponse();
+
+private:
+    MessageBuffer& m_buffer;
+    AsyncRequest::Map& m_requests;
 };
 
-}
+} /* namespace CKM */

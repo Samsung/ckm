@@ -19,11 +19,13 @@
  * @version    1.0
  */
 
-#include <client-manager-async-impl.h>
+#include <stdexcept>
+
 #include <ckm/ckm-error.h>
 #include <message-buffer.h>
 #include <client-common.h>
-#include <stdexcept>
+
+#include <client-manager-async-impl.h>
 
 namespace CKM {
 
@@ -37,14 +39,13 @@ ManagerAsync::Impl::~Impl()
 {
 }
 
-void ManagerAsync::Impl::saveKey(const ManagerAsync::ObserverPtr& observer,
-                                 const Alias& alias,
-                                 const KeyShPtr& key,
-                                 const Policy& policy)
+void ManagerAsync::Impl::saveKey(const ObserverPtr& observer,
+                           const Alias& alias,
+                           const KeyShPtr& key,
+                           const Policy& policy)
 {
     observerCheck(observer);
-
-    if (!key) {
+    if (alias.empty() || !key) {
         observer->ReceivedError(CKM_API_ERROR_INPUT_PARAM);
         return;
     }
@@ -52,168 +53,29 @@ void ManagerAsync::Impl::saveKey(const ManagerAsync::ObserverPtr& observer,
 }
 
 void ManagerAsync::Impl::saveCertificate(const ObserverPtr& observer,
-                                         const Alias& /*alias*/,
-                                         const CertificateShPtr& /*cert*/,
-                                         const Policy& /*policy*/)
+                                   const Alias& alias,
+                                   const CertificateShPtr& cert,
+                                   const Policy& policy)
 {
     observerCheck(observer);
-    observer->ReceivedError(CKM_API_ERROR_UNKNOWN);
+    if (alias.empty() || !cert) {
+        observer->ReceivedError(CKM_API_ERROR_INPUT_PARAM);
+        return;
+    }
+    saveBinaryData(observer, alias, DBDataType::CERTIFICATE, cert->getDER(), policy);
 }
+
 void ManagerAsync::Impl::saveData(const ObserverPtr& observer,
-                                  const Alias& /*alias*/,
-                                  const RawBuffer& /*data*/,
-                                  const Policy& /*policy*/)
+                            const Alias& alias,
+                            const RawBuffer& data,
+                            const Policy& policy)
 {
     observerCheck(observer);
-    observer->ReceivedError(CKM_API_ERROR_UNKNOWN);
-}
-
-void ManagerAsync::Impl::removeKey(const ObserverPtr& observer, const Alias& /*alias*/)
-{
-    observerCheck(observer);
-    observer->ReceivedError(CKM_API_ERROR_UNKNOWN);
-}
-void ManagerAsync::Impl::removeCertificate(const ObserverPtr& observer, const Alias& /*alias*/)
-{
-    observerCheck(observer);
-    observer->ReceivedError(CKM_API_ERROR_UNKNOWN);
-}
-void ManagerAsync::Impl::removeData(const ObserverPtr& observer, const Alias& /*alias*/)
-{
-    observerCheck(observer);
-    observer->ReceivedError(CKM_API_ERROR_UNKNOWN);
-}
-
-void ManagerAsync::Impl::getKey(const ObserverPtr& observer,
-                                const Alias& /*alias*/,
-                                const Password& /*password*/)
-{
-    observerCheck(observer);
-    observer->ReceivedError(CKM_API_ERROR_UNKNOWN);
-}
-void ManagerAsync::Impl::getCertificate(const ObserverPtr& observer,
-                                        const Alias& /*alias*/,
-                                        const Password& /*password*/)
-{
-    observerCheck(observer);
-    observer->ReceivedError(CKM_API_ERROR_UNKNOWN);
-}
-void ManagerAsync::Impl::getData(const ObserverPtr& observer,
-                                 const Alias& /*alias*/,
-                                 const Password& /*password*/)
-{
-    observerCheck(observer);
-    observer->ReceivedError(CKM_API_ERROR_UNKNOWN);
-}
-
-void ManagerAsync::Impl::getKeyAliasVector(const ObserverPtr& observer)
-{
-    observerCheck(observer);
-    observer->ReceivedError(CKM_API_ERROR_UNKNOWN);
-}
-void ManagerAsync::Impl::getCertificateAliasVector(const ObserverPtr& observer)
-{
-    observerCheck(observer);
-    observer->ReceivedError(CKM_API_ERROR_UNKNOWN);
-}
-void ManagerAsync::Impl::getDataAliasVector(const ObserverPtr& observer)
-{
-    observerCheck(observer);
-    observer->ReceivedError(CKM_API_ERROR_UNKNOWN);
-}
-
-void ManagerAsync::Impl::createKeyPairRSA(const ObserverPtr& observer,
-                                          int /*size*/,
-                                          const Alias& /*privateKeyAlias*/,
-                                          const Alias& /*publicKeyAlias*/,
-                                          const Policy& /*policyPrivateKey*/,
-                                          const Policy& /*policyPublicKey*/)
-{
-    observerCheck(observer);
-    observer->ReceivedError(CKM_API_ERROR_UNKNOWN);
-}
-void ManagerAsync::Impl::createKeyPairDSA(const ObserverPtr& observer,
-                                          int /*size*/,
-                                          const Alias& /*privateKeyAlias*/,
-                                          const Alias& /*publicKeyAlias*/,
-                                          const Policy& /*policyPrivateKey*/,
-                                          const Policy& /*policyPublicKey*/)
-{
-    observerCheck(observer);
-    observer->ReceivedError(CKM_API_ERROR_UNKNOWN);
-}
-void ManagerAsync::Impl::createKeyPairECDSA(const ObserverPtr& observer,
-                                            const ElipticCurve /*type*/,
-                                            const Alias& /*privateKeyAlias*/,
-                                            const Alias& /*publicKeyAlias*/,
-                                            const Policy& /*policyPrivateKey*/,
-                                            const Policy& /*policyPublicKey*/)
-{
-    observerCheck(observer);
-    observer->ReceivedError(CKM_API_ERROR_UNKNOWN);
-}
-
-void ManagerAsync::Impl::getCertificateChain(const ObserverPtr& observer,
-                                             const CertificateShPtr& /*certificate*/,
-                                             const CertificateShPtrVector& /*untrustedCertificates*/)
-{
-    observerCheck(observer);
-    observer->ReceivedError(CKM_API_ERROR_UNKNOWN);
-}
-
-void ManagerAsync::Impl::getCertificateChain(const ObserverPtr& observer,
-                                             const CertificateShPtr& /*certificate*/,
-                                             const AliasVector& /*untrustedCertificates*/)
-{
-    observerCheck(observer);
-    observer->ReceivedError(CKM_API_ERROR_UNKNOWN);
-}
-
-void ManagerAsync::Impl::createSignature(const ObserverPtr& observer,
-                                         const Alias& /*privateKeyAlias*/,
-                                         const Password& /*password*/,
-                                         const RawBuffer& /*message*/,
-                                         const HashAlgorithm /*hash*/,
-                                         const RSAPaddingAlgorithm /*padding*/)
-{
-    observerCheck(observer);
-    observer->ReceivedError(CKM_API_ERROR_UNKNOWN);
-}
-
-void ManagerAsync::Impl::verifySignature(const ObserverPtr& observer,
-                                         const Alias& /*publicKeyOrCertAlias*/,
-                                         const Password& /*password*/,
-                                         const RawBuffer& /*message*/,
-                                         const RawBuffer& /*signature*/,
-                                         const HashAlgorithm /*hash*/,
-                                         const RSAPaddingAlgorithm /*padding*/)
-{
-    observerCheck(observer);
-    observer->ReceivedError(CKM_API_ERROR_UNKNOWN);
-}
-
-void ManagerAsync::Impl::ocspCheck(const ObserverPtr& observer,
-                                   const CertificateShPtrVector& /*certificateChainVector*/)
-{
-    observerCheck(observer);
-    observer->ReceivedError(CKM_API_ERROR_UNKNOWN);
-}
-
-void ManagerAsync::Impl::allowAccess(const ObserverPtr& observer,
-                                     const std::string& /*alias*/,
-                                     const std::string& /*accessor*/,
-                                     AccessRight /*granted*/)
-{
-    observerCheck(observer);
-    observer->ReceivedError(CKM_API_ERROR_UNKNOWN);
-}
-
-void ManagerAsync::Impl::denyAccess(const ObserverPtr& observer,
-                                    const std::string& /*alias*/,
-                                    const std::string& /*accessor*/)
-{
-    observerCheck(observer);
-    observer->ReceivedError(CKM_API_ERROR_UNKNOWN);
+    if (alias.empty() || data.empty()) {
+        observer->ReceivedError(CKM_API_ERROR_INPUT_PARAM);
+        return;
+    }
+    saveBinaryData(observer, alias, DBDataType::BINARY_DATA, data, policy);
 }
 
 void ManagerAsync::Impl::saveBinaryData(const ManagerAsync::ObserverPtr& observer,
@@ -222,26 +84,225 @@ void ManagerAsync::Impl::saveBinaryData(const ManagerAsync::ObserverPtr& observe
                                         const RawBuffer& rawData,
                                         const Policy& policy)
 {
-    if (alias.empty() || rawData.empty()) {
+    try_catch_async([&] {
+        sendToStorage(observer,
+                      static_cast<int>(LogicCommand::SAVE),
+                      m_counter,
+                      static_cast<int>(dataType),
+                      alias,
+                      rawData,
+                      PolicySerializable(policy));
+    }, [&observer](int error){ observer->ReceivedError(error); } );
+}
+
+void ManagerAsync::Impl::removeBinaryData(const ManagerAsync::ObserverPtr& observer,
+                                          const Alias& alias,
+                                          DBDataType dataType)
+{
+    observerCheck(observer);
+    if (alias.empty()) {
         observer->ReceivedError(CKM_API_ERROR_INPUT_PARAM);
         return;
     }
-
     try_catch_async([&] {
-        m_counter++;
+        sendToStorage(observer,
+                      static_cast<int>(LogicCommand::REMOVE),
+                      m_counter,
+                      static_cast<int>(dataType),
+                      alias);
+    }, [&observer](int error){ observer->ReceivedError(error); } );
+}
 
-        auto send = MessageBuffer::Serialize(static_cast<int>(LogicCommand::SAVE),
-                                             m_counter,
-                                             static_cast<int>(dataType),
-                                             alias,
-                                             rawData,
-                                             PolicySerializable(policy));
+void ManagerAsync::Impl::getBinaryData(const ManagerAsync::ObserverPtr& observer,
+                                       const Alias &alias,
+                                       DBDataType sendDataType,
+                                       const Password &password)
+{
+    observerCheck(observer);
+    if (alias.empty()) {
+        observer->ReceivedError(CKM_API_ERROR_INPUT_PARAM);
+        return;
+    }
+    try_catch_async([&] {
+        sendToStorage(observer,
+                      static_cast<int>(LogicCommand::GET),
+                      m_counter,
+                      static_cast<int>(sendDataType),
+                      alias,
+                      password);
+    }, [&observer](int error){ observer->ReceivedError(error); } );
+}
+
+void ManagerAsync::Impl::createSignature(const ObserverPtr& observer,
+                                         const Alias& privateKeyAlias,
+                                         const Password& password,
+                                         const RawBuffer& message,
+                                         const HashAlgorithm hash,
+                                         const RSAPaddingAlgorithm padding)
+{
+    observerCheck(observer);
+    if (privateKeyAlias.empty() || message.empty()) {
+        observer->ReceivedError(CKM_API_ERROR_INPUT_PARAM);
+        return;
+    }
+    try_catch_async([&] {
+        sendToStorage(observer,
+                      static_cast<int>(LogicCommand::CREATE_SIGNATURE),
+                      m_counter,
+                      privateKeyAlias,
+                      password,
+                      message,
+                      static_cast<int>(hash),
+                      static_cast<int>(padding));
+    }, [&observer](int error) {observer->ReceivedError(error);});
+}
+
+void ManagerAsync::Impl::verifySignature(const ObserverPtr& observer,
+                                         const Alias& publicKeyOrCertAlias,
+                                         const Password& password,
+                                         const RawBuffer& message,
+                                         const RawBuffer& signature,
+                                         const HashAlgorithm hash,
+                                         const RSAPaddingAlgorithm padding)
+{
+    observerCheck(observer);
+    if (publicKeyOrCertAlias.empty() || message.empty() || signature.empty()) {
+        observer->ReceivedError(CKM_API_ERROR_INPUT_PARAM);
+        return;
+    }
+    try_catch_async([&] {
+        sendToStorage(observer,
+                      static_cast<int>(LogicCommand::VERIFY_SIGNATURE),
+                      m_counter,
+                      publicKeyOrCertAlias,
+                      password,
+                      message,
+                      signature,
+                      static_cast<int>(hash),
+                      static_cast<int>(padding));
+    }, [&observer](int error){ observer->ReceivedError(error); } );
+}
+
+void ManagerAsync::Impl::ocspCheck(const ObserverPtr& observer,
+                                   const CertificateShPtrVector& certificateChainVector)
+{
+    observerCheck(observer);
+    if (certificateChainVector.empty()) {
+        observer->ReceivedError(CKM_API_ERROR_INPUT_PARAM);
+        return;
+    }
+    try_catch_async([&] {
+        RawBufferVector rawCertChain;
+        for (auto &e: certificateChainVector) {
+            rawCertChain.push_back(e->getDER());
+        }
+
+        m_counter++;
+        auto send = MessageBuffer::Serialize(m_counter, rawCertChain);
 
         thread()->sendMessage(AsyncRequest(observer,
-                                           SERVICE_SOCKET_CKM_STORAGE,
+                                           SERVICE_SOCKET_OCSP,
                                            send.Pop(),
                                            m_counter));
+    }, [&observer](int error){ observer->ReceivedError(error); } );
+}
 
+void ManagerAsync::Impl::allowAccess(const ObserverPtr& observer,
+                                     const std::string& alias,
+                                     const std::string& accessor,
+                                     AccessRight granted)
+{
+    observerCheck(observer);
+    if (alias.empty() || accessor.empty()) {
+        observer->ReceivedError(CKM_API_ERROR_INPUT_PARAM);
+        return;
+    }
+    try_catch_async([&] {
+        sendToStorage(observer,
+                      static_cast<int>(LogicCommand::ALLOW_ACCESS),
+                      m_counter,
+                      alias,
+                      accessor,
+                      static_cast<int>(granted));
+    }, [&observer](int error){ observer->ReceivedError(error); } );
+}
+
+void ManagerAsync::Impl::denyAccess(const ObserverPtr& observer,
+                                    const std::string& alias,
+                                    const std::string& accessor)
+{
+    observerCheck(observer);
+    if (alias.empty() || accessor.empty()) {
+        observer->ReceivedError(CKM_API_ERROR_INPUT_PARAM);
+        return;
+    }
+    try_catch_async([&] {
+        sendToStorage(observer,
+                      static_cast<int>(LogicCommand::DENY_ACCESS),
+                      m_counter,
+                      alias,
+                      accessor);
+    }, [&observer](int error){ observer->ReceivedError(error); } );
+}
+
+void ManagerAsync::Impl::getBinaryDataAliasVector(const ManagerAsync::ObserverPtr& observer,
+                                                  DBDataType dataType)
+{
+    observerCheck(observer);
+    try_catch_async([&] {
+        sendToStorage(observer,
+                      static_cast<int>(LogicCommand::GET_LIST),
+                      m_counter,
+                      static_cast<int>(dataType));
+    }, [&observer](int error){ observer->ReceivedError(error); } );
+}
+
+void ManagerAsync::Impl::createKeyPair(const ManagerAsync::ObserverPtr& observer,
+                                       const KeyType key_type,
+                                       const int     additional_param,
+                                       const Alias  &privateKeyAlias,
+                                       const Alias  &publicKeyAlias,
+                                       const Policy &policyPrivateKey,
+                                       const Policy &policyPublicKey)
+{
+    observerCheck(observer);
+    if (privateKeyAlias.empty() || publicKeyAlias.empty()) {
+        observer->ReceivedError(CKM_API_ERROR_INPUT_PARAM);
+        return;
+    }
+    // input type check
+    LogicCommand cmd_type;
+    switch(key_type)
+    {
+        case KeyType::KEY_RSA_PUBLIC:
+        case KeyType::KEY_RSA_PRIVATE:
+            cmd_type = LogicCommand::CREATE_KEY_PAIR_RSA;
+            break;
+
+        case KeyType::KEY_DSA_PUBLIC:
+        case KeyType::KEY_DSA_PRIVATE:
+            cmd_type = LogicCommand::CREATE_KEY_PAIR_DSA;
+            break;
+
+        case KeyType::KEY_ECDSA_PUBLIC:
+        case KeyType::KEY_ECDSA_PRIVATE:
+            cmd_type = LogicCommand::CREATE_KEY_PAIR_ECDSA;
+            break;
+
+        default:
+            observer->ReceivedError(CKM_API_ERROR_INPUT_PARAM);
+            return;
+    }
+
+    try_catch_async([&] {
+        sendToStorage(observer,
+                      static_cast<int>(cmd_type),
+                      m_counter,
+                      static_cast<int>(additional_param),
+                      PolicySerializable(policyPrivateKey),
+                      PolicySerializable(policyPublicKey),
+                      privateKeyAlias,
+                      publicKeyAlias);
     }, [&observer](int error){ observer->ReceivedError(error); } );
 }
 

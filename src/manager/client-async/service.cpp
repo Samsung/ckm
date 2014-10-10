@@ -21,7 +21,9 @@
 
 #include <service.h>
 #include <dpl/log/log.h>
-#include <receiver.h>
+#include <storage-receiver.h>
+#include <ocsp-receiver.h>
+#include <protocols.h>
 
 namespace CKM {
 
@@ -97,7 +99,7 @@ void Service::socketReady(int sock, short revents)
             LogError("Unexpected event: " << revents << "!=" << POLLOUT);
             serviceError(CKM_API_ERROR_SOCKET);
         }
-    } catch (const Receiver::BadResponse&) {
+    } catch (const IReceiver::BadResponse&) {
         serviceError(CKM_API_ERROR_BAD_RESPONSE);
     } catch (std::exception &e) {
         LogError("STD exception " << e.what());
@@ -176,8 +178,17 @@ void Service::receiveData()
     // parse while you can
     while(m_responseBuffer->Ready())
     {
-        Receiver recv(*m_responseBuffer, m_responseMap);
-        recv.parseResponse();
+        std::unique_ptr<IReceiver> receiver;
+        if (m_interface == SERVICE_SOCKET_CKM_STORAGE)
+            receiver.reset(new StorageReceiver(*m_responseBuffer, m_responseMap));
+        else if (m_interface == SERVICE_SOCKET_OCSP)
+            receiver.reset(new OcspReceiver(*m_responseBuffer, m_responseMap));
+        else {
+            LogError("Unknown service " << m_interface);
+            serviceError(CKM_API_ERROR_RECV_FAILED);
+            return;
+        }
+        receiver->parseResponse();
 
         if (m_responseMap.empty())
             watch(m_sendQueue.empty()?0:POLLOUT);

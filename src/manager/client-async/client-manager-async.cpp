@@ -60,51 +60,51 @@ void ManagerAsync::saveData(const ObserverPtr& observer,
 
 void ManagerAsync::removeKey(const ObserverPtr& observer, const Alias& alias)
 {
-    m_impl->removeKey(observer, alias);
+    m_impl->removeBinaryData(observer, alias, DBDataType::DB_KEY_FIRST);
 }
 
 void ManagerAsync::removeCertificate(const ObserverPtr& observer, const Alias& alias)
 {
-    m_impl->removeCertificate(observer, alias);
+    m_impl->removeBinaryData(observer, alias, DBDataType::CERTIFICATE);
 }
 
 void ManagerAsync::removeData(const ObserverPtr& observer, const Alias& alias)
 {
-    m_impl->removeData(observer, alias);
+    m_impl->removeBinaryData(observer, alias, DBDataType::BINARY_DATA);
 }
 
 void ManagerAsync::getKey(const ObserverPtr& observer, const Alias& alias, const Password& password)
 {
-    m_impl->getKey(observer, alias, password);
+    m_impl->getBinaryData(observer, alias, DBDataType::DB_KEY_FIRST, password);
 }
 
 void ManagerAsync::getCertificate(const ObserverPtr& observer,
                                   const Alias& alias,
                                   const Password& password)
 {
-    m_impl->getCertificate(observer, alias, password);
+    m_impl->getBinaryData(observer, alias, DBDataType::CERTIFICATE, password);
 }
 
 void ManagerAsync::getData(const ObserverPtr& observer,
                            const Alias& alias,
                            const Password& password)
 {
-    m_impl->getData(observer, alias, password);
+    m_impl->getBinaryData(observer, alias, DBDataType::BINARY_DATA, password);
 }
 
 void ManagerAsync::getKeyAliasVector(const ObserverPtr& observer)
 {
-    m_impl->getKeyAliasVector(observer);
+    m_impl->getBinaryDataAliasVector(observer, DBDataType::DB_KEY_FIRST);
 }
 
 void ManagerAsync::getCertificateAliasVector(const ObserverPtr& observer)
 {
-    m_impl->getCertificateAliasVector(observer);
+    m_impl->getBinaryDataAliasVector(observer, DBDataType::CERTIFICATE);
 }
 
 void ManagerAsync::getDataAliasVector(const ObserverPtr& observer)
 {
-    m_impl->getDataAliasVector(observer);
+    m_impl->getBinaryDataAliasVector(observer, DBDataType::BINARY_DATA);
 }
 
 void ManagerAsync::createKeyPairRSA(const ObserverPtr& observer,
@@ -114,12 +114,13 @@ void ManagerAsync::createKeyPairRSA(const ObserverPtr& observer,
                                     const Policy& policyPrivateKey,
                                     const Policy& policyPublicKey)
 {
-    m_impl->createKeyPairRSA(observer,
-                             size,
-                             privateKeyAlias,
-                             publicKeyAlias,
-                             policyPrivateKey,
-                             policyPublicKey);
+    m_impl->createKeyPair(observer,
+                          KeyType::KEY_RSA_PUBLIC,
+                          size,
+                          privateKeyAlias,
+                          publicKeyAlias,
+                          policyPrivateKey,
+                          policyPublicKey);
 }
 
 void ManagerAsync::createKeyPairDSA(const ObserverPtr& observer,
@@ -129,12 +130,13 @@ void ManagerAsync::createKeyPairDSA(const ObserverPtr& observer,
                                     const Policy& policyPrivateKey,
                                     const Policy& policyPublicKey)
 {
-    m_impl->createKeyPairDSA(observer,
-                             size,
-                             privateKeyAlias,
-                             publicKeyAlias,
-                             policyPrivateKey,
-                             policyPublicKey);
+    m_impl->createKeyPair(observer,
+                          KeyType::KEY_DSA_PUBLIC,
+                          size,
+                          privateKeyAlias,
+                          publicKeyAlias,
+                          policyPrivateKey,
+                          policyPublicKey);
 }
 
 void ManagerAsync::createKeyPairECDSA(const ObserverPtr& observer,
@@ -144,26 +146,39 @@ void ManagerAsync::createKeyPairECDSA(const ObserverPtr& observer,
                                       const Policy& policyPrivateKey,
                                       const Policy& policyPublicKey)
 {
-    m_impl->createKeyPairECDSA(observer,
-                               type,
-                               privateKeyAlias,
-                               publicKeyAlias,
-                               policyPrivateKey,
-                               policyPublicKey);
+    m_impl->createKeyPair(observer,
+                          KeyType::KEY_ECDSA_PUBLIC,
+                          static_cast<int>(type),
+                          privateKeyAlias,
+                          publicKeyAlias,
+                          policyPrivateKey,
+                          policyPublicKey);
 }
 
 void ManagerAsync::getCertificateChain(const ObserverPtr& observer,
                                        const CertificateShPtr& certificate,
                                        const CertificateShPtrVector& untrustedCertificates)
 {
-    m_impl->getCertificateChain(observer, certificate, untrustedCertificates);
+    RawBufferVector rawBufferVector;
+
+    for (auto &e: untrustedCertificates) {
+        rawBufferVector.push_back(e->getDER());
+    }
+
+    m_impl->getCertChain(observer,
+                         LogicCommand::GET_CHAIN_CERT,
+                         certificate,
+                         rawBufferVector);
 }
 
 void ManagerAsync::getCertificateChain(const ObserverPtr& observer,
                                        const CertificateShPtr& certificate,
                                        const AliasVector& untrustedCertificates)
 {
-    m_impl->getCertificateChain(observer, certificate, untrustedCertificates);
+    m_impl->getCertChain(observer,
+                         LogicCommand::GET_CHAIN_ALIAS,
+                         certificate,
+                         untrustedCertificates);
 }
 
 void ManagerAsync::createSignature(const ObserverPtr& observer,

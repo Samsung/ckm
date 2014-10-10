@@ -14,29 +14,27 @@
  *  limitations under the License
  */
 /*
- * @file       receiver.cpp
+ * @file       ocsp-receiver.cpp
  * @author     Krzysztof Jackiewicz (k.jackiewicz@samsung.com)
  * @version    1.0
  */
 
-#include <receiver.h>
+#include <ocsp-receiver.h>
 #include <protocols.h>
 #include <dpl/log/log.h>
 
 namespace CKM {
 
-Receiver::Receiver(MessageBuffer& buffer, AsyncRequest::Map& requests) :
+OcspReceiver::OcspReceiver(MessageBuffer& buffer, AsyncRequest::Map& requests) :
     m_buffer(buffer),
-    m_requests(requests),
-    m_observer(NULL)
+    m_requests(requests)
 {
 }
 
-void Receiver::parseResponse()
+void OcspReceiver::parseResponse()
 {
-    int command;
-    int id;
-    m_buffer.Deserialize(command, id);
+    int id, retCode, ocspStatus;
+    m_buffer.Deserialize(id, retCode, ocspStatus);
 
     auto it = m_requests.find(id);
     if (it == m_requests.end()) {
@@ -48,36 +46,10 @@ void Receiver::parseResponse()
     AsyncRequest req = std::move(m_requests.at(id));
     m_requests.erase(id);
 
-    m_observer = req.observer;
-
-    switch (static_cast<LogicCommand>(command)) {
-    case LogicCommand::SAVE:
-        parseSaveCommand();
-        break;
-    // TODO other cases
-    default:
-        LogError("Unknown command id: " << command);
-        ThrowMsg(BadResponse, "Unknown command id: " << command);
-        break;
-    }
-}
-
-void Receiver::parseSaveCommand()
-{
-    int retCode;
-    int dataType;
-
-    m_buffer.Deserialize(retCode, dataType);
-
-    DBDataType dt = static_cast<DBDataType>(dataType);
-    if (dt >= DBDataType::DB_KEY_FIRST && dt <= DBDataType::DB_KEY_LAST) {
-        if (retCode == CKM_API_SUCCESS)
-            m_observer->ReceivedSaveKey();
-        else
-            m_observer->ReceivedError(retCode);
-    } else {
-        // TODO
-    }
+    if (retCode == CKM_API_SUCCESS)
+        req.observer->ReceivedOCSPCheck(ocspStatus);
+    else
+        req.observer->ReceivedError(retCode);
 }
 
 } /* namespace CKM */

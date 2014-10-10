@@ -70,7 +70,7 @@ void ConnectionThread::sendMessage(AsyncRequest&& req) {
     m_waitingReqs.push(std::move(req));
     lock.unlock();
 
-    // notifty via pipe
+    // notify via pipe
     m_pipe.notify();
 }
 
