@@ -242,7 +242,6 @@ struct Serialization {
     {
         Serialize(stream, *vec);
     }
-
 }; // struct Serialization
 
 struct Deserialization {
@@ -462,6 +461,47 @@ struct Deserialization {
     }
 
 }; // struct Deserialization
+
+// generic serialization
+template <typename... Args>
+struct Serializer;
+
+template <typename First, typename... Args>
+struct Serializer<First, Args...> : public Serializer<Args...> {
+    static void Serialize(IStream& stream, const First& f, const Args&... args) {
+        Serialization::Serialize(stream, f);
+        Serializer<Args...>::Serialize(stream, args...);
+    }
+};
+
+// end of recursion
+template <>
+struct Serializer<> {
+    static void Serialize(IStream&) {
+        return;
+    }
+};
+
+// generic deserialization
+template <typename... Args>
+struct Deserializer;
+
+template <typename First, typename... Args>
+struct Deserializer<First, Args...> : public Deserializer<Args...> {
+    static void Deserialize(IStream& stream, First& f, Args&... args) {
+        Deserialization::Deserialize(stream, f);
+        Deserializer<Args...>::Deserialize(stream, args...);
+    }
+};
+
+// end of recursion
+template <>
+struct Deserializer<> {
+    static void Deserialize(IStream&) {
+        return;
+    }
+};
+
 } // namespace CKM
 
 #endif // CENT_KEY_SERIALIZATION_H

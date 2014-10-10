@@ -44,11 +44,10 @@ public:
                 return CKM_API_ERROR_INPUT_PARAM;
             }
 
-            MessageBuffer send, recv;
-            Serialization::Serialize(send, static_cast<int>(ControlCommand::UNLOCK_USER_KEY));
-            Serialization::Serialize(send, user);
-            Serialization::Serialize(send, password);
-
+            MessageBuffer recv;
+            auto send = MessageBuffer::Serialize(static_cast<int>(ControlCommand::UNLOCK_USER_KEY),
+                                                 user,
+                                                 password);
             int retCode = sendToServer(
                 SERVICE_SOCKET_CKM_CONTROL,
                 send.Pop(),
@@ -58,7 +57,7 @@ public:
                 return retCode;
             }
 
-            Deserialization::Deserialize(recv, retCode);
+            recv.Deserialize(retCode);
 
             return retCode;
         });
@@ -70,10 +69,9 @@ public:
                 return CKM_API_ERROR_INPUT_PARAM;
             }
 
-            MessageBuffer send, recv;
-            Serialization::Serialize(send, static_cast<int>(ControlCommand::LOCK_USER_KEY));
-            Serialization::Serialize(send, user);
-
+            MessageBuffer recv;
+            auto send = MessageBuffer::Serialize(static_cast<int>(ControlCommand::LOCK_USER_KEY),
+                                                 user);
             int retCode = sendToServer(
                 SERVICE_SOCKET_CKM_CONTROL,
                 send.Pop(),
@@ -83,7 +81,7 @@ public:
                 return retCode;
             }
 
-            Deserialization::Deserialize(recv, retCode);
+            recv.Deserialize(retCode);
 
             return retCode;
         });
@@ -95,10 +93,9 @@ public:
                 return CKM_API_ERROR_INPUT_PARAM;
             }
 
-            MessageBuffer send, recv;
-            Serialization::Serialize(send, static_cast<int>(ControlCommand::REMOVE_USER_DATA));
-            Serialization::Serialize(send, user);
-
+            MessageBuffer recv;
+            auto send = MessageBuffer::Serialize(static_cast<int>(ControlCommand::REMOVE_USER_DATA),
+                                                 user);
             int retCode = sendToServer(
                 SERVICE_SOCKET_CKM_CONTROL,
                 send.Pop(),
@@ -108,7 +105,7 @@ public:
                 return retCode;
             }
 
-            Deserialization::Deserialize(recv, retCode);
+            recv.Deserialize(retCode);
 
             return retCode;
         });
@@ -120,11 +117,12 @@ public:
                 return CKM_API_ERROR_INPUT_PARAM;
             }
 
-            MessageBuffer send, recv;
-            Serialization::Serialize(send, static_cast<int>(ControlCommand::CHANGE_USER_PASSWORD));
-            Serialization::Serialize(send, user);
-            Serialization::Serialize(send, oldPassword);
-            Serialization::Serialize(send, newPassword);
+            MessageBuffer recv;
+            auto send = MessageBuffer::Serialize(
+                    static_cast<int>(ControlCommand::CHANGE_USER_PASSWORD),
+                    user,
+                    oldPassword,
+                    newPassword);
 
             int retCode = sendToServer(
                 SERVICE_SOCKET_CKM_CONTROL,
@@ -135,7 +133,7 @@ public:
                 return retCode;
             }
 
-            Deserialization::Deserialize(recv, retCode);
+            recv.Deserialize(retCode);
 
             return retCode;
         });
@@ -147,10 +145,11 @@ public:
                 return CKM_API_ERROR_INPUT_PARAM;
             }
 
-            MessageBuffer send, recv;
-            Serialization::Serialize(send, static_cast<int>(ControlCommand::RESET_USER_PASSWORD));
-            Serialization::Serialize(send, user);
-            Serialization::Serialize(send, newPassword);
+            MessageBuffer recv;
+            auto send = MessageBuffer::Serialize(
+                    static_cast<int>(ControlCommand::RESET_USER_PASSWORD),
+                    user,
+                    newPassword);
 
             int retCode = sendToServer(
                 SERVICE_SOCKET_CKM_CONTROL,
@@ -161,7 +160,7 @@ public:
                 return retCode;
             }
 
-            Deserialization::Deserialize(recv, retCode);
+            recv.Deserialize(retCode);
 
             return retCode;
         });
@@ -173,10 +172,9 @@ public:
                 return CKM_API_ERROR_INPUT_PARAM;
             }
 
-            MessageBuffer send,recv;
-            Serialization::Serialize(send, static_cast<int>(ControlCommand::REMOVE_APP_DATA));
-            Serialization::Serialize(send, smackLabel);
-
+            MessageBuffer recv;
+            auto send = MessageBuffer::Serialize(static_cast<int>(ControlCommand::REMOVE_APP_DATA),
+                                                 smackLabel);
             int retCode = sendToServer(
                 SERVICE_SOCKET_CKM_CONTROL,
                 send.Pop(),
@@ -186,7 +184,7 @@ public:
                 return retCode;
             }
 
-            Deserialization::Deserialize(recv, retCode);
+            recv.Deserialize(retCode);
 
             return retCode;
         });
@@ -198,10 +196,9 @@ public:
                 return CKM_API_ERROR_INPUT_PARAM;
             }
 
-            MessageBuffer send, recv;
-            Serialization::Serialize(send, static_cast<int>(ControlCommand::SET_CC_MODE));
-            Serialization::Serialize(send, static_cast<int>(mode));
-
+            MessageBuffer recv;
+            auto send = MessageBuffer::Serialize(static_cast<int>(ControlCommand::SET_CC_MODE),
+                                                 static_cast<int>(mode));
             int retCode = sendToServer(
                 SERVICE_SOCKET_CKM_CONTROL,
                 send.Pop(),
@@ -211,7 +208,7 @@ public:
                 return retCode;
             }
 
-            Deserialization::Deserialize(recv, retCode);
+            recv.Deserialize(retCode);
 
             return retCode;
         });
@@ -224,14 +221,13 @@ public:
                             AccessRight granted)
     {
         return try_catch([&] {
-            MessageBuffer send, recv;
-            Serialization::Serialize(send, static_cast<int>(ControlCommand::ALLOW_ACCESS));
-            Serialization::Serialize(send, static_cast<int>(user));
-            Serialization::Serialize(send, owner);
-            Serialization::Serialize(send, alias);
-            Serialization::Serialize(send, accessor);
-            Serialization::Serialize(send, static_cast<int>(granted));
-
+            MessageBuffer recv;
+            auto send = MessageBuffer::Serialize(static_cast<int>(ControlCommand::ALLOW_ACCESS),
+                                                 static_cast<int>(user),
+                                                 owner,
+                                                 alias,
+                                                 accessor,
+                                                 static_cast<int>(granted));
             int retCode = sendToServer(
                     SERVICE_SOCKET_CKM_CONTROL,
                 send.Pop(),
@@ -243,10 +239,7 @@ public:
 
             int command;
             int counter;
-            Deserialization::Deserialize(recv, command);
-            Deserialization::Deserialize(recv, counter);
-            Deserialization::Deserialize(recv, retCode);
-
+            recv.Deserialize(command, counter, retCode);
             return retCode;
         });
     }
@@ -257,13 +250,12 @@ public:
                            const std::string &accessor)
     {
         return try_catch([&] {
-            MessageBuffer send, recv;
-            Serialization::Serialize(send, static_cast<int>(ControlCommand::DENY_ACCESS));
-            Serialization::Serialize(send, static_cast<int>(user));
-            Serialization::Serialize(send, owner);
-            Serialization::Serialize(send, alias);
-            Serialization::Serialize(send, accessor);
-
+            MessageBuffer recv;
+            auto send = MessageBuffer::Serialize(static_cast<int>(ControlCommand::DENY_ACCESS),
+                                                 static_cast<int>(user),
+                                                 owner,
+                                                 alias,
+                                                 accessor);
             int retCode = sendToServer(
                     SERVICE_SOCKET_CKM_CONTROL,
                 send.Pop(),
@@ -275,10 +267,7 @@ public:
 
             int command;
             int counter;
-            Deserialization::Deserialize(recv, command);
-            Deserialization::Deserialize(recv, counter);
-            Deserialization::Deserialize(recv, retCode);
-
+            recv.Deserialize(command, counter, retCode);
             return retCode;
         });
     }

@@ -230,13 +230,12 @@ void ManagerAsync::Impl::saveBinaryData(const ManagerAsync::ObserverPtr& observe
     try_catch_async([&] {
         m_counter++;
 
-        MessageBuffer send;
-        Serialization::Serialize(send, static_cast<int>(LogicCommand::SAVE));
-        Serialization::Serialize(send, m_counter);
-        Serialization::Serialize(send, static_cast<int>(dataType));
-        Serialization::Serialize(send, alias);
-        Serialization::Serialize(send, rawData);
-        Serialization::Serialize(send, PolicySerializable(policy));
+        auto send = MessageBuffer::Serialize(static_cast<int>(LogicCommand::SAVE),
+                                             m_counter,
+                                             static_cast<int>(dataType),
+                                             alias,
+                                             rawData,
+                                             PolicySerializable(policy));
 
         thread()->sendMessage(AsyncRequest(observer,
                                            SERVICE_SOCKET_CKM_STORAGE,

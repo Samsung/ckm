@@ -62,6 +62,20 @@ public:
 
     virtual void Write(size_t num, const void *bytes);
 
+    // generic serialization
+    template <typename... Args>
+    static MessageBuffer Serialize( const Args&... args) {
+        MessageBuffer buffer;
+        Serializer<Args...>::Serialize(buffer, args...);
+        return buffer;
+    }
+
+    // generic deserialization
+    template <typename... Args>
+    void Deserialize(Args&... args) {
+        Deserializer<Args...>::Deserialize(*this, args...);
+    }
+
 protected:
 
     inline void CountBytesLeft() {

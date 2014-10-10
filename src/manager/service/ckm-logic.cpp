@@ -108,9 +108,7 @@ RawBuffer CKMLogic::unlockUserKey(uid_t user, const Password &password) {
         m_userDataMap.erase(user);
     }
 
-    MessageBuffer response;
-    Serialization::Serialize(response, retCode);
-    return response.Pop();
+    return MessageBuffer::Serialize(retCode).Pop();
 }
 
 RawBuffer CKMLogic::setCCModeStatus(CCModeState mode_status) {
@@ -142,9 +140,7 @@ RawBuffer CKMLogic::setCCModeStatus(CCModeState mode_status) {
         }
     }
 
-    MessageBuffer response;
-    Serialization::Serialize(response, retCode);
-    return response.Pop();
+    return MessageBuffer::Serialize(retCode).Pop();
 }
 
 RawBuffer CKMLogic::lockUserKey(uid_t user) {
@@ -152,9 +148,8 @@ RawBuffer CKMLogic::lockUserKey(uid_t user) {
     // TODO try catch for all errors that should be supported by error code
     m_userDataMap.erase(user);
 
-    MessageBuffer response;
-    Serialization::Serialize(response, retCode);
-    return response.Pop();
+    return MessageBuffer::Serialize(retCode).Pop();
+
 }
 
 RawBuffer CKMLogic::removeUserData(uid_t user) {
@@ -165,9 +160,7 @@ RawBuffer CKMLogic::removeUserData(uid_t user) {
     FileSystem fs(user);
     fs.removeUserData();
 
-    MessageBuffer response;
-    Serialization::Serialize(response, retCode);
-    return response.Pop();
+    return MessageBuffer::Serialize(retCode).Pop();
 }
 
 RawBuffer CKMLogic::changeUserPassword(
@@ -196,9 +189,7 @@ RawBuffer CKMLogic::changeUserPassword(
         retCode = CKM_API_ERROR_SERVER_ERROR;
     }
 
-    MessageBuffer response;
-    Serialization::Serialize(response, retCode);
-    return response.Pop();
+    return MessageBuffer::Serialize(retCode).Pop();
 }
 
 RawBuffer CKMLogic::resetUserPassword(
@@ -215,9 +206,7 @@ RawBuffer CKMLogic::resetUserPassword(
         fs.saveDKEK(handler.keyProvider.getWrappedDomainKEK(newPassword));
     }
 
-    MessageBuffer response;
-    Serialization::Serialize(response, retCode);
-    return response.Pop();
+    return MessageBuffer::Serialize(retCode).Pop();
 }
 
 RawBuffer CKMLogic::removeApplicationData(const std::string &smackLabel) {
@@ -248,9 +237,7 @@ RawBuffer CKMLogic::removeApplicationData(const std::string &smackLabel) {
         retCode = CKM_API_ERROR_DB_ERROR;
     }
 
-    MessageBuffer response;
-    Serialization::Serialize(response, retCode);
-    return response.Pop();
+    return MessageBuffer::Serialize(retCode).Pop();
 }
 
 int CKMLogic::saveDataHelper(
@@ -327,12 +314,10 @@ RawBuffer CKMLogic::saveData(
         retCode = CKM_API_ERROR_DB_ERROR;
     }
 
-    MessageBuffer response;
-    Serialization::Serialize(response, static_cast<int>(LogicCommand::SAVE));
-    Serialization::Serialize(response, commandId);
-    Serialization::Serialize(response, retCode);
-    Serialization::Serialize(response, static_cast<int>(dataType));
-
+    auto response = MessageBuffer::Serialize(static_cast<int>(LogicCommand::SAVE),
+                                             commandId,
+                                             retCode,
+                                             static_cast<int>(dataType));
     return response.Pop();
 }
 
@@ -363,12 +348,10 @@ RawBuffer CKMLogic::removeData(
         retCode = CKM_API_ERROR_DB_LOCKED;
     }
 
-    MessageBuffer response;
-    Serialization::Serialize(response, static_cast<int>(LogicCommand::REMOVE));
-    Serialization::Serialize(response, commandId);
-    Serialization::Serialize(response, retCode);
-    Serialization::Serialize(response, static_cast<int>(dataType));
-
+    auto response = MessageBuffer::Serialize(static_cast<int>(LogicCommand::REMOVE),
+                                             commandId,
+                                             retCode,
+                                             static_cast<int>(dataType));
     return response.Pop();
 }
 
@@ -460,12 +443,11 @@ RawBuffer CKMLogic::getData(
         retCode = CKM_API_ERROR_BAD_REQUEST;
     }
 
-    MessageBuffer response;
-    Serialization::Serialize(response, static_cast<int>(LogicCommand::GET));
-    Serialization::Serialize(response, commandId);
-    Serialization::Serialize(response, retCode);
-    Serialization::Serialize(response, static_cast<int>(row.dataType));
-    Serialization::Serialize(response, row.data);
+    auto response = MessageBuffer::Serialize(static_cast<int>(LogicCommand::GET),
+                                             commandId,
+                                             retCode,
+                                             static_cast<int>(row.dataType),
+                                             row.data);
     return response.Pop();
 }
 
@@ -493,12 +475,11 @@ RawBuffer CKMLogic::getDataList(
         retCode = CKM_API_ERROR_DB_LOCKED;
     }
 
-    MessageBuffer response;
-    Serialization::Serialize(response, static_cast<int>(LogicCommand::GET_LIST));
-    Serialization::Serialize(response, commandId);
-    Serialization::Serialize(response, retCode);
-    Serialization::Serialize(response, static_cast<int>(dataType));
-    Serialization::Serialize(response, aliasVector);
+    auto response = MessageBuffer::Serialize(static_cast<int>(LogicCommand::GET_LIST),
+                                             commandId,
+                                             retCode,
+                                             static_cast<int>(dataType),
+                                             aliasVector);
     return response.Pop();
 }
 
@@ -621,12 +602,7 @@ RawBuffer CKMLogic::createKeyPair(
         retCode = CKM_API_ERROR_DB_ERROR;
     }
 
-    MessageBuffer response;
-    Serialization::Serialize(response, static_cast<int>(protocol_cmd));
-    Serialization::Serialize(response, commandId);
-    Serialization::Serialize(response, retCode);
-
-    return response.Pop();
+    return MessageBuffer::Serialize(static_cast<int>(protocol_cmd), commandId, retCode).Pop();
 }
 
 RawBuffer CKMLogic::getCertificateChain(
@@ -654,11 +630,10 @@ RawBuffer CKMLogic::getCertificateChain(
             chainRawVector.push_back(e.getDER());
     }
 
-    MessageBuffer response;
-    Serialization::Serialize(response, static_cast<int>(LogicCommand::GET_CHAIN_CERT));
-    Serialization::Serialize(response, commandId);
-    Serialization::Serialize(response, retCode);
-    Serialization::Serialize(response, chainRawVector);
+    auto response = MessageBuffer::Serialize(static_cast<int>(LogicCommand::GET_CHAIN_CERT),
+                                             commandId,
+                                             retCode,
+                                             chainRawVector);
     return response.Pop();
 }
 
@@ -712,11 +687,10 @@ RawBuffer CKMLogic::getCertificateChain(
     }
 
 senderror:
-    MessageBuffer response;
-    Serialization::Serialize(response, static_cast<int>(LogicCommand::GET_CHAIN_ALIAS));
-    Serialization::Serialize(response, commandId);
-    Serialization::Serialize(response, retCode);
-    Serialization::Serialize(response, chainRawVector);
+    auto response = MessageBuffer::Serialize(static_cast<int>(LogicCommand::GET_CHAIN_ALIAS),
+                                             commandId,
+                                             retCode,
+                                             chainRawVector);
     return response.Pop();
 }
 
@@ -766,11 +740,10 @@ RawBuffer CKMLogic::createSignature(
         retCode = CKM_API_ERROR_SERVER_ERROR;
     }
 
-    MessageBuffer response;
-    Serialization::Serialize(response, static_cast<int>(LogicCommand::CREATE_SIGNATURE));
-    Serialization::Serialize(response, commandId);
-    Serialization::Serialize(response, retCode);
-    Serialization::Serialize(response, signature);
+    auto response = MessageBuffer::Serialize(static_cast<int>(LogicCommand::CREATE_SIGNATURE),
+                                             commandId,
+                                             retCode,
+                                             signature);
     return response.Pop();
 }
 
@@ -836,11 +809,9 @@ RawBuffer CKMLogic::verifySignature(
         retCode = CKM_API_ERROR_SERVER_ERROR;
     }
 
-    MessageBuffer response;
-    Serialization::Serialize(response, static_cast<int>(LogicCommand::VERIFY_SIGNATURE));
-    Serialization::Serialize(response, commandId);
-    Serialization::Serialize(response, retCode);
-
+    auto response = MessageBuffer::Serialize(static_cast<int>(LogicCommand::VERIFY_SIGNATURE),
+                                             commandId,
+                                             retCode);
     return response.Pop();
 }
 
@@ -872,12 +843,7 @@ RawBuffer CKMLogic::allowAccess(
         retCode = CKM_API_ERROR_DB_LOCKED;
     }
 
-    MessageBuffer response;
-    Serialization::Serialize(response, command);
-    Serialization::Serialize(response, msgID);
-    Serialization::Serialize(response, retCode);
-
-    return response.Pop();
+    return MessageBuffer::Serialize(command, msgID, retCode).Pop();
 }
 
 RawBuffer CKMLogic::denyAccess(
@@ -907,12 +873,7 @@ RawBuffer CKMLogic::denyAccess(
         retCode = CKM_API_ERROR_DB_LOCKED;
     }
 
-    MessageBuffer response;
-    Serialization::Serialize(response, command);
-    Serialization::Serialize(response, msgID);
-    Serialization::Serialize(response, retCode);
-
-    return response.Pop();
+    return MessageBuffer::Serialize(command, msgID, retCode).Pop();
 }
 
 } // namespace CKM

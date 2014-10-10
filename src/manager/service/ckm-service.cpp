@@ -113,7 +113,7 @@ RawBuffer CKMService::processControl(MessageBuffer &buffer) {
     Password newPass, oldPass;
     std::string smackLabel;
 
-    Deserialization::Deserialize(buffer, command);
+    buffer.Deserialize(command);
 
     LogDebug("Process control. Command: " << command);
 
@@ -121,29 +121,25 @@ RawBuffer CKMService::processControl(MessageBuffer &buffer) {
 
     switch(cc) {
     case ControlCommand::UNLOCK_USER_KEY:
-        Deserialization::Deserialize(buffer, user);
-        Deserialization::Deserialize(buffer, newPass);
+        buffer.Deserialize(user, newPass);
         return m_logic->unlockUserKey(user, newPass);
     case ControlCommand::LOCK_USER_KEY:
-        Deserialization::Deserialize(buffer, user);
+        buffer.Deserialize(user);
         return m_logic->lockUserKey(user);
     case ControlCommand::REMOVE_USER_DATA:
-        Deserialization::Deserialize(buffer, user);
+        buffer.Deserialize(user);
         return m_logic->removeUserData(user);
     case ControlCommand::CHANGE_USER_PASSWORD:
-        Deserialization::Deserialize(buffer, user);
-        Deserialization::Deserialize(buffer, oldPass);
-        Deserialization::Deserialize(buffer, newPass);
+        buffer.Deserialize(user, oldPass, newPass);
         return m_logic->changeUserPassword(user, oldPass, newPass);
     case ControlCommand::RESET_USER_PASSWORD:
-        Deserialization::Deserialize(buffer, user);
-        Deserialization::Deserialize(buffer, newPass);
+        buffer.Deserialize(user, newPass);
         return m_logic->resetUserPassword(user, newPass);
     case ControlCommand::REMOVE_APP_DATA:
-        Deserialization::Deserialize(buffer, smackLabel);
+        buffer.Deserialize(smackLabel);
         return m_logic->removeApplicationData(smackLabel);
     case ControlCommand::SET_CC_MODE:
-        Deserialization::Deserialize(buffer, cc_mode_status);
+        buffer.Deserialize(cc_mode_status);
         return m_logic->setCCModeStatus(static_cast<CCModeState>(cc_mode_status));
     case ControlCommand::ALLOW_ACCESS:
     {
@@ -152,11 +148,7 @@ RawBuffer CKMService::processControl(MessageBuffer &buffer) {
         std::string accessor_label;
         int req_rights;
 
-        Deserialization::Deserialize(buffer, user);
-        Deserialization::Deserialize(buffer, owner);
-        Deserialization::Deserialize(buffer, item_alias);
-        Deserialization::Deserialize(buffer, accessor_label);
-        Deserialization::Deserialize(buffer, req_rights);
+        buffer.Deserialize(user, owner, item_alias, accessor_label, req_rights);
         Credentials cred =
             {
                 user,
@@ -176,10 +168,7 @@ RawBuffer CKMService::processControl(MessageBuffer &buffer) {
         std::string item_alias;
         std::string accessor_label;
 
-        Deserialization::Deserialize(buffer, user);
-        Deserialization::Deserialize(buffer, owner);
-        Deserialization::Deserialize(buffer, item_alias);
-        Deserialization::Deserialize(buffer, accessor_label);
+        buffer.Deserialize(user, owner, item_alias, accessor_label);
         Credentials cred =
             {
                 user,
@@ -205,8 +194,8 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer)
     Alias alias;
     std::string user;
 
-    Deserialization::Deserialize(buffer, command);
-    Deserialization::Deserialize(buffer, msgID);
+    buffer.Deserialize(command);
+    buffer.Deserialize(msgID);
 
     // This is a workaround solution for locktype=None in Tizen 2.2.1
     // When locktype is None, lockscreen app doesn't interfere with unlocking process.
@@ -223,10 +212,7 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer)
         {
             RawBuffer rawData;
             PolicySerializable policy;
-            Deserialization::Deserialize(buffer, tmpDataType);
-            Deserialization::Deserialize(buffer, alias);
-            Deserialization::Deserialize(buffer, rawData);
-            Deserialization::Deserialize(buffer, policy);
+            buffer.Deserialize(tmpDataType, alias, rawData, policy);
             return m_logic->saveData(
                 cred,
                 msgID,
@@ -237,8 +223,7 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer)
         }
         case LogicCommand::REMOVE:
         {
-            Deserialization::Deserialize(buffer, tmpDataType);
-            Deserialization::Deserialize(buffer, alias);
+            buffer.Deserialize(tmpDataType, alias);
             return m_logic->removeData(
                 cred,
                 msgID,
@@ -248,9 +233,7 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer)
         case LogicCommand::GET:
         {
             Password password;
-            Deserialization::Deserialize(buffer, tmpDataType);
-            Deserialization::Deserialize(buffer, alias);
-            Deserialization::Deserialize(buffer, password);
+            buffer.Deserialize(tmpDataType, alias, password);
             return m_logic->getData(
                 cred,
                 msgID,
@@ -260,7 +243,7 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer)
         }
         case LogicCommand::GET_LIST:
         {
-            Deserialization::Deserialize(buffer, tmpDataType);
+            buffer.Deserialize(tmpDataType);
             return m_logic->getDataList(
                 cred,
                 msgID,
@@ -275,11 +258,11 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer)
             Alias publicKeyAlias;
             PolicySerializable policyPrivateKey;
             PolicySerializable policyPublicKey;
-            Deserialization::Deserialize(buffer, additional_param);
-            Deserialization::Deserialize(buffer, policyPrivateKey);
-            Deserialization::Deserialize(buffer, policyPublicKey);
-            Deserialization::Deserialize(buffer, privateKeyAlias);
-            Deserialization::Deserialize(buffer, publicKeyAlias);
+            buffer.Deserialize(additional_param,
+                               policyPrivateKey,
+                               policyPublicKey,
+                               privateKeyAlias,
+                               publicKeyAlias);
             return m_logic->createKeyPair(
                 cred,
                 static_cast<LogicCommand>(command),
@@ -294,8 +277,7 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer)
         {
             RawBuffer certificate;
             RawBufferVector rawBufferVector;
-            Deserialization::Deserialize(buffer, certificate);
-            Deserialization::Deserialize(buffer, rawBufferVector);
+            buffer.Deserialize(certificate, rawBufferVector);
             return m_logic->getCertificateChain(
                 cred,
                 msgID,
@@ -306,8 +288,7 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer)
         {
             RawBuffer certificate;
             AliasVector aliasVector;
-            Deserialization::Deserialize(buffer, certificate);
-            Deserialization::Deserialize(buffer, aliasVector);
+            buffer.Deserialize(certificate, aliasVector);
             return m_logic->getCertificateChain(
                 cred,
                 msgID,
@@ -320,12 +301,7 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer)
             Password password;        // password for private_key
             RawBuffer message;
             int padding, hash;
-            Deserialization::Deserialize(buffer, privateKeyAlias);
-            Deserialization::Deserialize(buffer, password);
-            Deserialization::Deserialize(buffer, message);
-            Deserialization::Deserialize(buffer, hash);
-            Deserialization::Deserialize(buffer, padding);
-
+            buffer.Deserialize(privateKeyAlias, password, message, hash, padding);
             return m_logic->createSignature(
                   cred,
                   msgID,
@@ -344,12 +320,12 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer)
             //HashAlgorithm hash;
             //RSAPaddingAlgorithm padding;
             int padding, hash;
-            Deserialization::Deserialize(buffer, publicKeyOrCertAlias);
-            Deserialization::Deserialize(buffer, password);
-            Deserialization::Deserialize(buffer, message);
-            Deserialization::Deserialize(buffer, signature);
-            Deserialization::Deserialize(buffer, hash);
-            Deserialization::Deserialize(buffer, padding);
+            buffer.Deserialize(publicKeyOrCertAlias,
+                               password,
+                               message,
+                               signature,
+                               hash,
+                               padding);
             return m_logic->verifySignature(
                 cred,
                 msgID,
@@ -365,9 +341,7 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer)
             Alias item_alias;
             std::string accessor_label;
             int req_rights;
-            Deserialization::Deserialize(buffer, item_alias);
-            Deserialization::Deserialize(buffer, accessor_label);
-            Deserialization::Deserialize(buffer, req_rights);
+            buffer.Deserialize(item_alias, accessor_label, req_rights);
             return m_logic->allowAccess(
                 cred,
                 command,
@@ -380,8 +354,7 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer)
         {
             Alias item_alias;
             std::string accessor_label;
-            Deserialization::Deserialize(buffer, item_alias);
-            Deserialization::Deserialize(buffer, accessor_label);
+            buffer.Deserialize(item_alias, accessor_label);
             return m_logic->denyAccess(
                 cred,
                 command,

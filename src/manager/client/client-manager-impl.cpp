@@ -68,13 +68,13 @@ int ManagerImpl::saveBinaryData(
         if (alias.empty() || rawData.empty())
             return CKM_API_ERROR_INPUT_PARAM;
 
-        MessageBuffer send, recv;
-        Serialization::Serialize(send, static_cast<int>(LogicCommand::SAVE));
-        Serialization::Serialize(send, m_counter);
-        Serialization::Serialize(send, static_cast<int>(dataType));
-        Serialization::Serialize(send, alias);
-        Serialization::Serialize(send, rawData);
-        Serialization::Serialize(send, PolicySerializable(policy));
+        MessageBuffer recv;
+        auto send = MessageBuffer::Serialize(static_cast<int>(LogicCommand::SAVE),
+                                             m_counter,
+                                             static_cast<int>(dataType),
+                                             alias,
+                                             rawData,
+                                             PolicySerializable(policy));
 
         int retCode = sendToServer(
             SERVICE_SOCKET_CKM_STORAGE,
@@ -88,10 +88,7 @@ int ManagerImpl::saveBinaryData(
         int command;
         int counter;
         int opType;
-        Deserialization::Deserialize(recv, command);
-        Deserialization::Deserialize(recv, counter);
-        Deserialization::Deserialize(recv, retCode);
-        Deserialization::Deserialize(recv, opType);
+        recv.Deserialize(command, counter, retCode, opType);
 
         if (counter != m_counter) {
             return CKM_API_ERROR_UNKNOWN;
@@ -129,12 +126,11 @@ int ManagerImpl::removeBinaryData(const Alias &alias, DBDataType dataType)
         if (alias.empty())
             return CKM_API_ERROR_INPUT_PARAM;
 
-        MessageBuffer send, recv;
-        Serialization::Serialize(send, static_cast<int>(LogicCommand::REMOVE));
-        Serialization::Serialize(send, m_counter);
-        Serialization::Serialize(send, static_cast<int>(dataType));
-        Serialization::Serialize(send, alias);
-
+        MessageBuffer recv;
+        auto send = MessageBuffer::Serialize(static_cast<int>(LogicCommand::REMOVE),
+                                             m_counter,
+                                             static_cast<int>(dataType),
+                                             alias);
         int retCode = sendToServer(
             SERVICE_SOCKET_CKM_STORAGE,
             send.Pop(),
@@ -147,10 +143,7 @@ int ManagerImpl::removeBinaryData(const Alias &alias, DBDataType dataType)
         int command;
         int counter;
         int opType;
-        Deserialization::Deserialize(recv, command);
-        Deserialization::Deserialize(recv, counter);
-        Deserialization::Deserialize(recv, retCode);
-        Deserialization::Deserialize(recv, opType);
+        recv.Deserialize(command, counter, retCode, opType);
 
         if (counter != m_counter) {
             return CKM_API_ERROR_UNKNOWN;
@@ -183,13 +176,12 @@ int ManagerImpl::getBinaryData(
         if (alias.empty())
             return CKM_API_ERROR_INPUT_PARAM;
 
-        MessageBuffer send, recv;
-        Serialization::Serialize(send, static_cast<int>(LogicCommand::GET));
-        Serialization::Serialize(send, m_counter);
-        Serialization::Serialize(send, static_cast<int>(sendDataType));
-        Serialization::Serialize(send, alias);
-        Serialization::Serialize(send, password);
-
+        MessageBuffer recv;
+        auto send = MessageBuffer::Serialize(static_cast<int>(LogicCommand::GET),
+                                             m_counter,
+                                             static_cast<int>(sendDataType),
+                                             alias,
+                                             password);
         int retCode = sendToServer(
             SERVICE_SOCKET_CKM_STORAGE,
             send.Pop(),
@@ -202,11 +194,7 @@ int ManagerImpl::getBinaryData(
         int command;
         int counter;
         int tmpDataType;
-        Deserialization::Deserialize(recv, command);
-        Deserialization::Deserialize(recv, counter);
-        Deserialization::Deserialize(recv, retCode);
-        Deserialization::Deserialize(recv, tmpDataType);
-        Deserialization::Deserialize(recv, rawData);
+        recv.Deserialize(command, counter, retCode, tmpDataType,rawData);
         recvDataType = static_cast<DBDataType>(tmpDataType);
 
         if (counter != m_counter) {
@@ -295,11 +283,10 @@ int ManagerImpl::getBinaryDataAliasVector(DBDataType dataType, AliasVector &alia
 {
     return try_catch([&] {
 
-        MessageBuffer send, recv;
-        Serialization::Serialize(send, static_cast<int>(LogicCommand::GET_LIST));
-        Serialization::Serialize(send, m_counter);
-        Serialization::Serialize(send, static_cast<int>(dataType));
-
+        MessageBuffer recv;
+        auto send = MessageBuffer::Serialize(static_cast<int>(LogicCommand::GET_LIST),
+                                             m_counter,
+                                             static_cast<int>(dataType));
         int retCode = sendToServer(
             SERVICE_SOCKET_CKM_STORAGE,
             send.Pop(),
@@ -312,12 +299,7 @@ int ManagerImpl::getBinaryDataAliasVector(DBDataType dataType, AliasVector &alia
         int command;
         int counter;
         int tmpDataType;
-
-        Deserialization::Deserialize(recv, command);
-        Deserialization::Deserialize(recv, counter);
-        Deserialization::Deserialize(recv, retCode);
-        Deserialization::Deserialize(recv, tmpDataType);
-        Deserialization::Deserialize(recv, aliasVector);
+        recv.Deserialize(command, counter, retCode, tmpDataType, aliasVector);
         if ((command != static_cast<int>(LogicCommand::GET_LIST)) || (counter != m_counter)) {
             return CKM_API_ERROR_UNKNOWN;
         }
@@ -406,15 +388,14 @@ int ManagerImpl::createKeyPair(
     int my_counter = m_counter;
     return try_catch([&] {
 
-        MessageBuffer send, recv;
-        Serialization::Serialize(send, static_cast<int>(cmd_type));
-        Serialization::Serialize(send, my_counter);
-        Serialization::Serialize(send, static_cast<int>(additional_param));
-        Serialization::Serialize(send, PolicySerializable(policyPrivateKey));
-        Serialization::Serialize(send, PolicySerializable(policyPublicKey));
-        Serialization::Serialize(send, privateKeyAlias);
-        Serialization::Serialize(send, publicKeyAlias);
-
+        MessageBuffer recv;
+        auto send = MessageBuffer::Serialize(static_cast<int>(cmd_type),
+                                             my_counter,
+                                             static_cast<int>(additional_param),
+                                             PolicySerializable(policyPrivateKey),
+                                             PolicySerializable(policyPublicKey),
+                                             privateKeyAlias,
+                                             publicKeyAlias);
         int retCode = sendToServer(
             SERVICE_SOCKET_CKM_STORAGE,
             send.Pop(),
@@ -426,10 +407,7 @@ int ManagerImpl::createKeyPair(
 
         int command;
         int counter;
-
-        Deserialization::Deserialize(recv, command);
-        Deserialization::Deserialize(recv, counter);
-        Deserialization::Deserialize(recv, retCode);
+        recv.Deserialize(command, counter, retCode);
         if (counter != my_counter) {
             return CKM_API_ERROR_UNKNOWN;
         }
@@ -449,11 +427,11 @@ int getCertChain(
 {
     return try_catch([&] {
 
-        MessageBuffer send, recv;
-        Serialization::Serialize(send, static_cast<int>(command));
-        Serialization::Serialize(send, counter);
-        Serialization::Serialize(send, certificate->getDER());
-        Serialization::Serialize(send, sendData);
+        MessageBuffer recv;
+        auto send = MessageBuffer::Serialize(static_cast<int>(command),
+                                             counter,
+                                             certificate->getDER(),
+                                             sendData);
         int retCode = sendToServer(
             SERVICE_SOCKET_CKM_STORAGE,
             send.Pop(),
@@ -466,11 +444,7 @@ int getCertChain(
         int retCommand;
         int retCounter;
         RawBufferVector rawBufferVector;
-
-        Deserialization::Deserialize(recv, retCommand);
-        Deserialization::Deserialize(recv, retCounter);
-        Deserialization::Deserialize(recv, retCode);
-        Deserialization::Deserialize(recv, rawBufferVector);
+        recv.Deserialize(retCommand, retCounter, retCode, rawBufferVector);
 
         if ((counter != retCounter) || (static_cast<int>(command) != retCommand)) {
             return CKM_API_ERROR_UNKNOWN;
@@ -536,15 +510,14 @@ int ManagerImpl::createSignature(
     int my_counter = m_counter;
     return try_catch([&] {
 
-        MessageBuffer send, recv;
-        Serialization::Serialize(send, static_cast<int>(LogicCommand::CREATE_SIGNATURE));
-        Serialization::Serialize(send, my_counter);
-        Serialization::Serialize(send, privateKeyAlias);
-        Serialization::Serialize(send, password);
-        Serialization::Serialize(send, message);
-        Serialization::Serialize(send, static_cast<int>(hash));
-        Serialization::Serialize(send, static_cast<int>(padding));
-
+        MessageBuffer recv;
+        auto send = MessageBuffer::Serialize(static_cast<int>(LogicCommand::CREATE_SIGNATURE),
+                                             my_counter,
+                                             privateKeyAlias,
+                                             password,
+                                             message,
+                                             static_cast<int>(hash),
+                                             static_cast<int>(padding));
         int retCode = sendToServer(
             SERVICE_SOCKET_CKM_STORAGE,
             send.Pop(),
@@ -557,10 +530,7 @@ int ManagerImpl::createSignature(
         int command;
         int counter;
 
-        Deserialization::Deserialize(recv, command);
-        Deserialization::Deserialize(recv, counter);
-        Deserialization::Deserialize(recv, retCode);
-        Deserialization::Deserialize(recv, signature);
+        recv.Deserialize(command, counter, retCode, signature);
 
         if ((command != static_cast<int>(LogicCommand::CREATE_SIGNATURE))
             || (counter != my_counter))
@@ -584,16 +554,15 @@ int ManagerImpl::verifySignature(
     int my_counter = m_counter;
     return try_catch([&] {
 
-        MessageBuffer send, recv;
-        Serialization::Serialize(send, static_cast<int>(LogicCommand::VERIFY_SIGNATURE));
-        Serialization::Serialize(send, my_counter);
-        Serialization::Serialize(send, publicKeyOrCertAlias);
-        Serialization::Serialize(send, password);
-        Serialization::Serialize(send, message);
-        Serialization::Serialize(send, signature);
-        Serialization::Serialize(send, static_cast<int>(hash));
-        Serialization::Serialize(send, static_cast<int>(padding));
-
+        MessageBuffer recv;
+        auto send = MessageBuffer::Serialize(static_cast<int>(LogicCommand::VERIFY_SIGNATURE),
+                                             my_counter,
+                                             publicKeyOrCertAlias,
+                                             password,
+                                             message,
+                                             signature,
+                                             static_cast<int>(hash),
+                                             static_cast<int>(padding));
         int retCode = sendToServer(
             SERVICE_SOCKET_CKM_STORAGE,
             send.Pop(),
@@ -606,9 +575,7 @@ int ManagerImpl::verifySignature(
         int command;
         int counter;
 
-        Deserialization::Deserialize(recv, command);
-        Deserialization::Deserialize(recv, counter);
-        Deserialization::Deserialize(recv, retCode);
+        recv.Deserialize(command, counter, retCode);
 
         if ((command != static_cast<int>(LogicCommand::VERIFY_SIGNATURE))
             || (counter != my_counter))
@@ -624,15 +591,14 @@ int ManagerImpl::ocspCheck(const CertificateShPtrVector &certChain, int &ocspSta
 {
     return try_catch([&] {
         int my_counter = ++m_counter;
-        MessageBuffer send, recv;
+        MessageBuffer recv;
 
         RawBufferVector rawCertChain;
         for (auto &e: certChain) {
             rawCertChain.push_back(e->getDER());
         }
 
-        Serialization::Serialize(send, my_counter);
-        Serialization::Serialize(send, rawCertChain);
+        auto send = MessageBuffer::Serialize(my_counter, rawCertChain);
 
         int retCode = sendToServer(
             SERVICE_SOCKET_OCSP,
@@ -645,9 +611,7 @@ int ManagerImpl::ocspCheck(const CertificateShPtrVector &certChain, int &ocspSta
 
         int counter;
 
-        Deserialization::Deserialize(recv, counter);
-        Deserialization::Deserialize(recv, retCode);
-        Deserialization::Deserialize(recv, ocspStatus);
+        recv.Deserialize(counter, retCode, ocspStatus);
 
         if (my_counter != counter) {
             return CKM_API_ERROR_UNKNOWN;
@@ -664,13 +628,12 @@ int ManagerImpl::allowAccess(const std::string &alias,
     m_counter++;
     int my_counter = m_counter;
     return try_catch([&] {
-        MessageBuffer send, recv;
-        Serialization::Serialize(send, static_cast<int>(LogicCommand::ALLOW_ACCESS));
-        Serialization::Serialize(send, my_counter);
-        Serialization::Serialize(send, alias);
-        Serialization::Serialize(send, accessor);
-        Serialization::Serialize(send, static_cast<int>(granted));
-
+        MessageBuffer recv;
+        auto send = MessageBuffer::Serialize(static_cast<int>(LogicCommand::ALLOW_ACCESS),
+                                             my_counter,
+                                             alias,
+                                             accessor,
+                                             static_cast<int>(granted));
         int retCode = sendToServer(
             SERVICE_SOCKET_CKM_STORAGE,
             send.Pop(),
@@ -682,9 +645,7 @@ int ManagerImpl::allowAccess(const std::string &alias,
 
         int command;
         int counter;
-        Deserialization::Deserialize(recv, command);
-        Deserialization::Deserialize(recv, counter);
-        Deserialization::Deserialize(recv, retCode);
+        recv.Deserialize(command, counter, retCode);
 
         if (my_counter != counter) {
             return CKM_API_ERROR_UNKNOWN;
@@ -699,12 +660,11 @@ int ManagerImpl::denyAccess(const std::string &alias, const std::string &accesso
     m_counter++;
     int my_counter = m_counter;
     return try_catch([&] {
-        MessageBuffer send, recv;
-        Serialization::Serialize(send, static_cast<int>(LogicCommand::DENY_ACCESS));
-        Serialization::Serialize(send, my_counter);
-        Serialization::Serialize(send, alias);
-        Serialization::Serialize(send, accessor);
-
+        MessageBuffer recv;
+        auto send = MessageBuffer::Serialize(static_cast<int>(LogicCommand::DENY_ACCESS),
+                                             my_counter,
+                                             alias,
+                                             accessor);
         int retCode = sendToServer(
             SERVICE_SOCKET_CKM_STORAGE,
             send.Pop(),
@@ -716,9 +676,7 @@ int ManagerImpl::denyAccess(const std::string &alias, const std::string &accesso
 
         int command;
         int counter;
-        Deserialization::Deserialize(recv, command);
-        Deserialization::Deserialize(recv, counter);
-        Deserialization::Deserialize(recv, retCode);
+        recv.Deserialize(command, counter, retCode);
 
         if (my_counter != counter) {
             return CKM_API_ERROR_UNKNOWN;

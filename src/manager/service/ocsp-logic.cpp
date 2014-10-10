@@ -49,12 +49,7 @@ RawBuffer OCSPLogic::ocspCheck(int commandId, const RawBufferVector &rawChain) {
     if (retCode == CKM_API_SUCCESS)
         ocspStatus = ocsp.verify(certChain);
 
-    MessageBuffer response;
-    Serialization::Serialize(response, commandId);
-    Serialization::Serialize(response, retCode);
-    Serialization::Serialize(response, ocspStatus);
-
-    return response.Pop();
+    return MessageBuffer::Serialize(commandId, retCode, ocspStatus).Pop();
 }
 
 } // namespace CKM

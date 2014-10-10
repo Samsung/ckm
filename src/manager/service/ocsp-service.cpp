@@ -84,8 +84,7 @@ bool OCSPService::processOne(
 
         int commandId;
         RawBufferVector chainVector;
-        Deserialization::Deserialize(buffer, commandId);
-        Deserialization::Deserialize(buffer, chainVector);
+        buffer.Deserialize(commandId, chainVector);
 
         RawBuffer response = m_logic->ocspCheck(commandId, chainVector);
         m_serviceManager->Write(conn, response);

@@ -36,8 +36,7 @@ void Receiver::parseResponse()
 {
     int command;
     int id;
-    Deserialization::Deserialize(m_buffer, command);
-    Deserialization::Deserialize(m_buffer, id);
+    m_buffer.Deserialize(command, id);
 
     auto it = m_requests.find(id);
     if (it == m_requests.end()) {
@@ -68,8 +67,7 @@ void Receiver::parseSaveCommand()
     int retCode;
     int dataType;
 
-    Deserialization::Deserialize(m_buffer, retCode);
-    Deserialization::Deserialize(m_buffer, dataType);
+    m_buffer.Deserialize(retCode, dataType);
 
     DBDataType dt = static_cast<DBDataType>(dataType);
     if (dt >= DBDataType::DB_KEY_FIRST && dt <= DBDataType::DB_KEY_LAST) {
