@@ -179,6 +179,8 @@ int ckmc_get_key_alias_list(ckmc_alias_list_s** ppalias_list);
  * @privlevel public
  * @privilege %http://tizen.org/privilege/keymanager
  *
+ * @remarks the certificate's binary value will be converted and saved as binary DER encoded certificates.
+ *
  * @param[in] alias  The name of a certificate to be stored
  * @param[in] cert   The certificate's binary value to be stored
  * @param[in] policy The policy about how to store a certificate securely
@@ -241,6 +243,7 @@ int ckmc_remove_cert(const char *alias);
  * @privilege %http://tizen.org/privilege/keymanager
  *
  * @remarks A client can access only certificate stored by the client.
+ * @remarks A DER encoded certificate will be returned as a return value.
  * @remarks You must destroy the newly created @a ppcert by calling ckmc_cert_free() if it is no longer needed.
  *
  * @param[in] alias    The name of a certificate to retrieve
@@ -557,6 +560,7 @@ int ckmc_create_key_pair_ecdsa(const ckmc_ec_type_e type, const char *private_ke
  * @retval #CKMC_ERROR_NONE               Successful
  * @retval #CKMC_ERROR_INVALID_PARAMETER  Input parameter is invalid
  * @retval #CKMC_ERROR_DB_LOCKED          A user key is not loaded in memory (a user is not logged in)
+ * @retval #CKMC_ERROR_DB_ERROR           Failed due to the error with unknown reason
  * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN   Alias does not exist
  * @retval #CKMC_ERROR_PERMISSION_DENIED  Failed to access key manager
  *
@@ -595,6 +599,7 @@ int ckmc_create_signature(const char *private_key_alias, const char *password, c
  * @retval #CKMC_ERROR_VERIFICATION_FAILED  The signature is invalid
  * @retval #CKMC_ERROR_INVALID_PARAMETER    Input parameter is invalid
  * @retval #CKMC_ERROR_DB_LOCKED            A user key is not loaded in memory (a user is not logged in)
+ * @retval #CKMC_ERROR_DB_ERROR             Failed due to the error with unknown reason
  * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN     Alias does not exist
  * @retval #CKMC_ERROR_PERMISSION_DENIED    Failed to access key manager
  *
@@ -630,6 +635,7 @@ int ckmc_verify_signature(const char *public_key_alias, const char *password, co
  * @retval #CKMC_ERROR_VERIFICATION_FAILED  The certificate chain is not valid
  * @retval #CKMC_ERROR_INVALID_PARAMETER    Input parameter is invalid
  * @retval #CKMC_ERROR_DB_LOCKED            A user key is not loaded in memory (a user is not logged in)
+ * @retval #CKMC_ERROR_DB_ERROR             Failed due to the error with unknown reason
  * @retval #CKMC_ERROR_INVALID_FORMAT       The format of certificate is not valid
  * @retval #CKMC_ERROR_PERMISSION_DENIED    Failed to access key manager
  *
@@ -662,6 +668,7 @@ int ckmc_get_cert_chain(const ckmc_cert_s *cert, const ckmc_cert_list_s *untrust
  * @retval #CKMC_ERROR_VERIFICATION_FAILED  The certificate chain is not valid
  * @retval #CKMC_ERROR_INVALID_PARAMETER    Input parameter is invalid
  * @retval #CKMC_ERROR_DB_LOCKED            A user key is not loaded in memory (a user is not logged in)
+ * @retval #CKMC_ERROR_DB_ERROR             Failed due to the error with unknown reason
  * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN     Alias does not exist
  * @retval #CKMC_ERROR_INVALID_FORMAT       The format of certificate is not valid
  * @retval #CKMC_ERROR_PERMISSION_DENIED    Failed to access key manager
@@ -691,6 +698,7 @@ int ckmc_get_cert_chain_with_alias(const ckmc_cert_s *cert, const ckmc_alias_lis
  * @retval #CKMC_ERROR_NONE                 Successful
  * @retval #CKMC_ERROR_INVALID_PARAMETER    Input parameter is invalid
  * @retval #CKMC_ERROR_DB_LOCKED            A user key is not loaded in memory (a user is not logged in)
+ * @retval #CKMC_ERROR_DB_ERROR             Failed due to the error with unknown reason
  * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN     Alias does not exist
  * @retval #CKMC_ERROR_PERMISSION_DENIED    Failed to access key manager
  *
@@ -719,6 +727,7 @@ int ckmc_allow_access(const char *alias, const char *accessor, ckmc_access_right
  * @retval #CKMC_ERROR_INVALID_PARAMETER    Input parameter is invalid or the @a accessor doesn't
  *                                          have access to @a alias
  * @retval #CKMC_ERROR_DB_LOCKED            A user key is not loaded in memory (a user is not logged in)
+ * @retval #CKMC_ERROR_DB_ERROR             Failed due to the error with unknown reason
  * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN     Alias does not exist
  * @retval #CKMC_ERROR_PERMISSION_DENIED    Failed to access key manager
  *
