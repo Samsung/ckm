@@ -3,7 +3,7 @@ Summary:    Central Key Manager and utilities
 Version:    0.1.6
 Release:    1
 Group:      System/Security
-License:    Apache License, Version 2.0
+License:    Apache-2.0
 Source0:    %{name}-%{version}.tar.gz
 Source1001: key-manager.manifest
 Source1002: key-manager-listener.manifest
