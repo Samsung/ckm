@@ -43,6 +43,13 @@ struct UserData {
 
 class CKMLogic {
 public:
+    class Exception
+    {
+        public:
+            DECLARE_EXCEPTION_TYPE(CKM::Exception, Base)
+            DECLARE_EXCEPTION_TYPE(Base, InputDataInvalid);
+    };
+
     CKMLogic();
     CKMLogic(const CKMLogic &) = delete;
     CKMLogic(CKMLogic &&) = delete;
@@ -152,6 +159,10 @@ public:
         const std::string &accessor_label);
 
 private:
+
+    void verifyBinaryData(
+        DBDataType dataType,
+        const RawBuffer &input_data) const;
 
     int saveDataHelper(
         Credentials &cred,

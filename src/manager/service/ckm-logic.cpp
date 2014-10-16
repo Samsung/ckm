@@ -250,6 +250,7 @@ int CKMLogic::saveDataHelper(
     if (0 == m_userDataMap.count(cred.uid))
         return CKM_API_ERROR_DB_LOCKED;
 
+    // proceed to data save
     DBRow row = { alias, cred.smackLabel,
          policy.extractable, dataType, DBCMAlgType::NONE,
          0, RawBuffer(), static_cast<int>(key.size()), key, RawBuffer() };
@@ -285,6 +286,39 @@ int CKMLogic::saveDataHelper(
     return CKM_API_SUCCESS;
 }
 
+void CKMLogic::verifyBinaryData(DBDataType dataType, const RawBuffer &input_data) const
+{
+    // verify the data integrity
+    switch(dataType)
+    {
+        case DBDataType::KEY_RSA_PUBLIC:
+        case DBDataType::KEY_RSA_PRIVATE:
+        case DBDataType::KEY_ECDSA_PUBLIC:
+        case DBDataType::KEY_ECDSA_PRIVATE:
+        case DBDataType::KEY_DSA_PUBLIC:
+        case DBDataType::KEY_DSA_PRIVATE:
+        case DBDataType::KEY_AES:
+        {
+            KeyShPtr output_key = CKM::Key::create(input_data);
+            if(output_key.get() == NULL)
+                ThrowMsg(CKMLogic::Exception::InputDataInvalid, "provided binary data is not valid key data");
+            break;
+        }
+
+        case DBDataType::CERTIFICATE:
+        {
+            CertificateShPtr cert = CKM::Certificate::create(input_data, DataFormat::FORM_DER);
+            if(cert.get() == NULL)
+                ThrowMsg(CKMLogic::Exception::InputDataInvalid, "provided binary data is not valid certificate data");
+            break;
+        }
+
+        // TODO: add here BINARY_DATA verification, i.e: max size etc.
+
+        default: break;
+    }
+}
+
 RawBuffer CKMLogic::saveData(
     Credentials &cred,
     int commandId,
@@ -295,8 +329,13 @@ RawBuffer CKMLogic::saveData(
 {
     int retCode = CKM_API_SUCCESS;
     try {
+        verifyBinaryData(dataType, key);
+
         retCode = saveDataHelper(cred, dataType, alias, key, policy);
         LogDebug("SaveDataHelper returned: " << retCode);
+    } catch (const CKMLogic::Exception::InputDataInvalid &e) {
+        LogError("Provided data invalid: " << e.GetMessage());
+        retCode = CKM_API_ERROR_INPUT_PARAM;
     } catch (const KeyProvider::Exception::Base &e) {
         LogError("KeyProvider failed with message: " << e.GetMessage());
         retCode = CKM_API_ERROR_SERVER_ERROR;
