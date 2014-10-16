@@ -17,7 +17,9 @@ private:
 };
 
 // mirrors the API-defined value
+#ifndef AES_GCM_TAG_SIZE
 #define AES_GCM_TAG_SIZE 16
+#endif
 
 CKM::RawBuffer createDefaultPass();
 CKM::RawBuffer createBigBlob(std::size_t size);
