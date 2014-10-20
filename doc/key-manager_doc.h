@@ -65,6 +65,18 @@
  *     Therefore, clients cannot access any data.
  *   - When a user changes his/her password, the key manager re-encrypts the user's DKEK with the new password.
  *
+ * Data Access Control
+ *   - By default, only the owner of a data can access to the data.
+ *   - If the owner grants the access to other applications, those applications can read or delete the data from key-manager DB.
+ *   - When an application is deleted, the data and access control information granted by the application are also removed.
+ *
+ * Alias Format
+ *   - The format of alias is package_id::name.
+ *   - If package_id is not provided by a client, the key-manager will add the package_id of the client to the name internally.
+ *   - The client can specify only its own pacakge id in the alias when storing a key, certificate, or data.
+ *   - A client should specify the pacakge id of the owner in the alias to retrieve a a key, certificate, or data shared by other applications.
+ *   - Aliases are returned as the format of package_id::name from the key-manager.
+ *
  */
 
 #endif /* __TIZEN_CORE_KEY_MANAGER_DOC_H__ */
