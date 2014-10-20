@@ -22,7 +22,9 @@ Requires: libkey-manager-common = %{version}-%{release}
 %{?systemd_requires}
 
 %description
-Central Key Manager and utilities
+Central Key Manager daemon could be used as secure storage
+for certificate and private/public keys. It gives API for
+application to sign and verify (DSA/RSA/ECDSA) signatures.
 
 %package -n key-manager-listener
 Summary:    Package with listener daemon
@@ -35,7 +37,7 @@ Requires:   libkey-manager-client = %{version}-%{release}
 %description -n key-manager-listener
 Listener for central key manager. This daemon is responsible for
 receive notification from dbus about uninstall application
-and notify central key manager about it.
+and pass them to key-manager daemon.
 
 %package -n libkey-manager-common
 Summary:    Central Key Manager (common libraries)
@@ -74,7 +76,7 @@ Requires:   boost-test
 Requires:   key-manager = %{version}-%{release}
 
 %description -n key-manager-tests
-Internal test for key-manager packages
+Internal test for key-manager implementation.
 
 %prep
 %setup -q
@@ -142,10 +144,6 @@ if [ $1 = 0 ]; then
     # unistall
     systemctl daemon-reload
 fi
-
-%post -n libkey-manager-common -p /sbin/ldconfig
-
-%postun -n libkey-manager-common -p /sbin/ldconfig
 
 %post -n libkey-manager-client -p /sbin/ldconfig
 
