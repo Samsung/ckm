@@ -20,6 +20,7 @@
  */
 
 #include "descriptor-set.h"
+#include <dpl/errno_string.h>
 #include <dpl/log/log.h>
 #include <string.h>
 #include <unistd.h>
@@ -69,7 +70,7 @@ void DescriptorSet::wait(int timeout_ms) {
         ThrowMsg(Timeout, "Poll timeout");
     } else if (ret < 0) {
         int err = errno;
-        ThrowMsg(InternalError, "Poll failed " << strerror(err));
+        ThrowMsg(InternalError, "Poll failed " << GetErrnoString(err));
     }
 
     notify(ret);

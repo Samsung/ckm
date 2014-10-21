@@ -20,7 +20,10 @@
  */
 
 #include <service.h>
+
+#include <dpl/errno_string.h>
 #include <dpl/log/log.h>
+
 #include <storage-receiver.h>
 #include <ocsp-receiver.h>
 #include <protocols.h>
@@ -130,7 +133,7 @@ void Service::sendData()
             if (EAGAIN == err || EWOULDBLOCK == err)
                 return;
 
-            LogError("Error in write: " << strerror(err));
+            LogError("Error in write: " << GetErrnoString(err));
             serviceError(CKM_API_ERROR_SEND_FAILED);
             return;
         }
@@ -158,7 +161,7 @@ void Service::receiveData()
     ssize_t temp = TEMP_FAILURE_RETRY(read(m_socket->Get(), buffer, RECV_BUFFER_SIZE));
     if (-1 == temp) {
         int err = errno;
-        LogError("Error in read: " << strerror(err));
+        LogError("Error in read: " << GetErrnoString(err));
         serviceError(CKM_API_ERROR_RECV_FAILED);
         return;
     }

@@ -22,7 +22,10 @@
 #include <connection-thread.h>
 #include <unistd.h>
 #include <poll.h>
+
+#include <dpl/errno_string.h>
 #include <dpl/log/log.h>
+
 #include <client-common.h>
 
 namespace CKM {
@@ -34,7 +37,7 @@ const int POLL_TIMEOUT = 8000;
 ConnectionThread::Pipe::Pipe()
 {
     if (-1 == pipe(m_pipe))
-        ThrowMsg(PipeError, "Pipe creation failed " << strerror(errno));
+        ThrowMsg(PipeError, "Pipe creation failed " << GetErrnoString(errno));
 }
 
 ConnectionThread::Pipe::~Pipe()
@@ -46,7 +49,7 @@ ConnectionThread::Pipe::~Pipe()
 void ConnectionThread::Pipe::notify()
 {
     if (-1 == TEMP_FAILURE_RETRY(write(m_pipe[1],"j",1)))
-        ThrowMsg(PipeError, "Writing pipe failed " << strerror(errno));
+        ThrowMsg(PipeError, "Writing pipe failed " << GetErrnoString(errno));
 }
 
 ConnectionThread::ConnectionThread() :
@@ -121,7 +124,7 @@ void ConnectionThread::readPipe(int pipe, short revents)
 
     if(1 != TEMP_FAILURE_RETRY(read(pipe,buffer, 1))) {
         int err = errno;
-        ThrowMsg(PipeError, "Failed to read pipe: " << strerror(err));
+        ThrowMsg(PipeError, "Failed to read pipe: " << GetErrnoString(err));
     }
 }
 

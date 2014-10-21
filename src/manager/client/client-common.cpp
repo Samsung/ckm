@@ -28,6 +28,7 @@
 #include <sys/un.h>
 #include <unistd.h>
 
+#include <dpl/errno_string.h>
 #include <dpl/log/log.h>
 #include <dpl/serialization.h>
 #include <dpl/singleton.h>
@@ -64,7 +65,7 @@ int waitForSocket(int sock, int event, int timeout) {
         LogDebug("Poll timeout");
     } else if (-1 == retval) {
         int err = errno;
-        LogError("Error in poll: " << strerror(err));
+        LogError("Error in poll: " << CKM::GetErrnoString(err));
     }
     return retval;
 }
@@ -84,7 +85,7 @@ int connectSocket(int& sock, char const * const interface) {
     sock = socket(AF_UNIX, SOCK_STREAM, 0);
     if (sock < 0) {
         int err = errno;
-        LogError("Error creating socket: " << strerror(err));
+        LogError("Error creating socket: " << GetErrnoString(err));
         return CKM_API_ERROR_SOCKET;
     }
 
@@ -92,7 +93,7 @@ int connectSocket(int& sock, char const * const interface) {
         fcntl(sock, F_SETFL, flags | O_NONBLOCK) < 0)
     {
         int err = errno;
-        LogError("Error in fcntl: " << strerror(err));
+        LogError("Error in fcntl: " << GetErrnoString(err));
         return CKM_API_ERROR_SOCKET;
     }
 
@@ -123,7 +124,7 @@ int connectSocket(int& sock, char const * const interface) {
 
         if (-1 == retval) {
             int err = errno;
-            LogError("Error in getsockopt: " << strerror(err));
+            LogError("Error in getsockopt: " << GetErrnoString(err));
             return CKM_API_ERROR_SOCKET;
         }
 
@@ -133,7 +134,7 @@ int connectSocket(int& sock, char const * const interface) {
         }
 
         if (error != 0) {
-            LogError("Error in connect: " << strerror(error));
+            LogError("Error in connect: " << GetErrnoString(error));
             return CKM_API_ERROR_SOCKET;
         }
 
@@ -142,7 +143,7 @@ int connectSocket(int& sock, char const * const interface) {
 
     if (-1 == retval) {
         int err = errno;
-        LogError("Error connecting socket: " << strerror(err));
+        LogError("Error connecting socket: " << GetErrnoString(err));
         if (err == EACCES)
             return CKM_API_ERROR_ACCESS_DENIED;
         return CKM_API_ERROR_SOCKET;
@@ -170,7 +171,7 @@ int sendToServer(char const * const interface, const RawBuffer &send, MessageBuf
         ssize_t temp = TEMP_FAILURE_RETRY(write(sock.Get(), &send[done], send.size() - done));
         if (-1 == temp) {
             int err = errno;
-            LogError("Error in write: " << strerror(err));
+            LogError("Error in write: " << GetErrnoString(err));
             return CKM_API_ERROR_SOCKET;
         }
         done += temp;
@@ -184,7 +185,7 @@ int sendToServer(char const * const interface, const RawBuffer &send, MessageBuf
         ssize_t temp = TEMP_FAILURE_RETRY(read(sock.Get(), buffer, 2048));
         if (-1 == temp) {
             int err = errno;
-            LogError("Error in read: " << strerror(err));
+            LogError("Error in read: " << GetErrnoString(err));
             return CKM_API_ERROR_SOCKET;
         }
 

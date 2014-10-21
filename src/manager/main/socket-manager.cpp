@@ -40,6 +40,7 @@
 
 #include <systemd/sd-daemon.h>
 
+#include <dpl/errno_string.h>
 #include <dpl/log/log.h>
 #include <dpl/assert.h>
 
@@ -176,7 +177,7 @@ SocketManager::SocketManager()
     FD_ZERO(&m_writeSet);
     if (-1 == pipe(m_notifyMe)) {
         int err = errno;
-        ThrowMsg(Exception::InitFailed, "Error in pipe: " << strerror(err));
+        ThrowMsg(Exception::InitFailed, "Error in pipe: " << GetErrnoString(err));
     }
     LogInfo("Pipe: Read desc: " << m_notifyMe[0] << " Write desc: " << m_notifyMe[1]);
 
@@ -233,7 +234,7 @@ void SocketManager::ReadyForAccept(int sock) {
 //    LogInfo("Accept on sock: " << sock << " Socket opended: " << client);
     if (-1 == client) {
         int err = errno;
-        LogDebug("Error in accept: " << strerror(err));
+        LogDebug("Error in accept: " << GetErrnoString(err));
         return;
     }
 
@@ -284,7 +285,7 @@ void SocketManager::ReadyForRead(int sock) {
             case EINTR:
                 break;
             default:
-                LogDebug("Reading sock error: " << strerror(err));
+                LogDebug("Reading sock error: " << GetErrnoString(err));
                 CloseSocket(sock);
         }
     }
@@ -303,7 +304,7 @@ void SocketManager::ReadyForWriteBuffer(int sock) {
             break;
         case EPIPE:
         default:
-            LogDebug("Error during write: " << strerror(err));
+            LogDebug("Error during write: " << GetErrnoString(err));
             CloseSocket(sock);
             break;
         }
@@ -422,7 +423,7 @@ void SocketManager::MainLoop() {
                 break;
             default:
                 int err = errno;
-                LogError("Error in select: " << strerror(err));
+                LogError("Error in select: " << GetErrnoString(err));
                 return;
             }
             continue;
@@ -483,8 +484,8 @@ int SocketManager::CreateDomainSocketHelp(
 
     if (-1 == (sockfd = socket(AF_UNIX, SOCK_STREAM, 0))) {
         int err = errno;
-        LogError("Error in socket: " << strerror(err));
-        ThrowMsg(Exception::InitFailed, "Error in socket: " << strerror(err));
+        LogError("Error in socket: " << GetErrnoString(err));
+        ThrowMsg(Exception::InitFailed, "Error in socket: " << GetErrnoString(err));
     }
 
     if (smack_check()) {
@@ -505,8 +506,8 @@ int SocketManager::CreateDomainSocketHelp(
     if (-1 == fcntl(sockfd, F_SETFL, flags | O_NONBLOCK)) {
         int err = errno;
         close(sockfd);
-        LogError("Error in fcntl: " << strerror(err));
-        ThrowMsg(Exception::InitFailed, "Error in fcntl: " << strerror(err));
+        LogError("Error in fcntl: " << GetErrnoString(err));
+        ThrowMsg(Exception::InitFailed, "Error in fcntl: " << GetErrnoString(err));
     }
 
     sockaddr_un serverAddress;
@@ -521,8 +522,8 @@ int SocketManager::CreateDomainSocketHelp(
     if (-1 == bind(sockfd, (struct sockaddr*)&serverAddress, sizeof(serverAddress))) {
         int err = errno;
         close(sockfd);
-        LogError("Error in bind: " << strerror(err));
-        ThrowMsg(Exception::InitFailed, "Error in bind: " << strerror(err));
+        LogError("Error in bind: " << GetErrnoString(err));
+        ThrowMsg(Exception::InitFailed, "Error in bind: " << GetErrnoString(err));
     }
 
     umask(originalUmask);
@@ -530,8 +531,8 @@ int SocketManager::CreateDomainSocketHelp(
     if (-1 == listen(sockfd, 5)) {
         int err = errno;
         close(sockfd);
-        LogError("Error in listen: " << strerror(err));
-        ThrowMsg(Exception::InitFailed, "Error in listen: " << strerror(err));
+        LogError("Error in listen: " << GetErrnoString(err));
+        ThrowMsg(Exception::InitFailed, "Error in listen: " << GetErrnoString(err));
     }
 
     return sockfd;

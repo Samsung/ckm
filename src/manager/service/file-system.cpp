@@ -30,6 +30,7 @@
 #include <sstream>
 #include <fstream>
 
+#include <dpl/errno_string.h>
 #include <dpl/log/log.h>
 
 #include <file-system.h>
@@ -148,7 +149,7 @@ int FileSystem::init() {
     if ((mkdir(CKM_DATA_PATH.c_str(), 0700)) && (errno != EEXIST)) {
         int err = errno;
         LogError("Error in mkdir. Data directory could not be created. Errno: "
-            << err << " (" << strerror(err) << ")");
+            << err << " (" << GetErrnoString(err) << ")");
         return -1; // TODO set up some error code
     }
     return 0;
@@ -156,20 +157,27 @@ int FileSystem::init() {
 
 UidVector FileSystem::getUIDsFromDBFile() {
     UidVector uids;
-    DIR *dirp = NULL;
-    errno = 0;
+    std::unique_ptr<DIR, std::function<int(DIR*)>>
+        dirp(::opendir(CKM_DATA_PATH.c_str()), ::closedir);
 
-    if((dirp = opendir(CKM_DATA_PATH.c_str())) == NULL) {
+    if (!dirp.get()) {
         int err = errno;
-        LogError("Error in opendir. Data directory could not be read. Errno: "
-                << err << " (" << strerror(err) << ")");
+        LogError("Error in opendir. Data directory could not be read. Error: " << GetErrnoString(err));
         return UidVector();
     }
 
-    struct dirent pPrevDirEntry;
+    size_t len = offsetof(struct dirent, d_name) + pathconf(CKM_DATA_PATH.c_str(), _PC_NAME_MAX) + 1;
+    std::unique_ptr<struct dirent, std::function<void(void*)>>
+        pEntry(static_cast<struct dirent*>(::malloc(len)), ::free);
+
+    if (!pEntry.get()) {
+        LogError("Memory allocation failed.");
+        return UidVector();
+    }
+
     struct dirent* pDirEntry = NULL;
 
-    while ( (!readdir_r(dirp, &pPrevDirEntry, &pDirEntry)) && pDirEntry ) {
+    while ( (!readdir_r(dirp.get(), pEntry.get(), &pDirEntry)) && pDirEntry ) {
 
         // Ignore files with diffrent prefix
         if (strncmp(pDirEntry->d_name, CKM_KEY_PREFIX.c_str(), CKM_KEY_PREFIX.size())) {
@@ -188,7 +196,6 @@ UidVector FileSystem::getUIDsFromDBFile() {
         }
     }
 
-    closedir(dirp);
     return uids;
 }
 
@@ -199,28 +206,28 @@ int FileSystem::removeUserData() const {
         retCode = -1;
         err = errno;
         LogError("Error in unlink user database: " << getDBPath()
-            << "Errno: " << errno << " " << strerror(err));
+            << "Errno: " << errno << " " << GetErrnoString(err));
     }
 
     if (unlink(getDKEKPath().c_str())) {
         retCode = -1;
         err = errno;
         LogError("Error in unlink user DKEK: " << getDKEKPath()
-            << "Errno: " << errno << " " << strerror(err));
+            << "Errno: " << errno << " " << GetErrnoString(err));
     }
 
     if (unlink(getDBDEKPath().c_str())) {
         retCode = -1;
         err = errno;
         LogError("Error in unlink user DBDEK: " << getDBDEKPath()
-            << "Errno: " << errno << " " << strerror(err));
+            << "Errno: " << errno << " " << GetErrnoString(err));
     }
 
     if (unlink(getRemovedAppsPath().c_str())) {
         retCode = -1;
         err = errno;
         LogError("Error in unlink user's Removed Apps File: " << getRemovedAppsPath()
-            << "Errno: " << errno << " " << strerror(err));
+            << "Errno: " << errno << " " << GetErrnoString(err));
     }
 
     return retCode;
