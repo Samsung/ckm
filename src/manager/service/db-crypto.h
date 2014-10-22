@@ -75,8 +75,8 @@ namespace CKM {
             void getAliases(
                     const std::string &clnt_label,
                     DBDataType dataType,
-                    AliasVector &aliases);
-            void getKeyAliases(const std::string &clnt_label, AliasVector &aliases);
+                    LabelAliasVector &aliases);
+            void getKeyAliases(const std::string &clnt_label, LabelAliasVector &aliases);
             bool deleteDBRow(
                     const Alias& alias,
                     const std::string &clnt_label);
@@ -206,9 +206,10 @@ namespace CKM {
                     const char *create_cmd,
                     const char *table_name);
             bool checkAliasExist(const std::string &alias) const;
-            std::string getLabelForAlias(const std::string& alias) const;
+            void getLabelForAlias(const std::string& alias, std::string & label) const;
+            void getLabelForAlias(const std::string& alias, std::string & label, int & index) const;
             bool checkGlobalAliasExist(const std::string& alias) const;
-            void getSingleType(const std::string &clnt_label, DBDataType type, AliasVector& aliases) const;
+            void getSingleType(const std::string &clnt_label, DBDataType type, LabelAliasVector& aliases) const;
    };
 } // namespace CKM
 

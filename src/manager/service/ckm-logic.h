@@ -86,13 +86,15 @@ public:
         Credentials &cred,
         int commandId,
         DBDataType dataType,
-        const Alias &alias);
+        const Alias &alias,
+        const std::string &label);
 
     RawBuffer getData(
         Credentials &cred,
         int commandId,
         DBDataType dataType,
         const Alias &alias,
+        const std::string &label,
         const Password &password);
 
     RawBuffer getDataList(
@@ -175,6 +177,7 @@ private:
         Credentials &cred,
         DBDataType dataType,
         const Alias &alias,
+        const std::string &label,
         const Password &password,
         DBRow &row);
 
@@ -192,6 +195,11 @@ private:
         const Alias &publicKeyOrCertAlias,
         const Password &password,           // password for public_key (optional)
         const KeyImpl &genericKey);
+
+    // @return true if alias & label are proper, false otherwise
+    static bool checkAliasAndLabelValid(
+        const Alias &alias,
+        const std::string &label);
 
     std::map<uid_t, UserData> m_userDataMap;
     CertificateStore m_certStore;

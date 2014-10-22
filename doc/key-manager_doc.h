@@ -73,8 +73,8 @@
  * Alias Format
  *   - The format of alias is package_id::name.
  *   - If package_id is not provided by a client, the key-manager will add the package_id of the client to the name internally.
- *   - The client can specify only its own pacakge id in the alias when storing a key, certificate, or data.
- *   - A client should specify the pacakge id of the owner in the alias to retrieve a a key, certificate, or data shared by other applications.
+ *   - The client can specify only its own package id in the alias when storing a key, certificate, or data.
+ *   - A client should specify the package id of the owner in the alias to retrieve a a key, certificate, or data shared by other applications.
  *   - Aliases are returned as the format of package_id::name from the key-manager.
  *
  */

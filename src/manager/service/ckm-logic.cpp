@@ -364,17 +364,30 @@ RawBuffer CKMLogic::removeData(
     Credentials &cred,
     int commandId,
     DBDataType dataType,
-    const Alias &alias)
+    const Alias &alias,
+    const std::string &label)
 {
     int retCode = CKM_API_SUCCESS;
 
     if (0 < m_userDataMap.count(cred.uid)) {
         Try {
-            auto erased = m_userDataMap[cred.uid].database.deleteDBRow(alias, cred.smackLabel);
-            // check if the data existed or not
-            if(!erased) {
-                LogError("No row for given alias and label");
-                retCode = CKM_API_ERROR_DB_ALIAS_UNKNOWN;
+            // use client label if not explicitly provided
+            const std::string & label_to_use = label.empty()?cred.smackLabel:label;
+
+            // verify alias and label are correct
+            if (true == checkAliasAndLabelValid(alias, label_to_use))
+            {
+                auto erased = m_userDataMap[cred.uid].database.deleteDBRow(alias, label_to_use);
+                // check if the data existed or not
+                if(!erased) {
+                    LogError("No row for given alias and label");
+                    retCode = CKM_API_ERROR_DB_ALIAS_UNKNOWN;
+                }
+            }
+            else
+            {
+                LogError("Invalid label or alias format");
+                retCode = CKM_API_ERROR_INPUT_PARAM;
             }
         } Catch (DBCrypto::Exception::PermissionDenied) {
             LogError("Error: not enough permissions!");
@@ -394,10 +407,24 @@ RawBuffer CKMLogic::removeData(
     return response.Pop();
 }
 
+bool CKMLogic::checkAliasAndLabelValid(const Alias &alias, const std::string &label)
+{
+    // verify the alias is valid
+    if(alias.find(':') != std::string::npos)
+        return false;
+
+    // verify the label is valid
+    if(label.find(LABEL_ALIAS_SEPARATOR) != std::string::npos)
+        return false;
+
+    return true;
+}
+
 int CKMLogic::getDataHelper(
     Credentials &cred,
     DBDataType dataType,
     const Alias &alias,
+    const std::string &label,
     const Password &password,
     DBRow &row)
 {
@@ -406,14 +433,24 @@ int CKMLogic::getDataHelper(
 
     auto &handler = m_userDataMap[cred.uid];
 
+    // use client label if not explicitly provided
+    const std::string & label_to_use = label.empty()?cred.smackLabel:label;
+
+    // verify alias and label are correct
+    if (true != checkAliasAndLabelValid(alias, label_to_use))
+        return CKM_API_ERROR_INPUT_PARAM;
+
     DBCrypto::DBRowOptional row_optional;
-    if (dataType == DBDataType::CERTIFICATE || dataType == DBDataType::BINARY_DATA) {
-        row_optional = handler.database.getDBRow(alias, cred.smackLabel, dataType);
-    } else if ((static_cast<int>(dataType) >= static_cast<int>(DBDataType::DB_KEY_FIRST))
-            && (static_cast<int>(dataType) <= static_cast<int>(DBDataType::DB_KEY_LAST)))
+    if (dataType == DBDataType::CERTIFICATE || dataType == DBDataType::BINARY_DATA)
     {
-        row_optional = handler.database.getKeyDBRow(alias, cred.smackLabel);
-    } else {
+        row_optional = handler.database.getDBRow(alias, label_to_use, dataType);
+    }
+    else if ((static_cast<int>(dataType) >= static_cast<int>(DBDataType::DB_KEY_FIRST)) &&
+             (static_cast<int>(dataType) <= static_cast<int>(DBDataType::DB_KEY_LAST)))
+    {
+        row_optional = handler.database.getKeyDBRow(alias, label_to_use);
+    }
+    else {
         LogError("Unknown type of requested data" << (int)dataType);
         return CKM_API_ERROR_BAD_REQUEST;
     }
@@ -445,13 +482,14 @@ RawBuffer CKMLogic::getData(
     int commandId,
     DBDataType dataType,
     const Alias &alias,
+    const std::string &label,
     const Password &password)
 {
     int retCode = CKM_API_SUCCESS;
     DBRow row;
 
     try {
-        retCode = getDataHelper(cred, dataType, alias, password, row);
+        retCode = getDataHelper(cred, dataType, alias, label, password, row);
     } catch (const KeyProvider::Exception::Base &e) {
         LogError("KeyProvider failed with error: " << e.GetMessage());
         retCode = CKM_API_ERROR_SERVER_ERROR;
@@ -496,15 +534,15 @@ RawBuffer CKMLogic::getDataList(
     DBDataType dataType)
 {
     int retCode = CKM_API_SUCCESS;
-    AliasVector aliasVector;
+    LabelAliasVector labelAliasVector;
 
     if (0 < m_userDataMap.count(cred.uid)) {
         auto &handler = m_userDataMap[cred.uid];
         Try {
             if (dataType == DBDataType::CERTIFICATE || dataType == DBDataType::BINARY_DATA) {
-                handler.database.getAliases(cred.smackLabel, dataType, aliasVector);
+                handler.database.getAliases(cred.smackLabel, dataType, labelAliasVector);
             } else {
-                handler.database.getKeyAliases(cred.smackLabel, aliasVector);
+                handler.database.getKeyAliases(cred.smackLabel, labelAliasVector);
             }
         } Catch (CKM::Exception) {
             LogError("Failed to get aliases");
@@ -518,7 +556,7 @@ RawBuffer CKMLogic::getDataList(
                                              commandId,
                                              retCode,
                                              static_cast<int>(dataType),
-                                             aliasVector);
+                                             labelAliasVector);
     return response.Pop();
 }
 
@@ -696,7 +734,7 @@ RawBuffer CKMLogic::getCertificateChain(
         }
 
         for (auto &i: aliasVector) {
-            retCode = getDataHelper(cred, DBDataType::CERTIFICATE, i, Password(), row);
+            retCode = getDataHelper(cred, DBDataType::CERTIFICATE, i, std::string(), Password(), row);
 
             if (retCode != CKM_API_SUCCESS)
                 goto senderror;
@@ -750,7 +788,7 @@ RawBuffer CKMLogic::createSignature(
 
     try {
         do {
-            retCode = getDataHelper(cred, DBDataType::DB_KEY_FIRST, privateKeyAlias, password, row);
+            retCode = getDataHelper(cred, DBDataType::DB_KEY_FIRST, privateKeyAlias, std::string(), password, row);
             if (CKM_API_SUCCESS != retCode) {
                 LogError("getDataHelper return error");
                 break;
@@ -804,12 +842,12 @@ RawBuffer CKMLogic::verifySignature(
             DBRow row;
             KeyImpl key;
 
-            retCode = getDataHelper(cred, DBDataType::DB_KEY_FIRST, publicKeyOrCertAlias, password, row);
+            retCode = getDataHelper(cred, DBDataType::DB_KEY_FIRST, publicKeyOrCertAlias, std::string(), password, row);
 
             if (retCode == CKM_API_SUCCESS) {
                 key = KeyImpl(row.data);
             } else if (retCode == CKM_API_ERROR_DB_ALIAS_UNKNOWN) {
-                retCode = getDataHelper(cred, DBDataType::CERTIFICATE, publicKeyOrCertAlias, password, row);
+                retCode = getDataHelper(cred, DBDataType::CERTIFICATE, publicKeyOrCertAlias, std::string(), password, row);
                 if (retCode != CKM_API_SUCCESS)
                     break;
                 CertificateImpl cert(row.data, DataFormat::FORM_DER);

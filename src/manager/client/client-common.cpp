@@ -37,7 +37,8 @@
 #include <message-buffer.h>
 
 #include <ckm/ckm-error.h>
-
+#include <ckmc/ckmc-type.h>
+#include <protocols.h>
 #include <client-common.h>
 
 IMPLEMENT_SAFE_SINGLETON(CKM::Log::LogSystem);
@@ -73,6 +74,42 @@ int waitForSocket(int sock, int event, int timeout) {
 } // namespace anonymous
 
 namespace CKM {
+
+AliasSupport::AliasSupport(const Alias &alias)
+{
+    std::size_t separator_pos = alias.rfind(CKM::LABEL_ALIAS_SEPARATOR);
+    if(separator_pos == std::string::npos)
+    {
+        m_label.clear();
+        m_alias = alias;
+    }
+    else
+    {
+        m_label = alias.substr(0, separator_pos);
+        m_alias = alias.substr(separator_pos + strlen(CKM::LABEL_ALIAS_SEPARATOR));
+    }
+}
+
+Alias AliasSupport::merge(const std::string &label, const std::string &alias)
+{
+    if(label.empty())
+        return alias;
+
+    std::stringstream output;
+    output << label << std::string(CKM::LABEL_ALIAS_SEPARATOR) << alias;
+    return output.str();
+}
+
+const Alias & AliasSupport::getAlias() const {
+    return m_alias;
+}
+const std::string & AliasSupport::getLabel() const {
+    return m_label;
+}
+
+bool AliasSupport::isLabelEmpty() const {
+    return m_label.empty();
+}
 
 
 int connectSocket(int& sock, char const * const interface) {

@@ -298,7 +298,7 @@ BOOST_AUTO_TEST_CASE(DBperfAliasRemoval)
     for(unsigned int l=0; l<num_labels; l++)
     {
         generate_label(l, label);
-        AliasVector expect_no_data;
+        LabelAliasVector expect_no_data;
         BOOST_REQUIRE_NO_THROW(m_db.getAliases(label, DBDataType::BINARY_DATA, expect_no_data));
         BOOST_REQUIRE(0 == expect_no_data.size());
     }
@@ -317,7 +317,7 @@ BOOST_AUTO_TEST_CASE(DBperfGetAliasList)
     performance_start("getAliases");
     for(unsigned int t=0; t<(c_test_retries/num_labels); t++)
     {
-        AliasVector ret_list;
+        LabelAliasVector ret_list;
         generate_label(rand()%num_labels, label);
 
         BOOST_REQUIRE_NO_THROW(m_db.getAliases(label, DBDataType::BINARY_DATA, ret_list));

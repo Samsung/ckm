@@ -14,7 +14,7 @@
  *  limitations under the License
  *
  *
- * @file        ckmc-type.h
+ * @file        ckmc-type.cpp
  * @author      Yuseok Jeon(yuseok.jeon@samsung.com)
  * @version     1.0
  * @brief       new and free methods for the struct of CAPI
@@ -28,10 +28,15 @@
 #include <ckmc/ckmc-type.h>
 #include <ckmc/ckmc-error.h>
 #include <ckmc-type-converter.h>
+#include <protocols.h>
 #include <openssl/x509v3.h>
 #include <openssl/pkcs12.h>
 #include <openssl/evp.h>
 #include <openssl/pem.h>
+
+
+const char * const ckmc_label_alias_separator = CKM::LABEL_ALIAS_SEPARATOR;
+
 
 int _ckmc_load_cert_from_x509(X509 *xCert, ckmc_cert_s **cert);
 
