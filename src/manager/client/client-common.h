@@ -26,6 +26,8 @@
 #ifndef _KEY_MANAGER_CLIENT_
 #define _KEY_MANAGER_CLIENT_
 
+#include <unistd.h>
+
 #include <vector>
 #include <functional>
 

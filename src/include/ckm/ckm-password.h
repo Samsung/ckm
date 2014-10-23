@@ -13,22 +13,22 @@
  *  limitations under the License
  *
  *
- * @file        safe-buffer.h
+ * @file        ckm-password.h
  * @author      Bartlomiej Grzelewski (b.grzelewski@samsung.com)
  * @version     1.0
- * @brief       Custom allocator for std
+ * @brief       Password holder with auto-erase on cleanup
  */
 
 #ifndef _SAFE_PASSWORD_H_
 #define _SAFE_PASSWORD_H_
 
 #include <ckm/ckm-raw-buffer.h>
-#include <boost/container/string.hpp>
+#include <string>
 
 namespace CKM {
 
-typedef boost::container::basic_string<char, std::char_traits<char>, erase_on_dealloc<char>> Password;
+typedef std::basic_string<char, std::char_traits<char>, std_erase_on_dealloc<char>> Password;
 
 } // namespace CKM
 
-#endif //_ERASE_ON_DEALLOC_H_
+#endif //_SAFE_PASSWORD_H_

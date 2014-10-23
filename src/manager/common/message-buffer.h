@@ -26,8 +26,6 @@
 #ifndef _CENT_KEY_MNG_SOCKET_BUFFER_
 #define _CENT_KEY_MNG_SOCKET_BUFFER_
 
-#include <vector>
-
 #include <dpl/binary_queue.h>
 #include <dpl/exception.h>
 #include <dpl/serialization.h>

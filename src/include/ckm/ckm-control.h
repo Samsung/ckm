@@ -22,7 +22,6 @@
 #pragma once
 
 #include <string>
-#include <vector>
 #include <memory>
 
 #include <ckm/ckm-error.h>

@@ -21,6 +21,7 @@
  */
 #pragma once
 
+#include <vector>
 #include <memory>
 
 #include <ckm/ckm-type.h>

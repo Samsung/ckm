@@ -13,7 +13,7 @@
  *  limitations under the License
  *
  *
- * @file        safe-buffer.h
+ * @file        ckm-raw-buffer.h
  * @author      Krzysztof Jackiewicz (k.jackiewicz@samsung.com)
  * @version     1.0
  * @brief       Custom allocator for std
@@ -22,43 +22,70 @@
 #ifndef _SAFE_BUFFER_H_
 #define _SAFE_BUFFER_H_
 
-#include <boost/container/vector.hpp>
+#include <stddef.h>
+#include <string.h>
+#include <vector>
 
 namespace CKM {
 
 template <typename T>
-struct erase_on_dealloc {
-    typedef T value_type;
+struct std_erase_on_dealloc
+{
+    // MJK: if re-factoring, remember not to inherit from the std::allocator !
+    // MJK: to be replaced with much shorter version once std::allocator_traits
+    // becomes supported in STL containers (i.e. list, vector and string)
+    typedef size_t    size_type;
+    typedef ptrdiff_t difference_type;
+    typedef T*        pointer;
+    typedef const T*  const_pointer;
+    typedef T&        reference;
+    typedef const T&  const_reference;
+    typedef T         value_type;
 
-    erase_on_dealloc() noexcept {}
+    std_erase_on_dealloc() = default;
 
     template <typename U>
-    erase_on_dealloc (const erase_on_dealloc<U>&) noexcept {}
+    std_erase_on_dealloc(const std_erase_on_dealloc<U>&) {}
 
-    T* allocate (std::size_t n)
-    {
+    T* allocate(std::size_t n) {
         return static_cast<T*>(::operator new(n*sizeof(T)));
     }
 
-    void deallocate (T* p, std::size_t n)
-    {
+    void deallocate(T* ptr, std::size_t n) {
         // clear the memory before deleting
-        memset(p,0,n*sizeof(T));
-        ::operator delete(p);
+        memset(ptr, 0 ,n * sizeof(T));
+        ::operator delete(ptr);
+    }
+
+    template<typename _Tp1>
+    struct rebind
+    {
+        typedef std_erase_on_dealloc<_Tp1> other;
+    };
+
+    void construct(pointer p, const T& val) {
+        new (p) T(val);
+    }
+
+    void destroy(pointer p) {
+        p->~T();
+    }
+
+    size_type max_size() const {
+        return size_type(-1);
     }
 };
 
 template <typename T, typename U>
-constexpr bool operator== (const erase_on_dealloc<T>&, const erase_on_dealloc<U>&) noexcept
-{
+inline bool operator == (const std_erase_on_dealloc<T>&, const std_erase_on_dealloc<U>&) {
     return true;
 }
 
 template <typename T, typename U>
-constexpr bool operator!= (const erase_on_dealloc<T>&, const erase_on_dealloc<U>&) noexcept
-{
-    return false;
+inline bool operator != (const std_erase_on_dealloc<T>& a, const std_erase_on_dealloc<U>& b) {
+    return !(a == b);
 }
+
 
 /*
  * TODO replace with:
@@ -68,12 +95,11 @@ constexpr bool operator!= (const erase_on_dealloc<T>&, const erase_on_dealloc<U>
  *
  *  typedef SafeBuffer<unsigned char> RawBuffer
  *
- * when gcc 4.7/4.8 is available. Also replace boost::vector with std::vector
- * in other parts of code
+ * when gcc 4.7/4.8 is available.
  */
 template <typename T>
 struct SafeBuffer {
-    typedef boost::container::vector<T, erase_on_dealloc<T>> Type;
+    typedef std::vector<T, std_erase_on_dealloc<T>> Type;
 };
 
 // used to pass password and raw key data
@@ -81,4 +107,4 @@ typedef SafeBuffer<unsigned char>::Type RawBuffer;
 
 } // namespace CKM
 
-#endif //_ERASE_ON_DEALLOC_H_
+#endif //_SAFE_BUFFER_H_

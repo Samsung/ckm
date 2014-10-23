@@ -74,23 +74,5 @@ const char* toDBAccessRight(AccessRight access_right_type) {
     }
 }
 
-PolicySerializable::PolicySerializable()
-{}
-
-
-PolicySerializable::PolicySerializable(const Policy &policy)
-  : Policy(policy)
-{}
-
-PolicySerializable::PolicySerializable(IStream &stream) {
-    Deserialization::Deserialize(stream, password);
-    Deserialization::Deserialize(stream, extractable);
-}
-
-void PolicySerializable::Serialize(IStream &stream) const {
-    Serialization::Serialize(stream, password);
-    Serialization::Serialize(stream, extractable);
-}
-
 } // namespace CKM
 

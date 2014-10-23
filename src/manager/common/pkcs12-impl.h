@@ -21,7 +21,6 @@
 #pragma once
 
 #include <memory>
-#include <vector>
 
 #include <ckm/ckm-pkcs12.h>
 

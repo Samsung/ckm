@@ -92,10 +92,16 @@ const char* toDBAccessRight(AccessRight access_right_type);
 class IStream;
 
 struct PolicySerializable : public Policy, ISerializable {
-    PolicySerializable();
-    explicit PolicySerializable(const Policy &);
-    explicit PolicySerializable(IStream &);
-    void Serialize(IStream &) const;
+    PolicySerializable() {};
+    explicit PolicySerializable(const Policy &policy) : Policy(policy) {}
+    explicit PolicySerializable(IStream &stream) {
+        Deserialization::Deserialize(stream, password);
+        Deserialization::Deserialize(stream, extractable);
+    }
+    void Serialize(IStream &stream) const {
+        Serialization::Serialize(stream, password);
+        Serialization::Serialize(stream, extractable);
+    }
 };
 
 } // namespace CKM

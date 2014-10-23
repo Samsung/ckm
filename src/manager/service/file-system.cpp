@@ -29,6 +29,8 @@
 #include <string>
 #include <sstream>
 #include <fstream>
+#include <memory>
+#include <stdexcept>
 
 #include <dpl/errno_string.h>
 #include <dpl/log/log.h>
