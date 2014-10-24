@@ -26,12 +26,9 @@
 #include <ckmc/ckmc-manager.h>
 #include <ckmc/ckmc-error.h>
 #include <ckmc-type-converter.h>
-#include <client-common.h>
 #include <iostream>
 #include <string.h>
 
-namespace
-{
 CKM::Password _tostring(const char *str)
 {
     if(str == NULL)
@@ -77,9 +74,6 @@ ckmc_cert_list_s *_toNewCkmCertList(CKM::CertificateShPtrVector &certVector)
     return start;
 }
 
-}
-
-
 KEY_MANAGER_CAPI
 int ckmc_save_key(const char *alias, const ckmc_key_s key, const ckmc_policy_s policy)
 {
@@ -115,8 +109,9 @@ int ckmc_remove_key(const char *alias)
     if(alias == NULL) {
         return CKMC_ERROR_INVALID_PARAMETER;
     }
+    CKM::Alias ckmAlias(alias);
 
-    int ret =  mgr->removeKey(alias);
+    int ret =  mgr->removeKey(ckmAlias);
     return to_ckmc_error(ret);
 }
 
@@ -129,9 +124,10 @@ int ckmc_get_key(const char *alias, const char *password, ckmc_key_s **key)
     if(alias == NULL || key == NULL) {
         return CKMC_ERROR_INVALID_PARAMETER;
     }
+    CKM::Alias ckmAlias(alias);
 
     CKM::ManagerShPtr mgr = CKM::Manager::create();
-    if( (ret = mgr->getKey(alias, _tostring(password), ckmKey)) != CKM_API_SUCCESS) {
+    if( (ret = mgr->getKey(ckmAlias, _tostring(password), ckmKey)) != CKM_API_SUCCESS) {
         return to_ckmc_error(ret);
     }
 
@@ -161,8 +157,8 @@ int ckmc_get_key_alias_list(ckmc_alias_list_s** alias_list)
 
     ckmc_alias_list_s *plist = NULL;
 
-    for (const auto it : aliasVector) {
-        char *alias = strndup(it.c_str(), it.size());
+    for (auto it = aliasVector.begin(); it != aliasVector.end(); it++) {
+        char *alias = strndup(it->c_str(), it->size());
 
         if (plist == NULL) { // first
             ret = ckmc_alias_list_new(alias, &plist);
@@ -179,8 +175,9 @@ int ckmc_get_key_alias_list(ckmc_alias_list_s** alias_list)
     }
 
     if(plist == NULL) { // if the alias_list size is zero
-        return CKMC_ERROR_DB_ALIAS_UNKNOWN;
+              return CKMC_ERROR_DB_ALIAS_UNKNOWN ;
     }
+
 
     return CKMC_ERROR_NONE;
 }
@@ -215,9 +212,10 @@ int ckmc_remove_cert(const char *alias)
     if(alias == NULL) {
         return CKMC_ERROR_INVALID_PARAMETER;
     }
+    CKM::Alias ckmAlias(alias);
 
     CKM::ManagerShPtr mgr = CKM::Manager::create();
-    int ret = mgr->removeCertificate(alias);
+    int ret = mgr->removeCertificate(ckmAlias);
 
     return to_ckmc_error(ret);
 }
@@ -231,9 +229,10 @@ int ckmc_get_cert(const char *alias, const char *password, ckmc_cert_s **cert)
     if(alias == NULL || cert == NULL) {
         return CKMC_ERROR_INVALID_PARAMETER;
     }
+    CKM::Alias ckmAlias(alias);
 
     CKM::ManagerShPtr mgr = CKM::Manager::create();
-    if( (ret = mgr->getCertificate(alias, _tostring(password), ckmCert)) != CKM_API_SUCCESS) {
+    if( (ret = mgr->getCertificate(ckmAlias, _tostring(password), ckmCert)) != CKM_API_SUCCESS) {
         return to_ckmc_error(ret);
     }
 
@@ -261,8 +260,8 @@ int ckmc_get_cert_alias_list(ckmc_alias_list_s** alias_list) {
 
     ckmc_alias_list_s *plist = NULL;
 
-    for (const auto it : aliasVector) {
-        char *alias = strndup(it.c_str(), it.size());
+    for (auto it = aliasVector.begin(); it != aliasVector.end(); it++) {
+        char *alias = strndup(it->c_str(), it->size());
 
         if (plist == NULL) { // first
             ret  = ckmc_alias_list_new(alias, &plist);
@@ -279,8 +278,9 @@ int ckmc_get_cert_alias_list(ckmc_alias_list_s** alias_list) {
     }
 
     if(plist == NULL) { // if the alias_list size is zero
-        return CKMC_ERROR_DB_ALIAS_UNKNOWN;
+            return CKMC_ERROR_DB_ALIAS_UNKNOWN ;
     }
+
 
     return CKMC_ERROR_NONE;
 }
@@ -312,9 +312,10 @@ int ckmc_remove_data(const char *alias)
     if(alias == NULL) {
         return CKMC_ERROR_INVALID_PARAMETER;
     }
+    CKM::Alias ckmAlias(alias);
 
     CKM::ManagerShPtr mgr = CKM::Manager::create();
-    int ret = mgr->removeData(alias);
+    int ret = mgr->removeData(ckmAlias);
     return to_ckmc_error(ret);
 }
 
@@ -327,9 +328,10 @@ int ckmc_get_data(const char *alias, const char *password, ckmc_raw_buffer_s **d
     if(alias == NULL || data == NULL) {
         return CKMC_ERROR_INVALID_PARAMETER;
     }
+    CKM::Alias ckmAlias(alias);
 
     CKM::ManagerShPtr mgr = CKM::Manager::create();
-    if( (ret = mgr->getData(alias, _tostring(password), ckmBuff)) != CKM_API_SUCCESS) {
+    if( (ret = mgr->getData(ckmAlias, _tostring(password), ckmBuff)) != CKM_API_SUCCESS) {
         return to_ckmc_error(ret);
     }
 
@@ -357,8 +359,8 @@ int ckmc_get_data_alias_list(ckmc_alias_list_s** alias_list){
 
     ckmc_alias_list_s *plist = NULL;
 
-    for (const auto it : aliasVector) {
-        char *alias = strndup(it.c_str(), it.size());
+    for(auto it = aliasVector.begin(); it != aliasVector.end(); it++) {
+        char *alias = strndup(it->c_str(), it->size());
 
         if (plist == NULL) { // first
             ret = ckmc_alias_list_new(alias, &plist);
@@ -375,7 +377,7 @@ int ckmc_get_data_alias_list(ckmc_alias_list_s** alias_list){
     }
 
     if(plist == NULL) { // if the alias_list size is zero
-        return CKMC_ERROR_DB_ALIAS_UNKNOWN;
+            return CKMC_ERROR_DB_ALIAS_UNKNOWN ;
     }
 
     return CKMC_ERROR_NONE;

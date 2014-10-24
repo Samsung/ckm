@@ -32,7 +32,6 @@ extern char const * const SERVICE_SOCKET_ECHO;
 extern char const * const SERVICE_SOCKET_CKM_CONTROL;
 extern char const * const SERVICE_SOCKET_CKM_STORAGE;
 extern char const * const SERVICE_SOCKET_OCSP;
-extern char const * const LABEL_ALIAS_SEPARATOR;
 
 enum class ControlCommand : int {
     UNLOCK_USER_KEY,
@@ -79,8 +78,6 @@ enum class DBDataType : int {
     CERTIFICATE,
     BINARY_DATA,
 };
-
-typedef std::vector<std::pair<std::string, Alias> > LabelAliasVector;
 
 DBDataType toDBDataType(KeyType key);
 KeyType toKeyType(DBDataType dbDataType);

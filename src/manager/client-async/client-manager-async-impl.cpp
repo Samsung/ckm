@@ -105,13 +105,11 @@ void ManagerAsync::Impl::removeBinaryData(const ManagerAsync::ObserverPtr& obser
         return;
     }
     try_catch_async([&] {
-        AliasSupport helper(alias);
         sendToStorage(observer,
                       static_cast<int>(LogicCommand::REMOVE),
                       m_counter,
                       static_cast<int>(dataType),
-                      helper.getAlias(),
-                      helper.getLabel());
+                      alias);
     }, [&observer](int error){ observer->ReceivedError(error); } );
 }
 
@@ -126,13 +124,11 @@ void ManagerAsync::Impl::getBinaryData(const ManagerAsync::ObserverPtr& observer
         return;
     }
     try_catch_async([&] {
-        AliasSupport helper(alias);
         sendToStorage(observer,
                       static_cast<int>(LogicCommand::GET),
                       m_counter,
                       static_cast<int>(sendDataType),
-                      helper.getAlias(),
-                      helper.getLabel(),
+                      alias,
                       password);
     }, [&observer](int error){ observer->ReceivedError(error); } );
 }

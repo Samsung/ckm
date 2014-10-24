@@ -33,8 +33,8 @@ namespace {
     const char *key_table = "KEY_TABLE";
     const char *permission_table = "PERMISSION_TABLE";
 
-// CKM_TABLE (alias TEXT, label TEXT, restricted INT, exportable INT, dataType INT, algorithmType INT,
-//            encryptionScheme INT, iv BLOB, dataSize INT, data BLOB, tag BLOB, idx INT )
+// CKM_TABLE (alias TEXT, label TEXT, restricted INT, exportable INT, dataType INT,
+//            algorithmType INT, encryptionScheme INT, iv BLOB, dataSize INT, data BLOB)
 
     const char *db_create_main_cmd =
             "CREATE TABLE CKM_TABLE("
@@ -48,9 +48,8 @@ namespace {
             "   dataSize INTEGER NOT NULL,"
             "   data BLOB NOT NULL,"
             "   tag BLOB NOT NULL,"
-            "   idx INTEGER PRIMARY KEY AUTOINCREMENT,"
-            "   UNIQUE(alias, label)"
-            "); CREATE INDEX ckm_index_label ON CKM_TABLE(label);"; // based on ANALYZE and performance test result
+            "   PRIMARY KEY(alias)"
+            "); CREATE INDEX alias_idx ON CKM_TABLE(alias);";
 
     const char *insert_main_cmd =
             "INSERT INTO CKM_TABLE("
@@ -71,13 +70,9 @@ namespace {
             //                                          1
             "SELECT dataType FROM CKM_TABLE WHERE alias=?;";
 
-    const char *select_label_global_alias_cmd =
+    const char *select_check_global_alias_cmd =
             //                                       1
             "SELECT label FROM CKM_TABLE WHERE alias=?;";
-
-    const char *select_label_index_global_alias_cmd =
-            //                                       1
-            "SELECT label, idx FROM CKM_TABLE WHERE alias=?;";
 
     const char *select_key_alias_cmd =
             //                                   1
@@ -109,20 +104,19 @@ namespace {
             "DELETE FROM KEY_TABLE WHERE label=?";
 
 
-// PERMISSION_TABLE (alias TEXT, label TEXT, access_flags TEXT, idx INT)
+// PERMISSION_TABLE (label TEXT, label TEXT, access_flags TEXT)
 
     const char *db_create_permission_cmd =
             "CREATE TABLE PERMISSION_TABLE("
             "   alias TEXT NOT NULL,"
             "   label TEXT NOT NULL,"
             "   accessFlags TEXT NOT NULL,"
-            "   idx INTEGER NOT NULL,"
-            "   FOREIGN KEY(idx) REFERENCES CKM_TABLE(idx) ON DELETE CASCADE,"
+            "   FOREIGN KEY(alias) REFERENCES CKM_TABLE(alias) ON DELETE CASCADE,"
             "   PRIMARY KEY(alias, label)"
-            "); CREATE INDEX perm_index_idx ON PERMISSION_TABLE(idx);"; // based on ANALYZE and performance test result
+            "); CREATE INDEX alias_label_idx ON PERMISSION_TABLE(alias, label);";
 
     const char *set_permission_alias_cmd =
-            "REPLACE INTO PERMISSION_TABLE(alias, label, accessFlags, idx) VALUES (?, ?, ?, ?);";
+            "REPLACE INTO PERMISSION_TABLE(alias, label, accessFlags) VALUES (?, ?, ?);";
 
     const char *select_permission_cmd =
             //                                                    1           2
@@ -137,11 +131,11 @@ namespace {
 
     const char *select_type_cross_cmd =
             //                                                                                                        1              2             3
-            "SELECT C.label, C.alias FROM CKM_TABLE AS C LEFT JOIN PERMISSION_TABLE AS P ON C.alias = P.alias WHERE C.dataType=? AND (C.label=? OR (P.label=? AND P.accessFlags IS NOT NULL)) GROUP BY C.alias;";
+            "SELECT C.alias FROM CKM_TABLE AS C LEFT JOIN PERMISSION_TABLE AS P ON C.alias = P.alias WHERE C.dataType=? AND (C.label=? OR (P.label=? AND P.accessFlags IS NOT NULL)) GROUP BY C.alias;";
 
     const char *select_key_type_cross_cmd =
             //                                                                                                       1                 2              3             4
-            "SELECT C.label, C.alias FROM CKM_TABLE AS C LEFT JOIN PERMISSION_TABLE AS P ON C.alias=P.alias WHERE C.dataType>=? AND C.dataType<=? AND (C.label=? OR (P.label=? AND P.accessFlags IS NOT NULL)) GROUP BY C.alias;";
+            "SELECT C.alias FROM CKM_TABLE AS C LEFT JOIN PERMISSION_TABLE AS P ON C.alias=P.alias WHERE C.dataType>=? AND C.dataType<=? AND (C.label=? OR (P.label=? AND P.accessFlags IS NOT NULL)) GROUP BY C.alias;";
 }
 
 namespace CKM {
@@ -224,35 +218,17 @@ using namespace DB;
         transaction.commit();
     }
 
-    void DBCrypto::getLabelForAlias(const std::string& alias, std::string & label) const {
+    std::string DBCrypto::getLabelForAlias(const std::string& alias) const {
         SqlConnection::DataCommandUniquePtr checkCmd =
-                m_connection->PrepareDataCommand(select_label_global_alias_cmd);
+                m_connection->PrepareDataCommand(select_check_global_alias_cmd);
         checkCmd->BindString(1, alias.c_str());
         if(checkCmd->Step()) {
-            label = checkCmd->GetColumnString(0);
+            return checkCmd->GetColumnString(0);
         } else
-            label.clear();
+            return std::string();
     }
-
-    void DBCrypto::getLabelForAlias(const std::string& alias, std::string & label, int & index) const
-    {
-        SqlConnection::DataCommandUniquePtr checkCmd =
-                m_connection->PrepareDataCommand(select_label_index_global_alias_cmd);
-        checkCmd->BindString(1, alias.c_str());
-        if(checkCmd->Step()) {
-            label = checkCmd->GetColumnString(0);
-            index = checkCmd->GetColumnInteger(1);
-        }
-        else
-        {
-            label.clear();
-            index = -1;
-        }
-    }
-
     bool DBCrypto::checkGlobalAliasExist(const std::string& alias) const {
-        std::string label;
-        getLabelForAlias(alias, label);
+        std::string label = this->getLabelForAlias(alias);
         if(label.empty() == false) {
             LogDebug("Global alias '" << alias  << "' exists already for label " << label);
             return true;
@@ -460,7 +436,7 @@ using namespace DB;
     void DBCrypto::getSingleType(
             const std::string &clnt_label,
             DBDataType type,
-            LabelAliasVector& aliases) const
+            AliasVector& aliases) const
     {
         Try{
             SqlConnection::DataCommandUniquePtr selectCommand =
@@ -470,9 +446,9 @@ using namespace DB;
             selectCommand->BindString(3, clnt_label.c_str());
 
             while(selectCommand->Step()) {
-                std::string label = selectCommand->GetColumnString(0);
-                Alias alias = selectCommand->GetColumnString(1);
-                aliases.push_back(std::make_pair(label, alias));
+                Alias alias;
+                alias = selectCommand->GetColumnString(0);
+                aliases.push_back(alias);
             }
             return;
         } Catch (SqlConnection::Exception::InvalidColumn) {
@@ -489,13 +465,13 @@ using namespace DB;
     void DBCrypto::getAliases(
         const std::string &clnt_label,
         DBDataType type,
-        LabelAliasVector& aliases)
+        AliasVector& aliases)
     {
         getSingleType(clnt_label, type, aliases);
     }
 
 
-    void DBCrypto::getKeyAliases(const std::string &clnt_label, LabelAliasVector &aliases)
+    void DBCrypto::getKeyAliases(const std::string &clnt_label, AliasVector &aliases)
     {
         Try{
             Transaction transaction(this);
@@ -507,9 +483,9 @@ using namespace DB;
             selectCommand->BindString(4, clnt_label.c_str());
 
             while(selectCommand->Step()) {
-                std::string label = selectCommand->GetColumnString(0);
-                Alias alias = selectCommand->GetColumnString(1);
-                aliases.push_back(std::make_pair(label, alias));
+                Alias alias;
+                alias = selectCommand->GetColumnString(0);
+                aliases.push_back(alias);
             }
             transaction.commit();
             return;
@@ -528,8 +504,7 @@ using namespace DB;
         Try {
             Transaction transaction(this);
 
-            std::string owner_label;
-            getLabelForAlias(alias, owner_label);
+            std::string owner_label = getLabelForAlias(alias);
             if( ! owner_label.empty() )
             {
                 // check access rights here
@@ -646,9 +621,7 @@ using namespace DB;
             Transaction transaction(this);
 
             // check if label is present
-            int ckm_tab_index;
-            std::string owner_label;
-            getLabelForAlias(alias, owner_label, ckm_tab_index);
+            std::string owner_label = getLabelForAlias(alias);
             if( ! owner_label.empty() )
             {
                 // owner can not add permissions to itself
@@ -665,7 +638,6 @@ using namespace DB;
                 setPermissionCommand->BindString(1, alias.c_str());
                 setPermissionCommand->BindString(2, accessor_label.c_str());
                 setPermissionCommand->BindString(3, toDBAccessRight(value_to_set));
-                setPermissionCommand->BindInteger(4, ckm_tab_index);
                 setPermissionCommand->Step();
                 transaction.commit();
                 return CKM_API_SUCCESS;
@@ -691,8 +663,7 @@ using namespace DB;
         Try {
             Transaction transaction(this);
 
-            std::string owner_label;
-            getLabelForAlias(alias, owner_label);
+            std::string owner_label = getLabelForAlias(alias);
             if( ! owner_label.empty() )
             {
                 // check access rights here - only owner can modify permissions

@@ -24,7 +24,6 @@
 #include <dpl/log/log.h>
 #include <key-impl.h>
 #include <certificate-impl.h>
-#include <client-common.h>
 
 namespace CKM {
 
@@ -162,18 +161,14 @@ void StorageReceiver::parseGetCommand()
 void StorageReceiver::parseGetListCommand()
 {
     int dataType, retCode;
-    LabelAliasVector labelAliasVector;
-    m_buffer.Deserialize(retCode, dataType, labelAliasVector);
+    AliasVector aliasVector;
+    m_buffer.Deserialize(retCode, dataType, aliasVector);
 
     // check error code
     if (retCode != CKM_API_SUCCESS) {
          m_observer->ReceivedError(retCode);
          return;
     }
-
-    AliasVector aliasVector;
-    for(const auto it : labelAliasVector)
-        aliasVector.push_back( AliasSupport::merge(it.first, it.second) );
 
     switch(type(dataType))
     {

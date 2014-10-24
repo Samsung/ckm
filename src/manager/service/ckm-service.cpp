@@ -192,7 +192,6 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer)
     int msgID;
     int tmpDataType;
     Alias alias;
-    std::string label;
     std::string user;
 
     buffer.Deserialize(command);
@@ -224,24 +223,22 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer)
         }
         case LogicCommand::REMOVE:
         {
-            buffer.Deserialize(tmpDataType, alias, label);
+            buffer.Deserialize(tmpDataType, alias);
             return m_logic->removeData(
                 cred,
                 msgID,
                 static_cast<DBDataType>(tmpDataType),
-                alias,
-                label);
+                alias);
         }
         case LogicCommand::GET:
         {
             Password password;
-            buffer.Deserialize(tmpDataType, alias, label, password);
+            buffer.Deserialize(tmpDataType, alias, password);
             return m_logic->getData(
                 cred,
                 msgID,
                 static_cast<DBDataType>(tmpDataType),
                 alias,
-                label,
                 password);
         }
         case LogicCommand::GET_LIST:
@@ -342,26 +339,28 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer)
         case LogicCommand::ALLOW_ACCESS:
         {
             Alias item_alias;
+            std::string accessor_label;
             int req_rights;
-            buffer.Deserialize(item_alias, label, req_rights);
+            buffer.Deserialize(item_alias, accessor_label, req_rights);
             return m_logic->allowAccess(
                 cred,
                 command,
                 msgID,
                 item_alias,
-                label,
+                accessor_label,
                 static_cast<AccessRight>(req_rights));
         }
         case LogicCommand::DENY_ACCESS:
         {
             Alias item_alias;
-            buffer.Deserialize(item_alias, label);
+            std::string accessor_label;
+            buffer.Deserialize(item_alias, accessor_label);
             return m_logic->denyAccess(
                 cred,
                 command,
                 msgID,
                 item_alias,
-                label);
+                accessor_label);
         }
         default:
             Throw(Exception::BrokenProtocol);

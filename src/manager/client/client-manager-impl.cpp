@@ -127,12 +127,10 @@ int ManagerImpl::removeBinaryData(const Alias &alias, DBDataType dataType)
             return CKM_API_ERROR_INPUT_PARAM;
 
         MessageBuffer recv;
-        AliasSupport helper(alias);
         auto send = MessageBuffer::Serialize(static_cast<int>(LogicCommand::REMOVE),
                                              m_counter,
                                              static_cast<int>(dataType),
-                                             helper.getAlias(),
-                                             helper.getLabel());
+                                             alias);
         int retCode = sendToServer(
             SERVICE_SOCKET_CKM_STORAGE,
             send.Pop(),
@@ -179,12 +177,10 @@ int ManagerImpl::getBinaryData(
             return CKM_API_ERROR_INPUT_PARAM;
 
         MessageBuffer recv;
-        AliasSupport helper(alias);
         auto send = MessageBuffer::Serialize(static_cast<int>(LogicCommand::GET),
                                              m_counter,
                                              static_cast<int>(sendDataType),
-                                             helper.getAlias(),
-                                             helper.getLabel(),
+                                             alias,
                                              password);
         int retCode = sendToServer(
             SERVICE_SOCKET_CKM_STORAGE,
@@ -303,14 +299,10 @@ int ManagerImpl::getBinaryDataAliasVector(DBDataType dataType, AliasVector &alia
         int command;
         int counter;
         int tmpDataType;
-        LabelAliasVector labelAliasVector;
-        recv.Deserialize(command, counter, retCode, tmpDataType, labelAliasVector);
+        recv.Deserialize(command, counter, retCode, tmpDataType, aliasVector);
         if ((command != static_cast<int>(LogicCommand::GET_LIST)) || (counter != m_counter)) {
             return CKM_API_ERROR_UNKNOWN;
         }
-
-        for(const auto it : labelAliasVector)
-            aliasVector.push_back( AliasSupport::merge(it.first, it.second) );
 
         return retCode;
     });
