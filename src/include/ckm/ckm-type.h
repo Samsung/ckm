@@ -92,11 +92,6 @@ enum class DBCMAlgType : int {
     COUNT
 };
 
-enum class CCModeState : int {
-    CC_MODE_OFF = 0,
-    CC_MODE_ON
-};
-
 enum class AccessRight: int {
     AR_READ = 0,
     AR_READ_REMOVE

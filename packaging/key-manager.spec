@@ -17,6 +17,7 @@ BuildRequires: libattr-devel
 BuildRequires: pkgconfig(libsmack)
 BuildRequires: pkgconfig(libsystemd-daemon)
 BuildRequires: pkgconfig(db-util)
+BuildRequires: pkgconfig(vconf)
 BuildRequires: boost-devel
 Requires: libkey-manager-common = %{version}-%{release}
 %{?systemd_requires}

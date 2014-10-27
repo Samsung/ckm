@@ -190,15 +190,10 @@ public:
         });
     }
 
-    virtual int setCCMode(CCModeState mode) {
+    virtual int updateCCMode() {
         return try_catch([&] {
-            if(((mode != CCModeState::CC_MODE_OFF)) && (mode != CCModeState::CC_MODE_ON)) {
-                return CKM_API_ERROR_INPUT_PARAM;
-            }
-
             MessageBuffer recv;
-            auto send = MessageBuffer::Serialize(static_cast<int>(ControlCommand::SET_CC_MODE),
-                                                 static_cast<int>(mode));
+            auto send = MessageBuffer::Serialize(static_cast<int>(ControlCommand::UPDATE_CC_MODE));
             int retCode = sendToServer(
                 SERVICE_SOCKET_CKM_CONTROL,
                 send.Pop(),

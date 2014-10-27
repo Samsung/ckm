@@ -6,6 +6,7 @@ PKG_CHECK_MODULES(KEY_MANAGER_DEP
     libsystemd-daemon
     capi-base-common
     db-util
+    vconf
     REQUIRED
     )
 FIND_PACKAGE(Threads REQUIRED)

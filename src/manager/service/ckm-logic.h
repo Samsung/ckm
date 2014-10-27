@@ -141,7 +141,7 @@ public:
         const HashAlgorithm hash,
         const RSAPaddingAlgorithm padding);
 
-    RawBuffer setCCModeStatus(CCModeState mode_status);
+    RawBuffer updateCCMode();
 
     RawBuffer allowAccess(
         Credentials &cred,
@@ -193,9 +193,11 @@ private:
         const Password &password,           // password for public_key (optional)
         const KeyImpl &genericKey);
 
+    void updateCCMode_internal();
+
     std::map<uid_t, UserData> m_userDataMap;
     CertificateStore m_certStore;
-    CCModeState cc_mode_status;
+    bool m_ccMode;
 };
 
 } // namespace CKM

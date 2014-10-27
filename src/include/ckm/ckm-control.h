@@ -62,7 +62,7 @@ public:
     // database only. This function may be used during application uninstallation.
     virtual int removeApplicationData(const std::string &smackLabel) = 0;
 
-    virtual int setCCMode(CCModeState mode) = 0;
+    virtual int updateCCMode() = 0;
 
     virtual int allowAccess(uid_t user,
                             const std::string &owner,

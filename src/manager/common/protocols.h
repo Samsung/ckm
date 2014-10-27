@@ -40,7 +40,7 @@ enum class ControlCommand : int {
     CHANGE_USER_PASSWORD,
     RESET_USER_PASSWORD,
     REMOVE_APP_DATA,
-    SET_CC_MODE,
+    UPDATE_CC_MODE,
     ALLOW_ACCESS,
     DENY_ACCESS,
     // for backward compatibility append new at the end

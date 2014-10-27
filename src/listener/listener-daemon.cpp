@@ -18,14 +18,6 @@
 
 #define CKM_LISTENER_TAG "CKM_LISTENER"
 
-#ifndef MDPP_MODE_ENFORCING
-#define MDPP_MODE_ENFORCING "Enforcing"
-#endif
-
-#ifndef MDPP_MODE_ENABLED
-#define MDPP_MODE_ENABLED   "Enabled"
-#endif
-
 #ifndef VCONFKEY_SECURITY_MDPP_STATE
 #define VCONFKEY_SECURITY_MDPP_STATE "file/security_mdpp/security_mdpp_state"
 #endif
@@ -93,22 +85,18 @@ void daemonize()
     SLOG(LOG_DEBUG, CKM_LISTENER_TAG, "%s", str);
 }
 
-void callSetCCMode(const char *mdpp_state)
+void callUpdateCCMode()
 {
+    // TODO make it call ckm only if it's already running (lock file)
     auto control = CKM::Control::create();
-    int ret = CKM_API_SUCCESS;
-    if ( !strcmp(mdpp_state, MDPP_MODE_ENABLED) ||
-            !strcmp(mdpp_state, MDPP_MODE_ENFORCING) )
-        ret = control->setCCMode(CKM::CCModeState::CC_MODE_ON);
-    else
-        ret = control->setCCMode(CKM::CCModeState::CC_MODE_OFF);
+    int ret = control->updateCCMode();
 
     SLOG(LOG_DEBUG, CKM_LISTENER_TAG, "Callback caller process id : %d\n", getpid());
 
     if ( ret != CKM_API_SUCCESS )
-        SLOG(LOG_ERROR, CKM_LISTENER_TAG, "CKM::Control::setCCMode error. ret : %d\n", ret);
+        SLOG(LOG_ERROR, CKM_LISTENER_TAG, "CKM::Control::updateCCMode error. ret : %d\n", ret);
     else
-        SLOG(LOG_DEBUG, CKM_LISTENER_TAG, "CKM::Control::setCCMode success. mdpp_state : %s", mdpp_state);
+        SLOG(LOG_DEBUG, CKM_LISTENER_TAG, "CKM::Control::updateCCMode success.\n");
 }
 
 void packageUninstalledEventCallback(
@@ -144,15 +132,9 @@ void packageUninstalledEventCallback(
     }
 }
 
-void ccModeChangedEventCallback(
-    keynode_t *key,
-    void *userData)
+void ccModeChangedEventCallback(keynode_t*, void*)
 {
-    (void) key;
-    (void) userData;
-
-    char *mdpp_state = vconf_get_str(VCONFKEY_SECURITY_MDPP_STATE);
-    callSetCCMode(mdpp_state);
+    callUpdateCCMode();
 }
 
 int main(void) {
@@ -175,8 +157,8 @@ int main(void) {
 
     int ret = 0;
     char *mdpp_state = vconf_get_str(VCONFKEY_SECURITY_MDPP_STATE);
-    if ( mdpp_state ) { // set CC mode and register event callback only when mdpp vconf key exists
-        callSetCCMode(mdpp_state);
+    if ( mdpp_state ) { // Update cc mode and register event callback only when mdpp vconf key exists
+        callUpdateCCMode();
 
         SLOG(LOG_DEBUG, CKM_LISTENER_TAG, "register vconfCCModeChanged event callback start");
         if ( 0 != (ret = vconf_notify_key_changed(VCONFKEY_SECURITY_MDPP_STATE, ccModeChangedEventCallback, NULL)) ) {

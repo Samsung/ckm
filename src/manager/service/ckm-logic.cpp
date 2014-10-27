@@ -19,6 +19,7 @@
  * @version     1.0
  * @brief       Sample service implementation.
  */
+#include <vconf/vconf.h>
 #include <dpl/serialization.h>
 #include <dpl/log/log.h>
 #include <ckm/ckm-error.h>
@@ -29,13 +30,21 @@
 #include <ckm-logic.h>
 #include <key-impl.h>
 
+#ifndef VCONFKEY_SECURITY_MDPP_STATE
+#define VCONFKEY_SECURITY_MDPP_STATE = "file/security_mdpp/security_mdpp_state";
+#endif
+
 namespace {
 const char * const CERT_SYSTEM_DIR = "/etc/ssl/certs";
+
+const char* const MDPP_MODE_ENFORCING = "Enforcing";
+const char* const MDPP_MODE_ENABLED = "Enabled";
+
 } // anonymous namespace
 
 namespace CKM {
 
-CKMLogic::CKMLogic()
+CKMLogic::CKMLogic() : m_ccMode(false)
 {
     int retCode = FileSystem::init();
     // TODO what can I do when init went wrong? exit(-1) ??
@@ -47,7 +56,7 @@ CKMLogic::CKMLogic()
         LogError("Fatal error in CertificateStore::setSystemCertificateDir. Chain creation will not work");
     }
 
-    cc_mode_status = CCModeState::CC_MODE_OFF;
+    updateCCMode_internal();
 }
 
 CKMLogic::~CKMLogic(){}
@@ -111,20 +120,22 @@ RawBuffer CKMLogic::unlockUserKey(uid_t user, const Password &password) {
     return MessageBuffer::Serialize(retCode).Pop();
 }
 
-RawBuffer CKMLogic::setCCModeStatus(CCModeState mode_status) {
-
-    int retCode = CKM_API_SUCCESS;
+void CKMLogic::updateCCMode_internal() {
     int fipsModeStatus = 0;
     int rc = 0;
+    bool newMode;
 
-    if((mode_status != CCModeState:: CC_MODE_OFF) && (mode_status != CCModeState:: CC_MODE_ON)) {
-        retCode = CKM_API_ERROR_INPUT_PARAM;
-    }
+    char *mdppState = vconf_get_str(VCONFKEY_SECURITY_MDPP_STATE);
+    newMode = ( mdppState && (!strcmp(mdppState, MDPP_MODE_ENABLED) ||
+                              !strcmp(mdppState, MDPP_MODE_ENFORCING)) );
+    if (newMode == m_ccMode)
+        return;
 
-    cc_mode_status = mode_status;
+    m_ccMode = newMode;
+
     fipsModeStatus = FIPS_mode();
 
-    if(cc_mode_status == CCModeState:: CC_MODE_ON) {
+    if(m_ccMode) {
         if(fipsModeStatus == 0) { // If FIPS mode off
             rc = FIPS_mode_set(1); // Change FIPS_mode from off to on
             if(rc == 0) {
@@ -139,8 +150,11 @@ RawBuffer CKMLogic::setCCModeStatus(CCModeState mode_status) {
             }
         }
     }
+}
 
-    return MessageBuffer::Serialize(retCode).Pop();
+RawBuffer CKMLogic::updateCCMode() {
+    updateCCMode_internal();
+    return MessageBuffer::Serialize(CKM_API_SUCCESS).Pop();
 }
 
 RawBuffer CKMLogic::lockUserKey(uid_t user) {
@@ -275,7 +289,7 @@ int CKMLogic::saveDataHelper(
     }
 
     // Do not encrypt data with password during cc_mode on
-    if(cc_mode_status == CCModeState::CC_MODE_ON) {
+    if(m_ccMode) {
         handler.crypto.encryptRow("", row);
     } else {
         handler.crypto.encryptRow(policy.password, row);
@@ -477,7 +491,10 @@ RawBuffer CKMLogic::getData(
     }
 
     // Prevent extracting private keys during cc-mode on
-    if((cc_mode_status == CCModeState::CC_MODE_ON) && (row.dataType == DBDataType::KEY_RSA_PRIVATE || row.dataType == DBDataType::KEY_ECDSA_PRIVATE ||  row.dataType == DBDataType::KEY_DSA_PRIVATE)) {
+    if((m_ccMode) && (row.dataType == DBDataType::KEY_RSA_PRIVATE ||
+                      row.dataType == DBDataType::KEY_ECDSA_PRIVATE ||
+                      row.dataType == DBDataType::KEY_DSA_PRIVATE))
+    {
         row.data.clear();
         retCode = CKM_API_ERROR_BAD_REQUEST;
     }
