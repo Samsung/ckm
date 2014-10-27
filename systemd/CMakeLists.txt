@@ -6,6 +6,6 @@ INSTALL(FILES
     ${CMAKE_SOURCE_DIR}/systemd/central-key-manager-api-storage.socket
     ${CMAKE_SOURCE_DIR}/systemd/central-key-manager-api-ocsp.socket
     DESTINATION
-    /usr/lib/systemd/system
+    ${SYSTEMD_UNIT_DIR}
 )
 
