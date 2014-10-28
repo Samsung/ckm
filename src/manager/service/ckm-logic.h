@@ -32,6 +32,7 @@
 #include <key-provider.h>
 #include <crypto-logic.h>
 #include <certificate-store.h>
+#include <file-lock.h>
 
 namespace CKM {
 
@@ -208,6 +209,7 @@ private:
     std::map<uid_t, UserData> m_userDataMap;
     CertificateStore m_certStore;
     bool m_ccMode;
+    //FileLock m_lock;
 };
 
 } // namespace CKM

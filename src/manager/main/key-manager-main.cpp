@@ -38,6 +38,7 @@
 
 #include <key-provider.h>
 #include <CryptoService.h>
+#include <file-system.h>
 
 IMPLEMENT_SAFE_SINGLETON(CKM::Log::LogSystem);
 
@@ -72,6 +73,14 @@ int main(void) {
     {
         CKM::Singleton<CKM::Log::LogSystem>::Instance().SetTag("CKM");
 
+        int retCode = CKM::FileSystem::init();
+        if (retCode) {
+            LogError("Fatal error in FileSystem::init()");
+            return 1;
+        }
+
+        CKM::FileLock fl = CKM::FileSystem::lock();
+
         sigset_t mask;
         sigemptyset(&mask);
         sigaddset(&mask, SIGTERM);
@@ -80,7 +89,7 @@ int main(void) {
             LogError("Error in pthread_sigmask");
             return 1;
         }
-        LogInfo("Init external liblaries SKMM and openssl");
+        LogInfo("Init external libraries SKMM and openssl");
 
         SSL_load_error_strings();
         SSL_library_init();
@@ -105,6 +114,10 @@ int main(void) {
         // Deinit OPENSSL ?
         EVP_cleanup();
         ERR_free_strings();
+    }
+    catch (const std::runtime_error& e)
+    {
+        LogError(e.what());
     }
     UNHANDLED_EXCEPTION_HANDLER_END
     return 0;

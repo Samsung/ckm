@@ -23,6 +23,7 @@
 
 #include <ckm/ckm-type.h>
 #include <string>
+#include <file-lock.h>
 
 namespace CKM {
 
@@ -51,6 +52,7 @@ public:
 
     static int init();
     static UidVector getUIDsFromDBFile();
+    static FileLock lock();
 
     virtual ~FileSystem(){}
 protected:

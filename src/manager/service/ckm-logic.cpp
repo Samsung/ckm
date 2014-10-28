@@ -46,12 +46,6 @@ namespace CKM {
 
 CKMLogic::CKMLogic() : m_ccMode(false)
 {
-    int retCode = FileSystem::init();
-    // TODO what can I do when init went wrong? exit(-1) ??
-    if (retCode) {
-        LogError("Fatal error in FileSystem::init()");
-    }
-
     if (CKM_API_SUCCESS != m_certStore.setSystemCertificateDir(CERT_SYSTEM_DIR)) {
         LogError("Fatal error in CertificateStore::setSystemCertificateDir. Chain creation will not work");
     }

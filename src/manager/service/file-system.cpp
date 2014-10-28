@@ -37,11 +37,12 @@
 
 namespace {
 
-static const std::string CKM_DATA_PATH = "/opt/data/ckm/";
-static const std::string CKM_KEY_PREFIX = "key-";
-static const std::string CKM_DB_KEY_PREFIX = "db-key-";
-static const std::string CKM_DB_PREFIX = "db-";
-static const std::string CKM_REMOVED_APP_PREFIX = "removed-app-";
+const std::string CKM_DATA_PATH = "/opt/data/ckm/";
+const std::string CKM_KEY_PREFIX = "key-";
+const std::string CKM_DB_KEY_PREFIX = "db-key-";
+const std::string CKM_DB_PREFIX = "db-";
+const std::string CKM_REMOVED_APP_PREFIX = "removed-app-";
+const std::string CKM_LOCK_FILE = "/var/run/key-manager.pid";
 
 } // namespace anonymous
 
@@ -231,6 +232,12 @@ int FileSystem::removeUserData() const {
     }
 
     return retCode;
+}
+
+FileLock FileSystem::lock()
+{
+    FileLock fl(CKM_LOCK_FILE.c_str());
+    return fl;
 }
 
 } // namespace CKM

@@ -22,6 +22,10 @@
 #define VCONFKEY_SECURITY_MDPP_STATE "file/security_mdpp/security_mdpp_state"
 #endif
 
+namespace {
+const char* const CKM_LOCK = "/var/run/key-manager.pid";
+};
+
 void daemonize()
 {
     // Let's operate in background
@@ -85,9 +89,24 @@ void daemonize()
     SLOG(LOG_DEBUG, CKM_LISTENER_TAG, "%s", str);
 }
 
+bool isCkmRunning()
+{
+    int lock = TEMP_FAILURE_RETRY(open(CKM_LOCK, O_RDWR));
+    if (lock == -1)
+        return false;
+
+    int ret = lockf(lock, F_TEST, 0);
+    close(lock);
+
+    // if lock test fails because of an error assume ckm is running
+    return (0 != ret);
+}
+
 void callUpdateCCMode()
 {
-    // TODO make it call ckm only if it's already running (lock file)
+    if(!isCkmRunning())
+        return;
+
     auto control = CKM::Control::create();
     int ret = control->updateCCMode();
 
