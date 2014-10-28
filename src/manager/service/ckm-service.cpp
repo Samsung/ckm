@@ -110,7 +110,7 @@ RawBuffer CKMService::processControl(MessageBuffer &buffer) {
     uid_t user;
     ControlCommand cc;
     Password newPass, oldPass;
-    std::string smackLabel;
+    Label smackLabel;
 
     buffer.Deserialize(command);
 
@@ -141,43 +141,35 @@ RawBuffer CKMService::processControl(MessageBuffer &buffer) {
         return m_logic->updateCCMode();
     case ControlCommand::ALLOW_ACCESS:
     {
-        std::string owner;
-        std::string item_alias;
-        std::string accessor_label;
-        int req_rights;
+        Name name;
+        Label ownerLabel;
+        Label accessorLabel;
+        int accessorRights;
 
-        buffer.Deserialize(user, owner, item_alias, accessor_label, req_rights);
-        Credentials cred =
-            {
-                user,
-                owner
-            };
+        buffer.Deserialize(user, ownerLabel, name, accessorLabel, accessorRights);
+        Credentials cred = { user, ownerLabel };
         return m_logic->allowAccess(
             cred,
             command,
             0, // dummy
-            item_alias,
-            accessor_label,
-            static_cast<AccessRight>(req_rights));
+            name,
+            accessorLabel,
+            static_cast<AccessRight>(accessorRights));
     }
     case ControlCommand::DENY_ACCESS:
     {
-        std::string owner;
-        std::string item_alias;
-        std::string accessor_label;
+        Name name;
+        Label ownerLabel;
+        Label accessorLabel;
 
-        buffer.Deserialize(user, owner, item_alias, accessor_label);
-        Credentials cred =
-            {
-                user,
-                owner
-            };
+        buffer.Deserialize(user, ownerLabel, name, accessorLabel);
+        Credentials cred = { user, ownerLabel };
         return m_logic->denyAccess(
             cred,
             command,
             0, // dummy
-            item_alias,
-            accessor_label);
+            name,
+            accessorLabel);
     }
     default:
         Throw(Exception::BrokenProtocol);
@@ -189,7 +181,8 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer)
     int command;
     int msgID;
     int tmpDataType;
-    Alias alias;
+    Name name;
+    Label label;
     std::string user;
 
     buffer.Deserialize(command);
@@ -210,33 +203,35 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer)
         {
             RawBuffer rawData;
             PolicySerializable policy;
-            buffer.Deserialize(tmpDataType, alias, rawData, policy);
+            buffer.Deserialize(tmpDataType, name, rawData, policy);
             return m_logic->saveData(
                 cred,
                 msgID,
                 static_cast<DBDataType>(tmpDataType),
-                alias,
+                name,
                 rawData,
                 policy);
         }
         case LogicCommand::REMOVE:
         {
-            buffer.Deserialize(tmpDataType, alias);
+            buffer.Deserialize(tmpDataType, name, label);
             return m_logic->removeData(
                 cred,
                 msgID,
                 static_cast<DBDataType>(tmpDataType),
-                alias);
+                name,
+                label);
         }
         case LogicCommand::GET:
         {
             Password password;
-            buffer.Deserialize(tmpDataType, alias, password);
+            buffer.Deserialize(tmpDataType, name, label, password);
             return m_logic->getData(
                 cred,
                 msgID,
                 static_cast<DBDataType>(tmpDataType),
-                alias,
+                name,
+                label,
                 password);
         }
         case LogicCommand::GET_LIST:
@@ -252,22 +247,22 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer)
         case LogicCommand::CREATE_KEY_PAIR_ECDSA:
         {
             int additional_param;
-            Alias privateKeyAlias;
-            Alias publicKeyAlias;
+            Name privateKeyName;
+            Name publicKeyName;
             PolicySerializable policyPrivateKey;
             PolicySerializable policyPublicKey;
             buffer.Deserialize(additional_param,
                                policyPrivateKey,
                                policyPublicKey,
-                               privateKeyAlias,
-                               publicKeyAlias);
+                               privateKeyName,
+                               publicKeyName);
             return m_logic->createKeyPair(
                 cred,
                 static_cast<LogicCommand>(command),
                 msgID,
                 additional_param,
-                privateKeyAlias,
-                publicKeyAlias,
+                privateKeyName,
+                publicKeyName,
                 policyPrivateKey,
                 policyPublicKey);
         }
@@ -295,15 +290,15 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer)
         }
         case LogicCommand::CREATE_SIGNATURE:
         {
-            Alias privateKeyAlias;
             Password password;        // password for private_key
             RawBuffer message;
             int padding, hash;
-            buffer.Deserialize(privateKeyAlias, password, message, hash, padding);
+            buffer.Deserialize(name, label, password, message, hash, padding);
             return m_logic->createSignature(
                   cred,
                   msgID,
-                  privateKeyAlias,
+                  name,
+                  label,
                   password,           // password for private_key
                   message,
                   static_cast<HashAlgorithm>(hash),
@@ -311,14 +306,14 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer)
         }
         case LogicCommand::VERIFY_SIGNATURE:
         {
-            Alias publicKeyOrCertAlias;
             Password password;           // password for public_key (optional)
             RawBuffer message;
             RawBuffer signature;
             //HashAlgorithm hash;
             //RSAPaddingAlgorithm padding;
             int padding, hash;
-            buffer.Deserialize(publicKeyOrCertAlias,
+            buffer.Deserialize(name,
+                               label,
                                password,
                                message,
                                signature,
@@ -327,7 +322,8 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer)
             return m_logic->verifySignature(
                 cred,
                 msgID,
-                publicKeyOrCertAlias,
+                name,
+                label,
                 password,           // password for public_key (optional)
                 message,
                 signature,
@@ -336,29 +332,25 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer)
         }
         case LogicCommand::ALLOW_ACCESS:
         {
-            Alias item_alias;
-            std::string accessor_label;
-            int req_rights;
-            buffer.Deserialize(item_alias, accessor_label, req_rights);
+            int reqRights;
+            buffer.Deserialize(name, label, reqRights);
             return m_logic->allowAccess(
                 cred,
                 command,
                 msgID,
-                item_alias,
-                accessor_label,
-                static_cast<AccessRight>(req_rights));
+                name,
+                label,
+                static_cast<AccessRight>(reqRights));
         }
         case LogicCommand::DENY_ACCESS:
         {
-            Alias item_alias;
-            std::string accessor_label;
-            buffer.Deserialize(item_alias, accessor_label);
+            buffer.Deserialize(name, label);
             return m_logic->denyAccess(
                 cred,
                 command,
                 msgID,
-                item_alias,
-                accessor_label);
+                name,
+                label);
         }
         default:
             Throw(Exception::BrokenProtocol);

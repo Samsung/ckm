@@ -169,13 +169,13 @@ public:
 
     void allowAccess(
             const ObserverPtr& observer,
-            const std::string& alias,
-            const std::string& accessor,
+            const Alias& alias,
+            const Label& accessor,
             AccessRight granted);
     void denyAccess(
             const ObserverPtr& observer,
-            const std::string& alias,
-            const std::string& accessor);
+            const Alias& alias,
+            const Label& accessor);
 
 private:
     std::unique_ptr<Impl> m_impl;

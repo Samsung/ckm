@@ -223,7 +223,7 @@ RawBuffer CKMLogic::resetUserPassword(
     return MessageBuffer::Serialize(retCode).Pop();
 }
 
-RawBuffer CKMLogic::removeApplicationData(const std::string &smackLabel) {
+RawBuffer CKMLogic::removeApplicationData(const Label &smackLabel) {
     int retCode = CKM_API_SUCCESS;
 
     try {
@@ -257,7 +257,7 @@ RawBuffer CKMLogic::removeApplicationData(const std::string &smackLabel) {
 int CKMLogic::saveDataHelper(
     Credentials &cred,
     DBDataType dataType,
-    const Alias &alias,
+    const Name &name,
     const RawBuffer &key,
     const PolicySerializable &policy)
 {
@@ -265,7 +265,7 @@ int CKMLogic::saveDataHelper(
         return CKM_API_ERROR_DB_LOCKED;
 
     // proceed to data save
-    DBRow row = { alias, cred.smackLabel,
+    DBRow row = { name, cred.smackLabel,
          policy.extractable, dataType, DBCMAlgType::NONE,
          0, RawBuffer(), static_cast<int>(key.size()), key, RawBuffer() };
 
@@ -337,7 +337,7 @@ RawBuffer CKMLogic::saveData(
     Credentials &cred,
     int commandId,
     DBDataType dataType,
-    const Alias &alias,
+    const Name &name,
     const RawBuffer &key,
     const PolicySerializable &policy)
 {
@@ -345,7 +345,7 @@ RawBuffer CKMLogic::saveData(
     try {
         verifyBinaryData(dataType, key);
 
-        retCode = saveDataHelper(cred, dataType, alias, key, policy);
+        retCode = saveDataHelper(cred, dataType, name, key, policy);
         LogDebug("SaveDataHelper returned: " << retCode);
     } catch (const CKMLogic::Exception::InputDataInvalid &e) {
         LogError("Provided data invalid: " << e.GetMessage());
@@ -359,8 +359,8 @@ RawBuffer CKMLogic::saveData(
     } catch (const DBCrypto::Exception::InternalError &e) {
         LogError("DBCrypto failed with message: " << e.GetMessage());
         retCode = CKM_API_ERROR_DB_ERROR;
-    } catch (const DBCrypto::Exception::AliasExists &e) {
-        LogError("DBCrypto couldn't save duplicate alias");
+    } catch (const DBCrypto::Exception::NameExists &e) {
+        LogError("DBCrypto couldn't save duplicate name");
         retCode = CKM_API_ERROR_DB_ALIAS_EXISTS;
     } catch (const DBCrypto::Exception::TransactionError &e) {
         LogError("DBCrypto transaction failed with message " << e.GetMessage());
@@ -378,17 +378,30 @@ RawBuffer CKMLogic::removeData(
     Credentials &cred,
     int commandId,
     DBDataType dataType,
-    const Alias &alias)
+    const Name &name,
+    const Label &label)
 {
     int retCode = CKM_API_SUCCESS;
 
     if (0 < m_userDataMap.count(cred.uid)) {
         Try {
-            auto erased = m_userDataMap[cred.uid].database.deleteDBRow(alias, cred.smackLabel);
-            // check if the data existed or not
-            if(!erased) {
-                LogError("No row for given alias and label");
-                retCode = CKM_API_ERROR_DB_ALIAS_UNKNOWN;
+            // use client label if not explicitly provided
+            const Label & ownerLabel = label.empty() ? cred.smackLabel : label;
+
+            // verify name and label are correct
+            if (true == checkNameAndLabelValid(name, ownerLabel))
+            {
+                auto erased = m_userDataMap[cred.uid].database.deleteDBRow(name, ownerLabel, cred.smackLabel);
+                // check if the data existed or not
+                if(!erased) {
+                    LogError("No row for given name and label");
+                    retCode = CKM_API_ERROR_DB_ALIAS_UNKNOWN;
+                }
+            }
+            else
+            {
+                LogError("Invalid label or name format");
+                retCode = CKM_API_ERROR_INPUT_PARAM;
             }
         } Catch (DBCrypto::Exception::PermissionDenied) {
             LogError("Error: not enough permissions!");
@@ -408,10 +421,24 @@ RawBuffer CKMLogic::removeData(
     return response.Pop();
 }
 
+bool CKMLogic::checkNameAndLabelValid(const Name &name, const Label &label)
+{
+    // verify the name is valid
+    if(name.find(':') != Label::npos)
+        return false;
+
+    // verify the label is valid
+    if(label.find(LABEL_NAME_SEPARATOR) != Label::npos)
+        return false;
+
+    return true;
+}
+
 int CKMLogic::getDataHelper(
     Credentials &cred,
     DBDataType dataType,
-    const Alias &alias,
+    const Name &name,
+    const Label &label,
     const Password &password,
     DBRow &row)
 {
@@ -420,19 +447,30 @@ int CKMLogic::getDataHelper(
 
     auto &handler = m_userDataMap[cred.uid];
 
+    // use client label if not explicitly provided
+    const Label ownerLabel = label.empty() ? cred.smackLabel : label;
+
+    // verify name and label are correct
+    if (true != checkNameAndLabelValid(name, ownerLabel))
+        return CKM_API_ERROR_INPUT_PARAM;
+
     DBCrypto::DBRowOptional row_optional;
-    if (dataType == DBDataType::CERTIFICATE || dataType == DBDataType::BINARY_DATA) {
-        row_optional = handler.database.getDBRow(alias, cred.smackLabel, dataType);
-    } else if ((static_cast<int>(dataType) >= static_cast<int>(DBDataType::DB_KEY_FIRST))
-            && (static_cast<int>(dataType) <= static_cast<int>(DBDataType::DB_KEY_LAST)))
+    if (dataType == DBDataType::CERTIFICATE || dataType == DBDataType::BINARY_DATA)
     {
-        row_optional = handler.database.getKeyDBRow(alias, cred.smackLabel);
-    } else {
+        row_optional = handler.database.getDBRow(name, ownerLabel, cred.smackLabel, dataType);
+    }
+    else if ((static_cast<int>(dataType) >= static_cast<int>(DBDataType::DB_KEY_FIRST)) &&
+             (static_cast<int>(dataType) <= static_cast<int>(DBDataType::DB_KEY_LAST)))
+    {
+        row_optional = handler.database.getKeyDBRow(name, ownerLabel, cred.smackLabel);
+    }
+    else
+    {
         LogError("Unknown type of requested data" << (int)dataType);
         return CKM_API_ERROR_BAD_REQUEST;
     }
     if(!row_optional) {
-        LogError("No row for given alias, label and type");
+        LogError("No row for given name, label and type");
         return CKM_API_ERROR_DB_ALIAS_UNKNOWN;
     } else {
         row = *row_optional;
@@ -458,14 +496,15 @@ RawBuffer CKMLogic::getData(
     Credentials &cred,
     int commandId,
     DBDataType dataType,
-    const Alias &alias,
+    const Name &name,
+    const Label &label,
     const Password &password)
 {
     int retCode = CKM_API_SUCCESS;
     DBRow row;
 
     try {
-        retCode = getDataHelper(cred, dataType, alias, password, row);
+        retCode = getDataHelper(cred, dataType, name, label, password, row);
     } catch (const KeyProvider::Exception::Base &e) {
         LogError("KeyProvider failed with error: " << e.GetMessage());
         retCode = CKM_API_ERROR_SERVER_ERROR;
@@ -513,18 +552,18 @@ RawBuffer CKMLogic::getDataList(
     DBDataType dataType)
 {
     int retCode = CKM_API_SUCCESS;
-    AliasVector aliasVector;
+    LabelNameVector labelNameVector;
 
     if (0 < m_userDataMap.count(cred.uid)) {
         auto &handler = m_userDataMap[cred.uid];
         Try {
             if (dataType == DBDataType::CERTIFICATE || dataType == DBDataType::BINARY_DATA) {
-                handler.database.getAliases(cred.smackLabel, dataType, aliasVector);
+                handler.database.getNames(cred.smackLabel, dataType, labelNameVector);
             } else {
-                handler.database.getKeyAliases(cred.smackLabel, aliasVector);
+                handler.database.getKeyNames(cred.smackLabel, labelNameVector);
             }
         } Catch (CKM::Exception) {
-            LogError("Failed to get aliases");
+            LogError("Failed to get names");
             retCode = CKM_API_ERROR_DB_ERROR;
         }
     } else {
@@ -535,7 +574,7 @@ RawBuffer CKMLogic::getDataList(
                                              commandId,
                                              retCode,
                                              static_cast<int>(dataType),
-                                             aliasVector);
+                                             labelNameVector);
     return response.Pop();
 }
 
@@ -544,8 +583,8 @@ int CKMLogic::createKeyPairHelper(
     Credentials &cred,
     const KeyType key_type,
     const int additional_param,
-    const Alias &aliasPrivate,
-    const Alias &aliasPublic,
+    const Name &namePrivate,
+    const Name &namePublic,
     const PolicySerializable &policyPrivate,
     const PolicySerializable &policyPublic)
 {
@@ -585,7 +624,7 @@ int CKMLogic::createKeyPairHelper(
     DBCrypto::Transaction transaction(&handler.database);
     retCode = saveDataHelper(cred,
                             toDBDataType(prv.getType()),
-                            aliasPrivate,
+                            namePrivate,
                             prv.getDER(),
                             policyPrivate);
 
@@ -594,7 +633,7 @@ int CKMLogic::createKeyPairHelper(
 
     retCode = saveDataHelper(cred,
                             toDBDataType(pub.getType()),
-                            aliasPublic,
+                            namePublic,
                             pub.getDER(),
                             policyPublic);
 
@@ -611,8 +650,8 @@ RawBuffer CKMLogic::createKeyPair(
     LogicCommand protocol_cmd,
     int commandId,
     const int additional_param,
-    const Alias &aliasPrivate,
-    const Alias &aliasPublic,
+    const Name &namePrivate,
+    const Name &namePublic,
     const PolicySerializable &policyPrivate,
     const PolicySerializable &policyPublic)
 {
@@ -639,13 +678,13 @@ RawBuffer CKMLogic::createKeyPair(
                         cred,
                         key_type,
                         additional_param,
-                        aliasPrivate,
-                        aliasPublic,
+                        namePrivate,
+                        namePublic,
                         policyPrivate,
                         policyPublic);
 
-    } catch (DBCrypto::Exception::AliasExists &e) {
-        LogDebug("DBCrypto error: alias exists: " << e.GetMessage());
+    } catch (DBCrypto::Exception::NameExists &e) {
+        LogDebug("DBCrypto error: name exists: " << e.GetMessage());
         retCode = CKM_API_ERROR_DB_ALIAS_EXISTS;
     } catch (DBCrypto::Exception::TransactionError &e) {
         LogDebug("DBCrypto error: transaction error: " << e.GetMessage());
@@ -713,7 +752,7 @@ RawBuffer CKMLogic::getCertificateChain(
         }
 
         for (auto &i: aliasVector) {
-            retCode = getDataHelper(cred, DBDataType::CERTIFICATE, i, Password(), row);
+            retCode = getDataHelper(cred, DBDataType::CERTIFICATE, i, Label(), Password(), row);
 
             if (retCode != CKM_API_SUCCESS)
                 goto senderror;
@@ -753,7 +792,8 @@ senderror:
 RawBuffer CKMLogic::createSignature(
         Credentials &cred,
         int commandId,
-        const Alias &privateKeyAlias,
+        const Name &privateKeyName,
+        const Label & ownerLabel,
         const Password &password,           // password for private_key
         const RawBuffer &message,
         const HashAlgorithm hash,
@@ -767,7 +807,7 @@ RawBuffer CKMLogic::createSignature(
 
     try {
         do {
-            retCode = getDataHelper(cred, DBDataType::DB_KEY_FIRST, privateKeyAlias, password, row);
+            retCode = getDataHelper(cred, DBDataType::DB_KEY_FIRST, privateKeyName, ownerLabel, password, row);
             if (CKM_API_SUCCESS != retCode) {
                 LogError("getDataHelper return error");
                 break;
@@ -806,7 +846,8 @@ RawBuffer CKMLogic::createSignature(
 RawBuffer CKMLogic::verifySignature(
         Credentials &cred,
         int commandId,
-        const Alias &publicKeyOrCertAlias,
+        const Name &publicKeyOrCertName,
+        const Label & ownerLabel,
         const Password &password,           // password for public_key (optional)
         const RawBuffer &message,
         const RawBuffer &signature,
@@ -821,12 +862,12 @@ RawBuffer CKMLogic::verifySignature(
             DBRow row;
             KeyImpl key;
 
-            retCode = getDataHelper(cred, DBDataType::DB_KEY_FIRST, publicKeyOrCertAlias, password, row);
+            retCode = getDataHelper(cred, DBDataType::DB_KEY_FIRST, publicKeyOrCertName, ownerLabel, password, row);
 
             if (retCode == CKM_API_SUCCESS) {
                 key = KeyImpl(row.data);
             } else if (retCode == CKM_API_ERROR_DB_ALIAS_UNKNOWN) {
-                retCode = getDataHelper(cred, DBDataType::CERTIFICATE, publicKeyOrCertAlias, password, row);
+                retCode = getDataHelper(cred, DBDataType::CERTIFICATE, publicKeyOrCertName, ownerLabel, password, row);
                 if (retCode != CKM_API_SUCCESS)
                     break;
                 CertificateImpl cert(row.data, DataFormat::FORM_DER);
@@ -875,16 +916,21 @@ RawBuffer CKMLogic::allowAccess(
         Credentials &cred,
         int command,
         int msgID,
-        const Alias &item_alias,
-        const std::string &accessor_label,
-        const AccessRight req_rights)
+        const Name &name,
+        const Label &accessorLabel,
+        const AccessRight reqRights)
 {
     int retCode = CKM_API_ERROR_VERIFICATION_FAILED;
 
-    if (0 < m_userDataMap.count(cred.uid))
-    {
+    if (cred.smackLabel.empty()) {
+        retCode = CKM_API_ERROR_INPUT_PARAM;
+    } else if (0 < m_userDataMap.count(cred.uid) && !cred.smackLabel.empty()) {
         Try {
-            retCode = m_userDataMap[cred.uid].database.setAccessRights(cred.smackLabel, item_alias, accessor_label, req_rights);
+            retCode = m_userDataMap[cred.uid].database.setAccessRights(
+                name,
+                cred.smackLabel,
+                accessorLabel,
+                reqRights);
         } Catch (DBCrypto::Exception::InvalidArgs) {
             LogError("Error: invalid args!");
             retCode = CKM_API_ERROR_INPUT_PARAM;
@@ -906,15 +952,16 @@ RawBuffer CKMLogic::denyAccess(
         Credentials &cred,
         int command,
         int msgID,
-        const Alias &item_alias,
-        const std::string &accessor_label)
+        const Name &name,
+        const Label &accessorLabel)
 {
     int retCode = CKM_API_ERROR_VERIFICATION_FAILED;
 
-    if (0 < m_userDataMap.count(cred.uid))
-    {
+    if (cred.smackLabel.empty()) {
+        retCode = CKM_API_ERROR_INPUT_PARAM;
+    } else if (0 < m_userDataMap.count(cred.uid)) {
         Try {
-            retCode = m_userDataMap[cred.uid].database.clearAccessRights(cred.smackLabel, item_alias, accessor_label);
+            retCode = m_userDataMap[cred.uid].database.clearAccessRights(name, cred.smackLabel, accessorLabel);
         } Catch (DBCrypto::Exception::PermissionDenied) {
             LogError("Error: not enough permissions!");
             retCode = CKM_API_ERROR_ACCESS_DENIED;

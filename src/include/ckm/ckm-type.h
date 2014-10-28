@@ -32,6 +32,7 @@ namespace CKM {
 // used to pass password and raw key data
 typedef std::vector<RawBuffer> RawBufferVector;
 typedef std::string Alias;
+typedef std::string Label;
 typedef std::vector<Alias> AliasVector;
 
 enum class KeyType : int {

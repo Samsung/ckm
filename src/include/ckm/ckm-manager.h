@@ -117,8 +117,8 @@ public:
     // if application does not have permission to use network.
     virtual int ocspCheck(const CertificateShPtrVector &certificateChainVector, int &ocspStatus) = 0;
 
-    virtual int allowAccess(const std::string &alias, const std::string &accessor, AccessRight granted) = 0;
-    virtual int denyAccess(const std::string &alias, const std::string &accessor) = 0;
+    virtual int allowAccess(const Alias &alias, const Label &accessor, AccessRight granted) = 0;
+    virtual int denyAccess(const Alias &alias, const Label &accessor) = 0;
 
 
     static ManagerShPtr create();

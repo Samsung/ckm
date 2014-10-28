@@ -30,7 +30,9 @@
 #include <functional>
 
 #include <noncopyable.h>
+#include <ckm/ckm-type.h>
 #include <message-buffer.h>
+#include <protocols.h>
 
 #define KEY_MANAGER_API __attribute__((visibility("default")))
 
@@ -39,6 +41,21 @@ extern "C" {
 }
 
 namespace CKM {
+
+class AliasSupport
+{
+    public:
+        AliasSupport(const Alias &alias);
+
+        const Label & getLabel() const;
+        const Name & getName() const;
+        bool isLabelEmpty() const;
+
+        static Alias merge(const Label &label, const Name &alias);
+    private:
+        Name m_name;
+        Label m_label;
+};
 
 int connectSocket(int& sock, char const * const interface);
 

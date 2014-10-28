@@ -32,7 +32,7 @@
 #include <sys/types.h>
 
 #include <dpl/exception.h>
-
+#include <protocols.h>
 #include <generic-event.h>
 #include <dpl/raw-buffer.h>
 
@@ -46,7 +46,7 @@ typedef int InterfaceID;
 
 struct Credentials {
     uid_t uid;
-    std::string smackLabel;
+    Label smackLabel;
 };
 
 struct ConnectionID {
@@ -60,7 +60,6 @@ struct ConnectionID {
 struct GenericSocketManager;
 
 struct GenericSocketService {
-    typedef std::string SmackLabel;
     typedef std::string ServiceHandlerPath;
     struct ServiceDescription {
         ServiceDescription(const char *path,
@@ -73,7 +72,7 @@ struct GenericSocketService {
           , useSendMsg(useSendMsg)
         {}
 
-        SmackLabel smackLabel;                 // Smack label for socket
+        Label smackLabel;                      // Smack label for socket
         InterfaceID interfaceID;               // All data from serviceHandlerPath will be marked with this interfaceHandler
         ServiceHandlerPath serviceHandlerPath; // Path to file
         bool useSendMsg;

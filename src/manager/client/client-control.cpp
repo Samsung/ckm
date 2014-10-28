@@ -166,7 +166,7 @@ public:
         });
     }
 
-    virtual int removeApplicationData(const std::string &smackLabel) {
+    virtual int removeApplicationData(const Label &smackLabel) {
         return try_catch([&] {
             if (smackLabel.empty()) {
                 return CKM_API_ERROR_INPUT_PARAM;
@@ -210,9 +210,9 @@ public:
     }
 
     virtual int allowAccess(uid_t user,
-                            const std::string &owner,
-                            const std::string &alias,
-                            const std::string &accessor,
+                            const Label &owner,
+                            const Alias &alias,
+                            const Label &accessor,
                             AccessRight granted)
     {
         return try_catch([&] {
@@ -240,9 +240,9 @@ public:
     }
 
     virtual int denyAccess(uid_t user,
-                           const std::string &owner,
-                           const std::string &alias,
-                           const std::string &accessor)
+                           const Label &owner,
+                           const Alias &alias,
+                           const Label &accessor)
     {
         return try_catch([&] {
             MessageBuffer recv;

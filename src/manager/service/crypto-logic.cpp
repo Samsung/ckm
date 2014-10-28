@@ -54,12 +54,12 @@ CryptoLogic& CryptoLogic::operator=(CryptoLogic &&second) {
     return *this;
 }
 
-bool CryptoLogic::haveKey(const std::string &smackLabel)
+bool CryptoLogic::haveKey(const Label &smackLabel)
 {
     return (m_keyMap.count(smackLabel) > 0);
 }
 
-void CryptoLogic::pushKey(const std::string &smackLabel,
+void CryptoLogic::pushKey(const Label &smackLabel,
                             const RawBuffer &applicationKey)
 {
     if (smackLabel.length() == 0) {

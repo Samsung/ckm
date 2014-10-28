@@ -105,11 +105,13 @@ void ManagerAsync::Impl::removeBinaryData(const ManagerAsync::ObserverPtr& obser
         return;
     }
     try_catch_async([&] {
+        AliasSupport helper(alias);
         sendToStorage(observer,
                       static_cast<int>(LogicCommand::REMOVE),
                       m_counter,
                       static_cast<int>(dataType),
-                      alias);
+                      helper.getName(),
+                      helper.getLabel());
     }, [&observer](int error){ observer->ReceivedError(error); } );
 }
 
@@ -124,11 +126,13 @@ void ManagerAsync::Impl::getBinaryData(const ManagerAsync::ObserverPtr& observer
         return;
     }
     try_catch_async([&] {
+        AliasSupport helper(alias);
         sendToStorage(observer,
                       static_cast<int>(LogicCommand::GET),
                       m_counter,
                       static_cast<int>(sendDataType),
-                      alias,
+                      helper.getName(),
+                      helper.getLabel(),
                       password);
     }, [&observer](int error){ observer->ReceivedError(error); } );
 }
@@ -146,10 +150,12 @@ void ManagerAsync::Impl::createSignature(const ObserverPtr& observer,
         return;
     }
     try_catch_async([&] {
+        AliasSupport helper(privateKeyAlias);
         sendToStorage(observer,
                       static_cast<int>(LogicCommand::CREATE_SIGNATURE),
                       m_counter,
-                      privateKeyAlias,
+                      helper.getName(),
+                      helper.getLabel(),
                       password,
                       message,
                       static_cast<int>(hash),
@@ -171,10 +177,12 @@ void ManagerAsync::Impl::verifySignature(const ObserverPtr& observer,
         return;
     }
     try_catch_async([&] {
+        AliasSupport helper(publicKeyOrCertAlias);
         sendToStorage(observer,
                       static_cast<int>(LogicCommand::VERIFY_SIGNATURE),
                       m_counter,
-                      publicKeyOrCertAlias,
+                      helper.getName(),
+                      helper.getLabel(),
                       password,
                       message,
                       signature,
@@ -208,8 +216,8 @@ void ManagerAsync::Impl::ocspCheck(const ObserverPtr& observer,
 }
 
 void ManagerAsync::Impl::allowAccess(const ObserverPtr& observer,
-                                     const std::string& alias,
-                                     const std::string& accessor,
+                                     const Alias& alias,
+                                     const Label& accessor,
                                      AccessRight granted)
 {
     observerCheck(observer);
@@ -228,8 +236,8 @@ void ManagerAsync::Impl::allowAccess(const ObserverPtr& observer,
 }
 
 void ManagerAsync::Impl::denyAccess(const ObserverPtr& observer,
-                                    const std::string& alias,
-                                    const std::string& accessor)
+                                    const Alias& alias,
+                                    const Label& accessor)
 {
     observerCheck(observer);
     if (alias.empty() || accessor.empty()) {

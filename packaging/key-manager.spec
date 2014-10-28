@@ -174,6 +174,7 @@ if [ $1 = 0 ]; then
     systemctl daemon-reload
 fi
 
+
 %files -n key-manager
 %manifest key-manager.manifest
 %{_bindir}/key-manager

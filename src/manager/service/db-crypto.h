@@ -44,7 +44,7 @@ namespace CKM {
             {
               public:
                 DECLARE_EXCEPTION_TYPE(CKM::Exception, Base)
-                DECLARE_EXCEPTION_TYPE(Base, AliasExists)
+                DECLARE_EXCEPTION_TYPE(Base, NameExists)
                 DECLARE_EXCEPTION_TYPE(Base, InternalError)
                 DECLARE_EXCEPTION_TYPE(Base, TransactionError)
                 DECLARE_EXCEPTION_TYPE(Base, PermissionDenied)
@@ -66,35 +66,41 @@ namespace CKM {
 
             void saveDBRow(const DBRow &row);
             DBRowOptional getDBRow(
-                    const Alias &alias,
-                    const std::string &clnt_label,
+                    const Name &name,
+                    const Label &ownerLabel,
+                    const Label &smackLabel,
                     DBDataType type);
             DBRowOptional getKeyDBRow(
-                    const Alias &alias,
-                    const std::string &clnt_label);
-            void getAliases(
-                    const std::string &clnt_label,
+                    const Name &name,
+                    const Label &ownerLabel,
+                    const Label &smackLabel);
+            void getNames(
+                    const Label &clnt_label,
                     DBDataType dataType,
-                    AliasVector &aliases);
-            void getKeyAliases(const std::string &clnt_label, AliasVector &aliases);
+                    LabelNameVector &labelNameVector);
+            void getKeyNames(
+                    const Label &clnt_label,
+                    LabelNameVector &labelNameVector);
             bool deleteDBRow(
-                    const Alias& alias,
-                    const std::string &clnt_label);
+                    const Name &name,
+                    const Label &ownerLabel,
+                    const Label &smackLabel);
 
             // keys
-            void saveKey(const std::string& label, const RawBuffer &key);
-            RawBufferOptional getKey(
-                    const std::string& label);
-            void deleteKey(const std::string& label);
+            void saveKey(const Label& label, const RawBuffer &key);
+            RawBufferOptional getKey(const Label& label);
+            void deleteKey(const Label& label);
 
             // permissions
-            int setAccessRights(const std::string& clnt_label,
-                                const Alias& alias,
-                                const std::string& accessor_label,
-                                const AccessRight value_to_set);
-            int clearAccessRights(const std::string& clnt_label,
-                                  const Alias& alias,
-                                  const std::string& accessor_label);
+            int setAccessRights(
+                    const Name &name,
+                    const Label &ownerLabel,
+                    const Label &accessorLabel,
+                    const AccessRight rights);
+            int clearAccessRights(
+                    const Name &name,
+                    const Label &ownerLabel,
+                    const Label &accessorLabel);
 
             int beginTransaction();
             int commitTransaction();
@@ -181,35 +187,56 @@ namespace CKM {
             };
 
             /**
-             * read PERMISSION_TABLE entry for pair <alias, label>
+             * read PERMISSION_TABLE entry for client smackLabel to access CKM entry <name, ownerLabel>
              *
              * @return permission string (consisting with DBOperationType chars), may be empty
              */
-            std::string getPermissionsForAliasAndLabel(const Alias &alias, const std::string &label) const;
-
-            /**
-             * check if current requesting alias has permissions
-             * to perform operation on the given DB entry
-             *
-             * @return true if permission granted, false otherwise
-             */
-            bool  rowAccessControlCheck(const DBRow & input_row,
-                                        const std::string &clnt_label,
-                                        DBOperationType access_type) const;
-            // helper
-            bool  rowAccessControlCheck(const Alias &alias,
-                                        const std::string &owner_label,
-                                        const std::string &clnt_label,
-                                        DBOperationType access_type) const;
+            std::string getPermissions(
+                    const Name &name,
+                    const Label &ownerLabel,
+                    const Label &smackLabel) const;
 
             void createTable(
                     const char *create_cmd,
                     const char *table_name);
-            bool checkAliasExist(const std::string &alias) const;
-            std::string getLabelForAlias(const std::string& alias) const;
-            bool checkGlobalAliasExist(const std::string& alias) const;
-            void getSingleType(const std::string &clnt_label, DBDataType type, AliasVector& aliases) const;
-   };
+            bool checkNameExist(const Name &name, const Label &owner) const;
+//            void getLabelForName(const Name &name, Label & label) const;
+//            void getLabelForName(const Name &name, Label & label, int & index) const;
+            bool checkGlobalNameExist(const Name &name, const Label &ownerLabel) const;
+            void getSingleType(const Label &clnt_label, DBDataType type, LabelNameVector& labelNameVector) const;
+            DBRowOptional getDBRowSimple(
+                    const Name &name,
+                    const Label &ownerLabel,
+                    DBDataType type);
+
+            DBRowOptional getDBRowJoin(
+                    const Name &name,
+                    const Label &ownerLabel,
+                    const Label &smackLabel,
+                    DBDataType type);
+
+            DBRowOptional getKeyDBRowSimple(
+                    const Name &name,
+                    const Label &onwerLabel);
+
+            DBRowOptional getKeyDBRowJoin(
+                    const Name &name,
+                    const Label &onwerLabel,
+                    const Label &smackLabel);
+
+            int countRows(
+                    const Name &name,
+                    const Label &label);
+
+            bool deleteDBRowSimple(
+                    const Name &name,
+                    const Label &ownerLabel);
+
+            bool deleteDBRowJoin(
+                    const Name &name,
+                    const Label &ownerLabel,
+                    const Label &smackLabel);
+    };
 } // namespace CKM
 
 #pragma GCC diagnostic pop

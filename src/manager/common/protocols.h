@@ -79,6 +79,12 @@ enum class DBDataType : int {
     BINARY_DATA,
 };
 
+// (client side) Alias = (service side) Label::Name
+extern char const * const LABEL_NAME_SEPARATOR;
+typedef std::string Name;
+typedef std::vector<std::pair<Label, Name> > LabelNameVector;
+
+
 DBDataType toDBDataType(KeyType key);
 KeyType toKeyType(DBDataType dbDataType);
 const char* toDBAccessRight(AccessRight access_right_type);

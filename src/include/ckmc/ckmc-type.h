@@ -38,6 +38,14 @@ extern "C" {
  */
 
 /**
+ * alias can be provided as an alias alone,
+ * or together with label - in this case,
+ * separator is used to separate label and alias.
+ * @see key-manager_doc.h
+ */
+extern char const * const ckmc_label_name_separator;
+
+/**
  * @brief Enumeration for key types of key manager.
  * @since_tizen 2.3
  */

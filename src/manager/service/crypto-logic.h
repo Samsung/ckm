@@ -51,8 +51,8 @@ public:
     void decryptRow(const Password &password, DBRow &row);
     void encryptRow(const Password &password, DBRow &row);
 
-    bool haveKey(const std::string &smackLabel);
-    void pushKey(const std::string &smackLabel,
+    bool haveKey(const Label &smackLabel);
+    void pushKey(const Label &smackLabel,
                  const RawBuffer &applicationKey);
 
 private:
@@ -60,7 +60,7 @@ private:
 	static const int ENCR_APPKEY =   1 << 1;
 	static const int ENCR_PASSWORD = 1 << 2;
 
-	std::map<std::string, RawBuffer> m_keyMap;
+	std::map<Label, RawBuffer> m_keyMap;
 
     RawBuffer generateRandIV() const;
     RawBuffer passwordToKey(const Password &password,

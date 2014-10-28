@@ -127,10 +127,12 @@ int ManagerImpl::removeBinaryData(const Alias &alias, DBDataType dataType)
             return CKM_API_ERROR_INPUT_PARAM;
 
         MessageBuffer recv;
+        AliasSupport helper(alias);
         auto send = MessageBuffer::Serialize(static_cast<int>(LogicCommand::REMOVE),
                                              m_counter,
                                              static_cast<int>(dataType),
-                                             alias);
+                                             helper.getName(),
+                                             helper.getLabel());
         int retCode = sendToServer(
             SERVICE_SOCKET_CKM_STORAGE,
             send.Pop(),
@@ -177,10 +179,12 @@ int ManagerImpl::getBinaryData(
             return CKM_API_ERROR_INPUT_PARAM;
 
         MessageBuffer recv;
+        AliasSupport helper(alias);
         auto send = MessageBuffer::Serialize(static_cast<int>(LogicCommand::GET),
                                              m_counter,
                                              static_cast<int>(sendDataType),
-                                             alias,
+                                             helper.getName(),
+                                             helper.getLabel(),
                                              password);
         int retCode = sendToServer(
             SERVICE_SOCKET_CKM_STORAGE,
@@ -299,10 +303,14 @@ int ManagerImpl::getBinaryDataAliasVector(DBDataType dataType, AliasVector &alia
         int command;
         int counter;
         int tmpDataType;
-        recv.Deserialize(command, counter, retCode, tmpDataType, aliasVector);
+        LabelNameVector labelNameVector;
+        recv.Deserialize(command, counter, retCode, tmpDataType, labelNameVector);
         if ((command != static_cast<int>(LogicCommand::GET_LIST)) || (counter != m_counter)) {
             return CKM_API_ERROR_UNKNOWN;
         }
+
+        for(const auto &it : labelNameVector)
+            aliasVector.push_back( AliasSupport::merge(it.first, it.second) );
 
         return retCode;
     });
@@ -511,9 +519,11 @@ int ManagerImpl::createSignature(
     return try_catch([&] {
 
         MessageBuffer recv;
+        AliasSupport helper(privateKeyAlias);
         auto send = MessageBuffer::Serialize(static_cast<int>(LogicCommand::CREATE_SIGNATURE),
                                              my_counter,
-                                             privateKeyAlias,
+                                             helper.getName(),
+                                             helper.getLabel(),
                                              password,
                                              message,
                                              static_cast<int>(hash),
@@ -555,9 +565,11 @@ int ManagerImpl::verifySignature(
     return try_catch([&] {
 
         MessageBuffer recv;
+        AliasSupport helper(publicKeyOrCertAlias);
         auto send = MessageBuffer::Serialize(static_cast<int>(LogicCommand::VERIFY_SIGNATURE),
                                              my_counter,
-                                             publicKeyOrCertAlias,
+                                             helper.getName(),
+                                             helper.getLabel(),
                                              password,
                                              message,
                                              signature,
@@ -621,8 +633,8 @@ int ManagerImpl::ocspCheck(const CertificateShPtrVector &certChain, int &ocspSta
     });
 }
 
-int ManagerImpl::allowAccess(const std::string &alias,
-                             const std::string &accessor,
+int ManagerImpl::allowAccess(const Alias &alias,
+                             const Label &accessor,
                              AccessRight granted)
 {
     m_counter++;
@@ -655,7 +667,7 @@ int ManagerImpl::allowAccess(const std::string &alias,
     });
 }
 
-int ManagerImpl::denyAccess(const std::string &alias, const std::string &accessor)
+int ManagerImpl::denyAccess(const Alias &alias, const Label &accessor)
 {
     m_counter++;
     int my_counter = m_counter;

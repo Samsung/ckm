@@ -209,16 +209,16 @@ void ManagerAsync::ocspCheck(const ObserverPtr& observer,
 }
 
 void ManagerAsync::allowAccess(const ObserverPtr& observer,
-                               const std::string& alias,
-                               const std::string& accessor,
+                               const Alias& alias,
+                               const Label& accessor,
                                AccessRight granted)
 {
     m_impl->allowAccess(observer, alias, accessor, granted);
 }
 
 void ManagerAsync::denyAccess(const ObserverPtr& observer,
-                              const std::string& alias,
-                              const std::string& accessor)
+                              const Alias& alias,
+                              const Label& accessor)
 {
     m_impl->denyAccess(observer, alias, accessor);
 }

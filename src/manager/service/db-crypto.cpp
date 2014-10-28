@@ -33,12 +33,12 @@ namespace {
     const char *key_table = "KEY_TABLE";
     const char *permission_table = "PERMISSION_TABLE";
 
-// CKM_TABLE (alias TEXT, label TEXT, restricted INT, exportable INT, dataType INT,
-//            algorithmType INT, encryptionScheme INT, iv BLOB, dataSize INT, data BLOB)
+// CKM_TABLE (name TEXT, label TEXT, restricted INT, exportable INT, dataType INT, algorithmType INT,
+//            encryptionScheme INT, iv BLOB, dataSize INT, data BLOB, tag BLOB, idx INT )
 
     const char *db_create_main_cmd =
             "CREATE TABLE CKM_TABLE("
-            "   alias TEXT NOT NULL,"
+            "   name TEXT NOT NULL,"
             "   label TEXT NOT NULL,"
             "   exportable INTEGER NOT NULL,"
             "   dataType INTEGER NOT NULL,"
@@ -48,13 +48,14 @@ namespace {
             "   dataSize INTEGER NOT NULL,"
             "   data BLOB NOT NULL,"
             "   tag BLOB NOT NULL,"
-            "   PRIMARY KEY(alias)"
-            "); CREATE INDEX alias_idx ON CKM_TABLE(alias);";
+            "   idx INTEGER PRIMARY KEY AUTOINCREMENT,"
+            "   UNIQUE(name, label)"
+            "); CREATE INDEX ckm_index_label ON CKM_TABLE(label);"; // based on ANALYZE and performance test result
 
     const char *insert_main_cmd =
             "INSERT INTO CKM_TABLE("
             //      1   2       3
-            "   alias, label, exportable,"
+            "   name, label, exportable,"
             //      4           5           6
             "   dataType, algorithmType, encryptionScheme,"
             //  7       8       9    10
@@ -62,27 +63,42 @@ namespace {
             "VALUES("
             "   ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
 
-    const char *select_alias_cmd =
-            //                                   1              2
-            "SELECT * FROM CKM_TABLE WHERE alias=? AND dataType=?; ";
+    const char *select_name_cmd =
+            "SELECT * FROM CKM_TABLE WHERE name=?001 AND label=?002 AND dataType=?003; ";
 
-    const char *select_check_alias_cmd =
-            //                                          1
-            "SELECT dataType FROM CKM_TABLE WHERE alias=?;";
+    const char *select_name_cmd_join =
+            "SELECT * FROM CKM_TABLE WHERE name=?001 AND label=?002 AND dataType=?004 AND "
+            " idx in (SELECT idx FROM PERMISSION_TABLE WHERE label = ?003); ";
 
-    const char *select_check_global_alias_cmd =
-            //                                       1
-            "SELECT label FROM CKM_TABLE WHERE alias=?;";
+    const char *select_check_name_cmd =
+            "SELECT dataType FROM CKM_TABLE WHERE name=?001 AND label=?002;";
 
-    const char *select_key_alias_cmd =
-            //                                   1
-            "SELECT * FROM CKM_TABLE WHERE alias=?"
-            //                     2     3
-            " AND dataType BETWEEN ? AND ?;";
+    const char *select_label_global_name_cmd =
+            "SELECT count(*) FROM CKM_TABLE WHERE name=?001 AND label=?002; ";
 
-    const char *delete_alias_cmd =
-            //                                 1
-            "DELETE FROM CKM_TABLE WHERE alias=?;";
+//    const char *select_label_index_global_name_cmd =
+//            //                                           1
+//            "SELECT label, idx FROM CKM_TABLE WHERE name=?;";
+
+    const char *select_key_name_cmd =
+            "SELECT * FROM CKM_TABLE WHERE name=?001 AND label=?002"
+            " AND dataType BETWEEN ?003 AND ?004;";
+
+    const char *select_key_name_cmd_join =
+            "SELECT * FROM CKM_TABLE WHERE name=?001 AND label=?002"
+            " AND dataType BETWEEN ?004 AND ?005 " 
+            " AND idx in (SELECT idx FROM PERMISSION_TABLE WHERE label = ?003);";
+
+    const char *select_count_rows_cmd =
+            "SELECT COUNT(idx) FROM CKM_TABLE WHERE name=?001 AND label=?002;";
+
+    const char *delete_name_cmd =
+            "DELETE FROM CKM_TABLE WHERE name=?001 AND label=?002;";
+
+    const char *delete_name_cmd_join =
+            "DELETE FROM CKM_TABLE WHERE name=?001 AND label=?002 AND "
+            " idx in (SELECT idx FROM PERMISSION_TABLE WHERE label=?003);";
+
 
     const char *delete_data_with_key_cmd =
             //                                 1
@@ -104,38 +120,40 @@ namespace {
             "DELETE FROM KEY_TABLE WHERE label=?";
 
 
-// PERMISSION_TABLE (label TEXT, label TEXT, access_flags TEXT)
+// PERMISSION_TABLE (label TEXT, access_flags TEXT, idx INT)
 
     const char *db_create_permission_cmd =
             "CREATE TABLE PERMISSION_TABLE("
-            "   alias TEXT NOT NULL,"
             "   label TEXT NOT NULL,"
             "   accessFlags TEXT NOT NULL,"
-            "   FOREIGN KEY(alias) REFERENCES CKM_TABLE(alias) ON DELETE CASCADE,"
-            "   PRIMARY KEY(alias, label)"
-            "); CREATE INDEX alias_label_idx ON PERMISSION_TABLE(alias, label);";
+            "   idx INTEGER NOT NULL,"
+            "   FOREIGN KEY(idx) REFERENCES CKM_TABLE(idx) ON DELETE CASCADE,"
+            "   PRIMARY KEY(label, idx)"
+            "); CREATE INDEX perm_index_idx ON PERMISSION_TABLE(idx);"; // based on ANALYZE and performance test result
 
-    const char *set_permission_alias_cmd =
-            "REPLACE INTO PERMISSION_TABLE(alias, label, accessFlags) VALUES (?, ?, ?);";
+    const char *set_permission_name_cmd =
+            "REPLACE INTO PERMISSION_TABLE(label, accessFlags, idx) "
+            " VALUES (?001, ?002, "
+            " (SELECT idx FROM CKM_TABLE WHERE name = ?003 and label = ?004)); ";
 
     const char *select_permission_cmd =
-            //                                                    1           2
-            "SELECT accessFlags FROM PERMISSION_TABLE WHERE alias=? AND label=?;";
+            "SELECT accessFlags FROM PERMISSION_TABLE WHERE label=?001 AND idx IN (SELECT idx FROM CKM_TABLE WHERE name=?002 AND label=?003);";
 
     const char *delete_permission_cmd =
-            //                                        1           2
-            "DELETE FROM PERMISSION_TABLE WHERE alias=? AND label=?;";
+            "DELETE FROM PERMISSION_TABLE WHERE label=?003 AND "
+            " idx IN (SELECT idx FROM CKM_TABLE WHERE name = ?001 AND label = ?002); ";
 
 
 // CKM_TABLE x PERMISSION_TABLE
 
     const char *select_type_cross_cmd =
-            //                                                                                                        1              2             3
-            "SELECT C.alias FROM CKM_TABLE AS C LEFT JOIN PERMISSION_TABLE AS P ON C.alias = P.alias WHERE C.dataType=? AND (C.label=? OR (P.label=? AND P.accessFlags IS NOT NULL)) GROUP BY C.alias;";
+            "SELECT C.label, C.name FROM CKM_TABLE AS C LEFT JOIN PERMISSION_TABLE AS P ON C.idx = P.idx WHERE "
+            "C.dataType=?001 AND (C.label=?002 OR (P.label=?002 AND P.accessFlags IS NOT NULL)) GROUP BY C.name;";
 
     const char *select_key_type_cross_cmd =
-            //                                                                                                       1                 2              3             4
-            "SELECT C.alias FROM CKM_TABLE AS C LEFT JOIN PERMISSION_TABLE AS P ON C.alias=P.alias WHERE C.dataType>=? AND C.dataType<=? AND (C.label=? OR (P.label=? AND P.accessFlags IS NOT NULL)) GROUP BY C.alias;";
+            "SELECT C.label, C.name FROM CKM_TABLE AS C LEFT JOIN PERMISSION_TABLE AS P ON C.idx=P.idx WHERE "
+            " C.dataType>=?001 AND C.dataType<=?002 AND "
+            "(C.label=?003 OR (P.label=?003 AND P.accessFlags IS NOT NULL)) GROUP BY C.name; ";
 }
 
 namespace CKM {
@@ -218,30 +236,49 @@ using namespace DB;
         transaction.commit();
     }
 
-    std::string DBCrypto::getLabelForAlias(const std::string& alias) const {
+//    void DBCrypto::getLabelForName(const Name &name, Label & label) const {
+//        SqlConnection::DataCommandUniquePtr checkCmd =
+//                m_connection->PrepareDataCommand(select_label_global_name_cmd);
+//        checkCmd->BindString(1, name.c_str());
+//        if(checkCmd->Step()) {
+//            label = checkCmd->GetColumnString(0);
+//        } else
+//            label.clear();
+//    }
+
+//    void DBCrypto::getLabelForName(const Name &name, Label & label, int & index) const
+//    {
+//        SqlConnection::DataCommandUniquePtr checkCmd =
+//                m_connection->PrepareDataCommand(select_label_index_global_name_cmd);
+//        checkCmd->BindString(1, name.c_str());
+//        if(checkCmd->Step()) {
+//            label = checkCmd->GetColumnString(0);
+//            index = checkCmd->GetColumnInteger(1);
+//        }
+//        else
+//        {
+//            label.clear();
+//            index = -1;
+//        }
+//    }
+
+    bool DBCrypto::checkGlobalNameExist(const Name &name, const Label &ownerLabel) const {
         SqlConnection::DataCommandUniquePtr checkCmd =
-                m_connection->PrepareDataCommand(select_check_global_alias_cmd);
-        checkCmd->BindString(1, alias.c_str());
-        if(checkCmd->Step()) {
-            return checkCmd->GetColumnString(0);
-        } else
-            return std::string();
-    }
-    bool DBCrypto::checkGlobalAliasExist(const std::string& alias) const {
-        std::string label = this->getLabelForAlias(alias);
-        if(label.empty() == false) {
-            LogDebug("Global alias '" << alias  << "' exists already for label " << label);
-            return true;
-        } else
-            return false;
+                m_connection->PrepareDataCommand(select_label_global_name_cmd);
+        checkCmd->BindString(1, name.c_str());
+        checkCmd->BindString(2, ownerLabel.c_str());
+        if(checkCmd->Step())
+            return checkCmd->GetColumnInteger(0)?true:false;
+        return false;
     }
 
-    bool DBCrypto::checkAliasExist(const std::string& alias) const {
+    bool DBCrypto::checkNameExist(const Name &name, const Label &owner) const {
         SqlConnection::DataCommandUniquePtr checkCmd =
-                m_connection->PrepareDataCommand(select_check_alias_cmd);
-        checkCmd->BindString(1, alias.c_str());
+                m_connection->PrepareDataCommand(select_check_name_cmd);
+        checkCmd->BindString(1, name.c_str());
+        checkCmd->BindString(2, owner.c_str());
         if(checkCmd->Step()) {
-            LogDebug("Private alias '" << alias  << "' exists already for type "
+            LogDebug("Private name '" << name  << "' exists already for type "
                     << checkCmd->GetColumnInteger(0));
             return true;
         } else
@@ -254,14 +291,14 @@ using namespace DB;
             //Sqlite does not support partial index in our version,
             //so we do it by hand
             Transaction transaction(this);
-            if(checkAliasExist(row.alias)) {
-                ThrowMsg(DBCrypto::Exception::AliasExists,
-                        "Alias exists for alias: " << row.alias);
+            if(checkNameExist(row.name, row.smackLabel)) {
+                ThrowMsg(DBCrypto::Exception::NameExists,
+                        "Name exists for name: " << row.name);
             }
 
             SqlConnection::DataCommandUniquePtr insertCommand =
                     m_connection->PrepareDataCommand(insert_main_cmd);
-            insertCommand->BindString(1, row.alias.c_str());
+            insertCommand->BindString(1, row.name.c_str());
             insertCommand->BindString(2, row.smackLabel.c_str());
             insertCommand->BindInteger(3, row.exportable);
             insertCommand->BindInteger(4, static_cast<int>(row.dataType));
@@ -287,7 +324,7 @@ using namespace DB;
 
     DBRow DBCrypto::getRow(const SqlConnection::DataCommandUniquePtr &selectCommand) {
         DBRow row;
-        row.alias = selectCommand->GetColumnString(0);
+        row.name = selectCommand->GetColumnString(0);
         row.smackLabel = selectCommand->GetColumnString(1);
         row.exportable = selectCommand->GetColumnInteger(2);
         row.dataType = static_cast<DBDataType>(selectCommand->GetColumnInteger(3));
@@ -300,13 +337,14 @@ using namespace DB;
         return row;
     }
 
-    std::string DBCrypto::getPermissionsForAliasAndLabel(const Alias &alias, const std::string &label) const
+    std::string DBCrypto::getPermissions(const Name &name, const Label &ownerLabel, const Label &smackLabel) const
     {
         Try{
             SqlConnection::DataCommandUniquePtr selectCommand =
                             m_connection->PrepareDataCommand(select_permission_cmd);
-            selectCommand->BindString(1, alias.c_str());
-            selectCommand->BindString(2, label.c_str());
+            selectCommand->BindString(1, smackLabel.c_str());
+            selectCommand->BindString(2, name.c_str());
+            selectCommand->BindString(3, ownerLabel.c_str());
 
             if(selectCommand->Step())
                 return selectCommand->GetColumnString(0);
@@ -322,55 +360,34 @@ using namespace DB;
         return std::string();
     }
 
-
-    bool    DBCrypto::rowAccessControlCheck(const Alias &alias,
-                                            const std::string &owner_label,
-                                            const std::string &clnt_label,
-                                            DBCrypto::DBOperationType access_type) const
-    {
-        // owner of the entry have all the permissions by default
-        // check if requesting client is the entry owner - if so, exit (permission granted)
-        if(owner_label == clnt_label)
-            return true;
-
-        // perform permissions DB query
-        std::string permission_string = this->getPermissionsForAliasAndLabel(alias, clnt_label);
-
-        // check if requested operation is in the permission string
-        LogDebug("pair <" << alias << "," << clnt_label << "> permission rights: \"" << permission_string << "\"");
-        if(permission_string.find(access_type) != std::string::npos)
-            return true;
-
-        return false;
-    }
-    bool    DBCrypto::rowAccessControlCheck(const DBRow & input_row,
-                                            const std::string &clnt_label,
-                                            DBCrypto::DBOperationType access_type) const
-    {
-        return this->rowAccessControlCheck(input_row.alias, input_row.smackLabel, clnt_label, access_type);
-    }
-
-
     DBCrypto::DBRowOptional DBCrypto::getDBRow(
-        const Alias &alias,
-        const std::string &clnt_label,
+        const Name &name,
+        const Label &ownerLabel,
+        const Label &smackLabel,
+        DBDataType type)
+    {
+        if (ownerLabel == smackLabel)
+            return getDBRowSimple(name, ownerLabel, type);
+        return getDBRowJoin(name, ownerLabel, smackLabel, type);
+    }
+
+    DBCrypto::DBRowOptional DBCrypto::getDBRowSimple(
+        const Name &name,
+        const Label &owner,
         DBDataType type)
     {
         Try {
             Transaction transaction(this);
             SqlConnection::DataCommandUniquePtr selectCommand =
-                    m_connection->PrepareDataCommand(select_alias_cmd);
-            selectCommand->BindString(1, alias.c_str());
-            selectCommand->BindInteger(2, static_cast<int>(type));
+                    m_connection->PrepareDataCommand(select_name_cmd);
+            selectCommand->BindString(1, name.c_str());
+            selectCommand->BindString(2, owner.c_str());
+            selectCommand->BindInteger(3, static_cast<int>(type));
 
             if(selectCommand->Step())
             {
                 // extract data
                 DBRow current_row = getRow(selectCommand);
-
-                // check access rights here
-                if( ! this->rowAccessControlCheck(current_row, clnt_label, DBCrypto::DB_OPERATION_READ) )
-                    ThrowMsg(Exception::PermissionDenied, "Not enough permissions to perform requested operation");
 
                 // finalize DB operations
                 transaction.commit();
@@ -389,29 +406,28 @@ using namespace DB;
         }
         ThrowMsg(DBCrypto::Exception::InternalError,
                 "Couldn't get row for type " << static_cast<int>(type) <<
-                " alias " << alias << " using client label " << clnt_label);
+                " name " << name << " using client label " << owner);
     }
 
-    DBCrypto::DBRowOptional DBCrypto::getKeyDBRow(
-        const Alias &alias,
-        const std::string &clnt_label)
+    DBCrypto::DBRowOptional DBCrypto::getDBRowJoin(
+        const Name &name,
+        const Label &ownerLabel,
+        const Label &smackLabel,
+        DBDataType type)
     {
-        Try{
+        Try {
             Transaction transaction(this);
             SqlConnection::DataCommandUniquePtr selectCommand =
-                    m_connection->PrepareDataCommand(select_key_alias_cmd);
-            selectCommand->BindString(1, alias.c_str());
-            selectCommand->BindInteger(2, static_cast<int>(DBDataType::DB_KEY_FIRST));
-            selectCommand->BindInteger(3, static_cast<int>(DBDataType::DB_KEY_LAST));
+                    m_connection->PrepareDataCommand(select_name_cmd_join);
+            selectCommand->BindString(1, name.c_str());
+            selectCommand->BindString(2, ownerLabel.c_str());
+            selectCommand->BindString(3, smackLabel.c_str());
+            selectCommand->BindInteger(4, static_cast<int>(type));
 
             if(selectCommand->Step())
             {
                 // extract data
                 DBRow current_row = getRow(selectCommand);
-
-                // check access rights here
-                if( ! this->rowAccessControlCheck(current_row, clnt_label, DBCrypto::DB_OPERATION_READ) )
-                    ThrowMsg(Exception::PermissionDenied, "Not enough permissions to perform requested operation");
 
                 // finalize DB operations
                 transaction.commit();
@@ -429,26 +445,114 @@ using namespace DB;
             LogError("Couldn't execute select statement");
         }
         ThrowMsg(DBCrypto::Exception::InternalError,
-                "Couldn't get Key for alias " << alias
-                << " using client label " << clnt_label);
+                "Couldn't get row for type " << static_cast<int>(type) <<
+                " name " << name << " using client label " << smackLabel);
+    }
+
+    DBCrypto::DBRowOptional DBCrypto::getKeyDBRow(
+        const Name &name,
+        const Label &ownerLabel,
+        const Label &smackLabel)
+    {
+        if (ownerLabel == smackLabel)
+            return getKeyDBRowSimple(name, ownerLabel);
+        else
+            return getKeyDBRowJoin(name, ownerLabel, smackLabel);
+    }
+
+    DBCrypto::DBRowOptional DBCrypto::getKeyDBRowSimple(
+        const Name &name,
+        const Label &ownerLabel)
+    {
+        Try{
+            Transaction transaction(this);
+            SqlConnection::DataCommandUniquePtr selectCommand =
+                    m_connection->PrepareDataCommand(select_key_name_cmd);
+            selectCommand->BindString(1, name.c_str());
+            selectCommand->BindString(2, ownerLabel.c_str());
+            selectCommand->BindInteger(3, static_cast<int>(DBDataType::DB_KEY_FIRST));
+            selectCommand->BindInteger(4, static_cast<int>(DBDataType::DB_KEY_LAST));
+
+            if(selectCommand->Step())
+            {
+                // extract data
+                DBRow current_row = getRow(selectCommand);
+
+                // finalize DB operations
+                transaction.commit();
+
+                // all okay, proceed
+                return DBRowOptional(current_row);
+            } else {
+                return DBRowOptional();
+            }
+        } Catch (SqlConnection::Exception::InvalidColumn) {
+            LogError("Select statement invalid column error");
+        } Catch (SqlConnection::Exception::SyntaxError) {
+            LogError("Couldn't prepare select statement");
+        } Catch (SqlConnection::Exception::InternalError) {
+            LogError("Couldn't execute select statement");
+        }
+        ThrowMsg(DBCrypto::Exception::InternalError,
+                "Couldn't get Key for name " << name
+                << " using client label " << ownerLabel);
+    }
+
+    DBCrypto::DBRowOptional DBCrypto::getKeyDBRowJoin(
+        const Name &name,
+        const Label &ownerLabel,
+        const Label &smackLabel)
+    {
+        Try{
+            Transaction transaction(this);
+            SqlConnection::DataCommandUniquePtr selectCommand =
+                    m_connection->PrepareDataCommand(select_key_name_cmd_join);
+            selectCommand->BindString(1, name.c_str());
+            selectCommand->BindString(2, ownerLabel.c_str());
+            selectCommand->BindString(3, smackLabel.c_str());
+            selectCommand->BindInteger(4, static_cast<int>(DBDataType::DB_KEY_FIRST));
+            selectCommand->BindInteger(5, static_cast<int>(DBDataType::DB_KEY_LAST));
+
+            if(selectCommand->Step())
+            {
+                // extract data
+                DBRow current_row = getRow(selectCommand);
+
+                // finalize DB operations
+                transaction.commit();
+
+                // all okay, proceed
+                return DBRowOptional(current_row);
+            } else {
+                return DBRowOptional();
+            }
+        } Catch (SqlConnection::Exception::InvalidColumn) {
+            LogError("Select statement invalid column error");
+        } Catch (SqlConnection::Exception::SyntaxError) {
+            LogError("Couldn't prepare select statement");
+        } Catch (SqlConnection::Exception::InternalError) {
+            LogError("Couldn't execute select statement");
+        }
+        ThrowMsg(DBCrypto::Exception::InternalError,
+                "Couldn't get Key for name " << name
+                << " using client label " << smackLabel);
     }
 
     void DBCrypto::getSingleType(
-            const std::string &clnt_label,
+            const Label &clnt_label,
             DBDataType type,
-            AliasVector& aliases) const
+            LabelNameVector& labelNameVector) const
     {
         Try{
             SqlConnection::DataCommandUniquePtr selectCommand =
                             m_connection->PrepareDataCommand(select_type_cross_cmd);
             selectCommand->BindInteger(1, static_cast<int>(type));
             selectCommand->BindString(2, clnt_label.c_str());
-            selectCommand->BindString(3, clnt_label.c_str());
 
             while(selectCommand->Step()) {
-                Alias alias;
-                alias = selectCommand->GetColumnString(0);
-                aliases.push_back(alias);
+                Label label = selectCommand->GetColumnString(0);
+                Name name = selectCommand->GetColumnString(1);
+                labelNameVector.push_back(std::make_pair(label, name));
             }
             return;
         } Catch (SqlConnection::Exception::InvalidColumn) {
@@ -462,16 +566,16 @@ using namespace DB;
                 "Couldn't get type " << static_cast<int>(type));
     }
 
-    void DBCrypto::getAliases(
-        const std::string &clnt_label,
+    void DBCrypto::getNames(
+        const Label &clnt_label,
         DBDataType type,
-        AliasVector& aliases)
+        LabelNameVector& labelNameVector)
     {
-        getSingleType(clnt_label, type, aliases);
+        getSingleType(clnt_label, type, labelNameVector);
     }
 
 
-    void DBCrypto::getKeyAliases(const std::string &clnt_label, AliasVector &aliases)
+    void DBCrypto::getKeyNames(const Label &clnt_label, LabelNameVector &labelNameVector)
     {
         Try{
             Transaction transaction(this);
@@ -480,12 +584,11 @@ using namespace DB;
             selectCommand->BindInteger(1, static_cast<int>(DBDataType::DB_KEY_FIRST));
             selectCommand->BindInteger(2, static_cast<int>(DBDataType::DB_KEY_LAST));
             selectCommand->BindString(3, clnt_label.c_str());
-            selectCommand->BindString(4, clnt_label.c_str());
 
             while(selectCommand->Step()) {
-                Alias alias;
-                alias = selectCommand->GetColumnString(0);
-                aliases.push_back(alias);
+                Label label = selectCommand->GetColumnString(0);
+                Name name = selectCommand->GetColumnString(1);
+                labelNameVector.push_back(std::make_pair(label, name));
             }
             transaction.commit();
             return;
@@ -496,47 +599,98 @@ using namespace DB;
         } Catch (SqlConnection::Exception::InternalError) {
             LogError("Couldn't execute select statement");
         }
-        ThrowMsg(DBCrypto::Exception::InternalError, "Couldn't get key aliases");
+        ThrowMsg(DBCrypto::Exception::InternalError, "Couldn't get key names");
     }
 
-    bool DBCrypto::deleteDBRow(const Alias &alias, const std::string &clnt_label)
+    bool DBCrypto::deleteDBRow(const Name &name, const Label &ownerLabel, const Label &credLabel) {
+        if (ownerLabel == credLabel)
+            return deleteDBRowSimple(name, ownerLabel);
+        return deleteDBRowJoin(name, ownerLabel, credLabel);
+    }
+
+    bool DBCrypto::deleteDBRowSimple(const Name &name, const Label &ownerLabel)
     {
         Try {
             Transaction transaction(this);
 
-            std::string owner_label = getLabelForAlias(alias);
-            if( ! owner_label.empty() )
+            if(countRows(name, ownerLabel) > 0)
             {
-                // check access rights here
-                if( ! this->rowAccessControlCheck(alias, owner_label, clnt_label, DBCrypto::DB_OPERATION_REMOVE) )
-                    ThrowMsg(Exception::PermissionDenied, "Not enough permissions to perform requested remove operation");
-
-                // if here, access right is granted - proceed with removal
-                // note: PERMISSION_TABLE entry will be deleted automatically by SQL (cascade relation between tables)
                 SqlConnection::DataCommandUniquePtr deleteCommand =
-                        m_connection->PrepareDataCommand(delete_alias_cmd);
-                deleteCommand->BindString(1, alias.c_str());
-                deleteCommand->Step();
+                        m_connection->PrepareDataCommand(delete_name_cmd);
+                deleteCommand->BindString(1, name.c_str());
+                deleteCommand->BindString(2, ownerLabel.c_str());
 
+                // Step() result code does not provide information whether
+                // anything was removed.
+                deleteCommand->Step();
                 transaction.commit();
+
                 return true;
             }
-            else
-            {
-                LogError("Error: no such alias: " << alias);
-                return false;
-            }
+            return false;
         } Catch (SqlConnection::Exception::SyntaxError) {
             LogError("Couldn't prepare delete statement");
         } Catch (SqlConnection::Exception::InternalError) {
             LogError("Couldn't execute delete statement");
         }
         ThrowMsg(DBCrypto::Exception::InternalError,
-                "Couldn't delete DBRow for alias " << alias << " using client label " << clnt_label);
+                "Couldn't delete DBRow for name " << name << " using client label " << ownerLabel);
+    }
+
+    bool DBCrypto::deleteDBRowJoin(const Name &name, const Label &ownerLabel, const Label &smackLabel)
+    {
+        Try {
+            Transaction transaction(this);
+
+            if (!checkNameExist(name, ownerLabel))
+                return false;
+
+            std::string permissions = DBCrypto::getPermissions(name, ownerLabel, smackLabel);
+            if(permissions.empty() == false)
+            {
+                // entry present, check if for reading or read/remove
+                if(permissions.find(toDBAccessRight(AccessRight::AR_READ_REMOVE)) == std::string::npos)
+                    ThrowMsg(DBCrypto::Exception::PermissionDenied, "Client " << smackLabel << " can only read " <<
+                             ownerLabel << CKM::LABEL_NAME_SEPARATOR << name << ", remove forbidden");
+
+                SqlConnection::DataCommandUniquePtr deleteCommand =
+                    m_connection->PrepareDataCommand(delete_name_cmd_join);
+                deleteCommand->BindString(1, name.c_str());
+                deleteCommand->BindString(2, ownerLabel.c_str());
+                deleteCommand->BindString(3, smackLabel.c_str());
+
+                // Step() result code does not provide information whether
+                // anything was removed.
+                deleteCommand->Step();
+                transaction.commit();
+
+                return true;
+            }
+            return false;
+        } Catch (SqlConnection::Exception::SyntaxError) {
+            LogError("Couldn't prepare delete statement");
+        } Catch (SqlConnection::Exception::InternalError) {
+            LogError("Couldn't execute delete statement");
+        }
+        ThrowMsg(DBCrypto::Exception::InternalError,
+                "Couldn't delete DBRow for name " << name << " using client label " << ownerLabel);
+    }
+
+    int DBCrypto::countRows(const Name &name, const Label &ownerLabel) {
+        SqlConnection::DataCommandUniquePtr checkCmd =
+                    m_connection->PrepareDataCommand(select_count_rows_cmd);
+        checkCmd->BindString(1, name.c_str());
+        checkCmd->BindString(2, ownerLabel.c_str());
+        if(checkCmd->Step()) {
+            return checkCmd->GetColumnInteger(0);
+        } else {
+            LogDebug("Row does not exist for name=" << name << "and label=" << ownerLabel);
+            return 0;
+        }
     }
 
     void DBCrypto::saveKey(
-            const std::string& label,
+            const Label& label,
             const RawBuffer &key)
     {
         Try {
@@ -557,8 +711,7 @@ using namespace DB;
                 "Couldn't save key for label " << label);
     }
 
-    DBCrypto::RawBufferOptional DBCrypto::getKey(
-            const std::string& label)
+    DBCrypto::RawBufferOptional DBCrypto::getKey(const Label& label)
     {
         Try {
             Transaction transaction(this);
@@ -586,7 +739,7 @@ using namespace DB;
                 "Couldn't get key for label " << label);
     }
 
-    void DBCrypto::deleteKey(const std::string& label) {
+    void DBCrypto::deleteKey(const Label& label) {
         Try {
             Transaction transaction(this);
 
@@ -611,92 +764,79 @@ using namespace DB;
                 "Couldn't delete key for label " << label);
     }
 
-
-    int DBCrypto::setAccessRights(  const std::string& clnt_label,
-                                    const Alias& alias,
-                                    const std::string& accessor_label,
-                                    const AccessRight value_to_set)
+    int DBCrypto::setAccessRights(
+            const Name &name,
+            const Label& ownerLabel,
+            const Label& accessorLabel,
+            const AccessRight accessRights)
     {
         Try {
             Transaction transaction(this);
 
-            // check if label is present
-            std::string owner_label = getLabelForAlias(alias);
-            if( ! owner_label.empty() )
-            {
-                // owner can not add permissions to itself
-                if(owner_label.compare(accessor_label) == 0)
-                    ThrowMsg(Exception::InvalidArgs, "Invalid accessor label: equal to owner label");
+            // owner can not add permissions to itself
+            if(ownerLabel.compare(accessorLabel) == 0)
+                return CKM_API_ERROR_INPUT_PARAM;
 
-                // check access rights here - only owner can modify permissions
-                if(owner_label != clnt_label)
-                    ThrowMsg(Exception::PermissionDenied, "Not enough permissions to perform requested write operation");
-
-                // if here, access right is granted - proceed to set permissions
-                SqlConnection::DataCommandUniquePtr setPermissionCommand =
-                        m_connection->PrepareDataCommand(set_permission_alias_cmd);
-                setPermissionCommand->BindString(1, alias.c_str());
-                setPermissionCommand->BindString(2, accessor_label.c_str());
-                setPermissionCommand->BindString(3, toDBAccessRight(value_to_set));
-                setPermissionCommand->Step();
-                transaction.commit();
-                return CKM_API_SUCCESS;
-            }
-            else
-            {
-                LogError("Error: no such alias: " << alias);
+            if (!checkNameExist(name, ownerLabel))
                 return CKM_API_ERROR_DB_ALIAS_UNKNOWN;
-            }
+
+            SqlConnection::DataCommandUniquePtr setPermissionCommand =
+                m_connection->PrepareDataCommand(set_permission_name_cmd);
+            setPermissionCommand->BindString(1, accessorLabel.c_str());
+            setPermissionCommand->BindString(2, toDBAccessRight(accessRights));
+            setPermissionCommand->BindString(3, name.c_str());
+            setPermissionCommand->BindString(4, ownerLabel.c_str());
+            setPermissionCommand->Step();
+            transaction.commit();
+            return CKM_API_SUCCESS;
         } Catch (SqlConnection::Exception::SyntaxError) {
             LogError("Couldn't prepare set statement");
         } Catch (SqlConnection::Exception::InternalError) {
             LogError("Couldn't execute set statement");
         }
         ThrowMsg(DBCrypto::Exception::InternalError,
-                "Couldn't set permissions for alias " << alias << " using client label " << clnt_label);
+                "Couldn't set permissions for name " << name );
     }
 
-    int DBCrypto::clearAccessRights(const std::string& clnt_label,
-                                    const Alias& alias,
-                                    const std::string& accessor_label)
+    int DBCrypto::clearAccessRights(
+            const Name &name,
+            const Label &ownerLabel,
+            const Label &accessorLabel)
     {
         Try {
             Transaction transaction(this);
 
-            std::string owner_label = getLabelForAlias(alias);
-            if( ! owner_label.empty() )
-            {
-                // check access rights here - only owner can modify permissions
-                if(owner_label != clnt_label)
-                    ThrowMsg(Exception::PermissionDenied, "Not enough permissions to perform requested write operation");
+            // owner can not add permissions to itself
+            if(ownerLabel.compare(accessorLabel) == 0)
+                return CKM_API_ERROR_INPUT_PARAM;
 
-                // check if permission for <label, accessor_label> is defined - otherwise nothing to drop
-                if( this->getPermissionsForAliasAndLabel(alias, accessor_label).empty() )
-                    ThrowMsg(Exception::InvalidArgs, "Permission not found");
-
-                // if here, access right is granted - proceed to delete permissions
-                SqlConnection::DataCommandUniquePtr deletePermissionCommand =
-                        m_connection->PrepareDataCommand(delete_permission_cmd);
-                deletePermissionCommand->BindString(1, alias.c_str());
-                deletePermissionCommand->BindString(2, accessor_label.c_str());
-                deletePermissionCommand->Step();
+            // check if CKM entry present
+            if (!checkNameExist(name, ownerLabel)) {
                 transaction.commit();
-                return CKM_API_SUCCESS;
-            }
-            else
-            {
-                LogError("Error: no such alias: " << alias);
                 return CKM_API_ERROR_DB_ALIAS_UNKNOWN;
             }
+
+            // check if permission entry present
+            if( DBCrypto::getPermissions(name, ownerLabel, accessorLabel).empty() )
+                return CKM_API_ERROR_INPUT_PARAM;
+
+            SqlConnection::DataCommandUniquePtr deletePermissionCommand =
+                m_connection->PrepareDataCommand(delete_permission_cmd);
+            deletePermissionCommand->BindString(1, name.c_str());
+            deletePermissionCommand->BindString(2, ownerLabel.c_str());
+            deletePermissionCommand->BindString(3, accessorLabel.c_str());
+            deletePermissionCommand->Step();
+            transaction.commit();
+            return CKM_API_SUCCESS;
         } Catch (SqlConnection::Exception::SyntaxError) {
             LogError("Couldn't prepare delete statement");
         } Catch (SqlConnection::Exception::InternalError) {
             LogError("Couldn't execute delete statement");
         }
         ThrowMsg(DBCrypto::Exception::InternalError,
-                "Couldn't delete permissions for alias " << alias << " using client label " << clnt_label);
+                "Couldn't delete permissions for name " << name);
     }
 
-} // CKM
+} // namespace CKM
 
 #pragma GCC diagnostic pop

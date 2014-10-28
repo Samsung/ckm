@@ -72,13 +72,13 @@ public:
         uid_t user,
         const Password &newPassword);
 
-    RawBuffer removeApplicationData(const std::string &smackLabel);
+    RawBuffer removeApplicationData(const Label &smackLabel);
 
     RawBuffer saveData(
         Credentials &cred,
         int commandId,
         DBDataType dataType,
-        const Alias &alias,
+        const Name &name,
         const RawBuffer &key,
         const PolicySerializable &policy);
 
@@ -86,13 +86,15 @@ public:
         Credentials &cred,
         int commandId,
         DBDataType dataType,
-        const Alias &alias);
+        const Name &name,
+        const Label &label);
 
     RawBuffer getData(
         Credentials &cred,
         int commandId,
         DBDataType dataType,
-        const Alias &alias,
+        const Name &name,
+        const Label &label,
         const Password &password);
 
     RawBuffer getDataList(
@@ -105,8 +107,8 @@ public:
         LogicCommand protocol_cmd,
         int commandId,
         const int additional_param,
-        const Alias &aliasPrivate,
-        const Alias &alaisPublic,
+        const Name &namePrivate,
+        const Name &namePublic,
         const PolicySerializable &policyPrivate,
         const PolicySerializable &policyPublic);
 
@@ -125,7 +127,8 @@ public:
     RawBuffer  createSignature(
         Credentials &cred,
         int commandId,
-        const Alias &privateKeyAlias,
+        const Name &privateKeyName,
+        const Label & ownerLabel,
         const Password &password,           // password for private_key
         const RawBuffer &message,
         const HashAlgorithm hash,
@@ -134,7 +137,8 @@ public:
     RawBuffer verifySignature(
         Credentials &cred,
         int commandId,
-        const Alias &publicKeyOrCertAlias,
+        const Name &publicKeyOrCertName,
+        const Label & ownerLabel,
         const Password &password,           // password for public_key (optional)
         const RawBuffer &message,
         const RawBuffer &signature,
@@ -147,16 +151,16 @@ public:
         Credentials &cred,
         int command,
         int msgID,
-        const Alias &item_alias,
-        const std::string &accessor_label,
+        const Name &name,
+        const Label &accessor_label,
         const AccessRight req_rights);
 
     RawBuffer denyAccess(
         Credentials &cred,
         int command,
         int msgID,
-        const Alias &item_alias,
-        const std::string &accessor_label);
+        const Name &name,
+        const Label &accessor_label);
 
 private:
 
@@ -167,14 +171,15 @@ private:
     int saveDataHelper(
         Credentials &cred,
         DBDataType dataType,
-        const Alias &alias,
+        const Name &name,
         const RawBuffer &key,
         const PolicySerializable &policy);
 
     int getDataHelper(
         Credentials &cred,
         DBDataType dataType,
-        const Alias &alias,
+        const Name &name,
+        const Label &label,
         const Password &password,
         DBRow &row);
 
@@ -182,17 +187,22 @@ private:
         Credentials &cred,
         const KeyType key_type,
         const int additional_param,
-        const Alias &aliasPrivate,
-        const Alias &aliasPublic,
+        const Name &namePrivate,
+        const Name &namePublic,
         const PolicySerializable &policyPrivate,
         const PolicySerializable &policyPublic);
 
     int getKeyHelper(
         Credentials &cred,
-        const Alias &publicKeyOrCertAlias,
+        const Name &publicKeyOrCertName,
         const Password &password,           // password for public_key (optional)
         const KeyImpl &genericKey);
 
+
+    // @return true if name & label are proper, false otherwise
+    static bool checkNameAndLabelValid(
+        const Name &name,
+        const Label &label);
     void updateCCMode_internal();
 
     std::map<uid_t, UserData> m_userDataMap;

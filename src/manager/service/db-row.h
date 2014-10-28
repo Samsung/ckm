@@ -1,14 +1,12 @@
 #pragma once
 
-#include <string>
-
 #include <ckm/ckm-type.h>
 #include <protocols.h>
 
 namespace CKM {
     struct DBRow {
-        std::string alias;
-        std::string smackLabel;
+        Name name;
+        Label smackLabel;
         int exportable;
         DBDataType dataType;        // cert/key/data
         DBCMAlgType algorithmType;  // Algorithm type used for row data encryption
