@@ -45,7 +45,7 @@ IMPLEMENT_SAFE_SINGLETON(CKM::Log::LogSystem);
 
 namespace {
 
-const int POLL_TIMEOUT = 8000;
+const int POLL_TIMEOUT = 600000;
 
 void centKeyClientEnableLogSystem(void) {
     CKM::Singleton<CKM::Log::LogSystem>::Instance().SetTag("CKM_CLIENT");
