@@ -207,13 +207,15 @@ bool AliasSupport::isLabelEmpty() const {
     return m_label.empty();
 }
 
-ServiceConnection::ServiceConnection(char const * const service_interface) {
+ServiceConnection::ServiceConnection(const char *service_interface) {
     if(service_interface)
         m_serviceInterface = std::string(service_interface);
 }
 
-int ServiceConnection::processRequest( const CKM::RawBuffer &send_buf,
-                                       CKM::MessageBuffer &recv_buf) {
+int ServiceConnection::processRequest(
+    const CKM::RawBuffer &send_buf,
+    CKM::MessageBuffer &recv_buf)
+{
     int ec;
     if(CKM_API_SUCCESS != (ec = send(send_buf)))
         return ec;
@@ -221,56 +223,52 @@ int ServiceConnection::processRequest( const CKM::RawBuffer &send_buf,
     return receive(recv_buf);
 }
 
-int ServiceConnection::Connect()
+int ServiceConnection::prepareConnection()
 {
-    // cleanup
-    if (isConnected())
-        disconnect();
+    if (m_socket.isConnected())
+        return CKM_API_SUCCESS;
 
-    return SockRAII::connect(m_serviceInterface.c_str());
+    return m_socket.connect(m_serviceInterface.c_str());
 }
 
 int ServiceConnection::send(const CKM::RawBuffer &send_buf)
 {
-    if( ! isConnected() )
-    {
-        int ec;
-        if(CKM_API_SUCCESS != (ec = ServiceConnection::Connect()))
-        {
-            LogError("send failed, connect fail code: " << ec);
-            return ec;
-        }
+    int retCode = prepareConnection();
+
+    if (retCode != CKM_API_SUCCESS) {
+        LogError("Failed to prepare connection: " << retCode);
+        return retCode;
     }
 
-    int ec = CKM_API_SUCCESS;
     ssize_t done = 0;
-    while((send_buf.size() - done) > 0)
-    {
-        if( 0 >= waitForSocket(POLLOUT, POLL_TIMEOUT)) {
+    while ((send_buf.size() - done) > 0) {
+        if (0 >= m_socket.waitForSocket(POLLOUT, POLL_TIMEOUT)) {
             LogError("Error in WaitForSocket.");
-            ec = CKM_API_ERROR_SOCKET;
+            retCode = CKM_API_ERROR_SOCKET;
             break;
         }
 
-        ssize_t temp = TEMP_FAILURE_RETRY(write(m_sock, &send_buf[done], send_buf.size() - done));
-        if(-1 == temp) {
+        ssize_t temp = TEMP_FAILURE_RETRY(write(m_socket.get(),
+                                                &send_buf[done],
+                                                send_buf.size() - done));
+        if (-1 == temp) {
             LogError("Error in write: " << CKM::GetErrnoString(errno));
-            ec = CKM_API_ERROR_SOCKET;
+            retCode = CKM_API_ERROR_SOCKET;
             break;
         }
 
         done += temp;
     }
 
-    if(ec != CKM_API_SUCCESS)
-        disconnect();
+    if (retCode != CKM_API_SUCCESS)
+        m_socket.disconnect();
 
-    return ec;
+    return retCode;
 }
 
 int ServiceConnection::receive(CKM::MessageBuffer &recv_buf)
 {
-    if( ! isConnected() )
+    if (!m_socket.isConnected())
     {
         LogError("Not connected!");
         return CKM_API_ERROR_SOCKET;
@@ -281,13 +279,15 @@ int ServiceConnection::receive(CKM::MessageBuffer &recv_buf)
     char buffer[c_recv_buf_len];
     do
     {
-        if( 0 >= waitForSocket(POLLIN, POLL_TIMEOUT)) {
+        if( 0 >= m_socket.waitForSocket(POLLIN, POLL_TIMEOUT)) {
             LogError("Error in WaitForSocket.");
             ec = CKM_API_ERROR_SOCKET;
             break;
         }
 
-        ssize_t temp = TEMP_FAILURE_RETRY(read(m_sock, buffer, sizeof(buffer)));
+        ssize_t temp = TEMP_FAILURE_RETRY(read(m_socket.get(),
+                                               buffer,
+                                               sizeof(buffer)));
         if(-1 == temp) {
             LogError("Error in read: " << CKM::GetErrnoString(errno));
             ec = CKM_API_ERROR_SOCKET;
@@ -306,7 +306,7 @@ int ServiceConnection::receive(CKM::MessageBuffer &recv_buf)
     while(!recv_buf.Ready());
 
     if(ec != CKM_API_SUCCESS)
-        disconnect();
+        m_socket.disconnect();
 
     return ec;
 }

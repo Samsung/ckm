@@ -69,15 +69,14 @@ class SockRAII {
         void disconnect();
         bool isConnected() const;
         int get() const;
+        int waitForSocket(int event, int timeout);
 
     protected:
         int connectWrapper(int socket, const char *interface);
-        int waitForSocket(int event, int timeout);
         int m_sock;
 };
 
-class ServiceConnection : private SockRAII
-{
+class ServiceConnection {
     public:
         ServiceConnection(const char * service_interface);
 
@@ -90,11 +89,11 @@ class ServiceConnection : private SockRAII
         int receive(CKM::MessageBuffer &recv_buf);
 
         virtual ~ServiceConnection();
+    protected:
+        int prepareConnection();
 
-    private:
+        SockRAII m_socket;
         std::string m_serviceInterface;
-
-        int Connect();
 };
 
 /*
