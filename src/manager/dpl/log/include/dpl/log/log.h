@@ -32,63 +32,20 @@ namespace CKM {
 namespace Log {
 /**
  * CKM log system
- *
- * To switch logs into old style, export
- * DPL_USE_OLD_STYLE_LOGS before application start
  */
-class LogSystem :
-    private Noncopyable
+class LogSystem : private Noncopyable
 {
-  private:
-    typedef std::list<AbstractLogProvider *> AbstractLogProviderPtrList;
-    AbstractLogProviderPtrList m_providers;
-
-    bool m_isLoggingEnabled;
-
   public:
-    bool IsLoggingEnabled() const;
     LogSystem();
     virtual ~LogSystem();
 
-    /**
-     * Log debug message
-     */
-    void Debug(const char *message,
-               const char *filename,
-               int line,
-               const char *function);
+    AbstractLogProvider::LogLevel GetLogLevel() const { return m_level; }
 
-    /**
-     * Log info message
-     */
-    void Info(const char *message,
-              const char *filename,
-              int line,
-              const char *function);
-
-    /**
-     * Log warning message
-     */
-    void Warning(const char *message,
-                 const char *filename,
-                 int line,
-                 const char *function);
-
-    /**
-     * Log error message
-     */
-    void Error(const char *message,
-               const char *filename,
-               int line,
-               const char *function);
-
-    /**
-     * Log pedantic message
-     */
-    void Pedantic(const char *message,
-                  const char *filename,
-                  int line,
-                  const char *function);
+    void Log(AbstractLogProvider::LogLevel level,
+             const char *message,
+             const char *filename,
+             int line,
+             const char *function);
 
     /**
      * Set default's DLOG provider Tag
@@ -106,6 +63,11 @@ class LogSystem :
      * Remove abstract provider from providers list
      */
     void RemoveProvider(AbstractLogProvider *provider);
+
+  private:
+    typedef std::list<AbstractLogProvider *> AbstractLogProviderPtrList;
+    AbstractLogProviderPtrList m_providers;
+    AbstractLogProvider::LogLevel m_level;
 };
 
 /*
@@ -136,38 +98,50 @@ typedef Singleton<LogSystem> LogSystemSingleton;
 //
 
 /* avoid warnings about unused variables */
-#define DPL_MACRO_DUMMY_LOGGING(message, function)                         \
-    do {                                                                   \
-        CKM::Log::NullStream ns;                                \
-        ns << message;                                                     \
+#define DPL_MACRO_DUMMY_LOGGING(message, level)                                 \
+    do {                                                                        \
+        CKM::Log::NullStream ns;                                                \
+        ns << message;                                                          \
     } while (0)
 
-#define DPL_MACRO_FOR_LOGGING(message, function)                           \
-do                                                                         \
-{                                                                          \
-    if (CKM::Log::LogSystemSingleton::Instance().IsLoggingEnabled())   \
-    {                                                                      \
-        std::ostringstream platformLog;                                    \
-        platformLog << message;                                            \
-        CKM::Log::LogSystemSingleton::Instance().function(      \
-            platformLog.str().c_str(),                                     \
-            __FILE__, __LINE__, __FUNCTION__);                             \
-    }                                                                      \
+#define DPL_MACRO_FOR_LOGGING(message, level)                                   \
+do                                                                              \
+{                                                                               \
+    if (level > CKM::Log::AbstractLogProvider::LogLevel::None &&                \
+        CKM::Log::LogSystemSingleton::Instance().GetLogLevel() >= level)        \
+    {                                                                           \
+        std::ostringstream platformLog;                                         \
+        platformLog << message;                                                 \
+        CKM::Log::LogSystemSingleton::Instance().Log(level,                     \
+                                                     platformLog.str().c_str(), \
+                                                     __FILE__,                  \
+                                                     __LINE__,                  \
+                                                     __FUNCTION__);             \
+    }                                                                           \
 } while (0)
 
 /* Errors must be always logged. */
-#define  LogError(message) DPL_MACRO_FOR_LOGGING(message, Error)
+#define  LogError(message)          \
+    DPL_MACRO_FOR_LOGGING(message, CKM::Log::AbstractLogProvider::LogLevel::Error)
 
 #ifdef BUILD_TYPE_DEBUG
-    #define LogDebug(message) DPL_MACRO_FOR_LOGGING(message, Debug)
-    #define LogInfo(message) DPL_MACRO_FOR_LOGGING(message, Info)
-    #define LogWarning(message) DPL_MACRO_FOR_LOGGING(message, Warning)
-    #define LogPedantic(message) DPL_MACRO_FOR_LOGGING(message, Pedantic)
+    #define LogDebug(message)       \
+        DPL_MACRO_FOR_LOGGING(message, CKM::Log::AbstractLogProvider::LogLevel::Debug)
+    #define LogInfo(message)        \
+        DPL_MACRO_FOR_LOGGING(message, CKM::Log::AbstractLogProvider::LogLevel::Info)
+    #define LogWarning(message)     \
+        DPL_MACRO_FOR_LOGGING(message, CKM::Log::AbstractLogProvider::LogLevel::Warning)
+    #define LogPedantic(message)    \
+        DPL_MACRO_FOR_LOGGING(message, CKM::Log::AbstractLogProvider::LogLevel::Pedantic)
 #else
-    #define LogDebug(message) DPL_MACRO_DUMMY_LOGGING(message, Debug)
-    #define LogInfo(message) DPL_MACRO_DUMMY_LOGGING(message, Info)
-    #define LogWarning(message) DPL_MACRO_DUMMY_LOGGING(message, Warning)
-    #define LogPedantic(message) DPL_MACRO_DUMMY_LOGGING(message, Pedantic)
+    #define LogDebug(message)       \
+        DPL_MACRO_DUMMY_LOGGING(message, CKM::Log::AbstractLogProvider::LogLevel::Debug)
+    #define LogInfo(message)        \
+        DPL_MACRO_DUMMY_LOGGING(message, CKM::Log::AbstractLogProvider::LogLevel::Info)
+    #define LogWarning(message)     \
+        DPL_MACRO_DUMMY_LOGGING(message, CKM::Log::AbstractLogProvider::LogLevel::Warning)
+    #define LogPedantic(message)    \
+        DPL_MACRO_DUMMY_LOGGING(message, CKM::Log::AbstractLogProvider::LogLevel::Pedantic)
 #endif // BUILD_TYPE_DEBUG
 
 #endif // CENT_KEY_LOG_H

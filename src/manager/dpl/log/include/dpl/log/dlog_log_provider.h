@@ -24,47 +24,26 @@
 
 #include <dpl/log/abstract_log_provider.h>
 #include <memory>
-#include <string>
 
 namespace CKM {
 namespace Log {
-class DLOGLogProvider :
-    public AbstractLogProvider
+class DLOGLogProvider : public AbstractLogProvider
 {
-  private:
-    std::unique_ptr<char[]> m_tag;
-
-    static std::string FormatMessage(const char *message,
-                                     const char *filename,
-                                     int line,
-                                     const char *function);
-
   public:
     DLOGLogProvider();
     virtual ~DLOGLogProvider();
 
-    virtual void Debug(const char *message,
-                       const char *fileName,
-                       int line,
-                       const char *function);
-    virtual void Info(const char *message,
-                      const char *fileName,
-                      int line,
-                      const char *function);
-    virtual void Warning(const char *message,
-                         const char *fileName,
-                         int line,
-                         const char *function);
-    virtual void Error(const char *message,
-                       const char *fileName,
-                       int line,
-                       const char *function);
-    virtual void Pedantic(const char *message,
-                          const char *fileName,
-                          int line,
-                          const char *function);
+    virtual void Log(AbstractLogProvider::LogLevel level,
+                     const char *message,
+                     const char *fileName,
+                     int line,
+                     const char *function) const;
+
     // Set global Tag according to DLOG
     void SetTag(const char *tag);
+
+  private:
+    std::unique_ptr<char[]> m_tag;
 };
 
 } // namespace Log

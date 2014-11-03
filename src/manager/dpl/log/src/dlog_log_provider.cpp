@@ -23,25 +23,43 @@
 #include <dpl/log/dlog_log_provider.h>
 #include <cstring>
 #include <sstream>
+#include <stdexcept>
+#include <map>
 #include <dlog.h>
-
-#define UNUSED __attribute__((unused))
 
 namespace CKM {
 namespace Log {
-std::string DLOGLogProvider::FormatMessage(const char *message,
-                                           const char *filename,
-                                           int line,
-                                           const char *function)
-{
-    std::ostringstream val;
 
-    val << std::string("[") <<
-    LocateSourceFileName(filename) << std::string(":") << line <<
-    std::string("] ") << function << std::string("(): ") << message;
+namespace {
+typedef void (*dlogMacro)(const char*, const char*);
 
-    return val.str();
+// I can't map LOG_ values because SLOG uses token concatenation
+void error(const char* tag, const char* msg) {
+    SLOG(LOG_ERROR, tag, "%s", msg);
 }
+void warning(const char* tag, const char* msg) {
+    SLOG(LOG_WARN, tag, "%s", msg);
+}
+void info(const char* tag, const char* msg) {
+    SLOG(LOG_INFO, tag, "%s", msg);
+}
+void debug(const char* tag, const char* msg) {
+    SLOG(LOG_DEBUG, tag, "%s", msg);
+}
+void pedantic(const char* tag, const char* msg) {
+    SLOG(LOG_VERBOSE, tag, "%s", msg);
+}
+std::map<AbstractLogProvider::LogLevel, dlogMacro> dlogMacros = {
+        // [](const char* tag, const char* msg) { SLOG(LOG_ERROR, tag, "%s", msg); } won't compile
+        { AbstractLogProvider::LogLevel::Error,     error },
+        { AbstractLogProvider::LogLevel::Warning,   warning },
+        { AbstractLogProvider::LogLevel::Info,      info },
+        { AbstractLogProvider::LogLevel::Debug,     debug},
+        { AbstractLogProvider::LogLevel::Pedantic,  pedantic}
+};
+
+} // namespace anonymous
+
 
 DLOGLogProvider::DLOGLogProvider()
 {}
@@ -58,51 +76,21 @@ void DLOGLogProvider::SetTag(const char *tag)
     m_tag.reset(buff);
 }
 
-void DLOGLogProvider::Debug(const char *message,
-                            const char *filename,
-                            int line,
-                            const char *function)
+void DLOGLogProvider::Log(AbstractLogProvider::LogLevel level,
+                          const char *message,
+                          const char *fileName,
+                          int line,
+                          const char *function) const
 {
-    SLOG(LOG_DEBUG, m_tag.get(), "%s",
-        FormatMessage(message, filename, line, function).c_str());
-}
+    std::ostringstream val;
+    val << std::string("[") << LocateSourceFileName(fileName) << std::string(":") << line <<
+           std::string("] ") << function << std::string("(): ") << message;
 
-void DLOGLogProvider::Info(const char *message,
-                           const char *filename,
-                           int line,
-                           const char *function)
-{
-    SLOG(LOG_INFO, m_tag.get(), "%s",
-        FormatMessage(message, filename, line, function).c_str());
-}
-
-void DLOGLogProvider::Warning(const char *message,
-                              const char *filename,
-                              int line,
-                              const char *function)
-{
-    SLOG(LOG_WARN, m_tag.get(), "%s",
-        FormatMessage(message, filename, line, function).c_str());
-}
-
-void DLOGLogProvider::Error(const char *message,
-                            const char *filename,
-                            int line,
-                            const char *function)
-{
-    SLOG(LOG_ERROR, m_tag.get(), "%s",
-        FormatMessage(message, filename, line, function).c_str());
-}
-
-void DLOGLogProvider::Pedantic(const char *message,
-                               const char *filename,
-                               int line,
-                               const char *function)
-{
-    SLOG(LOG_DEBUG, "CKM", "%s", FormatMessage(message,
-                                              filename,
-                                              line,
-                                              function).c_str());
+    try {
+        dlogMacros.at(level)(m_tag.get(), val.str().c_str());
+    } catch (const std::out_of_range&) {
+        SLOG(LOG_ERROR, m_tag.get(), "Unsupported log level: %d", level);
+    }
 }
 
 } // nemespace Log

@@ -21,14 +21,13 @@
  */
 #include <stddef.h>
 #include <dpl/log/abstract_log_provider.h>
+#include <dpl/availability.h>
 #include <cstring>
-
-#define UNUSED __attribute__((unused))
 
 namespace CKM {
 namespace Log {
 
-void AbstractLogProvider::SetTag(const char *tag UNUSED) {}
+void AbstractLogProvider::SetTag(const char *tag CKM_UNUSED) {}
 
 const char *AbstractLogProvider::LocateSourceFileName(const char *filename)
 {

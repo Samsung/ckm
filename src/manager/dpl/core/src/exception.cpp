@@ -51,7 +51,10 @@ void LogUnhandledException(const std::string &str,
     printf("%s\n", msg.str().c_str());
 
     // Logging to dlog
-    CKM::Log::LogSystemSingleton::Instance().Error(
-        str.c_str(), filename, line, function);
+    CKM::Log::LogSystemSingleton::Instance().Log(CKM::Log::AbstractLogProvider::LogLevel::Error,
+                                                 str.c_str(),
+                                                 filename,
+                                                 line,
+                                                 function);
 }
 } // namespace CKM

@@ -37,7 +37,8 @@ void AssertProc(const char *condition,
     {                                                                  \
         std::ostringstream platformLog;                                \
         platformLog << message;                                        \
-        CKM::Log::LogSystemSingleton::Instance().Pedantic(             \
+        CKM::Log::LogSystemSingleton::Instance().Log(                  \
+            CKM::Log::AbstractLogProvider::LogLevel::Pedantic,         \
             platformLog.str().c_str(),                                 \
             __FILE__, __LINE__, __FUNCTION__);                         \
     } \

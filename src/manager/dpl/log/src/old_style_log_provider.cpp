@@ -25,6 +25,8 @@
 #include <cstdio>
 #include <cstring>
 #include <sstream>
+#include <map>
+#include <stdexcept>
 #include <sys/time.h>
 #include <unistd.h>
 #include <dlog.h>
@@ -63,139 +65,44 @@ std::string GetFormattedTime()
              static_cast<int>(tv.tv_usec / 1000));
     return format;
 }
+
+struct ColorMark {
+    const char* const begin;
+    const char* const end;
+};
+
+std::map<AbstractLogProvider::LogLevel, ColorMark> consoleLevel = {
+        { AbstractLogProvider::LogLevel::Error,     {ERROR_BEGIN,       ERROR_END} },
+        { AbstractLogProvider::LogLevel::Warning,   {WARNING_BEGIN,     WARNING_END} },
+        { AbstractLogProvider::LogLevel::Info,      {INFO_BEGIN,        INFO_END} },
+        { AbstractLogProvider::LogLevel::Debug,     {DEBUG_BEGIN,       DEBUG_END} },
+        { AbstractLogProvider::LogLevel::Pedantic,  {PEDANTIC_BEGIN,    PEDANTIC_END} }
+};
+
 } // namespace anonymous
 
-std::string OldStyleLogProvider::FormatMessage(const char *message,
-                                               const char *filename,
-                                               int line,
-                                               const char *function)
-{
-    std::ostringstream val;
-
-    val << std::string("[") << GetFormattedTime() << std::string("] [") <<
-    static_cast<unsigned long>(pthread_self()) << "/" <<
-    static_cast<int>(getpid()) << std::string("] [") <<
-    LocateSourceFileName(filename) << std::string(":") << line <<
-    std::string("] ") << function << std::string("(): ") << message;
-
-    return val.str();
-}
-
-OldStyleLogProvider::OldStyleLogProvider(bool showDebug,
-                                         bool showInfo,
-                                         bool showWarning,
-                                         bool showError,
-                                         bool showPedantic) :
-    m_showDebug(showDebug),
-    m_showInfo(showInfo),
-    m_showWarning(showWarning),
-    m_showError(showError),
-    m_showPedantic(showPedantic),
-    m_printStdErr(false)
+OldStyleLogProvider::OldStyleLogProvider()
 {}
 
-OldStyleLogProvider::OldStyleLogProvider(bool showDebug,
-                                         bool showInfo,
-                                         bool showWarning,
-                                         bool showError,
-                                         bool showPedantic,
-                                         bool printStdErr) :
-    m_showDebug(showDebug),
-    m_showInfo(showInfo),
-    m_showWarning(showWarning),
-    m_showError(showError),
-    m_showPedantic(showPedantic),
-    m_printStdErr(printStdErr)
-{}
-
-void OldStyleLogProvider::Debug(const char *message,
-                                const char *filename,
-                                int line,
-                                const char *function)
+void OldStyleLogProvider::Log(AbstractLogProvider::LogLevel level,
+                              const char *message,
+                              const char *fileName,
+                              int line,
+                              const char *function) const
 {
-    if (m_showDebug) {
-        if (m_printStdErr) {
-            fprintf(stderr, "%s%s%s\n", DEBUG_BEGIN,
-                    FormatMessage(message, filename, line,
-                        function).c_str(), DEBUG_END);
-        } else {
-            fprintf(stdout, "%s%s%s\n", DEBUG_BEGIN,
-                    FormatMessage(message, filename, line,
-                        function).c_str(), DEBUG_END);
-        }
-    }
-}
+    try {
+        const struct ColorMark& mark = consoleLevel.at(level);
 
-void OldStyleLogProvider::Info(const char *message,
-                               const char *filename,
-                               int line,
-                               const char *function)
-{
-    if (m_showInfo) {
-        if (m_printStdErr) {
-            fprintf(stderr, "%s%s%s\n", INFO_BEGIN,
-                    FormatMessage(message, filename, line,
-                        function).c_str(), INFO_END);
-        } else {
-            fprintf(stdout, "%s%s%s\n", INFO_BEGIN,
-                    FormatMessage(message, filename, line,
-                        function).c_str(), INFO_END);
-        }
+        std::ostringstream val;
+        val << mark.begin << std::string("[") << GetFormattedTime() << std::string("] [") <<
+               static_cast<unsigned long>(pthread_self()) << "/" << static_cast<int>(getpid()) <<
+               std::string("] [") << LocateSourceFileName(fileName) << std::string(":") << line <<
+               std::string("] ") << function << std::string("(): ") << message << mark.end;
+        fprintf(stdout, "%s\n", val.str().c_str());
+    } catch (const std::out_of_range&) {
+        fprintf(stdout, "Unsupported log level: %d\n", level);
     }
-}
 
-void OldStyleLogProvider::Warning(const char *message,
-                                  const char *filename,
-                                  int line,
-                                  const char *function)
-{
-    if (m_showWarning) {
-        if (m_printStdErr) {
-            fprintf(stderr, "%s%s%s\n", WARNING_BEGIN,
-                    FormatMessage(message, filename, line,
-                        function).c_str(), WARNING_END);
-        } else {
-            fprintf(stdout, "%s%s%s\n", WARNING_BEGIN,
-                    FormatMessage(message, filename, line,
-                        function).c_str(), WARNING_END);
-        }
-    }
-}
-
-void OldStyleLogProvider::Error(const char *message,
-                                const char *filename,
-                                int line,
-                                const char *function)
-{
-    if (m_showError) {
-        if (m_printStdErr) {
-            fprintf(stderr, "%s%s%s\n", ERROR_BEGIN,
-                    FormatMessage(message, filename, line,
-                        function).c_str(), ERROR_END);
-        } else {
-            fprintf(stdout, "%s%s%s\n", ERROR_BEGIN,
-                    FormatMessage(message, filename, line,
-                        function).c_str(), ERROR_END);
-        }
-    }
-}
-
-void OldStyleLogProvider::Pedantic(const char *message,
-                                   const char *filename,
-                                   int line,
-                                   const char *function)
-{
-    if (m_showPedantic) {
-        if (m_printStdErr) {
-            fprintf(stderr, "%s%s%s\n", PEDANTIC_BEGIN,
-                    FormatMessage(message, filename, line,
-                        function).c_str(), PEDANTIC_END);
-        } else {
-            fprintf(stdout, "%s%s%s\n", PEDANTIC_BEGIN,
-                    FormatMessage(message, filename, line,
-                        function).c_str(), PEDANTIC_END);
-        }
-    }
 }
 
 }

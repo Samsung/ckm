@@ -18,6 +18,7 @@ BuildRequires: pkgconfig(libsmack)
 BuildRequires: pkgconfig(libsystemd-daemon)
 BuildRequires: pkgconfig(db-util)
 BuildRequires: pkgconfig(vconf)
+BuildRequires: pkgconfig(libsystemd-journal)
 BuildRequires: boost-devel
 Requires: libkey-manager-common = %{version}-%{release}
 %{?systemd_requires}

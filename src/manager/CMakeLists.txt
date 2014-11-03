@@ -5,6 +5,7 @@ PKG_CHECK_MODULES(COMMON_DEP
     db-util
     libsmack
     libcrypto
+    libsystemd-journal
     )
 
 SET(KEY_MANAGER_COMMON_VERSION_MAJOR 1)
@@ -28,6 +29,7 @@ SET(COMMON_SOURCES
     ${COMMON_PATH}/dpl/log/src/dlog_log_provider.cpp
     ${COMMON_PATH}/dpl/log/src/log.cpp
     ${COMMON_PATH}/dpl/log/src/old_style_log_provider.cpp
+    ${COMMON_PATH}/dpl/log/src/journal_log_provider.cpp
     ${COMMON_PATH}/dpl/core/src/assert.cpp
     ${COMMON_PATH}/dpl/core/src/binary_queue.cpp
     ${COMMON_PATH}/dpl/core/src/colors.cpp

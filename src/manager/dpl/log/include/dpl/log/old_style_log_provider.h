@@ -23,60 +23,20 @@
 #define CENT_KEY_OLD_STYLE_LOG_PROVIDER_H
 
 #include <dpl/log/abstract_log_provider.h>
-#include <string>
 
 namespace CKM {
 namespace Log {
-class OldStyleLogProvider :
-    public AbstractLogProvider
+class OldStyleLogProvider : public AbstractLogProvider
 {
-  private:
-    bool m_showDebug;
-    bool m_showInfo;
-    bool m_showWarning;
-    bool m_showError;
-    bool m_showPedantic;
-    bool m_printStdErr;
-
-    static std::string FormatMessage(const char *message,
-                                     const char *filename,
-                                     int line,
-                                     const char *function);
-
   public:
-    OldStyleLogProvider(bool showDebug,
-                        bool showInfo,
-                        bool showWarning,
-                        bool showError,
-                        bool showPedantic);
-    OldStyleLogProvider(bool showDebug,
-                        bool showInfo,
-                        bool showWarning,
-                        bool showError,
-                        bool showPedantic,
-                        bool printStdErr);
+    OldStyleLogProvider();
     virtual ~OldStyleLogProvider() {}
 
-    virtual void Debug(const char *message,
-                       const char *fileName,
-                       int line,
-                       const char *function);
-    virtual void Info(const char *message,
-                      const char *fileName,
-                      int line,
-                      const char *function);
-    virtual void Warning(const char *message,
-                         const char *fileName,
-                         int line,
-                         const char *function);
-    virtual void Error(const char *message,
-                       const char *fileName,
-                       int line,
-                       const char *function);
-    virtual void Pedantic(const char *message,
-                          const char *fileName,
-                          int line,
-                          const char *function);
+    virtual void Log(AbstractLogProvider::LogLevel level,
+                     const char *message,
+                     const char *fileName,
+                     int line,
+                     const char *function) const;
 };
 }
 } // namespace CKM
