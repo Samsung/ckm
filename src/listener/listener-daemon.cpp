@@ -24,11 +24,13 @@
 
 namespace {
 const char* const CKM_LOCK = "/var/run/key-manager.pid";
+const char* const LISTENER_LOCK = "/var/run/key-manager-listener.pid";
 };
 
 void daemonize()
 {
     // Let's operate in background
+    int fd;
     int result = fork();
     if (result < 0){
         SLOG(LOG_ERROR, CKM_LISTENER_TAG, "%s", "Error in fork!");
@@ -66,27 +68,33 @@ void daemonize()
 
     // Let's change current directory
     if (-1 == chdir("/")) {
-        SLOG(LOG_ERROR, CKM_LISTENER_TAG, "%s", "Error in chdir!");
+        SLOG(LOG_ERROR, CKM_LISTENER_TAG, "Error in chdir!");
         exit(1);
     }
 
     // Let's create lock file
-    result = open("/tmp/ckm-listener.lock", O_RDWR | O_CREAT, 0640);
-    if (result < 0) {
-        SLOG(LOG_ERROR, CKM_LISTENER_TAG, "%s", "Error in opening lock file!");
+    fd = TEMP_FAILURE_RETRY(creat(LISTENER_LOCK, 0640));
+    if (fd < 0) {
+        SLOG(LOG_ERROR, CKM_LISTENER_TAG, "Error in opening lock file!");
         exit(1);
     }
 
-    if (lockf(result, F_TLOCK, 0) < 0) {
-        SLOG(LOG_ERROR, CKM_LISTENER_TAG, "%s", "Daemon already working!");
-        exit(0);
+    if (lockf(fd, F_TLOCK, 0) < 0) {
+        if (errno == EACCES || errno == EAGAIN) {
+            SLOG(LOG_ERROR, CKM_LISTENER_TAG, "Daemon already working!");
+            exit(0);
+        }
+        SLOG(LOG_ERROR, CKM_LISTENER_TAG, "lockf failed with error: %s" , strerror(errno));
+        exit(1);
     }
 
-    char str[100];
-    sprintf(str, "%d\n", getpid());
-    result = write(result, str, strlen(str));
+    std::string pid = std::to_string(getpid());
+    if (TEMP_FAILURE_RETRY(write(fd, pid.c_str(), pid.size())) <= 0) {
+        SLOG(LOG_ERROR, CKM_LISTENER_TAG, "Failed to write lock file. Error: %s", strerror(errno));
+        exit(1);
+    }
 
-    SLOG(LOG_DEBUG, CKM_LISTENER_TAG, "%s", str);
+    SLOG(LOG_DEBUG, CKM_LISTENER_TAG, "%s", pid.c_str());
 }
 
 bool isCkmRunning()
