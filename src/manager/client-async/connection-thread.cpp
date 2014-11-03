@@ -30,10 +30,6 @@
 
 namespace CKM {
 
-namespace {
-const int POLL_TIMEOUT = 8000;
-} // namespace anonymous
-
 ConnectionThread::Pipe::Pipe()
 {
     if (-1 == pipe(m_pipe))

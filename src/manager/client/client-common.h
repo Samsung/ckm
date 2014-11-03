@@ -65,22 +65,21 @@ class SockRAII {
 
         virtual ~SockRAII();
 
-        int Connect(char const * const interface);
-        void Disconnect();
+        int connect(const char * interface);
+        void disconnect();
         bool isConnected() const;
-        int Get() const;
+        int get() const;
 
     protected:
-        int WaitForSocket(int event, int timeout);
-
-    private:
+        int connectWrapper(int socket, const char *interface);
+        int waitForSocket(int event, int timeout);
         int m_sock;
 };
 
-class ServiceConnection : public SockRAII
+class ServiceConnection : private SockRAII
 {
     public:
-        ServiceConnection(char const * const service_interface);
+        ServiceConnection(const char * service_interface);
 
         // roundtrip: send and receive
         int processRequest(const CKM::RawBuffer &send_buf,
@@ -93,11 +92,10 @@ class ServiceConnection : public SockRAII
         virtual ~ServiceConnection();
 
     private:
-        std::string m_service_interface;
+        std::string m_serviceInterface;
 
         int Connect();
 };
-
 
 /*
  * Decorator function that performs frequently repeated exception handling in

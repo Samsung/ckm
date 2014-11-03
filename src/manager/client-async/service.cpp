@@ -45,7 +45,7 @@ void Service::addRequest(AsyncRequest&& req)
     if(!m_socket) {
         m_socket.reset(new SockRAII());
         int ret;
-        if (CKM_API_SUCCESS != (ret = m_socket->Connect(m_interface.c_str()))) {
+        if (CKM_API_SUCCESS != (ret = m_socket->connect(m_interface.c_str()))) {
             LogError("Socket connection failed: " << ret);
             m_socket.reset();
             req.observer->ReceivedError(ret);
@@ -64,7 +64,7 @@ void Service::serviceError(int error)
     if (m_socket)
     {
         // stop listening on socket
-        m_descriptors.remove(m_socket->Get(), false);
+        m_descriptors.remove(m_socket->get(), false);
         // close the socket
         m_socket.reset();
     }
@@ -87,8 +87,8 @@ void Service::serviceError(int error)
 
 void Service::socketReady(int sock, short revents)
 {
-    if (sock != m_socket->Get()) {
-        LogError("Unexpected socket: " << sock << "!=" << m_socket->Get());
+    if (sock != m_socket->get()) {
+        LogError("Unexpected socket: " << sock << "!=" << m_socket->get());
         serviceError(CKM_API_ERROR_SOCKET);
         return;
     }
@@ -124,7 +124,7 @@ void Service::sendData()
     while (!m_sendQueue.empty()) {
         AsyncRequest& req = m_sendQueue.front();
 
-        ssize_t temp = TEMP_FAILURE_RETRY(write(m_socket->Get(),
+        ssize_t temp = TEMP_FAILURE_RETRY(write(m_socket->get(),
                                                 &req.buffer[req.written],
                                                 req.buffer.size() - req.written));
         if (-1 == temp) {
@@ -158,7 +158,7 @@ void Service::receiveData()
 {
     char buffer[RECV_BUFFER_SIZE];
 
-    ssize_t temp = TEMP_FAILURE_RETRY(read(m_socket->Get(), buffer, RECV_BUFFER_SIZE));
+    ssize_t temp = TEMP_FAILURE_RETRY(read(m_socket->get(), buffer, RECV_BUFFER_SIZE));
     if (-1 == temp) {
         int err = errno;
         LogError("Error in read: " << GetErrnoString(err));
@@ -201,9 +201,9 @@ void Service::receiveData()
 void Service::watch(short events)
 {
     if (0 == events)
-        m_descriptors.remove(m_socket->Get(), false);
+        m_descriptors.remove(m_socket->get(), false);
     else
-        m_descriptors.add(m_socket->Get(),
+        m_descriptors.add(m_socket->get(),
                           events,
                           [this](int sock, short revents){ socketReady(sock, revents); });
 }
