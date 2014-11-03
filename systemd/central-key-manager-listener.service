@@ -1,6 +1,6 @@
 [Unit]
 Description=Start the Central Key Manager Listener
-Require=dbus.service
+Requires=dbus.service
 
 [Service]
 Type=forking
