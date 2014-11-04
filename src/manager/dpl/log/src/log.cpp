@@ -224,57 +224,5 @@ void LogSystem::Pedantic(const char *message,
     }
 }
 
-void LogSystem::SecureInfo(const char *message,
-                         const char *filename,
-                         int line,
-                         const char *function)
-{
-    for (AbstractLogProviderPtrList::iterator iterator = m_providers.begin();
-         iterator != m_providers.end();
-         ++iterator)
-    {
-        (*iterator)->SecureInfo(message, filename, line, function);
-    }
-}
-
-void LogSystem::SecureDebug(const char *message,
-                         const char *filename,
-                         int line,
-                         const char *function)
-{
-    for (AbstractLogProviderPtrList::iterator iterator = m_providers.begin();
-         iterator != m_providers.end();
-         ++iterator)
-    {
-        (*iterator)->SecureDebug(message, filename, line, function);
-    }
-}
-
-void LogSystem::SecureError(const char *message,
-                         const char *filename,
-                         int line,
-                         const char *function)
-{
-    for (AbstractLogProviderPtrList::iterator iterator = m_providers.begin();
-         iterator != m_providers.end();
-         ++iterator)
-    {
-        (*iterator)->SecureError(message, filename, line, function);
-    }
-}
-
-void LogSystem::SecureWarning(const char *message,
-                         const char *filename,
-                         int line,
-                         const char *function)
-{
-    for (AbstractLogProviderPtrList::iterator iterator = m_providers.begin();
-         iterator != m_providers.end();
-         ++iterator)
-    {
-        (*iterator)->SecureWarning(message, filename, line, function);
-    }
-}
-
 }
 } // namespace CKM

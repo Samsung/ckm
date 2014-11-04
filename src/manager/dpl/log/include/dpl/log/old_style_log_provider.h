@@ -77,22 +77,6 @@ class OldStyleLogProvider :
                           const char *fileName,
                           int line,
                           const char *function);
-    virtual void SecureDebug(const char *message,
-                       const char *fileName,
-                       int line,
-                       const char *function);
-    virtual void SecureInfo(const char *message,
-                      const char *fileName,
-                      int line,
-                      const char *function);
-    virtual void SecureWarning(const char *message,
-                         const char *fileName,
-                         int line,
-                         const char *function);
-    virtual void SecureError(const char *message,
-                       const char *fileName,
-                       int line,
-                       const char *function);
 };
 }
 } // namespace CKM

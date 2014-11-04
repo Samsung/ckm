@@ -91,38 +91,6 @@ class LogSystem :
                   const char *function);
 
     /**
-     * Log pedantic message with secure macro
-     */
-    void SecureDebug(const char *message,
-               const char *filename,
-               int line,
-               const char *function);
-
-    /**
-     * Log info message with secure macro
-     */
-    void SecureInfo(const char *message,
-              const char *filename,
-              int line,
-              const char *function);
-
-    /**
-     * Log warning message with secure macro
-     */
-    void SecureWarning(const char *message,
-                 const char *filename,
-                 int line,
-                 const char *function);
-
-    /**
-     * Log error message with secure macro
-     */
-    void SecureError(const char *message,
-               const char *filename,
-               int line,
-               const char *function);
-
-    /**
      * Set default's DLOG provider Tag
      */
     void SetTag(const char *tag);
@@ -189,24 +157,17 @@ do                                                                         \
 
 /* Errors must be always logged. */
 #define  LogError(message) DPL_MACRO_FOR_LOGGING(message, Error)
-#define  LogSecureError(message) DPL_MACRO_FOR_LOGGING(message, SecureError)
 
 #ifdef BUILD_TYPE_DEBUG
     #define LogDebug(message) DPL_MACRO_FOR_LOGGING(message, Debug)
     #define LogInfo(message) DPL_MACRO_FOR_LOGGING(message, Info)
     #define LogWarning(message) DPL_MACRO_FOR_LOGGING(message, Warning)
     #define LogPedantic(message) DPL_MACRO_FOR_LOGGING(message, Pedantic)
-    #define LogSecureDebug(message) DPL_MACRO_FOR_LOGGING(message, SecureDebug)
-    #define LogSecureInfo(message) DPL_MACRO_FOR_LOGGING(message, SecureInfo)
-    #define LogSecureWarning(message) DPL_MACRO_FOR_LOGGING(message, SecureWarning)
 #else
     #define LogDebug(message) DPL_MACRO_DUMMY_LOGGING(message, Debug)
     #define LogInfo(message) DPL_MACRO_DUMMY_LOGGING(message, Info)
     #define LogWarning(message) DPL_MACRO_DUMMY_LOGGING(message, Warning)
     #define LogPedantic(message) DPL_MACRO_DUMMY_LOGGING(message, Pedantic)
-    #define LogSecureDebug(message) DPL_MACRO_DUMMY_LOGGING(message, SecureDebug)
-    #define LogSecureInfo(message) DPL_MACRO_DUMMY_LOGGING(message, SecureInfo)
-    #define LogSecureWarning(message) DPL_MACRO_DUMMY_LOGGING(message, SecureWarning)
 #endif // BUILD_TYPE_DEBUG
 
 #endif // CENT_KEY_LOG_H
