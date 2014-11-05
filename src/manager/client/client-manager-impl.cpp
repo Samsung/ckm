@@ -474,11 +474,17 @@ int ManagerImpl::getCertificateChain(
     const AliasVector &untrustedCertificates,
     CertificateShPtrVector &certificateChainVector)
 {
+    LabelNameVector untrusted_certs;
+    for (auto &e: untrustedCertificates) {
+        AliasSupport helper(e);
+        untrusted_certs.push_back(std::make_pair(helper.getLabel(), helper.getName()));
+    }
+
     return getCertChain(
         LogicCommand::GET_CHAIN_ALIAS,
         ++m_counter,
         certificate,
-        untrustedCertificates,
+        untrusted_certs,
         certificateChainVector,
         m_storageConnection);
 }

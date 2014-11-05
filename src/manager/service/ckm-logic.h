@@ -123,7 +123,7 @@ public:
         Credentials &cred,
         int commandId,
         const RawBuffer &certificate,
-        const AliasVector &aliasVector);
+        const LabelNameVector &labelNameVector);
 
     RawBuffer  createSignature(
         Credentials &cred,

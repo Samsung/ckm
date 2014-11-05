@@ -730,10 +730,9 @@ RawBuffer CKMLogic::getCertificateChain(
     Credentials &cred,
     int commandId,
     const RawBuffer &certificate,
-    const AliasVector &aliasVector)
+    const LabelNameVector &labelNameVector)
 {
     int retCode = CKM_API_SUCCESS;
-    std::size_t separator_pos = 0;
     RawBufferVector chainRawVector;
     try {
         CertificateImpl cert(certificate, DataFormat::FORM_DER);
@@ -746,26 +745,8 @@ RawBuffer CKMLogic::getCertificateChain(
             goto senderror;
         }
 
-        for (auto &i: aliasVector) {
-            if ((separator_pos = i.rfind(LABEL_NAME_SEPARATOR)) == Alias::npos) {
-                // No label prefixed in alias. put empty label
-                retCode = getDataHelper(
-                        cred,
-                        DBDataType::CERTIFICATE,
-                        i,
-                        Label(),
-                        Password(),
-                        row);
-            }
-            else {
-                retCode = getDataHelper(
-                        cred,
-                        DBDataType::CERTIFICATE,
-                        i.substr(separator_pos+strlen(LABEL_NAME_SEPARATOR)), // alias
-                        Label(i.substr(0, separator_pos)),                    // label
-                        Password(),
-                        row);
-            }
+        for (auto &i: labelNameVector) {
+            retCode = getDataHelper(cred, DBDataType::CERTIFICATE, i.second, i.first, Password(), row);
 
             if (retCode != CKM_API_SUCCESS)
                 goto senderror;

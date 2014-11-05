@@ -175,10 +175,16 @@ void ManagerAsync::getCertificateChain(const ObserverPtr& observer,
                                        const CertificateShPtr& certificate,
                                        const AliasVector& untrustedCertificates)
 {
+    LabelNameVector untrusted_certs;
+    for (auto &e: untrustedCertificates) {
+        AliasSupport helper(e);
+        untrusted_certs.push_back(std::make_pair(helper.getLabel(), helper.getName()));
+    }
+
     m_impl->getCertChain(observer,
                          LogicCommand::GET_CHAIN_ALIAS,
                          certificate,
-                         untrustedCertificates);
+                         untrusted_certs);
 }
 
 void ManagerAsync::createSignature(const ObserverPtr& observer,

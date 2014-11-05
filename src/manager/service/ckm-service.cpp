@@ -280,13 +280,13 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer)
         case LogicCommand::GET_CHAIN_ALIAS:
         {
             RawBuffer certificate;
-            AliasVector aliasVector;
-            buffer.Deserialize(certificate, aliasVector);
+            LabelNameVector untrusted_certs;
+            buffer.Deserialize(certificate, untrusted_certs);
             return m_logic->getCertificateChain(
                 cred,
                 msgID,
                 certificate,
-                aliasVector);
+                untrusted_certs);
         }
         case LogicCommand::CREATE_SIGNATURE:
         {
