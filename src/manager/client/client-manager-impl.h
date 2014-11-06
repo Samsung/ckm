@@ -97,8 +97,7 @@ public:
 
     int ocspCheck(const CertificateShPtrVector &certificateChain, int &ocspCheck);
 
-    int allowAccess(const Alias &alias, const Label &accessor, AccessRight granted);
-    int denyAccess(const Alias &alias, const Label &accessor);
+    int setPermission(const Alias &alias, const Label &accessor, Permission newPermission);
 
 protected:
     int saveBinaryData(

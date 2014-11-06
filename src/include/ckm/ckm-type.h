@@ -93,9 +93,11 @@ enum class DBCMAlgType : int {
     COUNT
 };
 
-enum class AccessRight: int {
-    AR_READ = 0,
-    AR_READ_REMOVE
+enum class Permission: int {
+    READ = 0,
+    READ_REMOVE,
+    // .. new values here
+    NONE = -1,
 };
 
 const char * ErrorToString(int error);

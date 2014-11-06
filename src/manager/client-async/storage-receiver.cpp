@@ -119,11 +119,8 @@ void StorageReceiver::parseResponse()
     case LogicCommand::CREATE_KEY_PAIR_DSA:
         parseRetCode(&ManagerAsync::Observer::ReceivedCreateKeyPairDSA);
         break;
-    case LogicCommand::ALLOW_ACCESS:
-        parseRetCode(&ManagerAsync::Observer::ReceivedAllowAccess);
-        break;
-    case LogicCommand::DENY_ACCESS:
-        parseRetCode(&ManagerAsync::Observer::ReceivedDenyAccess);
+    case LogicCommand::SET_PERMISSION:
+        parseRetCode(&ManagerAsync::Observer::ReceivedSetPermission);
         break;
 
     default:
@@ -278,9 +275,9 @@ void StorageReceiver::parseCreateSignatureCommand()
     m_observer->ReceivedCreateSignature(std::move(signature));
 }
 
-void StorageReceiver::parseAllowAccessCommand()
+void StorageReceiver::parseSetPermission()
 {
-    int retCode = 0;
+    int retCode;
     m_buffer.Deserialize(retCode);
 
     // check error code
@@ -289,21 +286,7 @@ void StorageReceiver::parseAllowAccessCommand()
          return;
     }
 
-    m_observer->ReceivedAllowAccess();
-}
-
-void StorageReceiver::parseDenyAccessCommand()
-{
-    int retCode = 0;
-    m_buffer.Deserialize(retCode);
-
-    // check error code
-    if (retCode != CKM_API_SUCCESS) {
-         m_observer->ReceivedError(retCode);
-         return;
-    }
-
-    m_observer->ReceivedDenyAccess();
+    m_observer->ReceivedSetPermission();
 }
 
 void StorageReceiver::parseRetCode(ObserverCb callback)

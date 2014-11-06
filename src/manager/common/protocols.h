@@ -22,6 +22,7 @@
  */
 #pragma once
 
+#include <string>
 #include <ckm/ckm-type.h>
 
 #include <dpl/serialization.h>
@@ -41,8 +42,7 @@ enum class ControlCommand : int {
     RESET_USER_PASSWORD,
     REMOVE_APP_DATA,
     UPDATE_CC_MODE,
-    ALLOW_ACCESS,
-    DENY_ACCESS,
+    SET_PERMISSION
     // for backward compatibility append new at the end
 };
 
@@ -58,16 +58,17 @@ enum class LogicCommand : int {
     CREATE_SIGNATURE,
     VERIFY_SIGNATURE,
     CREATE_KEY_PAIR_DSA,
-    ALLOW_ACCESS,
-    DENY_ACCESS,
+    SET_PERMISSION
     // for backward compatibility append new at the end
 };
 
 // Do not use DB_KEY_FIRST and DB_KEY_LAST in the code.
 // This values are only for db module!
 enum class DBDataType : int {
-    KEY_RSA_PUBLIC,
-    DB_KEY_FIRST = KEY_RSA_PUBLIC,
+    DB_DATA_TYPE_FIRST,
+    DB_KEY_FIRST = DB_DATA_TYPE_FIRST,
+
+    KEY_RSA_PUBLIC = DB_KEY_FIRST,
     KEY_RSA_PRIVATE,
     KEY_ECDSA_PUBLIC,
     KEY_ECDSA_PRIVATE,
@@ -77,6 +78,10 @@ enum class DBDataType : int {
     DB_KEY_LAST = KEY_AES,
     CERTIFICATE,
     BINARY_DATA,
+    // add new items here
+
+    // keep in mind to modify DB_DATA_TYPE_LAST when doing changes!
+    DB_DATA_TYPE_LAST = BINARY_DATA
 };
 
 // (client side) Alias = (service side) Label::Name
@@ -87,7 +92,8 @@ typedef std::vector<std::pair<Label, Name> > LabelNameVector;
 
 DBDataType toDBDataType(KeyType key);
 KeyType toKeyType(DBDataType dbDataType);
-const char* toDBAccessRight(AccessRight access_right_type);
+const char* toDBPermission(Permission access_right_type);
+Permission toPermission(const std::string &input_DB_data);
 
 class IStream;
 

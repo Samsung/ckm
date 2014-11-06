@@ -46,8 +46,7 @@ private:
     void parseRemoveCommand();
     void parseGetChainCertCommand();
     void parseCreateSignatureCommand();
-    void parseAllowAccessCommand();
-    void parseDenyAccessCommand();
+    void parseSetPermission();
 
     typedef void (ManagerAsync::Observer::*ObserverCb)();
 

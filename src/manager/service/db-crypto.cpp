@@ -63,42 +63,18 @@ namespace {
             "VALUES("
             "   ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
 
-    const char *select_name_cmd =
-            "SELECT * FROM CKM_TABLE WHERE name=?001 AND label=?002 AND dataType=?003; ";
-
-    const char *select_name_cmd_join =
-            "SELECT * FROM CKM_TABLE WHERE name=?001 AND label=?002 AND dataType=?004 AND "
-            " idx in (SELECT idx FROM PERMISSION_TABLE WHERE label = ?003); ";
-
     const char *select_check_name_cmd =
             "SELECT dataType FROM CKM_TABLE WHERE name=?001 AND label=?002;";
 
-    const char *select_label_global_name_cmd =
-            "SELECT count(*) FROM CKM_TABLE WHERE name=?001 AND label=?002; ";
-
-//    const char *select_label_index_global_name_cmd =
-//            //                                           1
-//            "SELECT label, idx FROM CKM_TABLE WHERE name=?;";
-
-    const char *select_key_name_cmd =
+    const char *select_row_by_name_label_type_cmd =
             "SELECT * FROM CKM_TABLE WHERE name=?001 AND label=?002"
             " AND dataType BETWEEN ?003 AND ?004;";
-
-    const char *select_key_name_cmd_join =
-            "SELECT * FROM CKM_TABLE WHERE name=?001 AND label=?002"
-            " AND dataType BETWEEN ?004 AND ?005 " 
-            " AND idx in (SELECT idx FROM PERMISSION_TABLE WHERE label = ?003);";
 
     const char *select_count_rows_cmd =
             "SELECT COUNT(idx) FROM CKM_TABLE WHERE name=?001 AND label=?002;";
 
     const char *delete_name_cmd =
             "DELETE FROM CKM_TABLE WHERE name=?001 AND label=?002;";
-
-    const char *delete_name_cmd_join =
-            "DELETE FROM CKM_TABLE WHERE name=?001 AND label=?002 AND "
-            " idx in (SELECT idx FROM PERMISSION_TABLE WHERE label=?003);";
-
 
     const char *delete_data_with_key_cmd =
             //                                 1
@@ -145,10 +121,6 @@ namespace {
 
 
 // CKM_TABLE x PERMISSION_TABLE
-
-    const char *select_type_cross_cmd =
-            "SELECT C.label, C.name FROM CKM_TABLE AS C LEFT JOIN PERMISSION_TABLE AS P ON C.idx = P.idx WHERE "
-            "C.dataType=?001 AND (C.label=?002 OR (P.label=?002 AND P.accessFlags IS NOT NULL)) GROUP BY C.name;";
 
     const char *select_key_type_cross_cmd =
             "SELECT C.label, C.name FROM CKM_TABLE AS C LEFT JOIN PERMISSION_TABLE AS P ON C.idx=P.idx WHERE "
@@ -236,70 +208,35 @@ using namespace DB;
         transaction.commit();
     }
 
-//    void DBCrypto::getLabelForName(const Name &name, Label & label) const {
-//        SqlConnection::DataCommandUniquePtr checkCmd =
-//                m_connection->PrepareDataCommand(select_label_global_name_cmd);
-//        checkCmd->BindString(1, name.c_str());
-//        if(checkCmd->Step()) {
-//            label = checkCmd->GetColumnString(0);
-//        } else
-//            label.clear();
-//    }
-
-//    void DBCrypto::getLabelForName(const Name &name, Label & label, int & index) const
-//    {
-//        SqlConnection::DataCommandUniquePtr checkCmd =
-//                m_connection->PrepareDataCommand(select_label_index_global_name_cmd);
-//        checkCmd->BindString(1, name.c_str());
-//        if(checkCmd->Step()) {
-//            label = checkCmd->GetColumnString(0);
-//            index = checkCmd->GetColumnInteger(1);
-//        }
-//        else
-//        {
-//            label.clear();
-//            index = -1;
-//        }
-//    }
-
-    bool DBCrypto::checkGlobalNameExist(const Name &name, const Label &ownerLabel) const {
-        SqlConnection::DataCommandUniquePtr checkCmd =
-                m_connection->PrepareDataCommand(select_label_global_name_cmd);
-        checkCmd->BindString(1, name.c_str());
-        checkCmd->BindString(2, ownerLabel.c_str());
-        if(checkCmd->Step())
-            return checkCmd->GetColumnInteger(0)?true:false;
-        return false;
-    }
-
-    bool DBCrypto::checkNameExist(const Name &name, const Label &owner) const {
-        SqlConnection::DataCommandUniquePtr checkCmd =
-                m_connection->PrepareDataCommand(select_check_name_cmd);
-        checkCmd->BindString(1, name.c_str());
-        checkCmd->BindString(2, owner.c_str());
-        if(checkCmd->Step()) {
-            LogDebug("Private name '" << name  << "' exists already for type "
-                    << checkCmd->GetColumnInteger(0));
-            return true;
-        } else
+    bool DBCrypto::isNameLabelPresent(const Name &name, const Label &owner) const {
+        Try {
+            SqlConnection::DataCommandUniquePtr checkCmd =
+                    m_connection->PrepareDataCommand(select_check_name_cmd);
+            checkCmd->BindString(1, name.c_str());
+            checkCmd->BindString(2, owner.c_str());
+            if(checkCmd->Step()) {
+                LogDebug("Private name '" << name  << "' exists already for type "
+                        << checkCmd->GetColumnInteger(0));
+                return true;
+            }
             return false;
+        } Catch(SqlConnection::Exception::SyntaxError) {
+            LogError("Couldn't prepare insert statement");
+        } Catch(SqlConnection::Exception::InternalError) {
+            LogError("Couldn't execute insert statement");
+        }
+        ThrowMsg(DBCrypto::Exception::InternalError,
+                "Couldn't check if name and label pair is present");
     }
 
     void DBCrypto::saveDBRow(const DBRow &row){
         Try {
-
-            //Sqlite does not support partial index in our version,
-            //so we do it by hand
-            Transaction transaction(this);
-            if(checkNameExist(row.name, row.smackLabel)) {
-                ThrowMsg(DBCrypto::Exception::NameExists,
-                        "Name exists for name: " << row.name);
-            }
-
+            // Sqlite does not support partial index in our version,
+            // so we do it by hand
             SqlConnection::DataCommandUniquePtr insertCommand =
                     m_connection->PrepareDataCommand(insert_main_cmd);
             insertCommand->BindString(1, row.name.c_str());
-            insertCommand->BindString(2, row.smackLabel.c_str());
+            insertCommand->BindString(2, row.ownerLabel.c_str());
             insertCommand->BindInteger(3, row.exportable);
             insertCommand->BindInteger(4, static_cast<int>(row.dataType));
             insertCommand->BindInteger(5, static_cast<int>(row.algorithmType));
@@ -310,7 +247,6 @@ using namespace DB;
             insertCommand->BindBlob(10, row.tag);
 
             insertCommand->Step();
-            transaction.commit();
             return;
 
         } Catch(SqlConnection::Exception::SyntaxError) {
@@ -325,7 +261,7 @@ using namespace DB;
     DBRow DBCrypto::getRow(const SqlConnection::DataCommandUniquePtr &selectCommand) {
         DBRow row;
         row.name = selectCommand->GetColumnString(0);
-        row.smackLabel = selectCommand->GetColumnString(1);
+        row.ownerLabel = selectCommand->GetColumnString(1);
         row.exportable = selectCommand->GetColumnInteger(2);
         row.dataType = static_cast<DBDataType>(selectCommand->GetColumnInteger(3));
         row.algorithmType = static_cast<DBCMAlgType>(selectCommand->GetColumnInteger(4));
@@ -337,19 +273,20 @@ using namespace DB;
         return row;
     }
 
-    std::string DBCrypto::getPermissions(const Name &name, const Label &ownerLabel, const Label &smackLabel) const
+    PermissionOptional DBCrypto::getPermissionRow(
+        const Name &name,
+        const Label &ownerLabel,
+        const Label &accessorLabel) const
     {
         Try{
             SqlConnection::DataCommandUniquePtr selectCommand =
                             m_connection->PrepareDataCommand(select_permission_cmd);
-            selectCommand->BindString(1, smackLabel.c_str());
+            selectCommand->BindString(1, accessorLabel.c_str());
             selectCommand->BindString(2, name.c_str());
             selectCommand->BindString(3, ownerLabel.c_str());
 
             if(selectCommand->Step())
-                return selectCommand->GetColumnString(0);
-
-            return std::string();
+                return PermissionOptional(toPermission(selectCommand->GetColumnString(0)));
         } Catch (SqlConnection::Exception::InvalidColumn) {
             LogError("Select statement invalid column error");
         } Catch (SqlConnection::Exception::SyntaxError) {
@@ -357,40 +294,34 @@ using namespace DB;
         } Catch (SqlConnection::Exception::InternalError) {
             LogError("Couldn't execute select statement");
         }
-        return std::string();
+        return PermissionOptional();
     }
 
     DBCrypto::DBRowOptional DBCrypto::getDBRow(
         const Name &name,
         const Label &ownerLabel,
-        const Label &smackLabel,
         DBDataType type)
     {
-        if (ownerLabel == smackLabel)
-            return getDBRowSimple(name, ownerLabel, type);
-        return getDBRowJoin(name, ownerLabel, smackLabel, type);
+        return getDBRow(name, ownerLabel, type, type);
     }
-
-    DBCrypto::DBRowOptional DBCrypto::getDBRowSimple(
+    DBCrypto::DBRowOptional DBCrypto::getDBRow(
         const Name &name,
-        const Label &owner,
-        DBDataType type)
+        const Label &ownerLabel,
+        DBDataType typeRangeStart,
+        DBDataType typeRangeStop)
     {
         Try {
-            Transaction transaction(this);
             SqlConnection::DataCommandUniquePtr selectCommand =
-                    m_connection->PrepareDataCommand(select_name_cmd);
+                    m_connection->PrepareDataCommand(select_row_by_name_label_type_cmd);
             selectCommand->BindString(1, name.c_str());
-            selectCommand->BindString(2, owner.c_str());
-            selectCommand->BindInteger(3, static_cast<int>(type));
+            selectCommand->BindString(2, ownerLabel.c_str());
+            selectCommand->BindInteger(3, static_cast<int>(typeRangeStart));
+            selectCommand->BindInteger(4, static_cast<int>(typeRangeStop));
 
             if(selectCommand->Step())
             {
                 // extract data
                 DBRow current_row = getRow(selectCommand);
-
-                // finalize DB operations
-                transaction.commit();
 
                 // all okay, proceed
                 return DBRowOptional(current_row);
@@ -405,192 +336,39 @@ using namespace DB;
             LogError("Couldn't execute select statement");
         }
         ThrowMsg(DBCrypto::Exception::InternalError,
-                "Couldn't get row for type " << static_cast<int>(type) <<
-                " name " << name << " using client label " << owner);
+                "Couldn't get row of type <" <<
+                static_cast<int>(typeRangeStart) << "," <<
+                static_cast<int>(typeRangeStop)  << ">" <<
+                " name " << name << " with owner label " << ownerLabel);
     }
 
-    DBCrypto::DBRowOptional DBCrypto::getDBRowJoin(
-        const Name &name,
-        const Label &ownerLabel,
+    void DBCrypto::listNames(
         const Label &smackLabel,
+        LabelNameVector& labelNameVector,
         DBDataType type)
     {
-        Try {
-            Transaction transaction(this);
-            SqlConnection::DataCommandUniquePtr selectCommand =
-                    m_connection->PrepareDataCommand(select_name_cmd_join);
-            selectCommand->BindString(1, name.c_str());
-            selectCommand->BindString(2, ownerLabel.c_str());
-            selectCommand->BindString(3, smackLabel.c_str());
-            selectCommand->BindInteger(4, static_cast<int>(type));
-
-            if(selectCommand->Step())
-            {
-                // extract data
-                DBRow current_row = getRow(selectCommand);
-
-                // finalize DB operations
-                transaction.commit();
-
-                // all okay, proceed
-                return DBRowOptional(current_row);
-            } else {
-                return DBRowOptional();
-            }
-        } Catch (SqlConnection::Exception::InvalidColumn) {
-            LogError("Select statement invalid column error");
-        } Catch (SqlConnection::Exception::SyntaxError) {
-            LogError("Couldn't prepare select statement");
-        } Catch (SqlConnection::Exception::InternalError) {
-            LogError("Couldn't execute select statement");
-        }
-        ThrowMsg(DBCrypto::Exception::InternalError,
-                "Couldn't get row for type " << static_cast<int>(type) <<
-                " name " << name << " using client label " << smackLabel);
+        listNames(smackLabel, labelNameVector, type, type);
     }
 
-    DBCrypto::DBRowOptional DBCrypto::getKeyDBRow(
-        const Name &name,
-        const Label &ownerLabel,
-        const Label &smackLabel)
-    {
-        if (ownerLabel == smackLabel)
-            return getKeyDBRowSimple(name, ownerLabel);
-        else
-            return getKeyDBRowJoin(name, ownerLabel, smackLabel);
-    }
-
-    DBCrypto::DBRowOptional DBCrypto::getKeyDBRowSimple(
-        const Name &name,
-        const Label &ownerLabel)
-    {
-        Try{
-            Transaction transaction(this);
-            SqlConnection::DataCommandUniquePtr selectCommand =
-                    m_connection->PrepareDataCommand(select_key_name_cmd);
-            selectCommand->BindString(1, name.c_str());
-            selectCommand->BindString(2, ownerLabel.c_str());
-            selectCommand->BindInteger(3, static_cast<int>(DBDataType::DB_KEY_FIRST));
-            selectCommand->BindInteger(4, static_cast<int>(DBDataType::DB_KEY_LAST));
-
-            if(selectCommand->Step())
-            {
-                // extract data
-                DBRow current_row = getRow(selectCommand);
-
-                // finalize DB operations
-                transaction.commit();
-
-                // all okay, proceed
-                return DBRowOptional(current_row);
-            } else {
-                return DBRowOptional();
-            }
-        } Catch (SqlConnection::Exception::InvalidColumn) {
-            LogError("Select statement invalid column error");
-        } Catch (SqlConnection::Exception::SyntaxError) {
-            LogError("Couldn't prepare select statement");
-        } Catch (SqlConnection::Exception::InternalError) {
-            LogError("Couldn't execute select statement");
-        }
-        ThrowMsg(DBCrypto::Exception::InternalError,
-                "Couldn't get Key for name " << name
-                << " using client label " << ownerLabel);
-    }
-
-    DBCrypto::DBRowOptional DBCrypto::getKeyDBRowJoin(
-        const Name &name,
-        const Label &ownerLabel,
-        const Label &smackLabel)
-    {
-        Try{
-            Transaction transaction(this);
-            SqlConnection::DataCommandUniquePtr selectCommand =
-                    m_connection->PrepareDataCommand(select_key_name_cmd_join);
-            selectCommand->BindString(1, name.c_str());
-            selectCommand->BindString(2, ownerLabel.c_str());
-            selectCommand->BindString(3, smackLabel.c_str());
-            selectCommand->BindInteger(4, static_cast<int>(DBDataType::DB_KEY_FIRST));
-            selectCommand->BindInteger(5, static_cast<int>(DBDataType::DB_KEY_LAST));
-
-            if(selectCommand->Step())
-            {
-                // extract data
-                DBRow current_row = getRow(selectCommand);
-
-                // finalize DB operations
-                transaction.commit();
-
-                // all okay, proceed
-                return DBRowOptional(current_row);
-            } else {
-                return DBRowOptional();
-            }
-        } Catch (SqlConnection::Exception::InvalidColumn) {
-            LogError("Select statement invalid column error");
-        } Catch (SqlConnection::Exception::SyntaxError) {
-            LogError("Couldn't prepare select statement");
-        } Catch (SqlConnection::Exception::InternalError) {
-            LogError("Couldn't execute select statement");
-        }
-        ThrowMsg(DBCrypto::Exception::InternalError,
-                "Couldn't get Key for name " << name
-                << " using client label " << smackLabel);
-    }
-
-    void DBCrypto::getSingleType(
-            const Label &clnt_label,
-            DBDataType type,
-            LabelNameVector& labelNameVector) const
-    {
-        Try{
-            SqlConnection::DataCommandUniquePtr selectCommand =
-                            m_connection->PrepareDataCommand(select_type_cross_cmd);
-            selectCommand->BindInteger(1, static_cast<int>(type));
-            selectCommand->BindString(2, clnt_label.c_str());
-
-            while(selectCommand->Step()) {
-                Label label = selectCommand->GetColumnString(0);
-                Name name = selectCommand->GetColumnString(1);
-                labelNameVector.push_back(std::make_pair(label, name));
-            }
-            return;
-        } Catch (SqlConnection::Exception::InvalidColumn) {
-            LogError("Select statement invalid column error");
-        } Catch (SqlConnection::Exception::SyntaxError) {
-            LogError("Couldn't prepare select statement");
-        } Catch (SqlConnection::Exception::InternalError) {
-            LogError("Couldn't execute select statement");
-        }
-        ThrowMsg(DBCrypto::Exception::InternalError,
-                "Couldn't get type " << static_cast<int>(type));
-    }
-
-    void DBCrypto::getNames(
-        const Label &clnt_label,
-        DBDataType type,
-        LabelNameVector& labelNameVector)
-    {
-        getSingleType(clnt_label, type, labelNameVector);
-    }
-
-
-    void DBCrypto::getKeyNames(const Label &clnt_label, LabelNameVector &labelNameVector)
+    void DBCrypto::listNames(
+        const Label &smackLabel,
+        LabelNameVector& labelNameVector,
+        DBDataType typeRangeStart,
+        DBDataType typeRangeStop)
     {
         Try{
             Transaction transaction(this);
             SqlConnection::DataCommandUniquePtr selectCommand =
                             m_connection->PrepareDataCommand(select_key_type_cross_cmd);
-            selectCommand->BindInteger(1, static_cast<int>(DBDataType::DB_KEY_FIRST));
-            selectCommand->BindInteger(2, static_cast<int>(DBDataType::DB_KEY_LAST));
-            selectCommand->BindString(3, clnt_label.c_str());
+            selectCommand->BindInteger(1, static_cast<int>(typeRangeStart));
+            selectCommand->BindInteger(2, static_cast<int>(typeRangeStop));
+            selectCommand->BindString(3, smackLabel.c_str());
 
             while(selectCommand->Step()) {
-                Label label = selectCommand->GetColumnString(0);
+                Label ownerLabel = selectCommand->GetColumnString(0);
                 Name name = selectCommand->GetColumnString(1);
-                labelNameVector.push_back(std::make_pair(label, name));
+                labelNameVector.push_back(std::make_pair(ownerLabel, name));
             }
-            transaction.commit();
             return;
         } Catch (SqlConnection::Exception::InvalidColumn) {
             LogError("Select statement invalid column error");
@@ -599,20 +377,16 @@ using namespace DB;
         } Catch (SqlConnection::Exception::InternalError) {
             LogError("Couldn't execute select statement");
         }
-        ThrowMsg(DBCrypto::Exception::InternalError, "Couldn't get key names");
+        ThrowMsg(DBCrypto::Exception::InternalError,
+                "Couldn't list names of type <" <<
+                static_cast<int>(typeRangeStart) << "," <<
+                static_cast<int>(typeRangeStop)  << ">" <<
+                " accessible to client label " << smackLabel);
     }
 
-    bool DBCrypto::deleteDBRow(const Name &name, const Label &ownerLabel, const Label &credLabel) {
-        if (ownerLabel == credLabel)
-            return deleteDBRowSimple(name, ownerLabel);
-        return deleteDBRowJoin(name, ownerLabel, credLabel);
-    }
-
-    bool DBCrypto::deleteDBRowSimple(const Name &name, const Label &ownerLabel)
+    bool DBCrypto::deleteDBRow(const Name &name, const Label &ownerLabel)
     {
         Try {
-            Transaction transaction(this);
-
             if(countRows(name, ownerLabel) > 0)
             {
                 SqlConnection::DataCommandUniquePtr deleteCommand =
@@ -623,7 +397,6 @@ using namespace DB;
                 // Step() result code does not provide information whether
                 // anything was removed.
                 deleteCommand->Step();
-                transaction.commit();
 
                 return true;
             }
@@ -637,46 +410,8 @@ using namespace DB;
                 "Couldn't delete DBRow for name " << name << " using client label " << ownerLabel);
     }
 
-    bool DBCrypto::deleteDBRowJoin(const Name &name, const Label &ownerLabel, const Label &smackLabel)
+    int DBCrypto::countRows(const Name &name, const Label &ownerLabel) const
     {
-        Try {
-            Transaction transaction(this);
-
-            if (!checkNameExist(name, ownerLabel))
-                return false;
-
-            std::string permissions = DBCrypto::getPermissions(name, ownerLabel, smackLabel);
-            if(permissions.empty() == false)
-            {
-                // entry present, check if for reading or read/remove
-                if(permissions.find(toDBAccessRight(AccessRight::AR_READ_REMOVE)) == std::string::npos)
-                    ThrowMsg(DBCrypto::Exception::PermissionDenied, "Client " << smackLabel << " can only read " <<
-                             ownerLabel << CKM::LABEL_NAME_SEPARATOR << name << ", remove forbidden");
-
-                SqlConnection::DataCommandUniquePtr deleteCommand =
-                    m_connection->PrepareDataCommand(delete_name_cmd_join);
-                deleteCommand->BindString(1, name.c_str());
-                deleteCommand->BindString(2, ownerLabel.c_str());
-                deleteCommand->BindString(3, smackLabel.c_str());
-
-                // Step() result code does not provide information whether
-                // anything was removed.
-                deleteCommand->Step();
-                transaction.commit();
-
-                return true;
-            }
-            return false;
-        } Catch (SqlConnection::Exception::SyntaxError) {
-            LogError("Couldn't prepare delete statement");
-        } Catch (SqlConnection::Exception::InternalError) {
-            LogError("Couldn't execute delete statement");
-        }
-        ThrowMsg(DBCrypto::Exception::InternalError,
-                "Couldn't delete DBRow for name " << name << " using client label " << ownerLabel);
-    }
-
-    int DBCrypto::countRows(const Name &name, const Label &ownerLabel) {
         SqlConnection::DataCommandUniquePtr checkCmd =
                     m_connection->PrepareDataCommand(select_count_rows_cmd);
         checkCmd->BindString(1, name.c_str());
@@ -694,13 +429,11 @@ using namespace DB;
             const RawBuffer &key)
     {
         Try {
-            Transaction transaction(this);
             SqlConnection::DataCommandUniquePtr insertCommand =
                     m_connection->PrepareDataCommand(insert_key_cmd);
             insertCommand->BindString(1, label.c_str());
             insertCommand->BindBlob(2, key);
             insertCommand->Step();
-            transaction.commit();
             return;
         } Catch (SqlConnection::Exception::SyntaxError) {
             LogError("Couldn't prepare insert key statement");
@@ -714,17 +447,14 @@ using namespace DB;
     DBCrypto::RawBufferOptional DBCrypto::getKey(const Label& label)
     {
         Try {
-            Transaction transaction(this);
             SqlConnection::DataCommandUniquePtr selectCommand =
                     m_connection->PrepareDataCommand(select_key_cmd);
             selectCommand->BindString(1, label.c_str());
 
             if (selectCommand->Step()) {
-                transaction.commit();
                 return RawBufferOptional(
                         selectCommand->GetColumnBlob(0));
             } else {
-                transaction.commit();
                 return RawBufferOptional();
             }
 
@@ -764,30 +494,34 @@ using namespace DB;
                 "Couldn't delete key for label " << label);
     }
 
-    int DBCrypto::setAccessRights(
+    int DBCrypto::setPermission(
             const Name &name,
             const Label& ownerLabel,
             const Label& accessorLabel,
-            const AccessRight accessRights)
+            const Permission permissions)
     {
         Try {
-            Transaction transaction(this);
-
-            // owner can not add permissions to itself
-            if(ownerLabel.compare(accessorLabel) == 0)
-                return CKM_API_ERROR_INPUT_PARAM;
-
-            if (!checkNameExist(name, ownerLabel))
-                return CKM_API_ERROR_DB_ALIAS_UNKNOWN;
-
-            SqlConnection::DataCommandUniquePtr setPermissionCommand =
-                m_connection->PrepareDataCommand(set_permission_name_cmd);
-            setPermissionCommand->BindString(1, accessorLabel.c_str());
-            setPermissionCommand->BindString(2, toDBAccessRight(accessRights));
-            setPermissionCommand->BindString(3, name.c_str());
-            setPermissionCommand->BindString(4, ownerLabel.c_str());
-            setPermissionCommand->Step();
-            transaction.commit();
+            if(permissions == Permission::NONE)
+            {
+                // clear access rights
+                SqlConnection::DataCommandUniquePtr deletePermissionCommand =
+                    m_connection->PrepareDataCommand(delete_permission_cmd);
+                deletePermissionCommand->BindString(1, name.c_str());
+                deletePermissionCommand->BindString(2, ownerLabel.c_str());
+                deletePermissionCommand->BindString(3, accessorLabel.c_str());
+                deletePermissionCommand->Step();
+            }
+            else
+            {
+                // add new rights
+                SqlConnection::DataCommandUniquePtr setPermissionCommand =
+                    m_connection->PrepareDataCommand(set_permission_name_cmd);
+                setPermissionCommand->BindString(1, accessorLabel.c_str());
+                setPermissionCommand->BindString(2, toDBPermission(permissions));
+                setPermissionCommand->BindString(3, name.c_str());
+                setPermissionCommand->BindString(4, ownerLabel.c_str());
+                setPermissionCommand->Step();
+            }
             return CKM_API_SUCCESS;
         } Catch (SqlConnection::Exception::SyntaxError) {
             LogError("Couldn't prepare set statement");
@@ -796,45 +530,6 @@ using namespace DB;
         }
         ThrowMsg(DBCrypto::Exception::InternalError,
                 "Couldn't set permissions for name " << name );
-    }
-
-    int DBCrypto::clearAccessRights(
-            const Name &name,
-            const Label &ownerLabel,
-            const Label &accessorLabel)
-    {
-        Try {
-            Transaction transaction(this);
-
-            // owner can not add permissions to itself
-            if(ownerLabel.compare(accessorLabel) == 0)
-                return CKM_API_ERROR_INPUT_PARAM;
-
-            // check if CKM entry present
-            if (!checkNameExist(name, ownerLabel)) {
-                transaction.commit();
-                return CKM_API_ERROR_DB_ALIAS_UNKNOWN;
-            }
-
-            // check if permission entry present
-            if( DBCrypto::getPermissions(name, ownerLabel, accessorLabel).empty() )
-                return CKM_API_ERROR_INPUT_PARAM;
-
-            SqlConnection::DataCommandUniquePtr deletePermissionCommand =
-                m_connection->PrepareDataCommand(delete_permission_cmd);
-            deletePermissionCommand->BindString(1, name.c_str());
-            deletePermissionCommand->BindString(2, ownerLabel.c_str());
-            deletePermissionCommand->BindString(3, accessorLabel.c_str());
-            deletePermissionCommand->Step();
-            transaction.commit();
-            return CKM_API_SUCCESS;
-        } Catch (SqlConnection::Exception::SyntaxError) {
-            LogError("Couldn't prepare delete statement");
-        } Catch (SqlConnection::Exception::InternalError) {
-            LogError("Couldn't execute delete statement");
-        }
-        ThrowMsg(DBCrypto::Exception::InternalError,
-                "Couldn't delete permissions for name " << name);
     }
 
 } // namespace CKM

@@ -139,37 +139,22 @@ RawBuffer CKMService::processControl(MessageBuffer &buffer) {
         return m_logic->removeApplicationData(smackLabel);
     case ControlCommand::UPDATE_CC_MODE:
         return m_logic->updateCCMode();
-    case ControlCommand::ALLOW_ACCESS:
+    case ControlCommand::SET_PERMISSION:
     {
         Name name;
         Label ownerLabel;
         Label accessorLabel;
-        int accessorRights = 0;
+        int accessorPermissions = 0;
 
-        buffer.Deserialize(user, ownerLabel, name, accessorLabel, accessorRights);
+        buffer.Deserialize(user, ownerLabel, name, accessorLabel, accessorPermissions);
         Credentials cred = { user, ownerLabel };
-        return m_logic->allowAccess(
+        return m_logic->setPermission(
             cred,
             command,
             0, // dummy
             name,
             accessorLabel,
-            static_cast<AccessRight>(accessorRights));
-    }
-    case ControlCommand::DENY_ACCESS:
-    {
-        Name name;
-        Label ownerLabel;
-        Label accessorLabel;
-
-        buffer.Deserialize(user, ownerLabel, name, accessorLabel);
-        Credentials cred = { user, ownerLabel };
-        return m_logic->denyAccess(
-            cred,
-            command,
-            0, // dummy
-            name,
-            accessorLabel);
+            static_cast<Permission>(accessorPermissions));
     }
     default:
         Throw(Exception::BrokenProtocol);
@@ -330,27 +315,17 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer)
                 static_cast<const HashAlgorithm>(hash),
                 static_cast<const RSAPaddingAlgorithm>(padding));
         }
-        case LogicCommand::ALLOW_ACCESS:
+        case LogicCommand::SET_PERMISSION:
         {
-            int reqRights = 0;
-            buffer.Deserialize(name, label, reqRights);
-            return m_logic->allowAccess(
+            int accessorPermissions = 0;
+            buffer.Deserialize(name, label, accessorPermissions);
+            return m_logic->setPermission(
                 cred,
                 command,
                 msgID,
                 name,
                 label,
-                static_cast<AccessRight>(reqRights));
-        }
-        case LogicCommand::DENY_ACCESS:
-        {
-            buffer.Deserialize(name, label);
-            return m_logic->denyAccess(
-                cred,
-                command,
-                msgID,
-                name,
-                label);
+                static_cast<Permission>(accessorPermissions));
         }
         default:
             Throw(Exception::BrokenProtocol);

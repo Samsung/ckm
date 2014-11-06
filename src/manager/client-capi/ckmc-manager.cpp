@@ -611,8 +611,8 @@ int ckmc_allow_access(const char *alias, const char *accessor, ckmc_access_right
 
     CKM::ManagerShPtr mgr = CKM::Manager::create();
 
-    CKM::AccessRight ar = static_cast<CKM::AccessRight>(static_cast<int>(granted));
-    return to_ckmc_error(mgr->allowAccess(alias, accessor, ar));
+    CKM::Permission ar = static_cast<CKM::Permission>(static_cast<int>(granted));
+    return to_ckmc_error(mgr->setPermission(alias, accessor, ar));
 }
 
 KEY_MANAGER_CAPI
@@ -623,5 +623,5 @@ int ckmc_deny_access(const char *alias, const char *accessor)
 
     CKM::ManagerShPtr mgr = CKM::Manager::create();
 
-    return to_ckmc_error(mgr->denyAccess(alias, accessor));
+    return to_ckmc_error(mgr->setPermission(alias, accessor, CKM::Permission::NONE));
 }

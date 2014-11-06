@@ -176,45 +176,20 @@ public:
         });
     }
 
-    virtual int allowAccess(uid_t user,
-                            const Label &owner,
-                            const Alias &alias,
-                            const Label &accessor,
-                            AccessRight granted)
+    virtual int setPermission(uid_t user,
+                                const Label &owner,
+                                const Alias &alias,
+                                const Label &accessor,
+                                Permission newPermission)
     {
         return try_catch([&] {
             MessageBuffer recv;
-            auto send = MessageBuffer::Serialize(static_cast<int>(ControlCommand::ALLOW_ACCESS),
+            auto send = MessageBuffer::Serialize(static_cast<int>(ControlCommand::SET_PERMISSION),
                                                  static_cast<int>(user),
                                                  owner,
                                                  alias,
                                                  accessor,
-                                                 static_cast<int>(granted));
-
-            int retCode = m_controlConnection.processRequest(send.Pop(), recv);
-            if (CKM_API_SUCCESS != retCode)
-                return retCode;
-
-            int command;
-            int counter;
-            recv.Deserialize(command, counter, retCode);
-
-            return retCode;
-        });
-    }
-
-    virtual int denyAccess(uid_t user,
-                           const Label &owner,
-                           const Alias &alias,
-                           const Label &accessor)
-    {
-        return try_catch([&] {
-            MessageBuffer recv;
-            auto send = MessageBuffer::Serialize(static_cast<int>(ControlCommand::DENY_ACCESS),
-                                                 static_cast<int>(user),
-                                                 owner,
-                                                 alias,
-                                                 accessor);
+                                                 static_cast<int>(newPermission));
 
             int retCode = m_controlConnection.processRequest(send.Pop(), recv);
             if (CKM_API_SUCCESS != retCode)

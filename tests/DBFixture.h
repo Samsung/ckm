@@ -32,10 +32,9 @@ class DBFixture
         void check_DB_integrity(const CKM::DBRow &rowPattern);
         void insert_row();
         void insert_row(const CKM::Name &name, const CKM::Label &owner_label);
-        void delete_row(const CKM::Name &name, const CKM::Label &owner_label, const CKM::Label &accessor_label);
+        void delete_row(const CKM::Name &name, const CKM::Label &owner_label);
         void add_permission(const CKM::Name &name, const CKM::Label &owner_label, const CKM::Label &accessor_label);
-        void read_row_expect_fail(const CKM::Name &name, const CKM::Label &owner_label, const CKM::Label &accessor_label);
-        void read_row_expect_success(const CKM::Name &name, const CKM::Label &owner_label, const CKM::Label &accessor_label);
+        void read_row_expect_success(const CKM::Name &name, const CKM::Label &owner_label);
 
         CKM::DBCrypto    m_db;
     private:

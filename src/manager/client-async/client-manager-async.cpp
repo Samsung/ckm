@@ -214,19 +214,12 @@ void ManagerAsync::ocspCheck(const ObserverPtr& observer,
     m_impl->ocspCheck(observer, certificateChainVector);
 }
 
-void ManagerAsync::allowAccess(const ObserverPtr& observer,
-                               const Alias& alias,
-                               const Label& accessor,
-                               AccessRight granted)
+void ManagerAsync::setPermission(const ObserverPtr& observer,
+                                   const Alias& alias,
+                                   const Label& accessor,
+                                   Permission newPermission)
 {
-    m_impl->allowAccess(observer, alias, accessor, granted);
-}
-
-void ManagerAsync::denyAccess(const ObserverPtr& observer,
-                              const Alias& alias,
-                              const Label& accessor)
-{
-    m_impl->denyAccess(observer, alias, accessor);
+    m_impl->setPermission(observer, alias, accessor, newPermission);
 }
 
 } // namespace CKM

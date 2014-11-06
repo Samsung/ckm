@@ -64,14 +64,28 @@ KeyType toKeyType(DBDataType dbtype) {
     }
 }
 
-const char* toDBAccessRight(AccessRight access_right_type) {
+namespace {
+const char* const DB_PERM_READ        = "R";
+const char* const DB_PERM_READ_REMOVE = "RD";
+}
+
+const char* toDBPermission(Permission access_right_type) {
     switch(access_right_type) {
-    case AccessRight::AR_READ:          return "R";
-    case AccessRight::AR_READ_REMOVE:   return "RD";
+    case Permission::READ:          return DB_PERM_READ;
+    case Permission::READ_REMOVE:   return DB_PERM_READ_REMOVE;
     default:
         // TODO
         throw 1;
     }
+}
+
+Permission toPermission(const std::string &input_DB_data) {
+    if(input_DB_data == DB_PERM_READ_REMOVE)
+        return Permission::READ_REMOVE;
+    else if(input_DB_data == DB_PERM_READ)
+        return Permission::READ;
+    else
+        return Permission::NONE;
 }
 
 } // namespace CKM

@@ -33,6 +33,7 @@
 #include <crypto-logic.h>
 #include <certificate-store.h>
 #include <file-lock.h>
+#include <access-control.h>
 
 namespace CKM {
 
@@ -73,10 +74,11 @@ public:
         uid_t user,
         const Password &newPassword);
 
-    RawBuffer removeApplicationData(const Label &smackLabel);
+    RawBuffer removeApplicationData(
+        const Label &smackLabel);
 
     RawBuffer saveData(
-        Credentials &cred,
+        const Credentials &cred,
         int commandId,
         DBDataType dataType,
         const Name &name,
@@ -84,14 +86,14 @@ public:
         const PolicySerializable &policy);
 
     RawBuffer removeData(
-        Credentials &cred,
+        const Credentials &cred,
         int commandId,
         DBDataType dataType,
         const Name &name,
         const Label &label);
 
     RawBuffer getData(
-        Credentials &cred,
+        const Credentials &cred,
         int commandId,
         DBDataType dataType,
         const Name &name,
@@ -99,12 +101,12 @@ public:
         const Password &password);
 
     RawBuffer getDataList(
-        Credentials &cred,
+        const Credentials &cred,
         int commandId,
         DBDataType dataType);
 
     RawBuffer createKeyPair(
-        Credentials &cred,
+        const Credentials &cred,
         LogicCommand protocol_cmd,
         int commandId,
         const int additional_param,
@@ -114,19 +116,19 @@ public:
         const PolicySerializable &policyPublic);
 
     RawBuffer getCertificateChain(
-        Credentials &cred,
+        const Credentials &cred,
         int commandId,
         const RawBuffer &certificate,
         const RawBufferVector &untrustedCertificates);
 
     RawBuffer getCertificateChain(
-        Credentials &cred,
+        const Credentials &cred,
         int commandId,
         const RawBuffer &certificate,
         const LabelNameVector &labelNameVector);
 
     RawBuffer  createSignature(
-        Credentials &cred,
+        const Credentials &cred,
         int commandId,
         const Name &privateKeyName,
         const Label & ownerLabel,
@@ -136,7 +138,7 @@ public:
         const RSAPaddingAlgorithm padding);
 
     RawBuffer verifySignature(
-        Credentials &cred,
+        const Credentials &cred,
         int commandId,
         const Name &publicKeyOrCertName,
         const Label & ownerLabel,
@@ -148,20 +150,13 @@ public:
 
     RawBuffer updateCCMode();
 
-    RawBuffer allowAccess(
-        Credentials &cred,
+    RawBuffer setPermission(
+        const Credentials &cred,
         int command,
         int msgID,
         const Name &name,
         const Label &accessor_label,
-        const AccessRight req_rights);
-
-    RawBuffer denyAccess(
-        Credentials &cred,
-        int command,
-        int msgID,
-        const Name &name,
-        const Label &accessor_label);
+        const Permission req_rights);
 
 private:
 
@@ -170,14 +165,35 @@ private:
         const RawBuffer &input_data) const;
 
     int saveDataHelper(
-        Credentials &cred,
+        const Credentials &cred,
         DBDataType dataType,
         const Name &name,
         const RawBuffer &key,
         const PolicySerializable &policy);
 
-    int getDataHelper(
-        Credentials &cred,
+    int removeDataHelper(
+        const Credentials &cred,
+        const Name &name,
+        const Label &ownerLabel);
+
+    int readDataRowHelper(
+        const Name &name,
+        const Label &ownerLabel,
+        DBDataType dataType,
+        DBCrypto & database,
+        DBRow &row);
+
+    int checkDataPermissionsHelper(
+        const Name &name,
+        const Label &ownerLabel,
+        const Label &accessorLabel,
+        const DBRow &row,
+        bool exportFlag,
+        DBCrypto & database);
+
+    int readDataHelper(
+        bool exportFlag,
+        const Credentials &cred,
         DBDataType dataType,
         const Name &name,
         const Label &label,
@@ -185,7 +201,7 @@ private:
         DBRow &row);
 
     int createKeyPairHelper(
-        Credentials &cred,
+        const Credentials &cred,
         const KeyType key_type,
         const int additional_param,
         const Name &namePrivate,
@@ -193,22 +209,26 @@ private:
         const PolicySerializable &policyPrivate,
         const PolicySerializable &policyPublic);
 
-    int getKeyHelper(
-        Credentials &cred,
-        const Name &publicKeyOrCertName,
-        const Password &password,           // password for public_key (optional)
-        const KeyImpl &genericKey);
+    int getCertificateChainHelper(
+        const Credentials &cred,
+        const RawBuffer &certificate,
+        const LabelNameVector &labelNameVector,
+        RawBufferVector & chainRawVector);
 
+    int setPermissionHelper(
+        const Credentials &cred,
+        const Name &name,
+        const Label &accessorLabel,
+        const Permission reqRights);
 
     // @return true if name & label are proper, false otherwise
     static bool checkNameAndLabelValid(
         const Name &name,
         const Label &label);
-    void updateCCMode_internal();
 
     std::map<uid_t, UserData> m_userDataMap;
     CertificateStore m_certStore;
-    bool m_ccMode;
+    AccessControl m_accessControl;
     //FileLock m_lock;
 };
 

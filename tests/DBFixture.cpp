@@ -62,7 +62,7 @@ void DBFixture::generate_perf_DB(unsigned int num_name, unsigned int num_label)
     for(unsigned int i=0; i<num_name; i++)
     {
         generate_name(i, rowPattern.name);
-        generate_label(i/num_label, rowPattern.smackLabel);
+        generate_label(i/num_label, rowPattern.ownerLabel);
 
         BOOST_REQUIRE_NO_THROW(m_db.saveDBRow(rowPattern));
     }
@@ -105,7 +105,7 @@ DBRow DBFixture::create_default_row(const Name &name,
 {
     DBRow row;
     row.name = name;
-    row.smackLabel = label;
+    row.ownerLabel = label;
     row.exportable = 1;
     row.algorithmType = DBCMAlgType::AES_GCM_256;
     row.dataType = type;
@@ -122,9 +122,9 @@ void DBFixture::compare_row(const DBRow &lhs, const DBRow &rhs)
             "namees didn't match! Got: " << rhs.name
                 << " , expected : " << lhs.name);
 
-    BOOST_CHECK_MESSAGE(lhs.smackLabel == rhs.smackLabel,
-            "smackLabel didn't match! Got: " << rhs.smackLabel
-                << " , expected : " << lhs.smackLabel);
+    BOOST_CHECK_MESSAGE(lhs.ownerLabel == rhs.ownerLabel,
+            "smackLabel didn't match! Got: " << rhs.ownerLabel
+                << " , expected : " << lhs.ownerLabel);
 
     BOOST_CHECK_MESSAGE(lhs.exportable == rhs.exportable,
             "exportable didn't match! Got: " << rhs.exportable
@@ -145,7 +145,7 @@ void DBFixture::check_DB_integrity(const DBRow &rowPattern)
     DBRow selectRow = rowPattern;
 
     DBCrypto::DBRowOptional optional_row;
-    BOOST_REQUIRE_NO_THROW(optional_row = m_db.getDBRow("name", "label", "label", DBDataType::BINARY_DATA));
+    BOOST_REQUIRE_NO_THROW(optional_row = m_db.getDBRow("name", "label", DBDataType::BINARY_DATA));
     BOOST_REQUIRE_MESSAGE(optional_row, "Select didn't return any row");
 
     compare_row(selectRow, rowPattern);
@@ -153,13 +153,12 @@ void DBFixture::check_DB_integrity(const DBRow &rowPattern)
     name_duplicate.data = createDefaultPass();
     name_duplicate.dataSize = name_duplicate.data.size();
 
-    BOOST_REQUIRE_THROW(m_db.saveDBRow(name_duplicate), DBCrypto::Exception::NameExists);
     unsigned int erased;
-    BOOST_REQUIRE_NO_THROW(erased = m_db.deleteDBRow("name", "label", "label"));
+    BOOST_REQUIRE_NO_THROW(erased = m_db.deleteDBRow("name", "label"));
     BOOST_REQUIRE_MESSAGE(erased > 0, "Inserted row didn't exist in db");
 
     DBCrypto::DBRowOptional row_optional;
-    BOOST_REQUIRE_NO_THROW(row_optional = m_db.getDBRow("name", "label", "label", DBDataType::BINARY_DATA));
+    BOOST_REQUIRE_NO_THROW(row_optional = m_db.getDBRow("name", "label", DBDataType::BINARY_DATA));
     BOOST_REQUIRE_MESSAGE(!row_optional, "Select should not return row after deletion");
 }
 
@@ -177,34 +176,27 @@ void DBFixture::insert_row(const Name &name, const Label &owner_label)
     BOOST_REQUIRE_NO_THROW(m_db.saveDBRow(rowPattern));
 }
 
-void DBFixture::delete_row(const Name &name, const Label &owner_label, const Label &accessor_label)
+void DBFixture::delete_row(const Name &name, const Label &owner_label)
 {
     bool exit_flag;
-    BOOST_REQUIRE_NO_THROW(exit_flag = m_db.deleteDBRow(name, owner_label, accessor_label));
+    BOOST_REQUIRE_NO_THROW(exit_flag = m_db.deleteDBRow(name, owner_label));
     BOOST_REQUIRE_MESSAGE(true == exit_flag, "remove name failed: no rows removed");
 }
 
 void DBFixture::add_permission(const Name &name, const Label &owner_label, const Label &accessor_label)
 {
     int ec;
-    BOOST_REQUIRE_NO_THROW(ec = m_db.setAccessRights(name,
+    BOOST_REQUIRE_NO_THROW(ec = m_db.setPermission(name,
                                                      owner_label,
                                                      accessor_label,
-                                                     CKM::AccessRight::AR_READ_REMOVE));
+                                                     CKM::Permission::READ_REMOVE));
     BOOST_REQUIRE_MESSAGE(CKM_API_SUCCESS == ec, "add permission failed: " << ec);
 }
 
-void DBFixture::read_row_expect_fail(const Name &name, const Label &owner_label, const Label &accessor_label)
+void DBFixture::read_row_expect_success(const Name &name, const Label &owner_label)
 {
     DBCrypto::DBRowOptional row;
-    BOOST_REQUIRE_NO_THROW(row = m_db.getDBRow(name, owner_label, accessor_label, DBDataType::BINARY_DATA));
-    BOOST_REQUIRE(!row);
-}
-
-void DBFixture::read_row_expect_success(const Name &name, const Label &owner_label, const Label &accessor_label)
-{
-    DBCrypto::DBRowOptional row;
-    BOOST_REQUIRE_NO_THROW(row = m_db.getDBRow(name, owner_label, accessor_label, DBDataType::BINARY_DATA));
+    BOOST_REQUIRE_NO_THROW(row = m_db.getDBRow(name, owner_label, DBDataType::BINARY_DATA));
     BOOST_REQUIRE_MESSAGE(row, "row is empty");
     BOOST_REQUIRE_MESSAGE(row->name == name, "name is not valid");
 }

@@ -30,6 +30,7 @@
 
 #include <ckm/ckm-type.h>
 #include <db-row.h>
+#include <permission.h>
 #include <protocols.h>
 
 #pragma GCC diagnostic push
@@ -44,10 +45,8 @@ namespace CKM {
             {
               public:
                 DECLARE_EXCEPTION_TYPE(CKM::Exception, Base)
-                DECLARE_EXCEPTION_TYPE(Base, NameExists)
                 DECLARE_EXCEPTION_TYPE(Base, InternalError)
                 DECLARE_EXCEPTION_TYPE(Base, TransactionError)
-                DECLARE_EXCEPTION_TYPE(Base, PermissionDenied)
                 DECLARE_EXCEPTION_TYPE(Base, InvalidArgs)
             };
             DBCrypto() :
@@ -65,43 +64,58 @@ namespace CKM {
             virtual ~DBCrypto();
 
             void saveDBRow(const DBRow &row);
+
             DBRowOptional getDBRow(
                     const Name &name,
                     const Label &ownerLabel,
-                    const Label &smackLabel,
                     DBDataType type);
-            DBRowOptional getKeyDBRow(
+
+            DBRowOptional getDBRow(
                     const Name &name,
                     const Label &ownerLabel,
-                    const Label &smackLabel);
-            void getNames(
-                    const Label &clnt_label,
-                    DBDataType dataType,
-                    LabelNameVector &labelNameVector);
-            void getKeyNames(
-                    const Label &clnt_label,
-                    LabelNameVector &labelNameVector);
+                    DBDataType typeRangeStart,
+                    DBDataType typeRangeStop);
+
+            void listNames(
+                    const Label &smackLabel,
+                    LabelNameVector& labelNameVector,
+                    DBDataType type);
+
+            void listNames(
+                    const Label &smackLabel,
+                    LabelNameVector& labelNameVector,
+                    DBDataType typeRangeStart,
+                    DBDataType typeRangeStop);
+
             bool deleteDBRow(
                     const Name &name,
-                    const Label &ownerLabel,
-                    const Label &smackLabel);
+                    const Label &ownerLabel);
+
 
             // keys
             void saveKey(const Label& label, const RawBuffer &key);
             RawBufferOptional getKey(const Label& label);
             void deleteKey(const Label& label);
 
+
             // permissions
-            int setAccessRights(
+            bool isNameLabelPresent(
+                    const Name &name,
+                    const Label &owner) const;
+
+            int setPermission(
                     const Name &name,
                     const Label &ownerLabel,
                     const Label &accessorLabel,
-                    const AccessRight rights);
-            int clearAccessRights(
+                    const Permission permissions);
+
+            PermissionOptional getPermissionRow(
                     const Name &name,
                     const Label &ownerLabel,
-                    const Label &accessorLabel);
+                    const Label &accessorLabel) const;
 
+
+            // transactions
             int beginTransaction();
             int commitTransaction();
             int rollbackTransaction();
@@ -180,62 +194,13 @@ namespace CKM {
             void initDatabase();
             DBRow getRow(const DB::SqlConnection::DataCommandUniquePtr &selectCommand);
 
-            enum DBOperationType : char {
-                DB_OPERATION_READ       = 'R',            ///< read DB row
-                DB_OPERATION_WRITE      = 'W',            ///< modify DB row
-                DB_OPERATION_REMOVE     = 'D'             ///< delete DB row
-            };
-
-            /**
-             * read PERMISSION_TABLE entry for client smackLabel to access CKM entry <name, ownerLabel>
-             *
-             * @return permission string (consisting with DBOperationType chars), may be empty
-             */
-            std::string getPermissions(
-                    const Name &name,
-                    const Label &ownerLabel,
-                    const Label &smackLabel) const;
-
             void createTable(
                     const char *create_cmd,
                     const char *table_name);
-            bool checkNameExist(const Name &name, const Label &owner) const;
-//            void getLabelForName(const Name &name, Label & label) const;
-//            void getLabelForName(const Name &name, Label & label, int & index) const;
-            bool checkGlobalNameExist(const Name &name, const Label &ownerLabel) const;
-            void getSingleType(const Label &clnt_label, DBDataType type, LabelNameVector& labelNameVector) const;
-            DBRowOptional getDBRowSimple(
-                    const Name &name,
-                    const Label &ownerLabel,
-                    DBDataType type);
-
-            DBRowOptional getDBRowJoin(
-                    const Name &name,
-                    const Label &ownerLabel,
-                    const Label &smackLabel,
-                    DBDataType type);
-
-            DBRowOptional getKeyDBRowSimple(
-                    const Name &name,
-                    const Label &onwerLabel);
-
-            DBRowOptional getKeyDBRowJoin(
-                    const Name &name,
-                    const Label &onwerLabel,
-                    const Label &smackLabel);
 
             int countRows(
                     const Name &name,
-                    const Label &label);
-
-            bool deleteDBRowSimple(
-                    const Name &name,
-                    const Label &ownerLabel);
-
-            bool deleteDBRowJoin(
-                    const Name &name,
-                    const Label &ownerLabel,
-                    const Label &smackLabel);
+                    const Label &label) const;
     };
 } // namespace CKM
 

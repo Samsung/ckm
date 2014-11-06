@@ -83,8 +83,8 @@ int ckmc_allow_access_by_adm(uid_t user, const char* owner, const char *alias, c
 
     auto control = CKM::Control::create();
 
-    CKM::AccessRight ar = static_cast<CKM::AccessRight>(static_cast<int>(granted));
-    return to_ckmc_error(control->allowAccess(user, owner, alias, accessor, ar));
+    CKM::Permission ar = static_cast<CKM::Permission>(static_cast<int>(granted));
+    return to_ckmc_error(control->setPermission(user, owner, alias, accessor, ar));
 }
 
 KEY_MANAGER_CAPI
@@ -95,5 +95,5 @@ int ckmc_deny_access_by_adm(uid_t user, const char* owner, const char *alias, co
 
     auto control = CKM::Control::create();
 
-    return to_ckmc_error(control->denyAccess(user, owner, alias, accessor));
+    return to_ckmc_error(control->setPermission(user, owner, alias, accessor, CKM::Permission::NONE));
 }

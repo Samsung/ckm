@@ -185,16 +185,16 @@ void CryptoLogic::encryptRow(const Password &password, DBRow &row)
             ThrowMsg(Exception::EncryptDBRowError, "Invalid dataSize.");
         }
 
-        if (!haveKey(row.smackLabel)) {
+        if (!haveKey(row.ownerLabel)) {
             ThrowMsg(Exception::EncryptDBRowError, "Missing application key for " <<
-              row.smackLabel << " label.");
+              row.ownerLabel << " label.");
         }
 
         if (crow.iv.empty()) {
             crow.iv = generateRandIV();
         }
 
-        key = m_keyMap[row.smackLabel];
+        key = m_keyMap[row.ownerLabel];
         crow.encryptionScheme = ENCR_APPKEY;
 
         auto dataPair = encryptDataAesGcm(crow.data, key, crow.iv);
@@ -241,9 +241,9 @@ void CryptoLogic::decryptRow(const Password &password, DBRow &row)
               "empty.");
         }
 
-        if ((row.encryptionScheme & ENCR_APPKEY) && !haveKey(row.smackLabel)) {
+        if ((row.encryptionScheme & ENCR_APPKEY) && !haveKey(row.ownerLabel)) {
             ThrowMsg(Exception::DecryptDBRowError, "Missing application key for " <<
-              row.smackLabel << " label.");
+              row.ownerLabel << " label.");
         }
 
         decBase64(crow.iv);
@@ -257,7 +257,7 @@ void CryptoLogic::decryptRow(const Password &password, DBRow &row)
         }
 
         if (crow.encryptionScheme & ENCR_APPKEY) {
-            key = m_keyMap[crow.smackLabel];
+            key = m_keyMap[crow.ownerLabel];
             crow.data = decryptDataAesGcm(crow.data, key, crow.iv, crow.tag);
         }
 

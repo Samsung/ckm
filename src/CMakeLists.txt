@@ -19,6 +19,7 @@ SET(KEY_MANAGER_SOURCES
     ${KEY_MANAGER_PATH}/main/generic-socket-manager.cpp
     ${KEY_MANAGER_PATH}/main/socket-manager.cpp
     ${KEY_MANAGER_PATH}/main/key-manager-main.cpp
+    ${KEY_MANAGER_PATH}/service/access-control.cpp
     ${KEY_MANAGER_PATH}/service/ckm-service.cpp
     ${KEY_MANAGER_PATH}/service/ckm-logic.cpp
     ${KEY_MANAGER_PATH}/service/key-provider.cpp

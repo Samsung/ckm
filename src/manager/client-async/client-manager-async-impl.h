@@ -74,15 +74,11 @@ public:
             const ObserverPtr& observer,
             const CertificateShPtrVector& certificateChainVector);
 
-    void allowAccess(
+    void setPermission(
             const ObserverPtr& observer,
             const Alias& alias,
             const Label& accessor,
-            AccessRight granted);
-    void denyAccess(
-            const ObserverPtr& observer,
-            const Alias& alias,
-            const Label& accessor);
+            Permission newPermission);
 
     // generic methods
     void saveBinaryData(

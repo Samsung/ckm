@@ -600,46 +600,19 @@ int ManagerImpl::ocspCheck(const CertificateShPtrVector &certChain, int &ocspSta
     });
 }
 
-int ManagerImpl::allowAccess(const Alias &alias,
-                             const Label &accessor,
-                             AccessRight granted)
+int ManagerImpl::setPermission(const Alias &alias,
+                                 const Label &accessor,
+                                 Permission newPermission)
 {
     m_counter++;
     int my_counter = m_counter;
     return try_catch([&] {
         MessageBuffer recv;
-        auto send = MessageBuffer::Serialize(static_cast<int>(LogicCommand::ALLOW_ACCESS),
+        auto send = MessageBuffer::Serialize(static_cast<int>(LogicCommand::SET_PERMISSION),
                                              my_counter,
                                              alias,
                                              accessor,
-                                             static_cast<int>(granted));
-
-        int retCode = m_storageConnection.processRequest(send.Pop(), recv);
-        if (CKM_API_SUCCESS != retCode)
-            return retCode;
-
-        int command;
-        int counter;
-        recv.Deserialize(command, counter, retCode);
-
-        if (my_counter != counter) {
-            return CKM_API_ERROR_UNKNOWN;
-        }
-
-        return retCode;
-    });
-}
-
-int ManagerImpl::denyAccess(const Alias &alias, const Label &accessor)
-{
-    m_counter++;
-    int my_counter = m_counter;
-    return try_catch([&] {
-        MessageBuffer recv;
-        auto send = MessageBuffer::Serialize(static_cast<int>(LogicCommand::DENY_ACCESS),
-                                             my_counter,
-                                             alias,
-                                             accessor);
+                                             static_cast<int>(newPermission));
 
         int retCode = m_storageConnection.processRequest(send.Pop(), recv);
         if (CKM_API_SUCCESS != retCode)

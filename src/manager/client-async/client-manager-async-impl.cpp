@@ -215,10 +215,10 @@ void ManagerAsync::Impl::ocspCheck(const ObserverPtr& observer,
     }, [&observer](int error){ observer->ReceivedError(error); } );
 }
 
-void ManagerAsync::Impl::allowAccess(const ObserverPtr& observer,
-                                     const Alias& alias,
-                                     const Label& accessor,
-                                     AccessRight granted)
+void ManagerAsync::Impl::setPermission(const ObserverPtr& observer,
+                                         const Alias& alias,
+                                         const Label& accessor,
+                                         Permission newPermission)
 {
     observerCheck(observer);
     if (alias.empty() || accessor.empty()) {
@@ -227,29 +227,11 @@ void ManagerAsync::Impl::allowAccess(const ObserverPtr& observer,
     }
     try_catch_async([&] {
         sendToStorage(observer,
-                      static_cast<int>(LogicCommand::ALLOW_ACCESS),
+                      static_cast<int>(LogicCommand::SET_PERMISSION),
                       m_counter,
                       alias,
                       accessor,
-                      static_cast<int>(granted));
-    }, [&observer](int error){ observer->ReceivedError(error); } );
-}
-
-void ManagerAsync::Impl::denyAccess(const ObserverPtr& observer,
-                                    const Alias& alias,
-                                    const Label& accessor)
-{
-    observerCheck(observer);
-    if (alias.empty() || accessor.empty()) {
-        observer->ReceivedError(CKM_API_ERROR_INPUT_PARAM);
-        return;
-    }
-    try_catch_async([&] {
-        sendToStorage(observer,
-                      static_cast<int>(LogicCommand::DENY_ACCESS),
-                      m_counter,
-                      alias,
-                      accessor);
+                      static_cast<int>(newPermission));
     }, [&observer](int error){ observer->ReceivedError(error); } );
 }
 
