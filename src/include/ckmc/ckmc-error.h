@@ -64,9 +64,9 @@ typedef enum{
 	CKMC_ERROR_DB_ALIAS_UNKNOWN         = TIZEN_ERROR_KEY_MANAGER | 0x0C, /**< No data for given alias */
 	CKMC_ERROR_VERIFICATION_FAILED      = TIZEN_ERROR_KEY_MANAGER | 0x0D, /**< CA certificate(s) were unknown and chain could not be created */
 	CKMC_ERROR_INVALID_FORMAT           = TIZEN_ERROR_KEY_MANAGER | 0x0E, /**< A provided file or binary has not a valid format */
-	CKMC_ERROR_FILE_ACCESS_DENIED       = TIZEN_ERROR_KEY_MANAGER | 0x0F, /**< A provided file or binary has not a valid format */
+	CKMC_ERROR_FILE_ACCESS_DENIED       = TIZEN_ERROR_KEY_MANAGER | 0x0F, /**< A provided file doesn't exist or cannot be accessed in the file system */
 	CKMC_ERROR_NOT_EXPORTABLE           = TIZEN_ERROR_KEY_MANAGER | 0x10, /**< Key is not exportable. It could not be returned to client */
-	CKMC_ERROR_UNKNOWN                  = TIZEN_ERROR_KEY_MANAGER | 0xFF, /**< A provided file or binary has not a valid format */
+	CKMC_ERROR_UNKNOWN                  = TIZEN_ERROR_KEY_MANAGER | 0xFF, /**< The error with unknown reason */
 } key_manager_error_e;
 
 /**
