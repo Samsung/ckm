@@ -185,12 +185,10 @@ void DBFixture::delete_row(const Name &name, const Label &owner_label)
 
 void DBFixture::add_permission(const Name &name, const Label &owner_label, const Label &accessor_label)
 {
-    int ec;
-    BOOST_REQUIRE_NO_THROW(ec = m_db.setPermission(name,
-                                                     owner_label,
-                                                     accessor_label,
-                                                     CKM::Permission::READ_REMOVE));
-    BOOST_REQUIRE_MESSAGE(CKM_API_SUCCESS == ec, "add permission failed: " << ec);
+    BOOST_REQUIRE_NO_THROW(m_db.setPermission(name,
+                                              owner_label,
+                                              accessor_label,
+                                              CKM::Permission::READ_REMOVE));
 }
 
 void DBFixture::read_row_expect_success(const Name &name, const Label &owner_label)

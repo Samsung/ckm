@@ -160,7 +160,7 @@ public:
         const Name &name,
         const Label &label,
         const Label &accessor_label,
-        const Permission req_rights);
+        const Permission newPermission);
 
 private:
 
@@ -227,7 +227,7 @@ private:
         const Name &name,
         const Label &ownerLabel,
         const Label &accessorLabel,
-        const Permission reqRights);
+        const Permission newPermission);
 
     std::map<uid_t, UserData> m_userDataMap;
     CertificateStore m_certStore;

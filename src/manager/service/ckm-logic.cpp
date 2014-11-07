@@ -822,7 +822,7 @@ RawBuffer CKMLogic::getCertificateChain(
 
         retCode = getCertificateChainHelper(cred, certificate, labelNameVector, chainRawVector);
     } catch (const CryptoLogic::Exception::Base &e) {
-        LogError("DBCyptorModule failed with message: " << e.GetMessage());
+        LogError("CryptoLogic failed with message: " << e.GetMessage());
         retCode = CKM_API_ERROR_SERVER_ERROR;
     } catch (const DBCrypto::Exception::Base &e) {
         LogError("DBCrypto failed with message: " << e.GetMessage());
@@ -956,11 +956,8 @@ int CKMLogic::setPermissionHelper(
         const Name &name,
         const Label &label,
         const Label &accessorLabel,
-        const Permission reqRights)
+        const Permission newPermission)
 {
-    if (0 == m_userDataMap.count(cred.uid))
-        return CKM_API_ERROR_DB_LOCKED;
-
     if(cred.smackLabel.empty() || cred.smackLabel==accessorLabel)
         return CKM_API_ERROR_INPUT_PARAM;
 
@@ -975,6 +972,9 @@ int CKMLogic::setPermissionHelper(
     if(access_ec != CKM_API_SUCCESS)
         return access_ec;
 
+    if (0 == m_userDataMap.count(cred.uid))
+        return CKM_API_ERROR_DB_LOCKED;
+
     auto &database = m_userDataMap[cred.uid].database;
     DBCrypto::Transaction transaction(&database);
 
@@ -982,20 +982,16 @@ int CKMLogic::setPermissionHelper(
         return CKM_API_ERROR_DB_ALIAS_UNKNOWN;
 
     // removing non-existing permissions: fail
-    if(reqRights == Permission::NONE)
+    if(newPermission == Permission::NONE)
     {
         if( !database.getPermissionRow(name, ownerLabel, accessorLabel) )
             return CKM_API_ERROR_INPUT_PARAM;
     }
 
-    int retCode = database.setPermission(name,
-                                     ownerLabel,
-                                     accessorLabel,
-                                     reqRights);
-
+    database.setPermission(name, cred.smackLabel, accessorLabel, newPermission);
     transaction.commit();
 
-    return retCode;
+    return CKM_API_SUCCESS;
 }
 
 RawBuffer CKMLogic::setPermission(
@@ -1005,11 +1001,11 @@ RawBuffer CKMLogic::setPermission(
         const Name &name,
         const Label &label,
         const Label &accessorLabel,
-        const Permission reqRights)
+        const Permission newPermission)
 {
     int retCode;
     Try {
-        retCode = setPermissionHelper(cred, name, label, accessorLabel, reqRights);
+        retCode = setPermissionHelper(cred, name, label, accessorLabel, newPermission);
     } Catch (CKM::Exception) {
         LogError("Error in set row!");
         retCode = CKM_API_ERROR_DB_ERROR;

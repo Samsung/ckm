@@ -43,7 +43,7 @@ namespace CKM {
             typedef boost::optional<RawBuffer> RawBufferOptional;
             class Exception
             {
-              public:
+            public:
                 DECLARE_EXCEPTION_TYPE(CKM::Exception, Base)
                 DECLARE_EXCEPTION_TYPE(Base, InternalError)
                 DECLARE_EXCEPTION_TYPE(Base, TransactionError)
@@ -63,7 +63,12 @@ namespace CKM {
 
             virtual ~DBCrypto();
 
-            void saveDBRow(const DBRow &row);
+            void saveDBRow(
+                    const DBRow &row);
+
+            bool isNameLabelPresent(
+                    const Name &name,
+                    const Label &owner) const;
 
             DBRowOptional getDBRow(
                     const Name &name,
@@ -91,7 +96,6 @@ namespace CKM {
                     const Name &name,
                     const Label &ownerLabel);
 
-
             // keys
             void saveKey(const Label& label, const RawBuffer &key);
             RawBufferOptional getKey(const Label& label);
@@ -99,11 +103,7 @@ namespace CKM {
 
 
             // permissions
-            bool isNameLabelPresent(
-                    const Name &name,
-                    const Label &owner) const;
-
-            int setPermission(
+            void setPermission(
                     const Name &name,
                     const Label &ownerLabel,
                     const Label &accessorLabel,
@@ -192,15 +192,67 @@ namespace CKM {
             bool m_inUserTransaction;
 
             void initDatabase();
-            DBRow getRow(const DB::SqlConnection::DataCommandUniquePtr &selectCommand);
+            DBRow getRow(
+                    const Name &name,
+                    const Label &ownerLabel,
+                    const DB::SqlConnection::DataCommandUniquePtr &selectCommand) const;
 
             void createTable(
                     const char *create_cmd,
                     const char *table_name);
 
-            int countRows(
-                    const Name &name,
-                    const Label &label) const;
+            class NameTable {
+            public:
+                explicit NameTable(DB::SqlConnection* connection) : m_connection(connection) {}
+
+                void addRow(
+                        const Name &name,
+                        const Label &ownerLabel);
+
+                void deleteRow(
+                        const Name &name,
+                        const Label &ownerLabel);
+
+                void deleteAllRows(
+                        const Label &ownerLabel);
+
+                bool isPresent(
+                        const Name &name,
+                        const Label &ownerLabel) const;
+
+            private:
+                DB::SqlConnection* m_connection;
+            };
+
+            class ObjectTable {
+            public:
+                explicit ObjectTable(DB::SqlConnection* connection) : m_connection(connection) {}
+
+                void addRow(
+                        const DBRow &row);
+
+            private:
+                DB::SqlConnection* m_connection;
+            };
+
+            class PermissionTable {
+            public:
+                explicit PermissionTable(DB::SqlConnection* connection) : m_connection(connection) {}
+
+                void setPermission(
+                        const Name &name,
+                        const Label &ownerLabel,
+                        const Label &accessorLabel,
+                        const Permission rights);
+
+                PermissionOptional getPermissionRow(
+                        const Name &name,
+                        const Label &ownerLabel,
+                        const Label &accessorLabel) const;
+
+            private:
+                DB::SqlConnection* m_connection;
+            };
     };
 } // namespace CKM
 
