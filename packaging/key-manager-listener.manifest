@@ -1,5 +1,13 @@
 <manifest>
+	<define>
+		<domain name="key-manager-listener" />
+		<request>
+			<smack request="pkgmgr::info" type="r" />
+			<smack request="pkgmgr::db" type="rlx" />
+			<smack request="ail::db" type="rlx" />
+		</request>
+	</define>
 	<request>
-		<domain name="_" />
+		<domain name="key-manager-listener" />
 	</request>
 </manifest>
