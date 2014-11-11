@@ -1,11 +1,11 @@
 [Unit]
 Description=Start the Central Key Manager Listener
 Requires=dbus.service
+After=central-key-manager.service
 
 [Service]
-Type=forking
+Type=simple
 ExecStart=/usr/bin/key-manager-listener
 
 [Install]
 WantedBy=multi-user.target
-

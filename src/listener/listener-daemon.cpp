@@ -1,13 +1,27 @@
-#include <stdio.h>
-#include <stdlib.h>
+/*
+ *  Copyright (c) 2000 - 2014 Samsung Electronics Co., Ltd All Rights Reserved
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License
+ */
+/*
+ * @file        listener-daemon.cpp
+ * @author      Bartlomiej Grzelewski (b.grzelewski@samsung.com)
+ * @version     1.0
+ * @brief       Listener daemon handle some events for key-manager.
+ */
+
 #include <fcntl.h>
-#include <errno.h>
 #include <unistd.h>
-#include <syslog.h>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <systemd/sd-daemon.h>
 
 #include <glib.h>
 #include <package_manager.h>
@@ -24,78 +38,7 @@
 
 namespace {
 const char* const CKM_LOCK = "/var/run/key-manager.pid";
-const char* const LISTENER_LOCK = "/var/run/key-manager-listener.pid";
 };
-
-void daemonize()
-{
-    // Let's operate in background
-    int fd;
-    int result = fork();
-    if (result < 0){
-        SLOG(LOG_ERROR, CKM_LISTENER_TAG, "%s", "Error in fork!");
-        exit(1);
-    }
-
-    if (result > 0)
-        exit(0);
-
-    // Let's disconnect from terminal
-    if (-1 == setsid()) {
-        SLOG(LOG_ERROR, CKM_LISTENER_TAG, "%s", "Error in fork!");
-        exit(1);
-    }
-
-    // Let's close all descriptors
-//    for (result = getdtablesize(); result>=0; --result)
-//    close(result);
-
-    close(0);
-    close(1);
-    close(2);
-
-    result = open("/dev/null", O_RDWR); // open stdin
-
-    int fd_stdout = 0;
-    int fd_stderr = 0;
-    fd_stdout = dup(result); // stdout
-    fd_stderr = dup(result); // stderr
-    SLOG(LOG_DEBUG, CKM_LISTENER_TAG, "%d : %s", fd_stdout, "stdout file descriptor");
-    SLOG(LOG_DEBUG, CKM_LISTENER_TAG, "%d : %s", fd_stderr, "stderr file descriptor");
-
-
-    umask(027);
-
-    // Let's change current directory
-    if (-1 == chdir("/")) {
-        SLOG(LOG_ERROR, CKM_LISTENER_TAG, "Error in chdir!");
-        exit(1);
-    }
-
-    // Let's create lock file
-    fd = TEMP_FAILURE_RETRY(creat(LISTENER_LOCK, 0640));
-    if (fd < 0) {
-        SLOG(LOG_ERROR, CKM_LISTENER_TAG, "Error in opening lock file!");
-        exit(1);
-    }
-
-    if (lockf(fd, F_TLOCK, 0) < 0) {
-        if (errno == EACCES || errno == EAGAIN) {
-            SLOG(LOG_ERROR, CKM_LISTENER_TAG, "Daemon already working!");
-            exit(0);
-        }
-        SLOG(LOG_ERROR, CKM_LISTENER_TAG, "lockf failed with error: %s" , strerror(errno));
-        exit(1);
-    }
-
-    std::string pid = std::to_string(getpid());
-    if (TEMP_FAILURE_RETRY(write(fd, pid.c_str(), pid.size())) <= 0) {
-        SLOG(LOG_ERROR, CKM_LISTENER_TAG, "Failed to write lock file. Error: %s", strerror(errno));
-        exit(1);
-    }
-
-    SLOG(LOG_DEBUG, CKM_LISTENER_TAG, "%s", pid.c_str());
-}
 
 bool isCkmRunning()
 {
@@ -166,8 +109,6 @@ void ccModeChangedEventCallback(keynode_t*, void*)
 
 int main(void) {
     SLOG(LOG_DEBUG, CKM_LISTENER_TAG, "%s", "Start!");
-
-    daemonize();
 
     // Let's start to listen
     GMainLoop *main_loop = g_main_loop_new(NULL, FALSE);
