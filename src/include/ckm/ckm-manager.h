@@ -43,14 +43,12 @@ public:
     virtual int saveCertificate(const Alias &alias, const CertificateShPtr &cert, const Policy &policy) = 0;
 
     /*
-     * Data must be extractable. If you set extractable bit to false funciton will
+     * Data must be extractable. If you set extractable bit to false function will
      * return ERROR_INPUT_PARAM.
      */
     virtual int saveData(const Alias &alias, const RawBuffer &data, const Policy &policy) = 0;
 
-    virtual int removeKey(const Alias &alias) = 0;
-    virtual int removeCertificate(const Alias &alias) = 0;
-    virtual int removeData(const Alias &alias) = 0;
+    virtual int removeAlias(const Alias &alias) = 0;
 
     virtual int getKey(const Alias &alias, const Password &password, KeyShPtr &key) = 0;
     virtual int getCertificate(

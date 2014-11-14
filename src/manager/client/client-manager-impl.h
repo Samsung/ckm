@@ -34,19 +34,18 @@ public:
     virtual ~ManagerImpl(){}
 
     int saveKey(const Alias &alias, const KeyShPtr &key, const Policy &policy);
-    int removeKey(const Alias &alias);
     int getKey(const Alias &alias, const Password &password, KeyShPtr &key);
     int getKeyAliasVector(AliasVector &aliasVector);
 
     int saveCertificate(const Alias &alias, const CertificateShPtr &cert, const Policy &policy);
-    int removeCertificate(const Alias &alias);
     int getCertificate(const Alias &alias, const Password &password, CertificateShPtr &cert);
     int getCertificateAliasVector(AliasVector &aliasVector);
 
     int saveData(const Alias &alias, const RawBuffer &rawData, const Policy &policy);
-    int removeData(const Alias &alias);
     int getData(const Alias &alias, const Password &password, RawBuffer &cert);
     int getDataAliasVector(AliasVector &aliasVector);
+
+    int removeAlias(const Alias &alias);
 
     int createKeyPairRSA(
         const int size,              // size in bits [1024, 2048, 4096]
@@ -105,10 +104,6 @@ protected:
         DBDataType dataType,
         const RawBuffer &rawData,
         const Policy &policy);
-
-    int removeBinaryData(
-        const Alias &alias,
-        DBDataType dataType);
 
     int getBinaryData(
         const Alias &alias,

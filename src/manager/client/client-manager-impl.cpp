@@ -101,7 +101,7 @@ int ManagerImpl::saveData(const Alias &alias, const RawBuffer &rawData, const Po
     return saveBinaryData(alias, DBDataType::BINARY_DATA, rawData, policy);
 }
 
-int ManagerImpl::removeBinaryData(const Alias &alias, DBDataType dataType)
+int ManagerImpl::removeAlias(const Alias &alias)
 {
     return try_catch([&] {
         if (alias.empty())
@@ -111,7 +111,6 @@ int ManagerImpl::removeBinaryData(const Alias &alias, DBDataType dataType)
         AliasSupport helper(alias);
         auto send = MessageBuffer::Serialize(static_cast<int>(LogicCommand::REMOVE),
                                              m_counter,
-                                             static_cast<int>(dataType),
                                              helper.getName(),
                                              helper.getLabel());
 
@@ -121,8 +120,7 @@ int ManagerImpl::removeBinaryData(const Alias &alias, DBDataType dataType)
 
         int command;
         int counter;
-        int opType;
-        recv.Deserialize(command, counter, retCode, opType);
+        recv.Deserialize(command, counter, retCode);
 
         if (counter != m_counter) {
             return CKM_API_ERROR_UNKNOWN;
@@ -130,18 +128,6 @@ int ManagerImpl::removeBinaryData(const Alias &alias, DBDataType dataType)
 
         return retCode;
     });
-}
-
-int ManagerImpl::removeKey(const Alias &alias) {
-    return removeBinaryData(alias, DBDataType::KEY_RSA_PUBLIC);
-}
-
-int ManagerImpl::removeCertificate(const Alias &alias) {
-    return removeBinaryData(alias, DBDataType::CERTIFICATE);
-}
-
-int ManagerImpl::removeData(const Alias &alias) {
-    return removeBinaryData(alias, DBDataType::BINARY_DATA);
 }
 
 int ManagerImpl::getBinaryData(

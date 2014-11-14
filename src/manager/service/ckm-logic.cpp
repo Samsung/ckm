@@ -403,7 +403,6 @@ int CKMLogic::removeDataHelper(
 RawBuffer CKMLogic::removeData(
     const Credentials &cred,
     int commandId,
-    DBDataType dataType,
     const Name &name,
     const Label &label)
 {
@@ -420,8 +419,7 @@ RawBuffer CKMLogic::removeData(
 
     auto response = MessageBuffer::Serialize(static_cast<int>(LogicCommand::REMOVE),
                                              commandId,
-                                             retCode,
-                                             static_cast<int>(dataType));
+                                             retCode);
     return response.Pop();
 }
 

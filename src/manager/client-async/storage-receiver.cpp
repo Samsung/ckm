@@ -213,8 +213,8 @@ void StorageReceiver::parseSaveCommand()
 
 void StorageReceiver::parseRemoveCommand()
 {
-    int dataType = 0, retCode = 0;
-    m_buffer.Deserialize(retCode, dataType);
+    int retCode = 0;
+    m_buffer.Deserialize(retCode);
 
     // check error code
     if (retCode != CKM_API_SUCCESS) {
@@ -222,18 +222,7 @@ void StorageReceiver::parseRemoveCommand()
          return;
     }
 
-    switch(type(dataType))
-    {
-    case DataType::KEY:
-        m_observer->ReceivedSaveKey();
-        break;
-    case DataType::CERT:
-        m_observer->ReceivedSaveCertificate();
-        break;
-    case DataType::DATA:
-        m_observer->ReceivedSaveData();
-        break;
-    }
+    m_observer->ReceivedRemovedAlias();
 }
 
 void StorageReceiver::parseGetChainCertCommand()

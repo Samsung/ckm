@@ -58,19 +58,9 @@ void ManagerAsync::saveData(const ObserverPtr& observer,
     m_impl->saveData(observer, alias, data, policy);
 }
 
-void ManagerAsync::removeKey(const ObserverPtr& observer, const Alias& alias)
+void ManagerAsync::removeAlias(const ObserverPtr& observer, const Alias& alias)
 {
-    m_impl->removeBinaryData(observer, alias, DBDataType::DB_KEY_FIRST);
-}
-
-void ManagerAsync::removeCertificate(const ObserverPtr& observer, const Alias& alias)
-{
-    m_impl->removeBinaryData(observer, alias, DBDataType::CERTIFICATE);
-}
-
-void ManagerAsync::removeData(const ObserverPtr& observer, const Alias& alias)
-{
-    m_impl->removeBinaryData(observer, alias, DBDataType::BINARY_DATA);
+    m_impl->removeAlias(observer, alias);
 }
 
 void ManagerAsync::getKey(const ObserverPtr& observer, const Alias& alias, const Password& password)

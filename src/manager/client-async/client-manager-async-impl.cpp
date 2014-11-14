@@ -97,9 +97,8 @@ void ManagerAsync::Impl::saveBinaryData(const ManagerAsync::ObserverPtr& observe
     }, [&observer](int error){ observer->ReceivedError(error); } );
 }
 
-void ManagerAsync::Impl::removeBinaryData(const ManagerAsync::ObserverPtr& observer,
-                                          const Alias& alias,
-                                          DBDataType dataType)
+void ManagerAsync::Impl::removeAlias(const ManagerAsync::ObserverPtr& observer,
+                                     const Alias& alias)
 {
     observerCheck(observer);
     if (alias.empty()) {
@@ -111,7 +110,6 @@ void ManagerAsync::Impl::removeBinaryData(const ManagerAsync::ObserverPtr& obser
         sendToStorage(observer,
                       static_cast<int>(LogicCommand::REMOVE),
                       m_counter,
-                      static_cast<int>(dataType),
                       helper.getName(),
                       helper.getLabel());
     }, [&observer](int error){ observer->ReceivedError(error); } );

@@ -89,7 +89,6 @@ public:
     RawBuffer removeData(
         const Credentials &cred,
         int commandId,
-        DBDataType dataType,
         const Name &name,
         const Label &label);
 

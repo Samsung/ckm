@@ -201,11 +201,10 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer)
         }
         case LogicCommand::REMOVE:
         {
-            buffer.Deserialize(tmpDataType, name, label);
+            buffer.Deserialize(name, label);
             return m_logic->removeData(
                 cred,
                 msgID,
-                static_cast<DBDataType>(tmpDataType),
                 name,
                 label);
         }

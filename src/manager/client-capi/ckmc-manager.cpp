@@ -116,7 +116,7 @@ int ckmc_remove_key(const char *alias)
         return CKMC_ERROR_INVALID_PARAMETER;
     }
 
-    int ret =  mgr->removeKey(alias);
+    int ret =  mgr->removeAlias(alias);
     return to_ckmc_error(ret);
 }
 
@@ -217,7 +217,7 @@ int ckmc_remove_cert(const char *alias)
     }
 
     CKM::ManagerShPtr mgr = CKM::Manager::create();
-    int ret = mgr->removeCertificate(alias);
+    int ret = mgr->removeAlias(alias);
 
     return to_ckmc_error(ret);
 }
@@ -314,7 +314,7 @@ int ckmc_remove_data(const char *alias)
     }
 
     CKM::ManagerShPtr mgr = CKM::Manager::create();
-    int ret = mgr->removeData(alias);
+    int ret = mgr->removeAlias(alias);
     return to_ckmc_error(ret);
 }
 

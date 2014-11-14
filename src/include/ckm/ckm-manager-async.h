@@ -51,9 +51,7 @@ public:
         virtual void ReceivedSaveCertificate() {}
         virtual void ReceivedSaveData() {}
 
-        virtual void ReceivedRemovedKey() {}
-        virtual void ReceivedRemovedCertificate() {}
-        virtual void ReceivedRemovedData() {}
+        virtual void ReceivedRemovedAlias() {}
 
         virtual void ReceivedKey(Key &&) {}
         virtual void ReceivedCertificate(Certificate &&) {}
@@ -99,9 +97,7 @@ public:
             const RawBuffer& data,
             const Policy& policy);
 
-    void removeKey(const ObserverPtr& observer, const Alias& alias);
-    void removeCertificate(const ObserverPtr& observer, const Alias& alias);
-    void removeData(const ObserverPtr& observer, const Alias& alias);
+    void removeAlias(const ObserverPtr& observer, const Alias& alias);
 
     void getKey(const ObserverPtr& observer, const Alias& alias, const Password& password);
     void getCertificate(const ObserverPtr& observer, const Alias& alias, const Password& password);

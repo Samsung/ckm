@@ -88,10 +88,9 @@ public:
             const RawBuffer& rawData,
             const Policy& policy);
 
-    void removeBinaryData(
+    void removeAlias(
             const ManagerAsync::ObserverPtr& observer,
-            const Alias &alias,
-            DBDataType dataType);
+            const Alias &alias);
 
     void getBinaryData(
             const ManagerAsync::ObserverPtr& observer,
