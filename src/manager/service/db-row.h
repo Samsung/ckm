@@ -21,6 +21,7 @@
  */
 #pragma once
 
+#include <vector>
 #include <ckm/ckm-type.h>
 #include <protocols.h>
 
@@ -37,5 +38,6 @@ namespace CKM {
         RawBuffer data;
         RawBuffer tag;              // tag for Aes Gcm algorithm
     };
+    typedef std::vector<DBRow> DBRowVector;
 } // namespace CKM
 

@@ -63,7 +63,7 @@ extern "C" {
  * @retval #CKMC_ERROR_DB_LOCKED         A user key is not loaded in memory (a user is not logged in)
  * @retval #CKMC_ERROR_DB_ALIAS_EXISTS   Alias already exists
  * @retval #CKMC_ERROR_INVALID_FORMAT    The format of raw_key is not valid
- * @retval #CKMC_ERROR_DB_ERROR          Failed due to other DB transaction unexpectedly
+ * @retval #CKMC_ERROR_DB_ERROR          Failed due to a database error
  * @retval #CKMC_ERROR_PERMISSION_DENIED Failed to access key manager
  *
  * @pre User is already logged in and the user key is already loaded into memory in plain text form.
@@ -93,7 +93,7 @@ int ckmc_save_key(const char *alias, const ckmc_key_s key, const ckmc_policy_s p
  * @retval #CKMC_ERROR_NONE              Successful
  * @retval #CKMC_ERROR_INVALID_PARAMETER Input parameter is invalid
  * @retval #CKMC_ERROR_DB_LOCKED         A user key is not loaded in memory (a user is not logged in)
- * @retval #CKMC_ERROR_DB_ERROR          Failed due to the error with unknown reason
+ * @retval #CKMC_ERROR_DB_ERROR          Failed due to a database error
  * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN  Alias does not exist
  * @retval #CKMC_ERROR_PERMISSION_DENIED Failed to access key manager
  *
@@ -126,7 +126,7 @@ int ckmc_remove_key(const char *alias);
  * @retval #CKMC_ERROR_NONE              Successful
  * @retval #CKMC_ERROR_INVALID_PARAMETER Input parameter is invalid
  * @retval #CKMC_ERROR_DB_LOCKED         A user key is not loaded in memory (a user is not logged in)
- * @retval #CKMC_ERROR_DB_ERROR          Failed due to the error with unknown reason
+ * @retval #CKMC_ERROR_DB_ERROR          Failed due to a database error
  * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN  Alias does not exist
  * @retval #CKMC_ERROR_PERMISSION_DENIED Failed to access key manager
  *
@@ -157,7 +157,7 @@ int ckmc_get_key(const char *alias, const char *password, ckmc_key_s **ppkey);
  * @retval #CKMC_ERROR_NONE              Successful
  * @retval #CKMC_ERROR_INVALID_PARAMETER Input parameter is invalid
  * @retval #CKMC_ERROR_DB_LOCKED         A user key is not loaded in memory (a user is not logged in)
- * @retval #CKMC_ERROR_DB_ERROR          Failed due to the error with unknown reason
+ * @retval #CKMC_ERROR_DB_ERROR          Failed due to a database error
  * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN  Alias does not exist
  * @retval #CKMC_ERROR_PERMISSION_DENIED Failed to access key manager
  *
@@ -193,7 +193,7 @@ int ckmc_get_key_alias_list(ckmc_alias_list_s** ppalias_list);
  * @retval #CKMC_ERROR_DB_LOCKED          A user key is not loaded in memory (a user is not logged in)
  * @retval #CKMC_ERROR_DB_ALIAS_EXISTS    Alias already exists
  * @retval #CKMC_ERROR_INVALID_FORMAT     The format of raw_cert is not valid
- * @retval #CKMC_ERROR_DB_ERROR           Failed due to other DB transaction unexpectedly
+ * @retval #CKMC_ERROR_DB_ERROR           Failed due to a database error
  * @retval #CKMC_ERROR_PERMISSION_DENIED  Failed to access key manager
  *
  * @pre User is already logged in and the user key is already loaded into memory in plain text form.
@@ -223,7 +223,7 @@ int ckmc_save_cert(const char *alias, const ckmc_cert_s cert, const ckmc_policy_
  * @retval #CKMC_ERROR_NONE               Successful
  * @retval #CKMC_ERROR_INVALID_PARAMETER  Input parameter is invalid
  * @retval #CKMC_ERROR_DB_LOCKED          A user key is not loaded in memory (a user is not logged in)
- * @retval #CKMC_ERROR_DB_ERROR           Failed due to the error with unknown reason
+ * @retval #CKMC_ERROR_DB_ERROR           Failed due to a database error
  * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN   Alias does not exist
  * @retval #CKMC_ERROR_PERMISSION_DENIED  Failed to access key manager
  *
@@ -257,7 +257,7 @@ int ckmc_remove_cert(const char *alias);
  * @retval #CKMC_ERROR_NONE               Successful
  * @retval #CKMC_ERROR_INVALID_PARAMETER  Input parameter is invalid
  * @retval #CKMC_ERROR_DB_LOCKED          A user key is not loaded in memory (a user is not logged in)
- * @retval #CKMC_ERROR_DB_ERROR           Failed due to the error with unknown reason
+ * @retval #CKMC_ERROR_DB_ERROR           Failed due to a database error
  * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN   Alias does not exists
  * @retval #CKMC_ERROR_PERMISSION_DENIED  Failed to access key manager
  *
@@ -288,7 +288,7 @@ int ckmc_get_cert(const char *alias, const char *password, ckmc_cert_s **ppcert)
  * @retval #CKMC_ERROR_NONE               Successful
  * @retval #CKMC_ERROR_INVALID_PARAMETER  Input parameter is invalid
  * @retval #CKMC_ERROR_DB_LOCKED          A user key is not loaded in memory (a user is not logged in)
- * @retval #CKMC_ERROR_DB_ERROR           Failed due to the error with unknown reason
+ * @retval #CKMC_ERROR_DB_ERROR           Failed due to a database error
  * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN   Alias does not exist
  * @retval #CKMC_ERROR_PERMISSION_DENIED  Failed to access key manager
  *
@@ -299,6 +299,101 @@ int ckmc_get_cert(const char *alias, const char *password, ckmc_cert_s **ppcert)
  * @see ckmc_get_cert()
  */
 int ckmc_get_cert_alias_list(ckmc_alias_list_s** ppalias_list);
+
+
+
+
+/**
+ * @brief Stores PKCS12's contents inside key manager based on the provided policies.
+ * All items from the PKCS12 will use the same alias.
+ *
+ * @since_tizen 2.3
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/keymanager
+ *
+ * @param[in] alias         The name of a data to be stored
+ * @param[in] pkcs          Pointer to the pkcs12 structure to be saved
+ * @param[in] key_policy    The policy about how to store pkcs's private key
+ * @param[in] cert_policy   The policy about how to store pkcs's certificate
+ *
+ * @return @c 0 on success,
+ *         otherwise a negative error value
+ *
+ * @retval #CKMC_ERROR_NONE               Successful
+ * @retval #CKMC_ERROR_INVALID_PARAMETER  Input parameter is invalid
+ * @retval #CKMC_ERROR_DB_LOCKED          A user key is not loaded in memory (a user is not logged in)
+ * @retval #CKMC_ERROR_DB_ALIAS_EXISTS    Alias already exists
+ * @retval #CKMC_ERROR_DB_ERROR           Failed due to a database error
+ * @retval #CKMC_ERROR_PERMISSION_DENIED  Failed to access key manager
+ *
+ * @pre User is already logged in and the user key is already loaded into memory in plain text form.
+ *
+ * @see ckmc_remove_pkcs12()
+ * @see ckmc_get_pkcs12()
+ * @see ckmc_get_data_alias_list()
+ * @see ckmc_load_from_pkcs12_file2()
+ * @see #ckmc_pkcs12_s
+ * @see #ckmc_policy_s
+ */
+int ckmc_save_pkcs12(const char *alias, const ckmc_pkcs12_s *pkcs, const ckmc_policy_s key_policy, const ckmc_policy_s cert_policy);
+
+/**
+ * @brief Removes all pkcs12 contents from key manager.
+ *
+ * @since_tizen 2.3
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/keymanager
+ *
+ * @remarks A client can remove only data stored by the client.
+ *
+ * @param[in] alias The name of pkcs12 to be removed
+ *
+ * @return @c 0 on success,
+ *         otherwise a negative error value
+ *
+ * @retval #CKMC_ERROR_NONE               Successful
+ * @retval #CKMC_ERROR_INVALID_PARAMETER  Input parameter is invalid
+ * @retval #CKMC_ERROR_DB_LOCKED          A user key is not loaded in memory (a user is not logged in)
+ * @retval #CKMC_ERROR_DB_ERROR           Failed due to a database error
+ * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN   Alias does not exist
+ * @retval #CKMC_ERROR_PERMISSION_DENIED  Failed to access key manager
+ *
+ * @pre User is already logged in and the user key is already loaded into memory in plain text form.
+ *
+ * @see ckmc_save_pkcs12()
+ * @see ckmc_get_pkcs12()
+ */
+int ckmc_remove_pkcs12(const char *alias);
+
+/**
+ * @brief Gets a pkcs12 from key manager.
+ *
+ * @since_tizen 2.3
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/keymanager
+ *
+ * @remarks A client can access only data stored by the client.
+ * @remarks You must destroy the newly created @a pkcs12 by calling ckmc_pkcs12_free() if it is no longer needed.
+ *
+ * @param[in]  alias     The name of a data to retrieve
+ * @param[out] pkcs12    The pointer to a newly created ckmc_pkcs12_s handle
+ *
+ * @return @c 0 on success,
+ *         otherwise a negative error value
+ *
+ * @retval #CKMC_ERROR_NONE               Successful
+ * @retval #CKMC_ERROR_INVALID_PARAMETER  Input parameter is invalid
+ * @retval #CKMC_ERROR_DB_LOCKED          A user key is not loaded in memory (a user is not logged in)
+ * @retval #CKMC_ERROR_DB_ERROR           Failed due to a database error
+ * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN   Alias does not exist
+ * @retval #CKMC_ERROR_PERMISSION_DENIED  Failed to access key manager
+ *
+ * @pre User is already logged in and the user key is already loaded into memory in plain text form.
+ *
+ * @see ckmc_save_pkcs12()
+ * @see ckmc_remove_pkcs12()
+ */
+int ckmc_get_pkcs12(const char *alias, ckmc_pkcs12_s **pkcs12);
 
 
 
@@ -321,7 +416,7 @@ int ckmc_get_cert_alias_list(ckmc_alias_list_s** ppalias_list);
  * @retval #CKMC_ERROR_INVALID_PARAMETER  Input parameter is invalid
  * @retval #CKMC_ERROR_DB_LOCKED          A user key is not loaded in memory (a user is not logged in)
  * @retval #CKMC_ERROR_DB_ALIAS_EXISTS    Alias already exists
- * @retval #CKMC_ERROR_DB_ERROR           Failed due to other DB transaction unexpectedly
+ * @retval #CKMC_ERROR_DB_ERROR           Failed due to a database error
  * @retval #CKMC_ERROR_PERMISSION_DENIED  Failed to access key manager
  *
  * @pre User is already logged in and the user key is already loaded into memory in plain text form.

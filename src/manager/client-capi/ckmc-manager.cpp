@@ -39,19 +39,33 @@ CKM::Password _tostring(const char *str)
     return CKM::Password(str);
 }
 
-CKM::CertificateShPtr _toCkmCertificate(const ckmc_cert_s *cert)
+CKM::KeyShPtr _toCkmKey(const ckmc_key_s *key)
 {
-    CKM::RawBuffer buffer(cert->raw_cert, cert->raw_cert + cert->cert_size);
-    CKM::DataFormat dataFormat = static_cast<CKM::DataFormat>(static_cast<int>(cert->data_format));
-    return CKM::Certificate::create(buffer, dataFormat);
+    if(key)
+    {
+        CKM::RawBuffer buffer(key->raw_key, key->raw_key + key->key_size);
+        return CKM::Key::create(buffer, _tostring(key->password));
+    }
+    return CKM::KeyShPtr();
 }
 
-ckmc_cert_list_s *_toNewCkmCertList(CKM::CertificateShPtrVector &certVector)
+CKM::CertificateShPtr _toCkmCertificate(const ckmc_cert_s *cert)
+{
+    if(cert)
+    {
+        CKM::RawBuffer buffer(cert->raw_cert, cert->raw_cert + cert->cert_size);
+        CKM::DataFormat dataFormat = static_cast<CKM::DataFormat>(static_cast<int>(cert->data_format));
+        return CKM::Certificate::create(buffer, dataFormat);
+    }
+    return CKM::CertificateShPtr();
+}
+
+ckmc_cert_list_s *_toNewCkmCertList(const CKM::CertificateShPtrVector &certVector)
 {
     int ret;
     ckmc_cert_list_s *start = NULL;
     ckmc_cert_list_s *plist = NULL;
-    CKM::CertificateShPtrVector::iterator it;
+    CKM::CertificateShPtrVector::const_iterator it;
     for(it = certVector.begin(); it != certVector.end(); it++) {
         CKM::RawBuffer rawBuffer = (*it)->getDER();
         unsigned char *rawCert = static_cast<unsigned char *>(malloc(rawBuffer.size()));
@@ -283,6 +297,115 @@ int ckmc_get_cert_alias_list(ckmc_alias_list_s** alias_list) {
     }
 
     return CKMC_ERROR_NONE;
+}
+
+KEY_MANAGER_CAPI
+int ckmc_save_pkcs12(const char *alias, const ckmc_pkcs12_s *ppkcs, const ckmc_policy_s key_policy, const ckmc_policy_s cert_policy)
+{
+    CKM::KeyShPtr private_key;
+    CKM::CertificateShPtr cert;
+    CKM::CertificateShPtrVector ca_cert_list;
+
+    if(alias==NULL || ppkcs==NULL) {
+        return CKMC_ERROR_INVALID_PARAMETER;
+    }
+    CKM::Alias ckmAlias(alias);
+
+    private_key = _toCkmKey(ppkcs->priv_key);
+    cert = _toCkmCertificate(ppkcs->cert);
+    ckmc_cert_list_s *current = NULL;
+    ckmc_cert_list_s *next = const_cast<ckmc_cert_list_s *>(ppkcs->ca_chain);
+    do {
+        current = next;
+        next = current->next;
+
+        if(current->cert == NULL){
+            continue;
+        }
+
+        CKM::CertificateShPtr tmpCkmCert = _toCkmCertificate(current->cert);
+        ca_cert_list.push_back(tmpCkmCert);
+    }while(next != NULL);
+
+    CKM::Policy keyPolicy(_tostring(key_policy.password), key_policy.extractable);
+    CKM::Policy certPolicy(_tostring(cert_policy.password), cert_policy.extractable);
+
+    CKM::PKCS12ShPtr pkcs12(new CKM::PKCS12Impl(private_key, cert, ca_cert_list));
+
+    CKM::ManagerShPtr mgr = CKM::Manager::create();
+    int ret = mgr->savePKCS12(ckmAlias, pkcs12, keyPolicy, certPolicy);
+
+    return to_ckmc_error(ret);
+}
+
+KEY_MANAGER_CAPI
+int ckmc_remove_pkcs12(const char *alias)
+{
+    if(alias == NULL) {
+        return CKMC_ERROR_INVALID_PARAMETER;
+    }
+
+    CKM::ManagerShPtr mgr = CKM::Manager::create();
+    int ret = mgr->removeAlias(alias);
+    return to_ckmc_error(ret);
+}
+
+KEY_MANAGER_CAPI
+int ckmc_get_pkcs12(const char *alias, ckmc_pkcs12_s **pkcs12)
+{
+    int ret;
+    CKM::PKCS12ShPtr ShPkcs12;
+    CKM::PKCS12 *pkcs12Ptr = NULL;
+    ckmc_key_s *private_key = NULL;
+    ckmc_cert_s *cert = NULL;
+    ckmc_cert_list_s *ca_cert_list = 0;
+
+    if(alias == NULL || pkcs12 == NULL) {
+        return CKMC_ERROR_INVALID_PARAMETER;
+    }
+
+    CKM::ManagerShPtr mgr = CKM::Manager::create();
+    if( (ret = mgr->getPKCS12(alias, ShPkcs12)) != CKM_API_SUCCESS) {
+        return to_ckmc_error(ret);
+    }
+
+    pkcs12Ptr = ShPkcs12.get();
+    if(!pkcs12Ptr)
+        return CKMC_ERROR_BAD_RESPONSE;
+
+    if(pkcs12Ptr->getKey())
+    {
+        CKM::KeyShPtr helper = pkcs12Ptr->getKey();
+
+        unsigned char *rawKey = reinterpret_cast<unsigned char*>(helper->getDER().data());
+        ckmc_key_type_e keyType = static_cast<ckmc_key_type_e>(static_cast<int>(helper->getType()));
+        ret = ckmc_key_new(rawKey, helper->getDER().size(), keyType, NULL, &private_key);
+        if(ret != CKMC_ERROR_NONE)
+            return ret;
+    }
+
+    if(pkcs12Ptr->getCertificate())
+    {
+        CKM::CertificateShPtr helper = pkcs12Ptr->getCertificate();
+
+        unsigned char *rawCert = reinterpret_cast<unsigned char*>(helper->getDER().data());
+        ret = ckmc_cert_new(rawCert, helper->getDER().size(), CKMC_FORM_DER, &cert);
+        if(ret != CKMC_ERROR_NONE) {
+            ckmc_key_free(private_key);
+            return ret;
+        }
+    }
+
+    ca_cert_list = _toNewCkmCertList(pkcs12Ptr->getCaCertificateShPtrVector());
+
+    ret = ckmc_pkcs12_new(private_key, cert, ca_cert_list, pkcs12);
+    if(ret != CKMC_ERROR_NONE)
+    {
+        ckmc_key_free(private_key);
+        ckmc_cert_free(cert);
+        ckmc_cert_list_free(ca_cert_list);
+    }
+    return ret;
 }
 
 KEY_MANAGER_CAPI

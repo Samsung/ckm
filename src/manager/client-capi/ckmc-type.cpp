@@ -189,6 +189,43 @@ int ckmc_load_cert_from_file(const char *file_path, ckmc_cert_s **cert)
 }
 
 KEY_MANAGER_CAPI
+void ckmc_cert_free(ckmc_cert_s *cert)
+{
+    if(cert == NULL)
+        return;
+
+    if(cert->raw_cert != NULL) {
+        memset(cert->raw_cert, 0, cert->cert_size);
+        free(cert->raw_cert);
+    }
+    free(cert);
+}
+
+KEY_MANAGER_CAPI
+int ckmc_pkcs12_new(ckmc_key_s *private_key, ckmc_cert_s *cert,
+        ckmc_cert_list_s *ca_cert_list, ckmc_pkcs12_s **pkcs12_bundle)
+{
+    ckmc_pkcs12_s *pkcs12;
+
+    if(!pkcs12_bundle ||
+       (private_key==NULL && cert==NULL && (ca_cert_list==NULL || ca_cert_list->cert==NULL))) {
+        return CKMC_ERROR_INVALID_PARAMETER;
+    }
+
+    pkcs12 = static_cast<ckmc_pkcs12_s*>(malloc(sizeof(ckmc_pkcs12_s)));
+    if(pkcs12 == NULL) {
+        return CKMC_ERROR_OUT_OF_MEMORY;
+    }
+    // ownership is transferred into pkcs12 - mentioned in the docs
+    pkcs12->priv_key = private_key;
+    pkcs12->cert = cert;
+    pkcs12->ca_chain = ca_cert_list;
+
+    *pkcs12_bundle = pkcs12;
+    return CKMC_ERROR_NONE;
+}
+
+KEY_MANAGER_CAPI
 int ckmc_load_from_pkcs12_file(const char *file_path, const char *passphrase, ckmc_key_s **private_key, ckmc_cert_s **ckmcert, ckmc_cert_list_s **ca_cert_list)
 {
     class Pkcs12Converter {
@@ -354,17 +391,42 @@ int ckmc_load_from_pkcs12_file(const char *file_path, const char *passphrase, ck
     return CKMC_ERROR_NONE;
 }
 
-KEY_MANAGER_CAPI
-void ckmc_cert_free(ckmc_cert_s *cert)
+int ckmc_load_from_pkcs12_file2(const char *file_path, const char *passphrase, ckmc_pkcs12_s **pkcs12_bundle)
 {
-    if(cert == NULL)
+    int ec;
+    ckmc_key_s *private_key = 0;
+    ckmc_cert_s *cert = 0;
+    ckmc_cert_list_s *ca_cert_list = 0;
+
+    if(!file_path || !pkcs12_bundle)
+        return CKMC_ERROR_INVALID_PARAMETER;
+
+    ec = ckmc_load_from_pkcs12_file(file_path, passphrase, &private_key, &cert, &ca_cert_list);
+    if(ec != CKMC_ERROR_NONE)
+        return ec;
+
+    ec = ckmc_pkcs12_new(private_key, cert, ca_cert_list, pkcs12_bundle);
+    if(ec != CKMC_ERROR_NONE)
+    {
+        ckmc_key_free(private_key);
+        ckmc_cert_free(cert);
+        ckmc_cert_list_free(ca_cert_list);
+        return ec;
+    }
+
+    return CKMC_ERROR_NONE;
+}
+
+KEY_MANAGER_CAPI
+void ckmc_pkcs12_free(ckmc_pkcs12_s *pkcs12)
+{
+    if(pkcs12 == NULL)
         return;
 
-    if(cert->raw_cert != NULL) {
-        memset(cert->raw_cert, 0, cert->cert_size);
-        free(cert->raw_cert);
-    }
-    free(cert);
+    ckmc_key_free(pkcs12->priv_key);
+    ckmc_cert_free(pkcs12->cert);
+    ckmc_cert_list_free(pkcs12->ca_chain);
+    free(pkcs12);
 }
 
 KEY_MANAGER_CAPI

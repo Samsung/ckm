@@ -66,6 +66,11 @@ namespace CKM {
             void saveDBRow(
                     const DBRow &row);
 
+            void saveDBRows(
+                    const Name &name,
+                    const Label &owner,
+                    const DBRowVector &rows);
+
             bool isNameLabelPresent(
                     const Name &name,
                     const Label &owner) const;
@@ -80,6 +85,19 @@ namespace CKM {
                     const Label &ownerLabel,
                     DBDataType typeRangeStart,
                     DBDataType typeRangeStop);
+
+            void getDBRows(
+                    const Name &name,
+                    const Label &ownerLabel,
+                    DBDataType type,
+                    DBRowVector &output);
+
+            void getDBRows(
+                    const Name &name,
+                    const Label &ownerLabel,
+                    DBDataType typeRangeStart,
+                    DBDataType typeRangeStop,
+                    DBRowVector &output);
 
             void listNames(
                     const Label &smackLabel,

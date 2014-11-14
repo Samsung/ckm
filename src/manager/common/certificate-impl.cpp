@@ -91,7 +91,8 @@ CertificateImpl::CertificateImpl(CertificateImpl &&second) {
 CertificateImpl& CertificateImpl::operator=(CertificateImpl &&second) {
     if (this == &second)
         return *this;
-    X509_free(m_x509);
+    if(m_x509)
+        X509_free(m_x509);
     m_x509 = second.m_x509;
     second.m_x509 = NULL;
     LogDebug("Certificate moved: " << (void*)m_x509);
@@ -101,7 +102,8 @@ CertificateImpl& CertificateImpl::operator=(CertificateImpl &&second) {
 CertificateImpl& CertificateImpl::operator=(const CertificateImpl &second) {
     if (this == &second)
         return *this;
-    X509_free(m_x509);
+    if(m_x509)
+        X509_free(m_x509);
     m_x509 = X509_dup(second.m_x509);
     return *this;
 }
@@ -258,7 +260,8 @@ std::string CertificateImpl::getOCSPURL() const {
 }
 
 CertificateImpl::~CertificateImpl() {
-    X509_free(m_x509);
+    if(m_x509)
+        X509_free(m_x509);
 }
 
 CertificateShPtr Certificate::create(const RawBuffer &rawBuffer, DataFormat format) {

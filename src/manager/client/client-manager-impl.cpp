@@ -46,7 +46,7 @@ int ManagerImpl::saveBinaryData(
     const RawBuffer &rawData,
     const Policy &policy)
 {
-    m_counter++;
+    int my_counter = ++m_counter;
 
     return try_catch([&] {
         if (alias.empty() || rawData.empty())
@@ -55,7 +55,7 @@ int ManagerImpl::saveBinaryData(
         MessageBuffer recv;
         AliasSupport helper(alias);
         auto send = MessageBuffer::Serialize(static_cast<int>(LogicCommand::SAVE),
-                                             m_counter,
+                                             my_counter,
                                              static_cast<int>(dataType),
                                              helper.getName(),
                                              helper.getLabel(),
@@ -71,9 +71,8 @@ int ManagerImpl::saveBinaryData(
         int opType;
         recv.Deserialize(command, counter, retCode, opType);
 
-        if (counter != m_counter) {
+        if (counter != my_counter)
             return CKM_API_ERROR_UNKNOWN;
-        }
 
         return retCode;
     });
@@ -106,16 +105,90 @@ int ManagerImpl::saveData(const Alias &alias, const RawBuffer &rawData, const Po
     return saveBinaryData(alias, DBDataType::BINARY_DATA, rawData, policy);
 }
 
+
+int ManagerImpl::savePKCS12(
+    const Alias & alias,
+    const PKCS12ShPtr &pkcs,
+    const Policy &keyPolicy,
+    const Policy &certPolicy)
+{
+    if (alias.empty() || pkcs.get()==NULL)
+        return CKM_API_ERROR_INPUT_PARAM;
+
+    int my_counter = ++m_counter;
+
+    return try_catch([&] {
+        MessageBuffer recv;
+        AliasSupport helper(alias);
+        auto send = MessageBuffer::Serialize(static_cast<int>(LogicCommand::SAVE_PKCS12),
+                                             my_counter,
+                                             helper.getName(),
+                                             helper.getLabel(),
+                                             PKCS12Serializable(*pkcs.get()),
+                                             PolicySerializable(keyPolicy),
+                                             PolicySerializable(certPolicy));
+
+        int retCode = m_storageConnection.processRequest(send.Pop(), recv);
+        if (CKM_API_SUCCESS != retCode)
+            return retCode;
+
+        int command;
+        int counter;
+        recv.Deserialize(command, counter, retCode);
+
+        if (counter != my_counter)
+            return CKM_API_ERROR_UNKNOWN;
+
+        return retCode;
+    });
+}
+
+int ManagerImpl::getPKCS12(const Alias &alias, PKCS12ShPtr &pkcs)
+{
+    if (alias.empty())
+        return CKM_API_ERROR_INPUT_PARAM;
+
+    int my_counter = ++m_counter;
+
+    return try_catch([&] {
+        MessageBuffer recv;
+        AliasSupport helper(alias);
+        auto send = MessageBuffer::Serialize(static_cast<int>(LogicCommand::GET_PKCS12),
+                                             my_counter,
+                                             helper.getName(),
+                                             helper.getLabel());
+
+        int retCode = m_storageConnection.processRequest(send.Pop(), recv);
+        if (CKM_API_SUCCESS != retCode)
+            return retCode;
+
+        int command;
+        int counter;
+        PKCS12Serializable gotPkcs;
+        recv.Deserialize(command, counter, retCode, gotPkcs);
+
+        if (counter != my_counter)
+            return CKM_API_ERROR_UNKNOWN;
+
+        pkcs = std::make_shared<PKCS12Impl>(std::move(gotPkcs));
+
+        return retCode;
+    });
+}
+
+
 int ManagerImpl::removeAlias(const Alias &alias)
 {
-    return try_catch([&] {
-        if (alias.empty())
-            return CKM_API_ERROR_INPUT_PARAM;
+    if (alias.empty())
+        return CKM_API_ERROR_INPUT_PARAM;
 
+    int my_counter = ++m_counter;
+
+    return try_catch([&] {
         MessageBuffer recv;
         AliasSupport helper(alias);
         auto send = MessageBuffer::Serialize(static_cast<int>(LogicCommand::REMOVE),
-                                             m_counter,
+                                             my_counter,
                                              helper.getName(),
                                              helper.getLabel());
 
@@ -127,9 +200,8 @@ int ManagerImpl::removeAlias(const Alias &alias)
         int counter;
         recv.Deserialize(command, counter, retCode);
 
-        if (counter != m_counter) {
+        if (counter != my_counter)
             return CKM_API_ERROR_UNKNOWN;
-        }
 
         return retCode;
     });
@@ -142,14 +214,16 @@ int ManagerImpl::getBinaryData(
     DBDataType &recvDataType,
     RawBuffer &rawData)
 {
-    return try_catch([&] {
-        if (alias.empty())
-            return CKM_API_ERROR_INPUT_PARAM;
+    if (alias.empty())
+        return CKM_API_ERROR_INPUT_PARAM;
 
+    int my_counter = ++m_counter;
+
+    return try_catch([&] {
         MessageBuffer recv;
         AliasSupport helper(alias);
         auto send = MessageBuffer::Serialize(static_cast<int>(LogicCommand::GET),
-                                             m_counter,
+                                             my_counter,
                                              static_cast<int>(sendDataType),
                                              helper.getName(),
                                              helper.getLabel(),
@@ -165,9 +239,8 @@ int ManagerImpl::getBinaryData(
         recv.Deserialize(command, counter, retCode, tmpDataType, rawData);
         recvDataType = DBDataType(tmpDataType);
 
-        if (counter != m_counter) {
+        if (counter != my_counter)
             return CKM_API_ERROR_UNKNOWN;
-        }
 
         return retCode;
     });
@@ -249,11 +322,12 @@ int ManagerImpl::getData(const Alias &alias, const Password &password, RawBuffer
 
 int ManagerImpl::getBinaryDataAliasVector(DBDataType dataType, AliasVector &aliasVector)
 {
-    return try_catch([&] {
+    int my_counter = ++m_counter;
 
+    return try_catch([&] {
         MessageBuffer recv;
         auto send = MessageBuffer::Serialize(static_cast<int>(LogicCommand::GET_LIST),
-                                             m_counter,
+                                             my_counter,
                                              static_cast<int>(dataType));
 
         int retCode = m_storageConnection.processRequest(send.Pop(), recv);
@@ -265,7 +339,7 @@ int ManagerImpl::getBinaryDataAliasVector(DBDataType dataType, AliasVector &alia
         int tmpDataType;
         LabelNameVector labelNameVector;
         recv.Deserialize(command, counter, retCode, tmpDataType, labelNameVector);
-        if ((command != static_cast<int>(LogicCommand::GET_LIST)) || (counter != m_counter)) {
+        if ((command != static_cast<int>(LogicCommand::GET_LIST)) || (counter != my_counter)) {
             return CKM_API_ERROR_UNKNOWN;
         }
 
@@ -352,8 +426,8 @@ int ManagerImpl::createKeyPair(
     }
 
     // proceed with sending request
-    m_counter++;
-    int my_counter = m_counter;
+    int my_counter = ++m_counter;
+
     return try_catch([&] {
 
         MessageBuffer recv;
@@ -479,8 +553,8 @@ int ManagerImpl::createSignature(
     const RSAPaddingAlgorithm padding,
     RawBuffer &signature)
 {
-    m_counter++;
-    int my_counter = m_counter;
+    int my_counter = ++m_counter;
+
     return try_catch([&] {
 
         MessageBuffer recv;
@@ -520,10 +594,9 @@ int ManagerImpl::verifySignature(
     const HashAlgorithm hash,
     const RSAPaddingAlgorithm padding)
 {
-    m_counter++;
-    int my_counter = m_counter;
-    return try_catch([&] {
+    int my_counter = ++m_counter;
 
+    return try_catch([&] {
         MessageBuffer recv;
         AliasSupport helper(publicKeyOrCertAlias);
         auto send = MessageBuffer::Serialize(static_cast<int>(LogicCommand::VERIFY_SIGNATURE),
@@ -586,8 +659,8 @@ int ManagerImpl::setPermission(const Alias &alias,
                                  const Label &accessor,
                                  Permission newPermission)
 {
-    m_counter++;
-    int my_counter = m_counter;
+    int my_counter = ++m_counter;
+
     return try_catch([&] {
         MessageBuffer recv;
         AliasSupport helper(alias);

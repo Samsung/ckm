@@ -27,6 +27,7 @@
 #include <ckm/ckm-certificate.h>
 #include <ckm/ckm-error.h>
 #include <ckm/ckm-key.h>
+#include <ckm/ckm-pkcs12.h>
 #include <ckm/ckm-type.h>
 
 // Central Key Manager namespace
@@ -41,6 +42,11 @@ public:
 
     virtual int saveKey(const Alias &alias, const KeyShPtr &key, const Policy &policy) = 0;
     virtual int saveCertificate(const Alias &alias, const CertificateShPtr &cert, const Policy &policy) = 0;
+    virtual int savePKCS12(
+            const Alias &alias,
+            const PKCS12ShPtr &pkcs,
+            const Policy &keyPolicy,
+            const Policy &certPolicy) = 0;
 
     /*
      * Data must be extractable. If you set extractable bit to false function will
@@ -56,6 +62,7 @@ public:
         const Password &password,
         CertificateShPtr &certificate) = 0;
     virtual int getData(const Alias &alias, const Password &password, RawBuffer &data) = 0;
+    virtual int getPKCS12(const Alias &alias, PKCS12ShPtr &pkcs) = 0;
 
     // send request for list of all keys/certificates/data that application/user may use
     virtual int getKeyAliasVector(AliasVector &aliasVector) = 0;

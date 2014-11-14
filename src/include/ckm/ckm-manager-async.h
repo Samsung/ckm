@@ -27,6 +27,7 @@
 #include <ckm/ckm-error.h>
 #include <ckm/ckm-key.h>
 #include <ckm/ckm-type.h>
+#include <ckm/ckm-pkcs12.h>
 
 // Central Key Manager namespace
 namespace CKM {
@@ -50,12 +51,14 @@ public:
         virtual void ReceivedSaveKey() {}
         virtual void ReceivedSaveCertificate() {}
         virtual void ReceivedSaveData() {}
+        virtual void ReceivedSavePKCS12() {}
 
         virtual void ReceivedRemovedAlias() {}
 
         virtual void ReceivedKey(Key &&) {}
         virtual void ReceivedCertificate(Certificate &&) {}
         virtual void ReceivedData(RawBuffer &&) {}
+        virtual void ReceivedPKCS12(PKCS12ShPtr &&) {}
 
         virtual void ReceivedKeyAliasVector(AliasVector &&) {}
         virtual void ReceivedCertificateAliasVector(AliasVector &&) {}
@@ -96,12 +99,19 @@ public:
             const Alias& alias,
             const RawBuffer& data,
             const Policy& policy);
+    void savePKCS12(
+            const ObserverPtr& observer,
+            const Alias &alias,
+            const PKCS12ShPtr &pkcs,
+            const Policy &keyPolicy,
+            const Policy &certPolicy);
 
     void removeAlias(const ObserverPtr& observer, const Alias& alias);
 
     void getKey(const ObserverPtr& observer, const Alias& alias, const Password& password);
     void getCertificate(const ObserverPtr& observer, const Alias& alias, const Password& password);
     void getData(const ObserverPtr& observer, const Alias& alias, const Password& password);
+    void getPKCS12(const ObserverPtr& observer, const Alias &alias);
 
     // send request for list of all keys/certificates/data that application/user may use
     void getKeyAliasVector(const ObserverPtr& observer);

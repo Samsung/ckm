@@ -26,6 +26,7 @@
 #include <string>
 
 #include <ckm/ckm-type.h>
+#include <pkcs12-impl.h>
 
 #include <dpl/exception.h>
 #include <dpl/serialization.h>
@@ -61,7 +62,9 @@ enum class LogicCommand : int {
     CREATE_SIGNATURE,
     VERIFY_SIGNATURE,
     CREATE_KEY_PAIR_DSA,
-    SET_PERMISSION
+    SET_PERMISSION,
+    SAVE_PKCS12,
+    GET_PKCS12
     // for backward compatibility append new at the end
 };
 
@@ -83,11 +86,31 @@ public:
         KEY_AES,
         CERTIFICATE,
         BINARY_DATA,
+
+        CHAIN_CERT_0,
+        CHAIN_CERT_1,
+        CHAIN_CERT_2,
+        CHAIN_CERT_3,
+        CHAIN_CERT_4,
+        CHAIN_CERT_5,
+        CHAIN_CERT_6,
+        CHAIN_CERT_7,
+        CHAIN_CERT_8,
+        CHAIN_CERT_9,
+        CHAIN_CERT_10,
+        CHAIN_CERT_11,
+        CHAIN_CERT_12,
+        CHAIN_CERT_13,
+        CHAIN_CERT_14,
+        CHAIN_CERT_15,
+
         // Special types to support database,
-        DB_FIRST = KEY_RSA_PUBLIC,
-        DB_LAST  = BINARY_DATA,
         DB_KEY_FIRST = KEY_RSA_PUBLIC,
         DB_KEY_LAST  = KEY_AES,
+        DB_CHAIN_FIRST = CHAIN_CERT_0,
+        DB_CHAIN_LAST = CHAIN_CERT_15,
+        DB_FIRST = KEY_RSA_PUBLIC,
+        DB_LAST  = CHAIN_CERT_15,
     };
 
     DBDataType()
@@ -151,6 +174,22 @@ public:
         if (DB_KEY_FIRST <= m_dataType && DB_KEY_LAST >= m_dataType)
             return true;
         return false;
+    }
+
+    bool isChainCert() const {
+        if (DB_CHAIN_FIRST <= m_dataType && DB_CHAIN_LAST >= m_dataType)
+            return true;
+        return false;
+    }
+
+    static DBDataType getChainDatatype(unsigned int index)
+    {
+        DBDataType result(static_cast<int>(index) + DB_CHAIN_FIRST);
+
+        if ( !result.isChainCert() )
+            ThrowMsg(Exception::OutOfRange, "Certificate number is out of range");
+
+        return result;
     }
 
     bool isKeyPrivate() const {
@@ -220,6 +259,17 @@ struct PolicySerializable : public Policy, ISerializable {
         Serialization::Serialize(stream, password);
         Serialization::Serialize(stream, extractable);
     }
+};
+
+struct PKCS12Serializable : public PKCS12Impl, ISerializable {
+    PKCS12Serializable();
+    explicit PKCS12Serializable(const PKCS12 &);
+    explicit PKCS12Serializable(IStream &);
+    PKCS12Serializable(
+            const KeyShPtr &privKey,
+            const CertificateShPtr &cert,
+            const CertificateShPtrVector &chainCerts);
+    void Serialize(IStream &) const;
 };
 
 } // namespace CKM

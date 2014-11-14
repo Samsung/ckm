@@ -41,8 +41,10 @@ public:
 
 private:
     void parseGetCommand();
+    void parseGetPKCS12Command();
     void parseGetListCommand();
     void parseSaveCommand();
+    void parseSavePKCS12Command();
     void parseRemoveCommand();
     void parseGetChainCertCommand();
     void parseCreateSignatureCommand();

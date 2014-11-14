@@ -55,12 +55,18 @@ void StorageReceiver::parseResponse()
     switch (static_cast<LogicCommand>(command)) {
     case LogicCommand::GET:
         parseGetCommand();
-        break ;
+        break;
+    case LogicCommand::GET_PKCS12:
+        parseGetPKCS12Command();
+        break;
     case LogicCommand::GET_LIST:
         parseGetListCommand();
         break;
     case LogicCommand::SAVE:
         parseSaveCommand();
+        break;
+    case LogicCommand::SAVE_PKCS12:
+        parseSavePKCS12Command();
         break;
     case LogicCommand::REMOVE:
         parseRemoveCommand();
@@ -118,6 +124,21 @@ void StorageReceiver::parseGetCommand()
         m_observer->ReceivedError(CKM_API_ERROR_BAD_RESPONSE);
 }
 
+void StorageReceiver::parseGetPKCS12Command()
+{
+    int retCode;
+    PKCS12Serializable gotPkcs;
+    m_buffer.Deserialize(retCode, gotPkcs);
+
+    // check error code
+    if (retCode != CKM_API_SUCCESS) {
+         m_observer->ReceivedError(retCode);
+         return;
+    }
+
+    m_observer->ReceivedPKCS12(std::make_shared<PKCS12Impl>(std::move(gotPkcs)));
+}
+
 void StorageReceiver::parseGetListCommand()
 {
     int dataType = 0, retCode = 0;
@@ -166,6 +187,20 @@ void StorageReceiver::parseSaveCommand()
         m_observer->ReceivedSaveData();
     else
         m_observer->ReceivedError(CKM_API_ERROR_BAD_RESPONSE);
+}
+
+void StorageReceiver::parseSavePKCS12Command()
+{
+    int retCode = 0;
+    m_buffer.Deserialize(retCode);
+
+    // check error code
+    if (retCode != CKM_API_SUCCESS) {
+         m_observer->ReceivedError(retCode);
+         return;
+    }
+
+    m_observer->ReceivedSavePKCS12();
 }
 
 void StorageReceiver::parseRemoveCommand()

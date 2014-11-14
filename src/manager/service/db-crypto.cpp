@@ -236,7 +236,26 @@ using namespace DB;
                 "Couldn't check if name and label pair is present");
     }
 
-    void DBCrypto::saveDBRow(const DBRow &row){
+    void DBCrypto::saveDBRows(const Name &name, const Label &owner, const DBRowVector &rows)
+    {
+        Try {
+            // transaction is present in the layer above
+            NameTable nameTable(this->m_connection);
+            ObjectTable objectTable(this->m_connection);
+            nameTable.addRow(name, owner);
+            for (const auto &i: rows)
+                objectTable.addRow(i);
+            return;
+        } Catch(SqlConnection::Exception::SyntaxError) {
+            LogError("Couldn't prepare insert statement");
+        } Catch(SqlConnection::Exception::InternalError) {
+            LogError("Couldn't execute insert statement: " << _rethrown_exception.GetMessage());
+        }
+        ThrowMsg(DBCrypto::Exception::InternalError,
+                "Couldn't save DBRow");
+    }
+
+    void DBCrypto::saveDBRow(const DBRow &row) {
         Try {
             // transaction is present in the layer above
             NameTable nameTable(this->m_connection);
@@ -345,6 +364,52 @@ using namespace DB;
             } else {
                 return DBRowOptional();
             }
+        } Catch (SqlConnection::Exception::InvalidColumn) {
+            LogError("Select statement invalid column error");
+        } Catch (SqlConnection::Exception::SyntaxError) {
+            LogError("Couldn't prepare select statement");
+        } Catch (SqlConnection::Exception::InternalError) {
+            LogError("Couldn't execute select statement");
+        }
+        ThrowMsg(DBCrypto::Exception::InternalError,
+                "Couldn't get row of type <" <<
+                static_cast<int>(typeRangeStart) << "," <<
+                static_cast<int>(typeRangeStop)  << ">" <<
+                " name " << name << " with owner label " << ownerLabel);
+    }
+
+    void DBCrypto::getDBRows(
+        const Name &name,
+        const Label &ownerLabel,
+        DBDataType type,
+        DBRowVector &output)
+    {
+        getDBRows(name, ownerLabel, type, type, output);
+    }
+
+    void DBCrypto::getDBRows(
+        const Name &name,
+        const Label &ownerLabel,
+        DBDataType typeRangeStart,
+        DBDataType typeRangeStop,
+        DBRowVector &output)
+    {
+        Try {
+            SqlConnection::DataCommandUniquePtr selectCommand =
+                    m_connection->PrepareDataCommand(DB_CMD_OBJECT_SELECT_BY_NAME_AND_LABEL);
+            selectCommand->BindInteger(1, typeRangeStart);
+            selectCommand->BindInteger(2, typeRangeStop);
+
+            // name table reference
+            selectCommand->BindString (101, name.c_str());
+            selectCommand->BindString (102, ownerLabel.c_str());
+
+            while(selectCommand->Step())
+            {
+                // extract data
+                output.push_back(getRow(name, ownerLabel, selectCommand));
+            }
+            return;
         } Catch (SqlConnection::Exception::InvalidColumn) {
             LogError("Select statement invalid column error");
         } Catch (SqlConnection::Exception::SyntaxError) {

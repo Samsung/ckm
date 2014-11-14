@@ -168,6 +168,17 @@ typedef struct __ckmc_cert_list {
 } ckmc_cert_list_s;
 
 /**
+ * @brief The structure for PKCS12 used in key manager CAPI.
+ * @since_tizen 2.3
+ */
+typedef struct __ckmc_pkcs12 {
+    ckmc_key_s  *priv_key;      /**< private key, may be null */
+    ckmc_cert_s *cert;          /**< certificate, may be null */
+    ckmc_cert_list_s *ca_chain; /**< chain certificates list, may be null */
+} ckmc_pkcs12_s;
+
+
+/**
  * @internal
  * @brief Creates a new @a ckmc_key_s handle and returns it.
  *
@@ -259,7 +270,6 @@ void ckmc_buffer_free(ckmc_raw_buffer_s *buffer);
  *
  * @see ckmc_cert_free()
  * @see ckmc_load_cert_from_file()
- * @see ckmc_load_from_pkcs12_file
  * @see #ckmc_cert_s
  */
 int ckmc_cert_new(unsigned char *raw_cert, size_t cert_size,
@@ -297,12 +307,42 @@ void ckmc_cert_free(ckmc_cert_s *cert);
  * @retval #CKMC_ERROR_FILE_ACCESS_DENIED  Provided file does not exist or cannot be accessed
  *
  * @see ckmc_cert_free()
- * @see ckmc_load_from_pkcs12_file()
  * @see #ckmc_cert_s
  */
 int ckmc_load_cert_from_file(const char *file_path, ckmc_cert_s **cert);
 
 /**
+ * @brief Creates a new @a ckmc_pkcs12_s handle and returns it.
+ *
+ * @since_tizen 2.3
+ *
+ * @remarks You must destroy the newly created @a ckmc_pkcs12_s by calling ckmc_pkcs12_free() if it is no longer needed.
+ * @remarks On success, private_key, cert && ca_cert_list ownership is transferred into newly returned ckmc_pkcs12_s.
+ *
+ * @param[in]  private_key      @a ckmc_key_s handle to the private key (optional)
+ * @param[in]  cert             @a ckmc_cert_s handle to the certificate (optional)
+ * @param[in]  ca_cert_list     @a ckmc_cert_list_s list of chain certificate handles (optional)
+ * @param[out] pkcs12_bundle    The pointer to a newly created @a ckmc_pkcs12_s handle
+ *
+ * @return @c 0 on success,
+ *         otherwise a negative error value
+ *
+ * @retval #CKMC_ERROR_INVALID_PARAMETER  Input parameter is invalid or private_key, cert and ca_cert_list all are null.
+ * @retval #CKMC_ERROR_OUT_OF_MEMORY      Not enough memory
+ *
+ * @see ckmc_pkcs12_free()
+ * @see ckmc_load_from_pkcs12_file()
+ * @see ckmc_load_from_pkcs12_file2()
+ * @see #ckmc_key_s
+ * @see #ckmc_cert_s
+ * @see #ckmc_cert_list_s
+ * @see #ckmc_pkcs12_s
+ */
+int ckmc_pkcs12_new(ckmc_key_s *private_key, ckmc_cert_s *cert,
+        ckmc_cert_list_s *ca_cert_list, ckmc_pkcs12_s **pkcs12_bundle);
+
+/**
+ * @deprecated, use @a ckmc_load_from_pkcs12_file2() instead
  * @brief Creates a new @a ckmc_key_s(private key), @a ckmc_cert_s(certificate), and @a ckmc_cert_list_s(CA certificates) handle from a given PKCS#12 file and returns them.
  *
  * @since_tizen 2.3
@@ -326,6 +366,8 @@ int ckmc_load_cert_from_file(const char *file_path, ckmc_cert_s **cert);
  * @retval #CKMC_ERROR_INVALID_FORMAT      Invalid PKCS12 file format
  * @retval #CKMC_ERROR_FILE_ACCESS_DENIED  Provided file does not exist or cannot be accessed
  *
+ * @see ckmc_pkcs12_new()
+ * @see ckmc_load_from_pkcs12_file2()
  * @see ckmc_key_free()
  * @see ckmc_cert_free()
  * @see ckmc_cert_list_all_free()
@@ -336,6 +378,44 @@ int ckmc_load_cert_from_file(const char *file_path, ckmc_cert_s **cert);
 int ckmc_load_from_pkcs12_file(const char *file_path, const char *passphrase,
         ckmc_key_s **private_key, ckmc_cert_s **cert,
         ckmc_cert_list_s **ca_cert_list);
+
+/**
+ * @brief Creates a new @a ckmc_pkcs12_s handle from a given PKCS#12 file and returns it.
+ *
+ * @since_tizen 2.3
+ *
+ * @remarks You must destroy the newly created @a ckmc_pkcs12_s by calling ckmc_pkcs12_free() if they are no longer needed.
+ *
+ * @param[in]  file_path    The path of PKCS12 file to be loaded
+ * @param[in]  passphrase   The passphrase used to decrypt the PCKS12 file \n
+ *                          If PKCS12 file is not encrypted, passphrase can be null.
+ * @param[out] ca_cert_list The pointer of newly created @a ckmc_cert_list_s handle for CA certificates \n
+ *                          It is null if the PKCS12 file does not contain CA certificates.
+ *
+ * @return #CKMC_ERROR_NONE on success,
+ *         otherwise a negative error value
+ *
+ * @retval #CKMC_ERROR_NONE                Successful
+ * @retval #CKMC_ERROR_OUT_OF_MEMORY       Not enough memory space
+ * @retval #CKMC_ERROR_INVALID_FORMAT      Invalid PKCS12 file format
+ * @retval #CKMC_ERROR_FILE_ACCESS_DENIED  Provided file does not exist or cannot be accessed
+ *
+ * @see ckmc_pkcs12_free()
+ * @see #ckmc_pkcs12_s
+ */
+int ckmc_load_from_pkcs12_file2(const char *file_path, const char *passphrase, ckmc_pkcs12_s **pkcs12_bundle);
+
+/**
+ * @brief Destroys the @a ckmc_pkcs12_s handle and releases all its resources.
+ *
+ * @since_tizen 2.3
+ *
+ * @param[in] pkcs12 The @a ckmc_pkcs12_s handle to destroy
+ *
+ * @see ckmc_pkcs12_new()
+ * @see ckmc_load_from_pkcs12_file2()
+ */
+void ckmc_pkcs12_free(ckmc_pkcs12_s *pkcs12);
 
 /**
  * @internal

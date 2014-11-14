@@ -45,13 +45,6 @@ struct UserData {
 
 class CKMLogic {
 public:
-    class Exception
-    {
-        public:
-            DECLARE_EXCEPTION_TYPE(CKM::Exception, Base)
-            DECLARE_EXCEPTION_TYPE(Base, InputDataInvalid);
-    };
-
     CKMLogic();
     CKMLogic(const CKMLogic &) = delete;
     CKMLogic(CKMLogic &&) = delete;
@@ -80,11 +73,20 @@ public:
     RawBuffer saveData(
         const Credentials &cred,
         int commandId,
-        DBDataType dataType,
         const Name &name,
         const Label &label,
-        const RawBuffer &key,
+        const RawBuffer &data,
+        DBDataType dataType,
         const PolicySerializable &policy);
+
+    RawBuffer savePKCS12(
+        const Credentials &cred,
+        int commandId,
+        const Name &name,
+        const Label &label,
+        const PKCS12Serializable &pkcs,
+        const PolicySerializable &keyPolicy,
+        const PolicySerializable &certPolicy);
 
     RawBuffer removeData(
         const Credentials &cred,
@@ -99,6 +101,12 @@ public:
         const Name &name,
         const Label &label,
         const Password &password);
+
+    RawBuffer getPKCS12(
+        const Credentials &cred,
+        int commandId,
+        const Name &name,
+        const Label &label);
 
     RawBuffer getDataList(
         const Credentials &cred,
@@ -163,29 +171,74 @@ public:
 
 private:
 
-    void verifyBinaryData(
+    int verifyBinaryData(
         DBDataType dataType,
         const RawBuffer &input_data) const;
 
+    int checkSaveConditions(
+        const Credentials &cred,
+        UserData &handler,
+        const Name &name,
+        const Label &label);
+
     int saveDataHelper(
         const Credentials &cred,
-        DBDataType dataType,
         const Name &name,
         const Label &label,
-        const RawBuffer &key,
+        DBDataType dataType,
+        const RawBuffer &data,
         const PolicySerializable &policy);
+
+    int saveDataHelper(
+        const Credentials &cred,
+        const Name &name,
+        const Label &label,
+        const PKCS12Serializable &pkcs,
+        const PolicySerializable &keyPolicy,
+        const PolicySerializable &certPolicy);
+
+    DBRow createEncryptedDBRow(
+        CryptoLogic &crypto,
+        const Name &name,
+        const Label &label,
+        DBDataType dataType,
+        const RawBuffer &data,
+        const Policy &policy) const;
+
+    int getPKCS12Helper(
+        const Credentials &cred,
+        const Name &name,
+        const Label &label,
+        KeyShPtr & privKey,
+        CertificateShPtr & cert,
+        CertificateShPtrVector & caChain);
+
+    int extractPKCS12Data(
+        CryptoLogic &crypto,
+        const Name &name,
+        const Label &ownerLabel,
+        const PKCS12Serializable &pkcs,
+        const PolicySerializable &keyPolicy,
+        const PolicySerializable &certPolicy,
+        DBRowVector &output) const;
 
     int removeDataHelper(
         const Credentials &cred,
         const Name &name,
         const Label &ownerLabel);
 
-    int readDataRowHelper(
+    int readSingleRow(
         const Name &name,
         const Label &ownerLabel,
         DBDataType dataType,
         DBCrypto & database,
         DBRow &row);
+
+    int readMultiRow(const Name &name,
+        const Label &ownerLabel,
+        DBDataType dataType,
+        DBCrypto & database,
+        DBRowVector &output);
 
     int checkDataPermissionsHelper(
         const Name &name,
@@ -203,6 +256,15 @@ private:
         const Label &label,
         const Password &password,
         DBRow &row);
+
+    int readDataHelper(
+        bool exportFlag,
+        const Credentials &cred,
+        DBDataType dataType,
+        const Name &name,
+        const Label &label,
+        const Password &password,
+        DBRowVector &rows);
 
     int createKeyPairHelper(
         const Credentials &cred,
@@ -227,6 +289,7 @@ private:
         const Label &ownerLabel,
         const Label &accessorLabel,
         const Permission newPermission);
+
 
     std::map<uid_t, UserData> m_userDataMap;
     CertificateStore m_certStore;

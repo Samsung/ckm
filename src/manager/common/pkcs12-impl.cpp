@@ -38,6 +38,13 @@ typedef std::unique_ptr<BIO, std::function<void(BIO*)>> BioUniquePtr;
 
 } // anonymous namespace
 
+PKCS12Impl::PKCS12Impl(const KeyShPtr &key, const CertificateShPtr &cert, const CertificateShPtrVector &caChain)
+    : m_pkey(key),
+      m_cert(cert),
+      m_ca(caChain)
+{
+}
+
 PKCS12Impl::PKCS12Impl(const RawBuffer &buffer, const Password &password)
 {
     EVP_PKEY *pkey = NULL;
@@ -109,6 +116,38 @@ PKCS12Impl::PKCS12Impl(const RawBuffer &buffer, const Password &password)
 
         sk_X509_pop_free(ca, X509_free);
     }
+}
+
+PKCS12Impl::PKCS12Impl(const PKCS12 &other)
+    : m_pkey(other.getKey()),
+      m_cert(other.getCertificate()),
+      m_ca(other.getCaCertificateShPtrVector())
+{
+}
+
+PKCS12Impl::PKCS12Impl(PKCS12Impl &&other)
+    : m_pkey(std::move(other.m_pkey)),
+      m_cert(std::move(other.m_cert)),
+      m_ca(std::move(other.m_ca))
+{
+}
+
+PKCS12Impl::PKCS12Impl(const PKCS12Impl &other)
+    : m_pkey(other.getKey()),
+      m_cert(other.getCertificate()),
+      m_ca(other.getCaCertificateShPtrVector())
+{
+}
+
+PKCS12Impl& PKCS12Impl::operator=(const PKCS12Impl &other)
+{
+    if(this != &other)
+    {
+        m_pkey = other.getKey();
+        m_cert = other.getCertificate();
+        m_ca = other.getCaCertificateShPtrVector();
+    }
+    return *this;
 }
 
 KeyShPtr PKCS12Impl::getKey() const {

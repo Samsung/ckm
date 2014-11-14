@@ -101,6 +101,26 @@ void ManagerAsync::Impl::saveBinaryData(const ManagerAsync::ObserverPtr& observe
     }, [&observer](int error){ observer->ReceivedError(error); } );
 }
 
+void ManagerAsync::Impl::savePKCS12(const ManagerAsync::ObserverPtr& observer,
+                                    const Alias &alias,
+                                    const PKCS12ShPtr &pkcs,
+                                    const Policy &keyPolicy,
+                                    const Policy &certPolicy)
+{
+    try_catch_async([&] {
+        AliasSupport helper(alias);
+        sendToStorage(observer,
+                      static_cast<int>(LogicCommand::SAVE_PKCS12),
+                      m_counter,
+                      helper.getName(),
+                      helper.getLabel(),
+                      PKCS12Serializable(*pkcs.get()),
+                      PolicySerializable(keyPolicy),
+                      PolicySerializable(certPolicy));
+
+    }, [&observer](int error){ observer->ReceivedError(error); } );
+}
+
 void ManagerAsync::Impl::removeAlias(const ManagerAsync::ObserverPtr& observer,
                                      const Alias& alias)
 {
@@ -138,6 +158,24 @@ void ManagerAsync::Impl::getBinaryData(const ManagerAsync::ObserverPtr& observer
                       helper.getName(),
                       helper.getLabel(),
                       password);
+    }, [&observer](int error){ observer->ReceivedError(error); } );
+}
+
+void ManagerAsync::Impl::getPKCS12(const ManagerAsync::ObserverPtr& observer,
+                                   const Alias &alias)
+{
+    observerCheck(observer);
+    if (alias.empty()) {
+        observer->ReceivedError(CKM_API_ERROR_INPUT_PARAM);
+        return;
+    }
+    try_catch_async([&] {
+        AliasSupport helper(alias);
+        sendToStorage(observer,
+                      static_cast<int>(LogicCommand::GET_PKCS12),
+                      m_counter,
+                      helper.getName(),
+                      helper.getLabel());
     }, [&observer](int error){ observer->ReceivedError(error); } );
 }
 

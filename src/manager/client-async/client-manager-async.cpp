@@ -58,6 +58,15 @@ void ManagerAsync::saveData(const ObserverPtr& observer,
     m_impl->saveData(observer, alias, data, policy);
 }
 
+void ManagerAsync::savePKCS12(const ObserverPtr& observer,
+                              const Alias &alias,
+                              const PKCS12ShPtr &pkcs,
+                              const Policy &keyPolicy,
+                              const Policy &certPolicy)
+{
+    m_impl->savePKCS12(observer, alias, pkcs, keyPolicy, certPolicy);
+}
+
 void ManagerAsync::removeAlias(const ObserverPtr& observer, const Alias& alias)
 {
     m_impl->removeAlias(observer, alias);
@@ -80,6 +89,12 @@ void ManagerAsync::getData(const ObserverPtr& observer,
                            const Password& password)
 {
     m_impl->getBinaryData(observer, alias, DBDataType::BINARY_DATA, password);
+}
+
+void ManagerAsync::getPKCS12(const ObserverPtr& observer,
+                             const Alias &alias)
+{
+    m_impl->getPKCS12(observer, alias);
 }
 
 void ManagerAsync::getKeyAliasVector(const ObserverPtr& observer)

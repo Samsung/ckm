@@ -45,6 +45,14 @@ public:
     int getData(const Alias &alias, const Password &password, RawBuffer &cert);
     int getDataAliasVector(AliasVector &aliasVector);
 
+    int savePKCS12(
+        const Alias &alias,
+        const PKCS12ShPtr &pkcs,
+        const Policy &keyPolicy,
+        const Policy &certPolicy);
+    int getPKCS12(const Alias &alias, PKCS12ShPtr &pkcs);
+
+
     int removeAlias(const Alias &alias);
 
     int createKeyPairRSA(

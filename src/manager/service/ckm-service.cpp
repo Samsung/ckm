@@ -197,11 +197,26 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer)
             return m_logic->saveData(
                 cred,
                 msgID,
-                DBDataType(tmpDataType),
                 name,
                 label,
                 rawData,
+                DBDataType(tmpDataType),
                 policy);
+        }
+        case LogicCommand::SAVE_PKCS12:
+        {
+            RawBuffer rawData;
+            PKCS12Serializable pkcs;
+            PolicySerializable keyPolicy, certPolicy;
+            buffer.Deserialize(name, label, pkcs, keyPolicy, certPolicy);
+            return m_logic->savePKCS12(
+                cred,
+                msgID,
+                name,
+                label,
+                pkcs,
+                keyPolicy,
+                certPolicy);
         }
         case LogicCommand::REMOVE:
         {
@@ -223,6 +238,15 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer)
                 name,
                 label,
                 password);
+        }
+        case LogicCommand::GET_PKCS12:
+        {
+            buffer.Deserialize(name, label);
+            return m_logic->getPKCS12(
+                cred,
+                msgID,
+                name,
+                label);
         }
         case LogicCommand::GET_LIST:
         {

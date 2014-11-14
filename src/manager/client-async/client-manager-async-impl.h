@@ -53,6 +53,12 @@ public:
             const Alias& alias,
             const RawBuffer& data,
             const Policy& policy);
+    void savePKCS12(
+            const ObserverPtr& observer,
+            const Alias &alias,
+            const PKCS12ShPtr &pkcs,
+            const Policy &keyPolicy,
+            const Policy &certPolicy);
 
     void createSignature(
             const ObserverPtr& observer,
@@ -97,6 +103,10 @@ public:
             const Alias &alias,
             DBDataType sendDataType,
             const Password &password);
+
+    void getPKCS12(
+            const ManagerAsync::ObserverPtr& observer,
+            const Alias &alias);
 
     void getBinaryDataAliasVector(
             const ManagerAsync::ObserverPtr& observer,
