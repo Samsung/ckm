@@ -25,6 +25,7 @@
 
 #include <dpl/log/log.h>
 
+#include <crypto.h>
 #include <pkcs12-impl.h>
 
 #include <certificate-impl.h>
@@ -59,6 +60,9 @@ PKCS12Impl::PKCS12Impl(const RawBuffer &buffer, const Password &password)
         LogDebug("d2i_PKCS12_bio failed.");
         return;
     }
+
+    // needed if parsing is done before manager initialization
+    initCryptoLib();
 
     if (!PKCS12_verify_mac(pkcs12, password.c_str(), password.size())) {
         LogDebug("Pkcs12 verify failed. Wrong password");

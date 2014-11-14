@@ -23,6 +23,7 @@
 #include <dpl/serialization.h>
 #include <dpl/log/log.h>
 
+#include <crypto.h>
 #include <client-manager-impl.h>
 #include <client-common.h>
 #include <message-buffer.h>
@@ -30,28 +31,12 @@
 #include <key-impl.h>
 #include <certificate-impl.h>
 
-namespace {
-
-void clientInitialize(void) {
-    OpenSSL_add_all_ciphers();
-    OpenSSL_add_all_algorithms();
-    OpenSSL_add_all_digests();
-}
-
-} // namespace anonymous
-
 namespace CKM {
-
-bool ManagerImpl::s_isInit = false;
 
 ManagerImpl::ManagerImpl()
   : m_counter(0), m_storageConnection(SERVICE_SOCKET_CKM_STORAGE), m_ocspConnection(SERVICE_SOCKET_OCSP)
 {
-    // TODO secure with mutex
-    if (!s_isInit) {
-        s_isInit = true;
-        clientInitialize();
-    }
+    initCryptoLib();
 }
 
 

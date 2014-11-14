@@ -130,7 +130,6 @@ protected:
         const Policy &policyPublicKey);
 
     int m_counter;
-    static bool s_isInit;
     CKM::ServiceConnection m_storageConnection;
     CKM::ServiceConnection m_ocspConnection;
 };

@@ -25,12 +25,15 @@
 #include <openssl/evp.h>
 
 #include <vector>
+#include <dpl/exception.h>
 #include <dpl/raw-buffer.h>
 
 // TODO move it to static const int
 #define AES_GCM_TAG_SIZE 16
 
 namespace CKM {
+
+void initCryptoLib();
 
 namespace Crypto {
 
