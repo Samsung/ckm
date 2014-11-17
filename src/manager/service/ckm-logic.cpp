@@ -39,6 +39,7 @@ const char * const CERT_SYSTEM_DIR = "/etc/ssl/certs";
 
 const char* const MDPP_MODE_ENFORCING = "Enforcing";
 const char* const MDPP_MODE_ENABLED = "Enabled";
+const char* const MDPP_MODE_DISABLED = "Disabled";
 
 } // anonymous namespace
 
@@ -120,8 +121,9 @@ void CKMLogic::updateCCMode_internal() {
     bool newMode;
 
     char *mdppState = vconf_get_str(VCONFKEY_SECURITY_MDPP_STATE);
-    newMode = ( mdppState && (!strcmp(mdppState, MDPP_MODE_ENABLED) ||
-                              !strcmp(mdppState, MDPP_MODE_ENFORCING)) );
+    newMode = (mdppState && (  !strcmp(mdppState, MDPP_MODE_ENABLED)
+                            || !strcmp(mdppState, MDPP_MODE_ENFORCING)
+                            || !strcmp(mdppState, MDPP_MODE_DISABLED)));
     if (newMode == m_ccMode)
         return;
 
