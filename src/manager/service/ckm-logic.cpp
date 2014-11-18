@@ -268,20 +268,20 @@ int CKMLogic::saveDataHelper(
     auto &handler = m_userDataMap[cred.uid];
     DBCrypto::Transaction transaction(&handler.database);
     if (!handler.crypto.haveKey(cred.smackLabel)) {
-        RawBuffer key;
+        RawBuffer got_key;
         auto key_optional = handler.database.getKey(cred.smackLabel);
         if(!key_optional) {
             LogDebug("No Key in database found. Generating new one for label: "
                     << cred.smackLabel);
-            key = handler.keyProvider.generateDEK(cred.smackLabel);
-            handler.database.saveKey(cred.smackLabel, key);
+            got_key = handler.keyProvider.generateDEK(cred.smackLabel);
+            handler.database.saveKey(cred.smackLabel, got_key);
         } else {
             LogDebug("Key from DB");
-            key = *key_optional;
+            got_key = *key_optional;
         }
 
-        key = handler.keyProvider.getPureDEK(key);
-        handler.crypto.pushKey(cred.smackLabel, key);
+        got_key = handler.keyProvider.getPureDEK(got_key);
+        handler.crypto.pushKey(cred.smackLabel, got_key);
     }
 
     // Do not encrypt data with password during cc_mode on

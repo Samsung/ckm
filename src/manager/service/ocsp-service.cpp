@@ -82,7 +82,7 @@ bool OCSPService::processOne(
 
         auto &buffer = info.buffer;
 
-        int commandId;
+        int commandId = 0;
         RawBufferVector chainVector;
         buffer.Deserialize(commandId, chainVector);
 

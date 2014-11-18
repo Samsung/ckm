@@ -223,7 +223,7 @@ int ManagerImpl::getKey(const Alias &alias, const Password &password, KeyShPtr &
 
 int ManagerImpl::getCertificate(const Alias &alias, const Password &password, CertificateShPtr &cert)
 {
-    DBDataType recvDataType;
+    DBDataType recvDataType = DBDataType::CERTIFICATE;
     RawBuffer rawData;
 
     int retCode = getBinaryData(
@@ -251,7 +251,7 @@ int ManagerImpl::getCertificate(const Alias &alias, const Password &password, Ce
 
 int ManagerImpl::getData(const Alias &alias, const Password &password, RawBuffer &rawData)
 {
-    DBDataType recvDataType;
+    DBDataType recvDataType = DBDataType::BINARY_DATA;
 
     int retCode = getBinaryData(
         alias,

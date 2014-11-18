@@ -879,9 +879,9 @@ std::vector<X509 *> CryptoService::verifyCertChain(X509 *cert,
 
     if(verified == OPENSSL_SUCCESS) {
         STACK_OF(X509) *chain = X509_STORE_CTX_get1_chain(ctx);
-        X509 *cert;
-        while((cert = sk_X509_pop(chain))) {
-            certChain.insert(certChain.begin(),cert);
+        X509 *icert;
+        while((icert = sk_X509_pop(chain))) {
+            certChain.insert(certChain.begin(),icert);
         }
     }
 

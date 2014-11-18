@@ -33,7 +33,7 @@ OcspReceiver::OcspReceiver(MessageBuffer& buffer, AsyncRequest::Map& requests) :
 
 void OcspReceiver::parseResponse()
 {
-    int id, retCode, ocspStatus;
+    int id = 0, retCode = 0, ocspStatus = 0;
     m_buffer.Deserialize(id, retCode, ocspStatus);
 
     auto it = m_requests.find(id);

@@ -106,8 +106,8 @@ bool CKMService::processOne(
 }
 
 RawBuffer CKMService::processControl(MessageBuffer &buffer) {
-    int command;
-    uid_t user;
+    int command = 0;
+    uid_t user = 0;
     ControlCommand cc;
     Password newPass, oldPass;
     Label smackLabel;
@@ -144,7 +144,7 @@ RawBuffer CKMService::processControl(MessageBuffer &buffer) {
         Name name;
         Label ownerLabel;
         Label accessorLabel;
-        int accessorRights;
+        int accessorRights = 0;
 
         buffer.Deserialize(user, ownerLabel, name, accessorLabel, accessorRights);
         Credentials cred = { user, ownerLabel };
@@ -178,9 +178,9 @@ RawBuffer CKMService::processControl(MessageBuffer &buffer) {
 
 RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer)
 {
-    int command;
-    int msgID;
-    int tmpDataType;
+    int command = 0;
+    int msgID = 0;
+    int tmpDataType = 0;
     Name name;
     Label label;
     std::string user;
@@ -246,7 +246,7 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer)
         case LogicCommand::CREATE_KEY_PAIR_DSA:
         case LogicCommand::CREATE_KEY_PAIR_ECDSA:
         {
-            int additional_param;
+            int additional_param = 0;
             Name privateKeyName;
             Name publicKeyName;
             PolicySerializable policyPrivateKey;
@@ -292,7 +292,7 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer)
         {
             Password password;        // password for private_key
             RawBuffer message;
-            int padding, hash;
+            int padding = 0, hash = 0;
             buffer.Deserialize(name, label, password, message, hash, padding);
             return m_logic->createSignature(
                   cred,
@@ -311,7 +311,7 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer)
             RawBuffer signature;
             //HashAlgorithm hash;
             //RSAPaddingAlgorithm padding;
-            int padding, hash;
+            int padding = 0, hash = 0;
             buffer.Deserialize(name,
                                label,
                                password,
@@ -332,7 +332,7 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer)
         }
         case LogicCommand::ALLOW_ACCESS:
         {
-            int reqRights;
+            int reqRights = 0;
             buffer.Deserialize(name, label, reqRights);
             return m_logic->allowAccess(
                 cred,

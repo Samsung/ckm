@@ -108,8 +108,8 @@ int CertificateStore::verifyCertificate(
     if (result > 0) {
         STACK_OF(X509) *chain = X509_STORE_CTX_get_chain(csc);
         for (int i = 0; i < sk_X509_num(chain); ++i) {
-            X509* cert = (X509*)sk_X509_value(chain, i);
-            chainVector.push_back(CertificateImpl(cert));
+            X509* icert = (X509*)sk_X509_value(chain, i);
+            chainVector.push_back(CertificateImpl(icert));
         }
     }
 

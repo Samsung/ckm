@@ -72,7 +72,7 @@ StorageReceiver::StorageReceiver(MessageBuffer& buffer, AsyncRequest::Map& reque
 
 void StorageReceiver::parseResponse()
 {
-    int command, id;
+    int command = 0, id = 0;
     m_buffer.Deserialize(command, id);
 
     auto it = m_requests.find(id);
@@ -136,7 +136,7 @@ void StorageReceiver::parseResponse()
 void StorageReceiver::parseGetCommand()
 {
     RawBuffer rawData;
-    int dataType, retCode;
+    int dataType = 0, retCode = 0;
     m_buffer.Deserialize(retCode, dataType, rawData);
 
     // check error code
@@ -161,7 +161,7 @@ void StorageReceiver::parseGetCommand()
 
 void StorageReceiver::parseGetListCommand()
 {
-    int dataType, retCode;
+    int dataType = 0, retCode = 0;
     LabelNameVector labelNameVector;
     m_buffer.Deserialize(retCode, dataType, labelNameVector);
 
@@ -191,7 +191,7 @@ void StorageReceiver::parseGetListCommand()
 
 void StorageReceiver::parseSaveCommand()
 {
-    int dataType, retCode;
+    int dataType = 0, retCode = 0;
     m_buffer.Deserialize(retCode, dataType);
 
     // check error code
@@ -216,7 +216,7 @@ void StorageReceiver::parseSaveCommand()
 
 void StorageReceiver::parseRemoveCommand()
 {
-    int dataType, retCode;
+    int dataType = 0, retCode = 0;
     m_buffer.Deserialize(retCode, dataType);
 
     // check error code
@@ -243,7 +243,7 @@ void StorageReceiver::parseGetChainCertCommand()
 {
     CertificateShPtrVector certificateChainVector;
     RawBufferVector rawBufferVector;
-    int retCode;
+    int retCode = 0;
     m_buffer.Deserialize(retCode, rawBufferVector);
 
     // check error code
@@ -265,7 +265,7 @@ void StorageReceiver::parseGetChainCertCommand()
 
 void StorageReceiver::parseCreateSignatureCommand()
 {
-    int retCode;
+    int retCode = 0;
     RawBuffer signature;
     m_buffer.Deserialize(retCode, signature);
 
@@ -280,7 +280,7 @@ void StorageReceiver::parseCreateSignatureCommand()
 
 void StorageReceiver::parseAllowAccessCommand()
 {
-    int retCode;
+    int retCode = 0;
     m_buffer.Deserialize(retCode);
 
     // check error code
@@ -294,7 +294,7 @@ void StorageReceiver::parseAllowAccessCommand()
 
 void StorageReceiver::parseDenyAccessCommand()
 {
-    int retCode;
+    int retCode = 0;
     m_buffer.Deserialize(retCode);
 
     // check error code
@@ -308,7 +308,7 @@ void StorageReceiver::parseDenyAccessCommand()
 
 void StorageReceiver::parseRetCode(ObserverCb callback)
 {
-    int retCode;
+    int retCode = 0;
     m_buffer.Deserialize(retCode);
 
     // check error code
