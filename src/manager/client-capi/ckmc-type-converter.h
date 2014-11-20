@@ -25,6 +25,7 @@
 
 #include <ckm/ckm-error.h>
 #include <ckmc/ckmc-error.h>
+#include <ckmc/ckmc-type.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -32,6 +33,7 @@ extern "C" {
 
 int to_ckmc_error(int ckm_error);
 int to_ckm_error(int ckmc_error);
+ckmc_ocsp_status_e to_ckmc_ocsp_status(int ckm_ocsp_status);
 
 #ifdef __cplusplus
 }

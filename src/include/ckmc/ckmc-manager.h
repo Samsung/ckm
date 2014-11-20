@@ -779,6 +779,31 @@ int ckmc_get_cert_chain(const ckmc_cert_s *cert, const ckmc_cert_list_s *untrust
  */
 int ckmc_get_cert_chain_with_alias(const ckmc_cert_s *cert, const ckmc_alias_list_s *untrustedcerts, ckmc_cert_list_s **ppcert_chain_list);
 
+
+/**
+ * @brief Perform OCSP which checks certificate is whether revoked or not
+ *
+ * @since_tizen 3.0
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/keymanager
+ *
+ * @param[in] pcert_chain_list   Certificate chain to perform OCSP check
+ * @param[out] ocsp_status       The pointer to status result of OCSP check
+ *
+ * @return @c 0 on success, otherwise a negative error value
+ *
+ * @retval #CKMC_ERROR_NONE                 Successful
+ * @retval #CKMC_ERROR_INVALID_PARAMETER    Input parameter is invalid
+ * @retval #CKMC_ERROR_PERMISSION_DENIED    Failed to access key manager
+ *
+ * @pre User is already logged in and the user key is already loaded into memory in plain text form.
+ *
+ * @see ckmc_get_cert_chain())
+ * @see ckmc_cert_list_all_free()
+ */
+int ckmc_ocsp_check(const ckmc_cert_list_s *pcert_chain_list, ckmc_ocsp_status_e *ocsp_status);
+
+
 /**
  * @deprecated, see ckmc_set_permission()
  * @brief Allows another application to access client's application data

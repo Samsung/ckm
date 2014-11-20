@@ -179,6 +179,22 @@ typedef struct __ckmc_cert_list {
 } ckmc_cert_list_s;
 
 /**
+ * @brief Enumeration for OCSP status.
+ * @since_tizen 3.0
+ */
+typedef enum __ckmc_ocsp_status {
+    CKMC_OCSP_STATUS_GOOD = 0,          /**< OCSP status is good */
+    CKMC_OCSP_STATUS_REVOKED,           /**< certificate is revoked */
+    CKMC_OCSP_STATUS_UNKNOWN,           /**< unknown error */
+    CKMC_OCSP_ERROR_UNSUPPORTED,        /**< certificate does not provide OCSP extension */
+    CKMC_OCSP_ERROR_INVALID_URL,        /**< invalid URL in certificate OCSP extension */
+    CKMC_OCSP_ERROR_INVALID_RESPONSE,   /**< invalid response from OCSP server */
+    CKMC_OCSP_ERROR_REMOTE,             /**< OCSP remote server error */
+    CKMC_OCSP_ERROR_NET,                /**< network connection error */
+    CKMC_OCSP_ERROR_INTERNAL            /**< OpenSSL API error */
+} ckmc_ocsp_status_e;
+
+/**
  * @brief The structure for PKCS12 used in key manager CAPI.
  * @since_tizen 2.3
  */

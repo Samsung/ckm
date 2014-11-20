@@ -20,9 +20,8 @@
  * @brief       OCSP implementation.
  */
 
+#include <string>
 #include <ocsp.h>
-#include <stdio.h>
-#include <string.h>
 #include <openssl/pem.h>
 #include <openssl/ocsp.h>
 #include <openssl/err.h>
@@ -71,13 +70,13 @@ int OCSPModule::verify(const CertificateImplVector &certificateChain) {
     bool unsupported = false; // ocsp is unsupported in certificate in chain (except root CA)
 
     if((systemCerts = loadSystemCerts(CKM_SYSTEM_CERTS_PATH)) == NULL) {
-        LogDebug("Error in loadSystemCerts function");
+        LogError("Error in loadSystemCerts function");
         return CKM_API_OCSP_STATUS_INTERNAL_ERROR;
     }
 
     for(unsigned int i=0; i < certificateChain.size() -1; i++) {// except root certificate
         if (certificateChain[i].empty() || certificateChain[i+1].empty()) {
-            LogDebug("Error. Broken certificate chain.");
+            LogError("Error. Broken certificate chain.");
             return CKM_API_OCSP_STATUS_INTERNAL_ERROR;
         }
 
@@ -86,7 +85,7 @@ int OCSPModule::verify(const CertificateImplVector &certificateChain) {
         std::string url = certificateChain[i].getOCSPURL();
 
         if (url.empty()) {
-            LogDebug("Certificate does not provide OCSP extension.");
+            LogError("Certificate in certchain[" << i << "] does not provide OCSP extension.");
             unsupported = true;
             continue;
         }
@@ -94,7 +93,8 @@ int OCSPModule::verify(const CertificateImplVector &certificateChain) {
         int result = ocsp_verify(cert, issuer, systemCerts, url);
 
         if(result != CKM_API_OCSP_STATUS_GOOD) {
-            LogDebug("Fail to OCSP certification checking: " << result);
+            LogError("Fail to OCSP certification check. Errorcode=[" << result <<
+                "], on certChain[" << i << "]");
             return result;
         }
     }

@@ -701,6 +701,38 @@ int ckmc_get_cert_chain_with_alias(const ckmc_cert_s *cert, const ckmc_alias_lis
 }
 
 KEY_MANAGER_CAPI
+int ckmc_ocsp_check(const ckmc_cert_list_s *pcert_chain_list, ckmc_ocsp_status_e *ocsp_status)
+{
+    if (pcert_chain_list == NULL
+        || pcert_chain_list->cert == NULL
+        || pcert_chain_list->cert->raw_cert == NULL
+        || pcert_chain_list->cert->cert_size <= 0
+        || ocsp_status == NULL) {
+        return CKMC_ERROR_INVALID_PARAMETER;
+    }
+
+    int ret = CKMC_ERROR_UNKNOWN;
+    int tmpOcspStatus = -1;
+    CKM::ManagerShPtr mgr = CKM::Manager::create();
+    CKM::CertificateShPtrVector ckmCertChain;
+    const ckmc_cert_list_s *current = NULL;
+    const ckmc_cert_list_s *next = pcert_chain_list;
+
+    do {
+        current = next;
+        next = current->next;
+        if (current->cert == NULL)
+            continue;
+
+        ckmCertChain.push_back(_toCkmCertificate(current->cert));
+    } while (next != NULL);
+
+    ret = mgr->ocspCheck(ckmCertChain, tmpOcspStatus);
+    *ocsp_status = to_ckmc_ocsp_status(tmpOcspStatus);
+    return to_ckmc_error(ret);
+}
+
+KEY_MANAGER_CAPI
 int ckmc_allow_access(const char *alias, const char *accessor, ckmc_access_right_e granted)
 {
     return ckmc_set_permission(alias, accessor, static_cast<int>(granted));
