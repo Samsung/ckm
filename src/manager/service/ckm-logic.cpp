@@ -481,7 +481,7 @@ int CKMLogic::getDataHelper(
         }
         key = *key_optional;
         key = handler.keyProvider.getPureDEK(key);
-        handler.crypto.pushKey(cred.smackLabel, key);
+        handler.crypto.pushKey(row.smackLabel, key);
     }
     handler.crypto.decryptRow(password, row);
 
