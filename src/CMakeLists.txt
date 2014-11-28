@@ -31,10 +31,11 @@ SET(KEY_MANAGER_SOURCES
     ${KEY_MANAGER_PATH}/service/ocsp-logic.cpp
     )
 
+# -fPIE and -pie flag is added for ASLR
 SET_SOURCE_FILES_PROPERTIES(
     ${KEY_MANAGER_SOURCES}
     PROPERTIES
-        COMPILE_FLAGS "-D_GNU_SOURCE -fvisibility=hidden")
+        COMPILE_FLAGS "-D_GNU_SOURCE -fvisibility=hidden -fPIE")
 
 INCLUDE_DIRECTORIES(SYSTEM
     ${KEY_MANAGER_DEP_INCLUDE_DIRS}
@@ -53,10 +54,12 @@ INCLUDE_DIRECTORIES(
 
 ADD_EXECUTABLE(${TARGET_KEY_MANAGER} ${KEY_MANAGER_SOURCES})
 
+# pie flag is added for ASLR
 TARGET_LINK_LIBRARIES(${TARGET_KEY_MANAGER}
     ${CMAKE_THREAD_LIBS_INIT}
     ${KEY_MANAGER_DEP_LIBRARIES}
     ${TARGET_KEY_MANAGER_COMMON}
+    -pie
     )
 
 ################################################################################
