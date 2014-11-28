@@ -34,6 +34,20 @@ class AccessControl
 {
 public:
     /**
+     * check if given data can be saved under given label by accessorLabel
+     * @return CKM_API_SUCCESS if access is allowed, otherwise negative error code
+     */
+    int canSave(const Label & ownerLabel,
+                const Label & accessorLabel) const;
+
+    /**
+     * check if given label can be modified by accessorLabel
+     * @return CKM_API_SUCCESS if access is allowed, otherwise negative error code
+     */
+    int canModify(const Label & ownerLabel,
+                  const Label & accessorLabel) const;
+
+    /**
      * check if given row can be read (for internal use)
      * @return CKM_API_SUCCESS if access is allowed, otherwise negative error code
      */

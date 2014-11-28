@@ -85,11 +85,13 @@ void ManagerAsync::Impl::saveBinaryData(const ManagerAsync::ObserverPtr& observe
                                         const Policy& policy)
 {
     try_catch_async([&] {
+        AliasSupport helper(alias);
         sendToStorage(observer,
                       static_cast<int>(LogicCommand::SAVE),
                       m_counter,
                       static_cast<int>(dataType),
-                      alias,
+                      helper.getName(),
+                      helper.getLabel(),
                       rawData,
                       PolicySerializable(policy));
     }, [&observer](int error){ observer->ReceivedError(error); } );
@@ -226,10 +228,12 @@ void ManagerAsync::Impl::setPermission(const ObserverPtr& observer,
         return;
     }
     try_catch_async([&] {
+        AliasSupport helper(alias);
         sendToStorage(observer,
                       static_cast<int>(LogicCommand::SET_PERMISSION),
                       m_counter,
-                      alias,
+                      helper.getName(),
+                      helper.getLabel(),
                       accessor,
                       static_cast<int>(newPermission));
     }, [&observer](int error){ observer->ReceivedError(error); } );
@@ -285,14 +289,18 @@ void ManagerAsync::Impl::createKeyPair(const ManagerAsync::ObserverPtr& observer
     }
 
     try_catch_async([&] {
+        AliasSupport prvHelper(privateKeyAlias);
+        AliasSupport pubHelper(publicKeyAlias);
         sendToStorage(observer,
                       static_cast<int>(cmd_type),
                       m_counter,
                       static_cast<int>(additional_param),
                       PolicySerializable(policyPrivateKey),
                       PolicySerializable(policyPublicKey),
-                      privateKeyAlias,
-                      publicKeyAlias);
+                      prvHelper.getName(),
+                      prvHelper.getLabel(),
+                      pubHelper.getName(),
+                      pubHelper.getLabel());
     }, [&observer](int error){ observer->ReceivedError(error); } );
 }
 

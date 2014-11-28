@@ -142,17 +142,18 @@ RawBuffer CKMService::processControl(MessageBuffer &buffer) {
     case ControlCommand::SET_PERMISSION:
     {
         Name name;
-        Label ownerLabel;
+        Label label;
         Label accessorLabel;
         int accessorPermissions = 0;
 
-        buffer.Deserialize(user, ownerLabel, name, accessorLabel, accessorPermissions);
-        Credentials cred = { user, ownerLabel };
+        buffer.Deserialize(user, name, label, accessorLabel, accessorPermissions);
+        Credentials cred = { user, label };
         return m_logic->setPermission(
             cred,
             command,
             0, // dummy
             name,
+            label,
             accessorLabel,
             static_cast<Permission>(accessorPermissions));
     }
@@ -167,7 +168,7 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer)
     int msgID = 0;
     int tmpDataType = 0;
     Name name;
-    Label label;
+    Label label, accessorLabel;
     std::string user;
 
     buffer.Deserialize(command);
@@ -234,21 +235,27 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer)
         {
             int additional_param = 0;
             Name privateKeyName;
+            Label privateKeyLabel;
             Name publicKeyName;
+            Label publicKeyLabel;
             PolicySerializable policyPrivateKey;
             PolicySerializable policyPublicKey;
             buffer.Deserialize(additional_param,
                                policyPrivateKey,
                                policyPublicKey,
                                privateKeyName,
-                               publicKeyName);
+                               privateKeyLabel,
+                               publicKeyName,
+                               publicKeyLabel);
             return m_logic->createKeyPair(
                 cred,
                 static_cast<LogicCommand>(command),
                 msgID,
                 additional_param,
                 privateKeyName,
+                privateKeyLabel,
                 publicKeyName,
+                publicKeyLabel,
                 policyPrivateKey,
                 policyPublicKey);
         }
@@ -319,13 +326,14 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer)
         case LogicCommand::SET_PERMISSION:
         {
             int accessorPermissions = 0;
-            buffer.Deserialize(name, label, accessorPermissions);
+            buffer.Deserialize(name, label, accessorLabel, accessorPermissions);
             return m_logic->setPermission(
                 cred,
                 command,
                 msgID,
                 name,
                 label,
+                accessorLabel,
                 static_cast<Permission>(accessorPermissions));
         }
         default:

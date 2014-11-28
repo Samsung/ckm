@@ -210,16 +210,32 @@ int CKMLogic::saveDataHelper(
     const Credentials &cred,
     DBDataType dataType,
     const Name &name,
+    const Label &label,
     const RawBuffer &key,
     const PolicySerializable &policy)
 {
-    if (0 == m_userDataMap.count(cred.uid))
-        return CKM_API_ERROR_DB_LOCKED;
+    // use client label if not explicitly provided
+    const Label ownerLabel = label.empty() ? cred.smackLabel : label;
+
+    // verify name and label are correct
+    if ( !checkNameAndLabelValid(name, ownerLabel) )
+        return CKM_API_ERROR_INPUT_PARAM;
+
+    // check if allowed to save using ownerLabel
+    int access_ec = m_accessControl.canSave(ownerLabel, cred.smackLabel);
+    if(access_ec != CKM_API_SUCCESS)
+    {
+        LogWarning("label " << cred.smackLabel << " can not save rows using label " << ownerLabel);
+        return access_ec;
+    }
 
     // proceed to data save
     DBRow row = { name, cred.smackLabel,
          policy.extractable, dataType, DBCMAlgType::NONE,
          0, RawBuffer(), static_cast<int>(key.size()), key, RawBuffer() };
+
+    if (0 == m_userDataMap.count(cred.uid))
+        return CKM_API_ERROR_DB_LOCKED;
 
     auto &handler = m_userDataMap[cred.uid];
     DBCrypto::Transaction transaction(&handler.database);
@@ -302,12 +318,9 @@ RawBuffer CKMLogic::saveData(
 {
     int retCode = CKM_API_SUCCESS;
     try {
-        if (!label.empty() && label.compare(cred.smackLabel))
-            ThrowMsg(CKMLogic::Exception::InputDataInvalid, "smack label in param is not your label");
-
         verifyBinaryData(dataType, key);
 
-        retCode = saveDataHelper(cred, dataType, name, key, policy);
+        retCode = saveDataHelper(cred, dataType, name, label, key, policy);
         LogDebug("SaveDataHelper returned: " << retCode);
     } catch (const CKMLogic::Exception::InputDataInvalid &e) {
         LogError("Provided data invalid: " << e.GetMessage());
@@ -613,7 +626,9 @@ int CKMLogic::createKeyPairHelper(
     const KeyType key_type,
     const int additional_param,
     const Name &namePrivate,
+    const Label &labelPrivate,
     const Name &namePublic,
+    const Label &labelPublic,
     const PolicySerializable &policyPrivate,
     const PolicySerializable &policyPublic)
 {
@@ -654,6 +669,7 @@ int CKMLogic::createKeyPairHelper(
     retCode = saveDataHelper(cred,
                             toDBDataType(prv.getType()),
                             namePrivate,
+                            labelPrivate,
                             prv.getDER(),
                             policyPrivate);
 
@@ -663,6 +679,7 @@ int CKMLogic::createKeyPairHelper(
     retCode = saveDataHelper(cred,
                             toDBDataType(pub.getType()),
                             namePublic,
+                            labelPublic,
                             pub.getDER(),
                             policyPublic);
 
@@ -680,7 +697,9 @@ RawBuffer CKMLogic::createKeyPair(
     int commandId,
     const int additional_param,
     const Name &namePrivate,
+    const Label &labelPrivate,
     const Name &namePublic,
+    const Label &labelPublic,
     const PolicySerializable &policyPrivate,
     const PolicySerializable &policyPublic)
 {
@@ -708,7 +727,9 @@ RawBuffer CKMLogic::createKeyPair(
                         key_type,
                         additional_param,
                         namePrivate,
+                        labelPrivate,
                         namePublic,
+                        labelPublic,
                         policyPrivate,
                         policyPublic);
     } catch (DBCrypto::Exception::TransactionError &e) {
@@ -933,6 +954,7 @@ RawBuffer CKMLogic::verifySignature(
 int CKMLogic::setPermissionHelper(
         const Credentials &cred,
         const Name &name,
+        const Label &label,
         const Label &accessorLabel,
         const Permission reqRights)
 {
@@ -940,25 +962,38 @@ int CKMLogic::setPermissionHelper(
     if(cred.smackLabel.empty() || cred.smackLabel==accessorLabel)
         return CKM_API_ERROR_INPUT_PARAM;
 
+    // use client label if not explicitly provided
+    const Label ownerLabel = label.empty() ? cred.smackLabel : label;
+
+    // verify name and label are correct
+    if (true != checkNameAndLabelValid(name, ownerLabel))
+        return CKM_API_ERROR_INPUT_PARAM;
+
+    // check if allowed to modify
+    int access_ec = m_accessControl.canModify(ownerLabel, cred.smackLabel);
+    if(access_ec != CKM_API_SUCCESS)
+        return access_ec;
+
     if (0 == m_userDataMap.count(cred.uid))
         return CKM_API_ERROR_DB_LOCKED;
+
     auto &database = m_userDataMap[cred.uid].database;
     DBCrypto::Transaction transaction(&database);
 
-    if( ! database.isNameLabelPresent(name, cred.smackLabel) )
+    if( ! database.isNameLabelPresent(name, ownerLabel) )
         return CKM_API_ERROR_DB_ALIAS_UNKNOWN;
 
     // removing non-existing permissions: fail
     if(reqRights == Permission::NONE)
     {
-        if( !database.getPermissionRow(name, cred.smackLabel, accessorLabel) )
+        if( !database.getPermissionRow(name, ownerLabel, accessorLabel) )
             return CKM_API_ERROR_INPUT_PARAM;
     }
 
     retCode = database.setPermission(name,
-                                       cred.smackLabel,
-                                       accessorLabel,
-                                       reqRights);
+                                     ownerLabel,
+                                     accessorLabel,
+                                     reqRights);
 
     transaction.commit();
 
@@ -970,12 +1005,13 @@ RawBuffer CKMLogic::setPermission(
         int command,
         int msgID,
         const Name &name,
+        const Label &label,
         const Label &accessorLabel,
         const Permission reqRights)
 {
     int retCode;
     Try {
-        retCode = setPermissionHelper(cred, name, accessorLabel, reqRights);
+        retCode = setPermissionHelper(cred, name, label, accessorLabel, reqRights);
     } Catch (CKM::Exception) {
         LogError("Error in set row!");
         retCode = CKM_API_ERROR_DB_ERROR;

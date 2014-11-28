@@ -112,7 +112,9 @@ public:
         int commandId,
         const int additional_param,
         const Name &namePrivate,
+        const Label &labelPrivate,
         const Name &namePublic,
+        const Label &labelPublic,
         const PolicySerializable &policyPrivate,
         const PolicySerializable &policyPublic);
 
@@ -142,7 +144,7 @@ public:
         const Credentials &cred,
         int commandId,
         const Name &publicKeyOrCertName,
-        const Label & ownerLabel,
+        const Label &label,
         const Password &password,           // password for public_key (optional)
         const RawBuffer &message,
         const RawBuffer &signature,
@@ -156,6 +158,7 @@ public:
         int command,
         int msgID,
         const Name &name,
+        const Label &label,
         const Label &accessor_label,
         const Permission req_rights);
 
@@ -169,6 +172,7 @@ private:
         const Credentials &cred,
         DBDataType dataType,
         const Name &name,
+        const Label &label,
         const RawBuffer &key,
         const PolicySerializable &policy);
 
@@ -206,7 +210,9 @@ private:
         const KeyType key_type,
         const int additional_param,
         const Name &namePrivate,
+        const Label &labelPrivate,
         const Name &namePublic,
+        const Label &labelPublic,
         const PolicySerializable &policyPrivate,
         const PolicySerializable &policyPublic);
 
@@ -219,6 +225,7 @@ private:
     int setPermissionHelper(
         const Credentials &cred,
         const Name &name,
+        const Label &ownerLabel,
         const Label &accessorLabel,
         const Permission reqRights);
 

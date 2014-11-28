@@ -184,10 +184,14 @@ public:
     {
         return try_catch([&] {
             MessageBuffer recv;
+            AliasSupport helper(alias);
+            if( /* label defined */ !helper.getLabel().empty() &&
+                /* two different labels given */ (helper.getLabel() != owner))
+                return CKM_API_ERROR_INPUT_PARAM;
             auto send = MessageBuffer::Serialize(static_cast<int>(ControlCommand::SET_PERMISSION),
                                                  static_cast<int>(user),
+                                                 helper.getName(),
                                                  owner,
-                                                 alias,
                                                  accessor,
                                                  static_cast<int>(newPermission));
 

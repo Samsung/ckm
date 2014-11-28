@@ -381,13 +381,17 @@ int ManagerImpl::createKeyPair(
     return try_catch([&] {
 
         MessageBuffer recv;
+        AliasSupport privateHelper(privateKeyAlias);
+        AliasSupport publicHelper(publicKeyAlias);
         auto send = MessageBuffer::Serialize(static_cast<int>(cmd_type),
                                              my_counter,
                                              static_cast<int>(additional_param),
                                              PolicySerializable(policyPrivateKey),
                                              PolicySerializable(policyPublicKey),
-                                             privateKeyAlias,
-                                             publicKeyAlias);
+                                             privateHelper.getName(),
+                                             privateHelper.getLabel(),
+                                             publicHelper.getName(),
+                                             publicHelper.getLabel());
 
         int retCode = m_storageConnection.processRequest(send.Pop(), recv);
         if (CKM_API_SUCCESS != retCode)
@@ -610,9 +614,11 @@ int ManagerImpl::setPermission(const Alias &alias,
     int my_counter = m_counter;
     return try_catch([&] {
         MessageBuffer recv;
+        AliasSupport helper(alias);
         auto send = MessageBuffer::Serialize(static_cast<int>(LogicCommand::SET_PERMISSION),
                                              my_counter,
-                                             alias,
+                                             helper.getName(),
+                                             helper.getLabel(),
                                              accessor,
                                              static_cast<int>(newPermission));
 

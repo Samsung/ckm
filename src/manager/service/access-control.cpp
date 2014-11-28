@@ -76,6 +76,22 @@ bool AccessControl::isCCMode() const
     return m_ccMode;
 }
 
+int AccessControl::canSave(
+        const Label & ownerLabel,
+        const Label & accessorLabel) const
+{
+    if(ownerLabel != accessorLabel)
+        return CKM_API_ERROR_ACCESS_DENIED;
+
+    return CKM_API_SUCCESS;
+}
+
+int AccessControl::canModify(
+        const Label & ownerLabel,
+        const Label & accessorLabel) const
+{
+    return canSave(ownerLabel, accessorLabel);
+}
 
 int AccessControl::canRead(
         const DBRow & row,
