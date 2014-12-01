@@ -320,9 +320,11 @@ int try_catch(const std::function<int()>& func)
     int retval = CKM_API_ERROR_UNKNOWN;
     try {
         return func();
-    } catch (MessageBuffer::Exception::Base &e) {
+    } catch (const MessageBuffer::Exception::Base &e) {
         LogError("CKM::MessageBuffer::Exception " << e.DumpToString());
-    } catch (std::exception &e) {
+    } catch (const DBDataType::Exception::Base &e) {
+        LogError("CKM::DBDataType::Exception " << e.DumpToString());
+    } catch (const std::exception &e) {
         LogError("STD exception " << e.what());
     } catch (...) {
         LogError("Unknown exception occured");
@@ -337,6 +339,9 @@ void try_catch_async(const std::function<void()>& func, const std::function<void
     } catch (const MessageBuffer::Exception::Base& e) {
         LogError("CKM::MessageBuffer::Exception " << e.DumpToString());
         error(CKM_API_ERROR_BAD_REQUEST);
+    } catch (const DBDataType::Exception::Base &e) {
+        LogError("CKM::DBDataType conversion failed:" << e.DumpToString());
+        error(CKM_API_ERROR_UNKNOWN);
     } catch (const std::exception& e) {
         LogError("STD exception " << e.what());
         error(CKM_API_ERROR_UNKNOWN);

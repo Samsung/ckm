@@ -82,7 +82,12 @@ int ManagerImpl::saveBinaryData(
 int ManagerImpl::saveKey(const Alias &alias, const KeyShPtr &key, const Policy &policy) {
     if (key.get() == NULL)
         return CKM_API_ERROR_INPUT_PARAM;
-    return saveBinaryData(alias, toDBDataType(key->getType()), key->getDER(), policy);
+    Try {
+        return saveBinaryData(alias, DBDataType(key->getType()), key->getDER(), policy);
+    } Catch (DBDataType::Exception::Base) {
+        LogError("Error in key conversion. Could not convert KeyType::NONE to DBDataType!");
+    }
+    return CKM_API_ERROR_INPUT_PARAM;
 }
 
 int ManagerImpl::saveCertificate(
@@ -158,7 +163,7 @@ int ManagerImpl::getBinaryData(
         int counter;
         int tmpDataType;
         recv.Deserialize(command, counter, retCode, tmpDataType, rawData);
-        recvDataType = static_cast<DBDataType>(tmpDataType);
+        recvDataType = DBDataType(tmpDataType);
 
         if (counter != m_counter) {
             return CKM_API_ERROR_UNKNOWN;
@@ -196,7 +201,7 @@ int ManagerImpl::getKey(const Alias &alias, const Password &password, KeyShPtr &
 
 int ManagerImpl::getCertificate(const Alias &alias, const Password &password, CertificateShPtr &cert)
 {
-    DBDataType recvDataType = DBDataType::CERTIFICATE;
+    DBDataType recvDataType;
     RawBuffer rawData;
 
     int retCode = getBinaryData(

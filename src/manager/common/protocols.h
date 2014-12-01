@@ -22,9 +22,12 @@
  */
 #pragma once
 
+#include <stdexcept>
 #include <string>
+
 #include <ckm/ckm-type.h>
 
+#include <dpl/exception.h>
 #include <dpl/serialization.h>
 
 namespace CKM {
@@ -62,26 +65,137 @@ enum class LogicCommand : int {
     // for backward compatibility append new at the end
 };
 
-// Do not use DB_KEY_FIRST and DB_KEY_LAST in the code.
-// This values are only for db module!
-enum class DBDataType : int {
-    DB_DATA_TYPE_FIRST,
-    DB_KEY_FIRST = DB_DATA_TYPE_FIRST,
+class DBDataType {
+public:
+    class Exception {
+    public:
+        DECLARE_EXCEPTION_TYPE(CKM::Exception, Base)
+        DECLARE_EXCEPTION_TYPE(Base, OutOfRange)
+    };
 
-    KEY_RSA_PUBLIC = DB_KEY_FIRST,
-    KEY_RSA_PRIVATE,
-    KEY_ECDSA_PUBLIC,
-    KEY_ECDSA_PRIVATE,
-    KEY_DSA_PUBLIC,
-    KEY_DSA_PRIVATE,
-    KEY_AES,
-    DB_KEY_LAST = KEY_AES,
-    CERTIFICATE,
-    BINARY_DATA,
-    // add new items here
+    enum DataType {
+        KEY_RSA_PUBLIC,
+        KEY_RSA_PRIVATE,
+        KEY_ECDSA_PUBLIC,
+        KEY_ECDSA_PRIVATE,
+        KEY_DSA_PUBLIC,
+        KEY_DSA_PRIVATE,
+        KEY_AES,
+        CERTIFICATE,
+        BINARY_DATA,
+        // Special types to support database,
+        DB_FIRST = KEY_RSA_PUBLIC,
+        DB_LAST  = BINARY_DATA,
+        DB_KEY_FIRST = KEY_RSA_PUBLIC,
+        DB_KEY_LAST  = KEY_AES,
+    };
 
-    // keep in mind to modify DB_DATA_TYPE_LAST when doing changes!
-    DB_DATA_TYPE_LAST = BINARY_DATA
+    DBDataType()
+      : m_dataType(BINARY_DATA)
+    {}
+
+    DBDataType(DataType data)
+      : m_dataType(data)
+    {
+        if (!isInRange(data))
+            ThrowMsg(Exception::OutOfRange, "Invalid conversion from DataType to DBDataType");
+    }
+
+    explicit DBDataType(KeyType key) {
+        switch(key) {
+        case KeyType::KEY_RSA_PUBLIC:    m_dataType = DBDataType::KEY_RSA_PUBLIC;    break;
+        case KeyType::KEY_RSA_PRIVATE:   m_dataType = DBDataType::KEY_RSA_PRIVATE;   break;
+        case KeyType::KEY_DSA_PUBLIC:    m_dataType = DBDataType::KEY_DSA_PUBLIC;    break;
+        case KeyType::KEY_DSA_PRIVATE:   m_dataType = DBDataType::KEY_DSA_PRIVATE;   break;
+        case KeyType::KEY_ECDSA_PUBLIC:  m_dataType = DBDataType::KEY_ECDSA_PUBLIC;  break;
+        case KeyType::KEY_ECDSA_PRIVATE: m_dataType = DBDataType::KEY_ECDSA_PRIVATE; break;
+        case KeyType::KEY_AES:           m_dataType = DBDataType::KEY_AES;           break;
+        default:
+            ThrowMsg(Exception::OutOfRange, "Invalid conversion from KeyType to DBDataType");
+        }
+    }
+
+    explicit DBDataType(int data)
+      : m_dataType(static_cast<DataType>(data))
+    {
+        if (!isInRange(data))
+            ThrowMsg(Exception::OutOfRange, "Invalid conversion from int to DBDataType");
+    }
+
+    DBDataType(const DBDataType &) = default;
+    DBDataType& operator=(const DBDataType &) = default;
+
+    operator int () const {
+        return static_cast<int>(m_dataType);
+    }
+
+    operator KeyType () const {
+        switch(m_dataType) {
+        case DBDataType::KEY_RSA_PUBLIC: return KeyType::KEY_RSA_PUBLIC;
+        case DBDataType::KEY_RSA_PRIVATE: return KeyType::KEY_RSA_PRIVATE;
+        case DBDataType::KEY_DSA_PUBLIC: return KeyType::KEY_DSA_PUBLIC;
+        case DBDataType::KEY_DSA_PRIVATE: return KeyType::KEY_DSA_PRIVATE;
+        case DBDataType::KEY_ECDSA_PRIVATE: return KeyType::KEY_ECDSA_PRIVATE;
+        case DBDataType::KEY_ECDSA_PUBLIC: return KeyType::KEY_ECDSA_PUBLIC;
+        case DBDataType::KEY_AES: return KeyType::KEY_AES;
+        default:
+            ThrowMsg(Exception::OutOfRange, "Invalid conversion from DBDataType to KeyType");
+        }
+    }
+
+    bool operator==(const DBDataType &second) const {
+        return m_dataType == second.m_dataType;
+    }
+
+    bool isKey() const {
+        if (DB_KEY_FIRST <= m_dataType && DB_KEY_LAST >= m_dataType)
+            return true;
+        return false;
+    }
+
+    bool isKeyPrivate() const {
+        switch (m_dataType) {
+        case KEY_RSA_PRIVATE:
+        case KEY_DSA_PRIVATE:
+        case KEY_ECDSA_PRIVATE:
+              return true;
+        default:
+              return false;
+        }
+    }
+
+    bool isKeyPublic() const {
+        switch (m_dataType) {
+        case KEY_RSA_PUBLIC:
+        case KEY_DSA_PUBLIC:
+        case KEY_ECDSA_PUBLIC:
+              return true;
+        default:
+              return false;
+        }
+    }
+
+    bool isCertificate() const {
+        return m_dataType == CERTIFICATE;
+    }
+
+    bool isBinaryData() const {
+        return m_dataType == BINARY_DATA;
+    }
+
+    static bool isInRange(int data) {
+        if (data < static_cast<int>(DB_FIRST))
+            return false;
+        if (data > static_cast<int>(DB_LAST))
+            return false;
+        return true;
+    }
+
+    // it's not virtual with a reason!
+    ~DBDataType(){}
+
+private:
+    DataType m_dataType;
 };
 
 // (client side) Alias = (service side) Label::Name
@@ -90,8 +204,6 @@ typedef std::string Name;
 typedef std::vector<std::pair<Label, Name> > LabelNameVector;
 
 
-DBDataType toDBDataType(KeyType key);
-KeyType toKeyType(DBDataType dbDataType);
 const char* toDBPermission(Permission access_right_type);
 Permission toPermission(const std::string &input_DB_data);
 

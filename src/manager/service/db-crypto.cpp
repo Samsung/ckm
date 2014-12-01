@@ -283,7 +283,7 @@ using namespace DB;
         row.name = name;
         row.ownerLabel = ownerLabel;
         row.exportable = selectCommand->GetColumnInteger(0);
-        row.dataType = static_cast<DBDataType>(selectCommand->GetColumnInteger(1));
+        row.dataType = DBDataType(selectCommand->GetColumnInteger(1));
         row.algorithmType = static_cast<DBCMAlgType>(selectCommand->GetColumnInteger(2));
         row.encryptionScheme = selectCommand->GetColumnInteger(3);
         row.iv = selectCommand->GetColumnBlob(4);
@@ -318,6 +318,7 @@ using namespace DB;
     {
         return getDBRow(name, ownerLabel, type, type);
     }
+
     DBCrypto::DBRowOptional DBCrypto::getDBRow(
         const Name &name,
         const Label &ownerLabel,
@@ -327,8 +328,8 @@ using namespace DB;
         Try {
             SqlConnection::DataCommandUniquePtr selectCommand =
                     m_connection->PrepareDataCommand(DB_CMD_OBJECT_SELECT_BY_NAME_AND_LABEL);
-            selectCommand->BindInteger(1, static_cast<int>(typeRangeStart));
-            selectCommand->BindInteger(2, static_cast<int>(typeRangeStop));
+            selectCommand->BindInteger(1, typeRangeStart);
+            selectCommand->BindInteger(2, typeRangeStop);
 
             // name table reference
             selectCommand->BindString (101, name.c_str());

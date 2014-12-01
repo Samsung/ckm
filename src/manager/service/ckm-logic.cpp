@@ -293,34 +293,16 @@ int CKMLogic::saveDataHelper(
 void CKMLogic::verifyBinaryData(DBDataType dataType, const RawBuffer &input_data) const
 {
     // verify the data integrity
-    switch(dataType)
-    {
-        case DBDataType::KEY_RSA_PUBLIC:
-        case DBDataType::KEY_RSA_PRIVATE:
-        case DBDataType::KEY_ECDSA_PUBLIC:
-        case DBDataType::KEY_ECDSA_PRIVATE:
-        case DBDataType::KEY_DSA_PUBLIC:
-        case DBDataType::KEY_DSA_PRIVATE:
-        case DBDataType::KEY_AES:
-        {
-            KeyShPtr output_key = CKM::Key::create(input_data);
-            if(output_key.get() == NULL)
-                ThrowMsg(CKMLogic::Exception::InputDataInvalid, "provided binary data is not valid key data");
-            break;
-        }
-
-        case DBDataType::CERTIFICATE:
-        {
-            CertificateShPtr cert = CKM::Certificate::create(input_data, DataFormat::FORM_DER);
-            if(cert.get() == NULL)
-                ThrowMsg(CKMLogic::Exception::InputDataInvalid, "provided binary data is not valid certificate data");
-            break;
-        }
-
-        // TODO: add here BINARY_DATA verification, i.e: max size etc.
-
-        default: break;
+    if (dataType.isKey()) {
+        KeyShPtr output_key = CKM::Key::create(input_data);
+        if(output_key.get() == NULL)
+            ThrowMsg(CKMLogic::Exception::InputDataInvalid, "provided binary data is not valid key data");
+    } else if (dataType.isCertificate()) {
+        CertificateShPtr cert = CKM::Certificate::create(input_data, DataFormat::FORM_DER);
+        if(cert.get() == NULL)
+            ThrowMsg(CKMLogic::Exception::InputDataInvalid, "provided binary data is not valid certificate data");
     }
+    // TODO: add here BINARY_DATA verification, i.e: max size etc.
 }
 
 RawBuffer CKMLogic::saveData(
@@ -429,26 +411,15 @@ int CKMLogic::readDataRowHelper(const Name &name,
                                 DBCrypto & database,
                                 DBRow &row)
 {
-    // read row
     DBCrypto::DBRowOptional row_optional;
-    // TODO: move this check into request deserialization
-    if((static_cast<int>(dataType)<static_cast<int>(DBDataType::DB_DATA_TYPE_FIRST)) ||
-       (static_cast<int>(dataType)>static_cast<int>(DBDataType::DB_DATA_TYPE_LAST)))
-    {
-        LogError("Unknown type of requested data: " << (int)dataType);
-        return CKM_API_ERROR_BAD_REQUEST;
-    }
-    // TODO: provide internal type rather than using DB types in socket comms
-    else if ((dataType >= DBDataType::DB_KEY_FIRST) &&
-             (dataType <= DBDataType::DB_KEY_LAST))
+    if (dataType.isKey())
     {
         // read all key types
         row_optional = database.getDBRow(name,
                                          ownerLabel,
                                          DBDataType::DB_KEY_FIRST,
                                          DBDataType::DB_KEY_LAST);
-    }
-    else {
+    } else {
         // read anything else
         row_optional = database.getDBRow(name,
                                          ownerLabel,
@@ -578,24 +549,13 @@ RawBuffer CKMLogic::getDataList(
         auto &database = m_userDataMap[cred.uid].database;
 
         Try {
-            // list names
-            // TODO: move this check into request deserialization
-            if((static_cast<int>(dataType)<static_cast<int>(DBDataType::DB_DATA_TYPE_FIRST)) ||
-               (static_cast<int>(dataType)>static_cast<int>(DBDataType::DB_DATA_TYPE_LAST)))
-            {
-                LogError("Unknown type of requested data: " << (int)dataType);
-                retCode = CKM_API_ERROR_BAD_REQUEST;
-            }
-            // TODO: provide internal type rather than using DB types in socket comms
-            else if ((dataType >= DBDataType::DB_KEY_FIRST) && (dataType <= DBDataType::DB_KEY_LAST))
-            {
+            if (dataType.isKey()) {
                 // list all key types
                 database.listNames(cred.smackLabel,
                                    labelNameVector,
                                    DBDataType::DB_KEY_FIRST,
                                    DBDataType::DB_KEY_LAST);
-            }
-            else {
+            } else {
                 // list anything else
                 database.listNames(cred.smackLabel,
                                    labelNameVector,
@@ -665,7 +625,7 @@ int CKMLogic::createKeyPairHelper(
     auto &database = m_userDataMap[cred.uid].database;
     DBCrypto::Transaction transaction(&database);
     retCode = saveDataHelper(cred,
-                            toDBDataType(prv.getType()),
+                            DBDataType(prv.getType()),
                             namePrivate,
                             labelPrivate,
                             prv.getDER(),
@@ -675,7 +635,7 @@ int CKMLogic::createKeyPairHelper(
         return retCode;
 
     retCode = saveDataHelper(cred,
-                            toDBDataType(pub.getType()),
+                            DBDataType(pub.getType()),
                             namePublic,
                             labelPublic,
                             pub.getDER(),

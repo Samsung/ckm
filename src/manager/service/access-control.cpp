@@ -125,19 +125,8 @@ int AccessControl::canExport(
         return CKM_API_ERROR_NOT_EXPORTABLE;
 
     // prevent extracting private keys during cc-mode on
-    if( isCCMode() )
-    {
-        switch(row.dataType)
-        {
-            case DBDataType::KEY_RSA_PRIVATE:
-            case DBDataType::KEY_ECDSA_PRIVATE:
-            case DBDataType::KEY_DSA_PRIVATE:
-                return CKM_API_ERROR_BAD_REQUEST;
-
-            default:
-                break;
-        }
-    }
+    if (isCCMode() && row.dataType.isKeyPrivate())
+        return CKM_API_ERROR_BAD_REQUEST;
 
     return CKM_API_SUCCESS;
 }

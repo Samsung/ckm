@@ -49,7 +49,11 @@ void ManagerAsync::Impl::saveKey(const ObserverPtr& observer,
         observer->ReceivedError(CKM_API_ERROR_INPUT_PARAM);
         return;
     }
-    saveBinaryData(observer, alias, toDBDataType(key->getType()), key->getDER(), policy);
+    Try {
+        saveBinaryData(observer, alias, DBDataType(key->getType()), key->getDER(), policy);
+    } Catch(DBDataType::Exception::Base) {
+        observer->ReceivedError(CKM_API_ERROR_INPUT_PARAM);
+    }
 }
 
 void ManagerAsync::Impl::saveCertificate(const ObserverPtr& observer,

@@ -28,41 +28,6 @@
 
 namespace CKM {
 
-namespace {
-
-enum class DataType {
-    KEY,
-    CERT,
-    DATA
-};
-
-DataType type(int dbDataType)
-{
-    switch(static_cast<DBDataType>(dbDataType))
-    {
-    case DBDataType::KEY_RSA_PUBLIC:
-    case DBDataType::KEY_RSA_PRIVATE:
-    case DBDataType::KEY_ECDSA_PUBLIC:
-    case DBDataType::KEY_ECDSA_PRIVATE:
-    case DBDataType::KEY_DSA_PUBLIC:
-    case DBDataType::KEY_DSA_PRIVATE:
-    case DBDataType::KEY_AES:
-        return DataType::KEY;
-
-    case DBDataType::CERTIFICATE:
-        return DataType::CERT;
-
-    case DBDataType::BINARY_DATA:
-        return DataType::DATA;
-
-    default:
-        LogError("Unsupported data type: " <<dbDataType);
-        ThrowMsg(IReceiver::BadResponse, "Unsupported data type: " << dbDataType);
-    }
-}
-
-} // namespace anonymous
-
 StorageReceiver::StorageReceiver(MessageBuffer& buffer, AsyncRequest::Map& requests) :
     m_buffer(buffer),
     m_requests(requests),
@@ -142,18 +107,15 @@ void StorageReceiver::parseGetCommand()
          return;
     }
 
-    switch(type(dataType))
-    {
-    case DataType::KEY:
+    DBDataType type(dataType);
+    if (type.isKey())
         m_observer->ReceivedKey(KeyImpl(rawData));
-        break;
-    case DataType::CERT:
+    else if (type.isCertificate())
         m_observer->ReceivedCertificate(CertificateImpl(rawData, DataFormat::FORM_DER));
-        break;
-    case DataType::DATA:
+    else if (type.isBinaryData())
         m_observer->ReceivedData(std::move(rawData));
-        break;
-    }
+    else
+        m_observer->ReceivedError(CKM_API_ERROR_BAD_RESPONSE);
 }
 
 void StorageReceiver::parseGetListCommand()
@@ -172,18 +134,16 @@ void StorageReceiver::parseGetListCommand()
     for(const auto &it : labelNameVector)
         aliasVector.push_back( AliasSupport::merge(it.first, it.second) );
 
-    switch(type(dataType))
-    {
-    case DataType::KEY:
+    DBDataType type(dataType);
+
+    if (type.isKey())
         m_observer->ReceivedKeyAliasVector(std::move(aliasVector));
-        break;
-    case DataType::CERT:
+    else if (type.isCertificate())
         m_observer->ReceivedCertificateAliasVector(std::move(aliasVector));
-        break;
-    case DataType::DATA:
+    else if (type.isBinaryData())
         m_observer->ReceivedDataAliasVector(std::move(aliasVector));
-        break;
-    }
+    else
+        m_observer->ReceivedError(CKM_API_ERROR_BAD_RESPONSE);
 }
 
 void StorageReceiver::parseSaveCommand()
@@ -197,18 +157,15 @@ void StorageReceiver::parseSaveCommand()
          return;
     }
 
-    switch(type(dataType))
-    {
-    case DataType::KEY:
+    DBDataType type(dataType);
+    if (type.isKey())
         m_observer->ReceivedSaveKey();
-        break;
-    case DataType::CERT:
+    else if (type.isCertificate())
         m_observer->ReceivedSaveCertificate();
-        break;
-    case DataType::DATA:
+    else if (type.isBinaryData())
         m_observer->ReceivedSaveData();
-        break;
-    }
+    else
+        m_observer->ReceivedError(CKM_API_ERROR_BAD_RESPONSE);
 }
 
 void StorageReceiver::parseRemoveCommand()
