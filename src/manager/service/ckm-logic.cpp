@@ -298,11 +298,15 @@ RawBuffer CKMLogic::saveData(
     int commandId,
     DBDataType dataType,
     const Name &name,
+    const Label &label,
     const RawBuffer &key,
     const PolicySerializable &policy)
 {
     int retCode = CKM_API_SUCCESS;
     try {
+        if (!label.empty() && label.compare(cred.smackLabel))
+            ThrowMsg(CKMLogic::Exception::InputDataInvalid, "smack label in param is not your label");
+
         verifyBinaryData(dataType, key);
 
         retCode = saveDataHelper(cred, dataType, name, key, policy);

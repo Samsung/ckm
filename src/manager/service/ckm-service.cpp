@@ -188,12 +188,13 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer)
         {
             RawBuffer rawData;
             PolicySerializable policy;
-            buffer.Deserialize(tmpDataType, name, rawData, policy);
+            buffer.Deserialize(tmpDataType, name, label, rawData, policy);
             return m_logic->saveData(
                 cred,
                 msgID,
                 static_cast<DBDataType>(tmpDataType),
                 name,
+                label,
                 rawData,
                 policy);
         }

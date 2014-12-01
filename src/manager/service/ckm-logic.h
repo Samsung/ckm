@@ -82,6 +82,7 @@ public:
         int commandId,
         DBDataType dataType,
         const Name &name,
+        const Label &label,
         const RawBuffer &key,
         const PolicySerializable &policy);
 

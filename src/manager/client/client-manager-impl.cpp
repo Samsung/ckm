@@ -68,10 +68,12 @@ int ManagerImpl::saveBinaryData(
             return CKM_API_ERROR_INPUT_PARAM;
 
         MessageBuffer recv;
+        AliasSupport helper(alias);
         auto send = MessageBuffer::Serialize(static_cast<int>(LogicCommand::SAVE),
                                              m_counter,
                                              static_cast<int>(dataType),
-                                             alias,
+                                             helper.getName(),
+                                             helper.getLabel(),
                                              rawData,
                                              PolicySerializable(policy));
 
