@@ -229,11 +229,6 @@ private:
         const Label &accessorLabel,
         const Permission reqRights);
 
-    // @return true if name & label are proper, false otherwise
-    static bool checkNameAndLabelValid(
-        const Name &name,
-        const Label &label);
-
     std::map<uid_t, UserData> m_userDataMap;
     CertificateStore m_certStore;
     AccessControl m_accessControl;

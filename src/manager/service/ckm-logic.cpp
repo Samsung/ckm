@@ -32,6 +32,20 @@
 
 namespace {
 const char * const CERT_SYSTEM_DIR = "/etc/ssl/certs";
+
+bool isLabelValid(const CKM::Label &label) {
+    // TODO: copy code from libprivilege control (for check smack label)
+    if (label.find(CKM::LABEL_NAME_SEPARATOR) != CKM::Label::npos)
+        return false;
+    return true;
+}
+
+bool isNameValid(const CKM::Name &name) {
+    if (name.find(CKM::LABEL_NAME_SEPARATOR) != CKM::Name::npos)
+        return false;
+    return true;
+}
+
 } // anonymous namespace
 
 namespace CKM {
@@ -215,11 +229,13 @@ int CKMLogic::saveDataHelper(
     const PolicySerializable &policy)
 {
     // use client label if not explicitly provided
-    const Label ownerLabel = label.empty() ? cred.smackLabel : label;
+    const Label &ownerLabel = label.empty() ? cred.smackLabel : label;
 
     // verify name and label are correct
-    if ( !checkNameAndLabelValid(name, ownerLabel) )
+    if (!isNameValid(name) || !isLabelValid(ownerLabel)) {
+        LogWarning("Invalid parameter passed to key-manager");
         return CKM_API_ERROR_INPUT_PARAM;
+    }
 
     // check if allowed to save using ownerLabel
     int access_ec = m_accessControl.canSave(ownerLabel, cred.smackLabel);
@@ -354,9 +370,7 @@ int CKMLogic::removeDataHelper(
     if (0 == m_userDataMap.count(cred.uid))
         return CKM_API_ERROR_DB_LOCKED;
 
-    // verify name and label are correct
-    if( !checkNameAndLabelValid(name, ownerLabel) )
-    {
+    if (!isNameValid(name) || !isLabelValid(ownerLabel)) {
         LogError("Invalid label or name format");
         return CKM_API_ERROR_INPUT_PARAM;
     }
@@ -396,7 +410,7 @@ RawBuffer CKMLogic::removeData(
     int retCode;
     Try {
         // use client label if not explicitly provided
-        const Label & ownerLabel = label.empty() ? cred.smackLabel : label;
+        const Label &ownerLabel = label.empty() ? cred.smackLabel : label;
 
         retCode = removeDataHelper(cred, name, ownerLabel);
     } Catch (CKM::Exception) {
@@ -409,19 +423,6 @@ RawBuffer CKMLogic::removeData(
                                              retCode,
                                              static_cast<int>(dataType));
     return response.Pop();
-}
-
-bool CKMLogic::checkNameAndLabelValid(const Name &name, const Label &label)
-{
-    // verify the name is valid
-    if(name.find(':') != Label::npos)
-        return false;
-
-    // verify the label is valid
-    if(label.find(LABEL_NAME_SEPARATOR) != Label::npos)
-        return false;
-
-    return true;
 }
 
 int CKMLogic::readDataRowHelper(const Name &name,
@@ -494,10 +495,9 @@ int CKMLogic::readDataHelper(
         return CKM_API_ERROR_DB_LOCKED;
 
     // use client label if not explicitly provided
-    const Label ownerLabel = label.empty() ? cred.smackLabel : label;
+    const Label &ownerLabel = label.empty() ? cred.smackLabel : label;
 
-    // verify name and label are correct
-    if (true != checkNameAndLabelValid(name, ownerLabel))
+    if (!isNameValid(name) || !isLabelValid(ownerLabel))
         return CKM_API_ERROR_INPUT_PARAM;
 
     auto &handler = m_userDataMap[cred.uid];
@@ -958,24 +958,22 @@ int CKMLogic::setPermissionHelper(
         const Label &accessorLabel,
         const Permission reqRights)
 {
-    int retCode;
+    if (0 == m_userDataMap.count(cred.uid))
+        return CKM_API_ERROR_DB_LOCKED;
+
     if(cred.smackLabel.empty() || cred.smackLabel==accessorLabel)
         return CKM_API_ERROR_INPUT_PARAM;
 
     // use client label if not explicitly provided
-    const Label ownerLabel = label.empty() ? cred.smackLabel : label;
+    const Label& ownerLabel = label.empty() ? cred.smackLabel : label;
 
     // verify name and label are correct
-    if (true != checkNameAndLabelValid(name, ownerLabel))
+    if (!isNameValid(name) || !isLabelValid(ownerLabel))
         return CKM_API_ERROR_INPUT_PARAM;
 
-    // check if allowed to modify
     int access_ec = m_accessControl.canModify(ownerLabel, cred.smackLabel);
     if(access_ec != CKM_API_SUCCESS)
         return access_ec;
-
-    if (0 == m_userDataMap.count(cred.uid))
-        return CKM_API_ERROR_DB_LOCKED;
 
     auto &database = m_userDataMap[cred.uid].database;
     DBCrypto::Transaction transaction(&database);
@@ -990,7 +988,7 @@ int CKMLogic::setPermissionHelper(
             return CKM_API_ERROR_INPUT_PARAM;
     }
 
-    retCode = database.setPermission(name,
+    int retCode = database.setPermission(name,
                                      ownerLabel,
                                      accessorLabel,
                                      reqRights);
