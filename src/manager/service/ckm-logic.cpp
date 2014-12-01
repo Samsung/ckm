@@ -80,8 +80,6 @@ RawBuffer CKMLogic::unlockUserKey(uid_t user, const Password &password) {
             for(auto& appSmackLabel : removedApps) {
                 handle.database.deleteKey(appSmackLabel);
             }
-
-            // TODO wipe key
         }
     } catch (const KeyProvider::Exception::PassWordError &e) {
         LogError("Incorrect Password " << e.GetMessage());

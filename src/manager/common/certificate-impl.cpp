@@ -258,9 +258,7 @@ std::string CertificateImpl::getOCSPURL() const {
 }
 
 CertificateImpl::~CertificateImpl() {
-    LogDebug("free cert start ptr: " << (void*)m_x509);
     X509_free(m_x509);
-    LogDebug("free cert end");
 }
 
 CertificateShPtr Certificate::create(const RawBuffer &rawBuffer, DataFormat format) {
