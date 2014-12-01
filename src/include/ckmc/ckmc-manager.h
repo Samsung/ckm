@@ -713,6 +713,7 @@ int ckmc_create_signature(const char *private_key_alias, const char *password, c
 int ckmc_verify_signature(const char *public_key_alias, const char *password, const ckmc_raw_buffer_s message, const ckmc_raw_buffer_s signature, const ckmc_hash_algo_e hash, const ckmc_rsa_padding_algo_e padding);
 
 /**
+ * @deprecated, see ckmc_get_certificate_chain()
  * @brief Verifies a certificate chain and returns that chain.
  *
  * @since_tizen 2.3
@@ -746,6 +747,7 @@ int ckmc_verify_signature(const char *public_key_alias, const char *password, co
 int ckmc_get_cert_chain(const ckmc_cert_s *cert, const ckmc_cert_list_s *untrustedcerts, ckmc_cert_list_s **ppcert_chain_list);
 
 /**
+ * @deprecated, see ckmc_get_certificate_chain_with_alias()
  * @brief Verifies a certificate chain using an alias list of untrusted certificates and return that chain.
  *
  * @since_tizen 2.3
@@ -779,6 +781,76 @@ int ckmc_get_cert_chain(const ckmc_cert_s *cert, const ckmc_cert_list_s *untrust
  */
 int ckmc_get_cert_chain_with_alias(const ckmc_cert_s *cert, const ckmc_alias_list_s *untrustedcerts, ckmc_cert_list_s **ppcert_chain_list);
 
+/**
+ * @brief Verifies a certificate chain and returns that chain using user entered trusted and untrusted CA certificates
+ *
+ * @since_tizen 3.0
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/keymanager
+ *
+ * @remarks If the trusted root certificates are provided as a user input, these certificates do not need to exist in the system's certificate storage.
+ * @remarks You must destroy the newly created @a ppcert_chain_list by calling ckmc_cert_list_all_free() if it is no longer needed.
+ *  *
+ * @param[in] cert                    The certificate to be verified
+ * @param[in] untrustedcerts          The untrusted CA certificates to be used in verifying a certificate chain
+ * @param[in] trustedcerts            The trusted CA certificates to be used in verifying a certificate chain
+ * @param[in] use_trustedsystemcerts  The flag indicating the use of the trusted root certificates in the system's certificate storage.
+ * @param[out] ppcert_chain_list The pointer to a newly created certificate chain's handle \n
+ *                               If an error occurs, @a *ppcert_chain_list will be null.
+ *
+ * @return @c 0 on success and the signature is valid,
+ *         otherwise a negative error value
+ *
+ * @retval #CKMC_ERROR_NONE                 Successful
+ * @retval #CKMC_ERROR_VERIFICATION_FAILED  The certificate chain is not valid
+ * @retval #CKMC_ERROR_INVALID_PARAMETER    Input parameter is invalid
+ * @retval #CKMC_ERROR_DB_LOCKED            A user key is not loaded in memory (a user is not logged in)
+ * @retval #CKMC_ERROR_DB_ERROR             Failed due to the error with unknown reason
+ * @retval #CKMC_ERROR_INVALID_FORMAT       The format of certificate is not valid
+ * @retval #CKMC_ERROR_PERMISSION_DENIED    Failed to access key manager
+ *
+ * @pre User is already logged in and the user key is already loaded into memory in plain text form.
+ *
+ * @see ckmc_get_cert_chain_with_alias())
+ * @see ckmc_cert_list_all_free()
+ */
+int ckmc_get_certificate_chain(const ckmc_cert_s *cert, const ckmc_cert_list_s *untrustedcerts, const ckmc_cert_list_s *trustedcerts, const bool use_trustedsystemcerts, ckmc_cert_list_s **ppcert_chain_list);
+
+/**
+ * @brief Verifies a certificate chain and returns that chain using alias lists of untrusted and trusted certificates
+ *
+ * @since_tizen 3.0
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/keymanager
+ *
+ * @remarks If the alias list of trusted root certificates is provided as a user input, these certificates do not need to exist in the system's certificate storage.
+ * @remarks You must destroy the newly created @a ppcert_chain_list by calling ckmc_cert_list_all_free() if it is no longer needed.
+ *
+ * @param[in] cert                    The certificate to be verified
+ * @param[in] untrustedcerts          The alias list of untrusted CA certificates stored in key manager to be used in verifying a certificate chain
+ * @param[in] trustedcerts            The alias list of trusted CA certificates stored in key manager to be used in verifying a certificate chain
+ * @param[in] use_trustedsystemcerts  The flag indicating the use of the trusted root certificates in the system's certificate storage.
+ * @param[out] ppcert_chain_list The pointer to a newly created certificate chain's handle \n
+ *                               If an error occurs, @a *ppcert_chain_list will be null.
+ *
+ * @return @c 0 on success and the signature is valid,
+ *         otherwise a negative error value
+ *
+ * @retval #CKMC_ERROR_NONE                 Successful
+ * @retval #CKMC_ERROR_VERIFICATION_FAILED  The certificate chain is not valid
+ * @retval #CKMC_ERROR_INVALID_PARAMETER    Input parameter is invalid
+ * @retval #CKMC_ERROR_DB_LOCKED            A user key is not loaded in memory (a user is not logged in)
+ * @retval #CKMC_ERROR_DB_ERROR             Failed due to the error with unknown reason
+ * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN     Alias does not exist
+ * @retval #CKMC_ERROR_INVALID_FORMAT       The format of certificate is not valid
+ * @retval #CKMC_ERROR_PERMISSION_DENIED    Failed to access key manager
+ *
+ * @pre User is already logged in and the user key is already loaded into memory in plain text form.
+ *
+ * @see ckmc_get_cert_chain())
+ * @see ckmc_cert_list_all_free()
+ */
+int ckmc_get_certificate_chain_with_alias(const ckmc_cert_s *cert, const ckmc_alias_list_s *untrustedcerts, const ckmc_alias_list_s *trustedcerts, const bool use_trustedsystemcerts, ckmc_cert_list_s **ppcert_chain_list);
 
 /**
  * @brief Perform OCSP which checks certificate is whether revoked or not
@@ -802,7 +874,6 @@ int ckmc_get_cert_chain_with_alias(const ckmc_cert_s *cert, const ckmc_alias_lis
  * @see ckmc_cert_list_all_free()
  */
 int ckmc_ocsp_check(const ckmc_cert_list_s *pcert_chain_list, ckmc_ocsp_status_e *ocsp_status);
-
 
 /**
  * @deprecated, see ckmc_set_permission()

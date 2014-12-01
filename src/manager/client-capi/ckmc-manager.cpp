@@ -32,6 +32,9 @@
 
 namespace
 {
+const CKM::CertificateShPtrVector EMPTY_CERT_VECTOR;
+const CKM::AliasVector EMPTY_ALIAS_VECTOR;
+
 CKM::Password _tostring(const char *str)
 {
     if(str == NULL)
@@ -58,6 +61,32 @@ CKM::CertificateShPtr _toCkmCertificate(const ckmc_cert_s *cert)
         return CKM::Certificate::create(buffer, dataFormat);
     }
     return CKM::CertificateShPtr();
+}
+
+CKM::CertificateShPtrVector _toCkmCertificateVector(const ckmc_cert_list_s *list)
+{
+    CKM::CertificateShPtrVector certs;
+    ckmc_cert_list_s *current = const_cast<ckmc_cert_list_s *>(list);
+    while (current != NULL)
+    {
+        if (current->cert != NULL)
+            certs.push_back(_toCkmCertificate(current->cert));
+        current = current->next;
+    }
+    return certs;
+}
+
+CKM::AliasVector _toCkmAliasVector(const ckmc_alias_list_s *list)
+{
+    CKM::AliasVector aliases;
+    ckmc_alias_list_s *current = const_cast<ckmc_alias_list_s *>(list);
+    while (current != NULL)
+    {
+        if (current->alias != NULL)
+            aliases.push_back(CKM::Alias(current->alias));
+        current = current->next;
+    }
+    return aliases;
 }
 
 ckmc_cert_list_s *_toNewCkmCertList(const CKM::CertificateShPtrVector &certVector)
@@ -631,24 +660,9 @@ int ckmc_get_cert_chain(const ckmc_cert_s *cert, const ckmc_cert_list_s *untrust
 
     CKM::CertificateShPtr ckmCert = _toCkmCertificate(cert);
 
-    CKM::CertificateShPtrVector ckmUntrustedCerts;
-    if(untrustedcerts != NULL) {
-        ckmc_cert_list_s *current = NULL;
-        ckmc_cert_list_s *next = const_cast<ckmc_cert_list_s *>(untrustedcerts);
-        do {
-            current = next;
-            next = current->next;
+    CKM::CertificateShPtrVector ckmUntrustedCerts = _toCkmCertificateVector(untrustedcerts);
 
-            if(current->cert == NULL){
-                continue;
-            }
-
-            CKM::CertificateShPtr tmpCkmCert = _toCkmCertificate(current->cert);
-            ckmUntrustedCerts.push_back(tmpCkmCert);
-        }while(next != NULL);
-    }
-
-    ret = mgr->getCertificateChain(ckmCert, ckmUntrustedCerts, ckmCertChain);
+    ret = mgr->getCertificateChain(ckmCert, ckmUntrustedCerts, EMPTY_CERT_VECTOR, true, ckmCertChain);
     if( ret != CKM_API_SUCCESS) {
         return to_ckmc_error(ret);
     }
@@ -675,27 +689,80 @@ int ckmc_get_cert_chain_with_alias(const ckmc_cert_s *cert, const ckmc_alias_lis
         return CKMC_ERROR_INVALID_FORMAT;
     }
 
-    CKM::AliasVector ckmUntrustedAliases;
-    if(untrustedcerts != NULL) {
-        ckmc_alias_list_s *current = NULL;
-        ckmc_alias_list_s *next = const_cast<ckmc_alias_list_s *>(untrustedcerts);
-        do {
-            current = next;
-            next = current->next;
+    CKM::AliasVector ckmUntrustedAliases = _toCkmAliasVector(untrustedcerts);
 
-            if(current->alias == NULL){
-                return CKMC_ERROR_INVALID_PARAMETER;
-            }
-            CKM::Alias ckmAlias(current->alias);
-            ckmUntrustedAliases.push_back(ckmAlias);
-        }while(next != NULL);
-    }
-
-    if( (ret = mgr->getCertificateChain(ckmCert, ckmUntrustedAliases, ckmCertChain)) != CKM_API_SUCCESS) {
+    ret = mgr->getCertificateChain(ckmCert, ckmUntrustedAliases, EMPTY_ALIAS_VECTOR, true, ckmCertChain);
+    if( ret != CKM_API_SUCCESS) {
         return to_ckmc_error(ret);
     }
 
     *cert_chain_list = _toNewCkmCertList(ckmCertChain);
+
+    return CKMC_ERROR_NONE;
+}
+
+KEY_MANAGER_CAPI
+int ckmc_get_certificate_chain(const ckmc_cert_s* cert,
+                               const ckmc_cert_list_s* untrustedcerts,
+                               const ckmc_cert_list_s* trustedcerts,
+                               const bool sys_certs,
+                               ckmc_cert_list_s** ppcert_chain_list)
+{
+    int ret;
+    CKM::ManagerShPtr mgr = CKM::Manager::create();
+    CKM::CertificateShPtrVector ckm_cert_chain;
+
+    if(cert == NULL || cert->raw_cert == NULL || cert->cert_size <= 0 || ppcert_chain_list == NULL) {
+        return CKMC_ERROR_INVALID_PARAMETER;
+    }
+
+    CKM::CertificateShPtr ckm_cert = _toCkmCertificate(cert);
+    if(ckm_cert.get() == NULL) {
+        return CKMC_ERROR_INVALID_PARAMETER;
+    }
+
+    CKM::CertificateShPtrVector ckm_untrusted = _toCkmCertificateVector(untrustedcerts);
+    CKM::CertificateShPtrVector ckm_trusted = _toCkmCertificateVector(trustedcerts);
+
+    ret = mgr->getCertificateChain(ckm_cert, ckm_untrusted, ckm_trusted, sys_certs, ckm_cert_chain);
+    if( ret != CKM_API_SUCCESS) {
+        return to_ckmc_error(ret);
+    }
+
+    *ppcert_chain_list = _toNewCkmCertList(ckm_cert_chain);
+
+    return CKMC_ERROR_NONE;
+}
+
+KEY_MANAGER_CAPI
+int ckmc_get_certificate_chain_with_alias(const ckmc_cert_s* cert,
+                                          const ckmc_alias_list_s* untrustedcerts,
+                                          const ckmc_alias_list_s* trustedcerts,
+                                          const bool sys_certs,
+                                          ckmc_cert_list_s** ppcert_chain_list)
+{
+    int ret;
+    CKM::ManagerShPtr mgr = CKM::Manager::create();
+    CKM::CertificateShPtrVector ckm_cert_chain;
+
+    if(cert == NULL || cert->raw_cert == NULL || cert->cert_size <= 0 || ppcert_chain_list == NULL) {
+        return CKMC_ERROR_INVALID_PARAMETER;
+    }
+
+    CKM::CertificateShPtr ckm_cert = _toCkmCertificate(cert);
+    if(ckm_cert.get() == NULL) {
+        return CKMC_ERROR_INVALID_PARAMETER;
+    }
+
+    CKM::AliasVector ckm_untrusted = _toCkmAliasVector(untrustedcerts);
+    CKM::AliasVector ckm_trusted = _toCkmAliasVector(trustedcerts);
+
+    ret = mgr->getCertificateChain(ckm_cert, ckm_untrusted, ckm_trusted, sys_certs, ckm_cert_chain);
+    if( ret != CKM_API_SUCCESS) {
+        return to_ckmc_error(ret);
+    }
+
+    *ppcert_chain_list = _toNewCkmCertList(ckm_cert_chain);
 
     return CKMC_ERROR_NONE;
 }

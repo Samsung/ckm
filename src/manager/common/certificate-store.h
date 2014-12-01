@@ -36,18 +36,20 @@ public:
     CertificateStore& operator=(const CertificateStore &) = delete;
     virtual ~CertificateStore();
 
-    int loadFile(const std::string &path);
-
-    int setSystemCertificateDir(const char *path);
-
     int verifyCertificate(
         const CertificateImpl &cert,
         const CertificateImplVector &untrustedVector,
-        CertificateImplVector &chainVector,
-        bool stateCCMode);
+        const CertificateImplVector &trustedVector,
+        bool useTrustedSystemCertificates,
+        bool stateCCMode,
+        CertificateImplVector &chainVector);
 
-protected:
-    X509_STORE *m_store;
+private:
+    int addSystemCertificateDirs();
+    int addSystemCertificateFiles();
+    int addCustomTrustedCertificates(const CertificateImplVector &trustedVector);
+
+    X509_STORE* m_store;
 };
 
 } // namespace CKM

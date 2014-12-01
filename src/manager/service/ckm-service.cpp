@@ -289,24 +289,32 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer)
         case LogicCommand::GET_CHAIN_CERT:
         {
             RawBuffer certificate;
-            RawBufferVector rawBufferVector;
-            buffer.Deserialize(certificate, rawBufferVector);
+            RawBufferVector untrustedVector;
+            RawBufferVector trustedVector;
+            bool systemCerts;
+            buffer.Deserialize(certificate, untrustedVector, trustedVector, systemCerts);
             return m_logic->getCertificateChain(
                 cred,
                 msgID,
                 certificate,
-                rawBufferVector);
+                untrustedVector,
+                trustedVector,
+                systemCerts);
         }
         case LogicCommand::GET_CHAIN_ALIAS:
         {
             RawBuffer certificate;
-            LabelNameVector untrusted_certs;
-            buffer.Deserialize(certificate, untrusted_certs);
+            LabelNameVector untrustedVector;
+            LabelNameVector trustedVector;
+            bool systemCerts;
+            buffer.Deserialize(certificate, untrustedVector, trustedVector, systemCerts);
             return m_logic->getCertificateChain(
                 cred,
                 msgID,
                 certificate,
-                untrusted_certs);
+                untrustedVector,
+                trustedVector,
+                systemCerts);
         }
         case LogicCommand::CREATE_SIGNATURE:
         {

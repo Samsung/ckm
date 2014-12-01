@@ -148,6 +148,18 @@ public:
             const ObserverPtr& observer,
             const CertificateShPtr& certificate,
             const AliasVector& untrustedCertificates);
+    void getCertificateChain(
+            const ObserverPtr& observer,
+            const CertificateShPtr& certificate,
+            const CertificateShPtrVector& untrustedCertificates,
+            const CertificateShPtrVector& trustedCertificates,
+            bool useSystemTrustedCertificates);
+    void getCertificateChain(
+            const ObserverPtr& observer,
+            const CertificateShPtr& certificate,
+            const AliasVector& untrustedCertificates,
+            const AliasVector& trustedCertificates,
+            bool useSystemTrustedCertificates);
 
     void createSignature(
             const ObserverPtr& observer,

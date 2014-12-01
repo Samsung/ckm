@@ -22,6 +22,7 @@ SET(COMMON_SOURCES
     ${COMMON_PATH}/common/smack-check.cpp
     ${COMMON_PATH}/common/certificate-impl.cpp
     ${COMMON_PATH}/common/certificate-store.cpp
+    ${COMMON_PATH}/common/certificate-config.cpp
     ${COMMON_PATH}/common/key-impl.cpp
     ${COMMON_PATH}/common/pkcs12-impl.cpp
     ${COMMON_PATH}/common/descriptor-set.cpp

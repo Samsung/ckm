@@ -24,6 +24,30 @@
 
 namespace CKM {
 
+namespace {
+RawBufferVector toRawBufferVector(const CertificateShPtrVector& certificates)
+{
+    RawBufferVector rawBufferVector;
+    for (auto &e: certificates) {
+        rawBufferVector.push_back(e->getDER());
+    }
+    return rawBufferVector;
+}
+
+LabelNameVector toLabelNameVector(const AliasVector& aliases)
+{
+    LabelNameVector labelNames;
+    for (auto &e: aliases) {
+        AliasSupport helper(e);
+        labelNames.push_back(std::make_pair(helper.getLabel(), helper.getName()));
+    }
+    return labelNames;
+}
+const RawBufferVector EMPTY_CERT_VECTOR;
+const LabelNameVector EMPTY_ALIAS_VECTOR;
+
+} // namespace anonymous
+
 ManagerAsync::ManagerAsync()
 {
     m_impl.reset(new Impl());
@@ -164,32 +188,52 @@ void ManagerAsync::getCertificateChain(const ObserverPtr& observer,
                                        const CertificateShPtr& certificate,
                                        const CertificateShPtrVector& untrustedCertificates)
 {
-    RawBufferVector rawBufferVector;
-
-    for (auto &e: untrustedCertificates) {
-        rawBufferVector.push_back(e->getDER());
-    }
-
     m_impl->getCertChain(observer,
                          LogicCommand::GET_CHAIN_CERT,
                          certificate,
-                         rawBufferVector);
+                         toRawBufferVector(untrustedCertificates),
+                         EMPTY_CERT_VECTOR,
+                         true);
 }
 
 void ManagerAsync::getCertificateChain(const ObserverPtr& observer,
                                        const CertificateShPtr& certificate,
                                        const AliasVector& untrustedCertificates)
 {
-    LabelNameVector untrusted_certs;
-    for (auto &e: untrustedCertificates) {
-        AliasSupport helper(e);
-        untrusted_certs.push_back(std::make_pair(helper.getLabel(), helper.getName()));
-    }
-
     m_impl->getCertChain(observer,
                          LogicCommand::GET_CHAIN_ALIAS,
                          certificate,
-                         untrusted_certs);
+                         toLabelNameVector(untrustedCertificates),
+                         EMPTY_ALIAS_VECTOR,
+                         true);
+}
+
+void ManagerAsync::getCertificateChain(const ObserverPtr& observer,
+                                       const CertificateShPtr& certificate,
+                                       const CertificateShPtrVector& untrustedCertificates,
+                                       const CertificateShPtrVector& trustedCertificates,
+                                       bool useSystemTrustedCertificates)
+{
+    m_impl->getCertChain(observer,
+                         LogicCommand::GET_CHAIN_CERT,
+                         certificate,
+                         toRawBufferVector(untrustedCertificates),
+                         toRawBufferVector(trustedCertificates),
+                         useSystemTrustedCertificates);
+}
+
+void ManagerAsync::getCertificateChain(const ObserverPtr& observer,
+                                       const CertificateShPtr& certificate,
+                                       const AliasVector& untrustedCertificates,
+                                       const AliasVector& trustedCertificates,
+                                       bool useSystemTrustedCertificates)
+{
+    m_impl->getCertChain(observer,
+                         LogicCommand::GET_CHAIN_ALIAS,
+                         certificate,
+                         toLabelNameVector(untrustedCertificates),
+                         toLabelNameVector(trustedCertificates),
+                         useSystemTrustedCertificates);
 }
 
 void ManagerAsync::createSignature(const ObserverPtr& observer,

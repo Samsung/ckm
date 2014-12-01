@@ -31,9 +31,9 @@
 #include <db-crypto.h>
 #include <key-provider.h>
 #include <crypto-logic.h>
-#include <certificate-store.h>
 #include <file-lock.h>
 #include <access-control.h>
+#include <certificate-impl.h>
 
 namespace CKM {
 
@@ -136,13 +136,17 @@ public:
         const Credentials &cred,
         int commandId,
         const RawBuffer &certificate,
-        const RawBufferVector &untrustedCertificates);
+        const RawBufferVector &untrustedCertificates,
+        const RawBufferVector &trustedCertificates,
+        bool useTrustedSystemCertificates);
 
     RawBuffer getCertificateChain(
         const Credentials &cred,
         int commandId,
         const RawBuffer &certificate,
-        const LabelNameVector &labelNameVector);
+        const LabelNameVector &untrustedCertificates,
+        const LabelNameVector &trustedCertificates,
+        bool useTrustedSystemCertificates);
 
     RawBuffer  createSignature(
         const Credentials &cred,
@@ -299,11 +303,25 @@ private:
         const PolicySerializable &policyPrivate,
         const PolicySerializable &policyPublic);
 
+    int readCertificateHelper(
+        const Credentials &cred,
+        const LabelNameVector &labelNameVector,
+        CertificateImplVector &certVector);
+
+    int getCertificateChainHelper(
+        const CertificateImpl &cert,
+        const RawBufferVector &untrustedCertificates,
+        const RawBufferVector &trustedCertificates,
+        bool useTrustedSystemCertificates,
+        RawBufferVector &chainRawVector);
+
     int getCertificateChainHelper(
         const Credentials &cred,
-        const RawBuffer &certificate,
-        const LabelNameVector &labelNameVector,
-        RawBufferVector & chainRawVector);
+        const CertificateImpl &cert,
+        const LabelNameVector &untrusted,
+        const LabelNameVector &trusted,
+        bool useTrustedSystemCertificates,
+        RawBufferVector &chainRawVector);
 
     int setPermissionHelper(
         const Credentials &cred,
@@ -314,7 +332,6 @@ private:
 
 
     std::map<uid_t, UserData> m_userDataMap;
-    CertificateStore m_certStore;
     AccessControl m_accessControl;
     //FileLock m_lock;
 };

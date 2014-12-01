@@ -33,6 +33,61 @@
 
 namespace CKM {
 
+namespace {
+template <class T>
+int getCertChain(
+    ServiceConnection & serviceConnection,
+    LogicCommand command,
+    int counter,
+    const CertificateShPtr &certificate,
+    const T &untrustedVector,
+    const T &trustedVector,
+    bool useTrustedSystemCertificates,
+    CertificateShPtrVector &certificateChainVector)
+{
+    return try_catch([&] {
+
+        MessageBuffer recv;
+        auto send = MessageBuffer::Serialize(static_cast<int>(command),
+                                             counter,
+                                             certificate->getDER(),
+                                             untrustedVector,
+                                             trustedVector,
+                                             useTrustedSystemCertificates);
+
+        int retCode = serviceConnection.processRequest(send.Pop(), recv);
+        if (CKM_API_SUCCESS != retCode)
+            return retCode;
+
+        int retCommand;
+        int retCounter;
+        RawBufferVector rawBufferVector;
+        recv.Deserialize(retCommand, retCounter, retCode, rawBufferVector);
+
+        if ((counter != retCounter) || (static_cast<int>(command) != retCommand)) {
+            return CKM_API_ERROR_UNKNOWN;
+        }
+
+        if (retCode != CKM_API_SUCCESS) {
+            return retCode;
+        }
+
+        for (auto &e: rawBufferVector) {
+            CertificateShPtr cert(new CertificateImpl(e, DataFormat::FORM_DER));
+            if (cert->empty())
+                return CKM_API_ERROR_BAD_RESPONSE;
+            certificateChainVector.push_back(cert);
+        }
+
+        return retCode;
+    });
+}
+
+const CertificateShPtrVector EMPTY_CERT_VECTOR;
+const AliasVector EMPTY_ALIAS_VECTOR;
+
+} // namespace anonymous
+
 ManagerImpl::ManagerImpl()
   : m_counter(0), m_storageConnection(SERVICE_SOCKET_CKM_STORAGE), m_ocspConnection(SERVICE_SOCKET_OCSP)
 {
@@ -458,71 +513,16 @@ int ManagerImpl::createKeyPair(
     });
 }
 
-
-template <class T>
-int getCertChain(
-    LogicCommand command,
-    int counter,
-    const CertificateShPtr &certificate,
-    const T &sendData,
-    CertificateShPtrVector &certificateChainVector,
-    ServiceConnection & service_connection)
-{
-    return try_catch([&] {
-
-        MessageBuffer recv;
-        auto send = MessageBuffer::Serialize(static_cast<int>(command),
-                                             counter,
-                                             certificate->getDER(),
-                                             sendData);
-
-        int retCode = service_connection.processRequest(send.Pop(), recv);
-        if (CKM_API_SUCCESS != retCode)
-            return retCode;
-
-        int retCommand;
-        int retCounter;
-        RawBufferVector rawBufferVector;
-        recv.Deserialize(retCommand, retCounter, retCode, rawBufferVector);
-
-        if ((counter != retCounter) || (static_cast<int>(command) != retCommand)) {
-            return CKM_API_ERROR_UNKNOWN;
-        }
-
-        if (retCode != CKM_API_SUCCESS) {
-            return retCode;
-        }
-
-        for (auto &e: rawBufferVector) {
-            CertificateShPtr cert(new CertificateImpl(e, DataFormat::FORM_DER));
-            if (cert->empty())
-                return CKM_API_ERROR_BAD_RESPONSE;
-            certificateChainVector.push_back(cert);
-        }
-
-        return retCode;
-    });
-}
-
-
 int ManagerImpl::getCertificateChain(
     const CertificateShPtr &certificate,
     const CertificateShPtrVector &untrustedCertificates,
     CertificateShPtrVector &certificateChainVector)
 {
-    RawBufferVector rawBufferVector;
-
-    for (auto &e: untrustedCertificates) {
-        rawBufferVector.push_back(e->getDER());
-    }
-
-    return getCertChain(
-        LogicCommand::GET_CHAIN_CERT,
-        ++m_counter,
-        certificate,
-        rawBufferVector,
-        certificateChainVector,
-        m_storageConnection);
+    return getCertificateChain(certificate,
+                               untrustedCertificates,
+                               EMPTY_CERT_VECTOR,
+                               true,
+                               certificateChainVector);
 }
 
 int ManagerImpl::getCertificateChain(
@@ -530,19 +530,69 @@ int ManagerImpl::getCertificateChain(
     const AliasVector &untrustedCertificates,
     CertificateShPtrVector &certificateChainVector)
 {
-    LabelNameVector untrusted_certs;
+    return getCertificateChain(certificate,
+                               untrustedCertificates,
+                               EMPTY_ALIAS_VECTOR,
+                               true,
+                               certificateChainVector);
+}
+
+int ManagerImpl::getCertificateChain(
+    const CertificateShPtr &certificate,
+    const CertificateShPtrVector &untrustedCertificates,
+    const CertificateShPtrVector &trustedCertificates,
+    bool useTrustedSystemCertificates,
+    CertificateShPtrVector &certificateChainVector)
+{
+    RawBufferVector untrustedVector;
+    RawBufferVector trustedVector;
+
     for (auto &e: untrustedCertificates) {
-        AliasSupport helper(e);
-        untrusted_certs.push_back(std::make_pair(helper.getLabel(), helper.getName()));
+        untrustedVector.push_back(e->getDER());
+    }
+    for (auto &e: trustedCertificates) {
+        trustedVector.push_back(e->getDER());
     }
 
     return getCertChain(
-        LogicCommand::GET_CHAIN_ALIAS,
-        ++m_counter,
-        certificate,
-        untrusted_certs,
-        certificateChainVector,
-        m_storageConnection);
+            m_storageConnection,
+            LogicCommand::GET_CHAIN_CERT,
+            ++m_counter,
+            certificate,
+            untrustedVector,
+            trustedVector,
+            useTrustedSystemCertificates,
+            certificateChainVector);
+}
+
+int ManagerImpl::getCertificateChain(
+    const CertificateShPtr &certificate,
+    const AliasVector &untrustedCertificates,
+    const AliasVector &trustedCertificates,
+    bool useTrustedSystemCertificates,
+    CertificateShPtrVector &certificateChainVector)
+{
+    LabelNameVector untrustedVector;
+    LabelNameVector trustedVector;
+
+    for (auto &e: untrustedCertificates) {
+        AliasSupport helper(e);
+        untrustedVector.push_back(std::make_pair(helper.getLabel(), helper.getName()));
+    }
+    for (auto &e: trustedCertificates) {
+        AliasSupport helper(e);
+        trustedVector.push_back(std::make_pair(helper.getLabel(), helper.getName()));
+    }
+
+    return getCertChain(
+            m_storageConnection,
+            LogicCommand::GET_CHAIN_ALIAS,
+            ++m_counter,
+            certificate,
+            untrustedVector,
+            trustedVector,
+            useTrustedSystemCertificates,
+            certificateChainVector);
 }
 
 int ManagerImpl::createSignature(

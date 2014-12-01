@@ -126,10 +126,12 @@ public:
             const ManagerAsync::ObserverPtr& observer,
             LogicCommand command,
             const CertificateShPtr &certificate,
-            const T &sendData)
+            const T &untrusted,
+            const T &trusted,
+            bool useSystemTrustedCertificates)
     {
         observerCheck(observer);
-        if (!certificate || sendData.empty()) {
+        if (!certificate) {
             observer->ReceivedError(CKM_API_ERROR_INPUT_PARAM);
             return;
         }
@@ -138,7 +140,9 @@ public:
                           static_cast<int>(command),
                           m_counter,
                           certificate->getDER(),
-                          sendData);
+                          untrusted,
+                          trusted,
+                          useSystemTrustedCertificates);
         }, [&observer](int error){ observer->ReceivedError(error); } );
     }
 

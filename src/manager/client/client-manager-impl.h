@@ -86,6 +86,20 @@ public:
         const AliasVector &untrustedCertificates,
         CertificateShPtrVector &certificateChainVector);
 
+    int getCertificateChain(
+        const CertificateShPtr &certificate,
+        const CertificateShPtrVector &untrustedCertificates,
+        const CertificateShPtrVector &trustedCertificates,
+        bool useTrustedSystemCertificates,
+        CertificateShPtrVector &certificateChainVector);
+
+    int getCertificateChain(
+        const CertificateShPtr &certificate,
+        const AliasVector &untrustedCertificates,
+        const AliasVector &trustedCertificates,
+        bool useTrustedSystemCertificates,
+        CertificateShPtrVector &certificateChainVector);
+
     int createSignature(
         const Alias &privateKeyAlias,
         const Password &password,           // password for private_key

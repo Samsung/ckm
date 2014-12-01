@@ -29,6 +29,8 @@
 #include <CryptoService.h>
 #include <ckm-logic.h>
 #include <key-impl.h>
+#include <certificate-config.h>
+#include <certificate-store.h>
 
 namespace {
 const char * const CERT_SYSTEM_DIR = "/etc/ssl/certs";
@@ -52,9 +54,7 @@ namespace CKM {
 
 CKMLogic::CKMLogic()
 {
-    if (CKM_API_SUCCESS != m_certStore.setSystemCertificateDir(CERT_SYSTEM_DIR)) {
-        LogError("Fatal error in CertificateStore::setSystemCertificateDir. Chain creation will not work");
-    }
+    CertificateConfig::addSystemCertificateDir(CERT_SYSTEM_DIR);
 
     m_accessControl.updateCCMode();
 }
@@ -1069,29 +1069,130 @@ RawBuffer CKMLogic::createKeyPair(
     return MessageBuffer::Serialize(static_cast<int>(protocol_cmd), commandId, retCode).Pop();
 }
 
+int CKMLogic::readCertificateHelper(
+        const Credentials &cred,
+        const LabelNameVector &labelNameVector,
+        CertificateImplVector &certVector)
+{
+    DBRow row;
+    for (auto &i: labelNameVector) {
+        int ec = readDataHelper(false, cred, DBDataType::CERTIFICATE, i.second, i.first, Password(), row);
+        if (ec != CKM_API_SUCCESS)
+            return ec;
+        certVector.push_back(CertificateImpl(row.data, DataFormat::FORM_DER));
+
+        // try to read chain certificates (if present)
+        DBRowVector rawCaChain;
+        ec = readDataHelper(false, cred, DBDataType::DB_CHAIN_FIRST, i.second, i.first, CKM::Password(), rawCaChain);
+        if(ec != CKM_API_SUCCESS && ec != CKM_API_ERROR_DB_ALIAS_UNKNOWN)
+            return ec;
+        for(auto &rawCaCert : rawCaChain)
+            certVector.push_back(CertificateImpl(rawCaCert.data, DataFormat::FORM_DER));
+    }
+    return CKM_API_SUCCESS;
+}
+
+int CKMLogic::getCertificateChainHelper(
+        const CertificateImpl &cert,
+        const RawBufferVector &untrustedCertificates,
+        const RawBufferVector &trustedCertificates,
+        bool useTrustedSystemCertificates,
+        RawBufferVector &chainRawVector)
+{
+    CertificateImplVector untrustedCertVector;
+    CertificateImplVector trustedCertVector;
+    CertificateImplVector chainVector;
+
+    if (cert.empty())
+        return CKM_API_ERROR_INPUT_PARAM;
+
+    for (auto &e: untrustedCertificates)
+        untrustedCertVector.push_back(CertificateImpl(e, DataFormat::FORM_DER));
+    for (auto &e: trustedCertificates)
+        trustedCertVector.push_back(CertificateImpl(e, DataFormat::FORM_DER));
+
+    CertificateStore store;
+    int retCode = store.verifyCertificate(cert,
+                                          untrustedCertVector,
+                                          trustedCertVector,
+                                          useTrustedSystemCertificates,
+                                          m_accessControl.isCCMode(),
+                                          chainVector);
+    if (retCode != CKM_API_SUCCESS)
+        return retCode;
+
+    for (auto &e : chainVector)
+        chainRawVector.push_back(e.getDER());
+    return CKM_API_SUCCESS;
+}
+
+int CKMLogic::getCertificateChainHelper(
+        const Credentials &cred,
+        const CertificateImpl &cert,
+        const LabelNameVector &untrusted,
+        const LabelNameVector &trusted,
+        bool useTrustedSystemCertificates,
+        RawBufferVector &chainRawVector)
+{
+    CertificateImplVector untrustedCertVector;
+    CertificateImplVector trustedCertVector;
+    CertificateImplVector chainVector;
+    DBRow row;
+
+    if (cert.empty())
+        return CKM_API_ERROR_INPUT_PARAM;
+
+    int retCode = readCertificateHelper(cred, untrusted, untrustedCertVector);
+    if (retCode != CKM_API_SUCCESS)
+        return retCode;
+    retCode = readCertificateHelper(cred, trusted, trustedCertVector);
+    if (retCode != CKM_API_SUCCESS)
+        return retCode;
+
+    CertificateStore store;
+    retCode = store.verifyCertificate(cert,
+                                      untrustedCertVector,
+                                      trustedCertVector,
+                                      useTrustedSystemCertificates,
+                                      m_accessControl.isCCMode(),
+                                      chainVector);
+    if (retCode != CKM_API_SUCCESS)
+        return retCode;
+
+    for (auto &i: chainVector)
+        chainRawVector.push_back(i.getDER());
+
+    return CKM_API_SUCCESS;
+}
+
 RawBuffer CKMLogic::getCertificateChain(
-    const Credentials &cred,
+    const Credentials & /*cred*/,
     int commandId,
     const RawBuffer &certificate,
-    const RawBufferVector &untrustedRawCertVector)
+    const RawBufferVector &untrustedCertificates,
+    const RawBufferVector &trustedCertificates,
+    bool useTrustedSystemCertificates)
 {
-    (void)cred;
-
     CertificateImpl cert(certificate, DataFormat::FORM_DER);
-    CertificateImplVector untrustedCertVector;
-    CertificateImplVector chainVector;
     RawBufferVector chainRawVector;
-
-    for (auto &e: untrustedRawCertVector)
-        untrustedCertVector.push_back(CertificateImpl(e, DataFormat::FORM_DER));
-
-    LogDebug("Cert is empty: " << cert.empty());
-
-    int retCode = m_certStore.verifyCertificate(cert, untrustedCertVector, chainVector, m_accessControl.isCCMode());
-
-    if (retCode == CKM_API_SUCCESS) {
-        for (auto &e : chainVector)
-            chainRawVector.push_back(e.getDER());
+    int retCode = CKM_API_ERROR_UNKNOWN;
+    try {
+        retCode = getCertificateChainHelper(cert,
+                                            untrustedCertificates,
+                                            trustedCertificates,
+                                            useTrustedSystemCertificates,
+                                            chainRawVector);
+    } catch (const CryptoLogic::Exception::Base &e) {
+        LogError("CryptoLogic failed with message: " << e.GetMessage());
+        retCode = CKM_API_ERROR_SERVER_ERROR;
+    } catch (const DBCrypto::Exception::Base &e) {
+        LogError("DBCrypto failed with message: " << e.GetMessage());
+        retCode = CKM_API_ERROR_DB_ERROR;
+    } catch (const std::exception& e) {
+        LogError("STD exception " << e.what());
+        retCode = CKM_API_ERROR_SERVER_ERROR;
+    } catch (...) {
+        LogError("Unknown error.");
     }
 
     auto response = MessageBuffer::Serialize(static_cast<int>(LogicCommand::GET_CHAIN_CERT),
@@ -1101,63 +1202,34 @@ RawBuffer CKMLogic::getCertificateChain(
     return response.Pop();
 }
 
-int CKMLogic::getCertificateChainHelper(
-        const Credentials &cred,
-        const RawBuffer &certificate,
-        const LabelNameVector &labelNameVector,
-        RawBufferVector & chainRawVector)
-{
-    CertificateImpl cert(certificate, DataFormat::FORM_DER);
-    CertificateImplVector untrustedCertVector;
-    CertificateImplVector chainVector;
-    DBRow row;
-
-    if (cert.empty())
-        return CKM_API_ERROR_SERVER_ERROR;
-
-    for (auto &i: labelNameVector) {
-        int ec = readDataHelper(false, cred, DBDataType::CERTIFICATE, i.second, i.first, Password(), row);
-        if (ec != CKM_API_SUCCESS)
-            return ec;
-        untrustedCertVector.push_back(CertificateImpl(row.data, DataFormat::FORM_DER));
-
-        // try to read chain certificates (if present)
-        DBRowVector rawCaChain;
-        ec = readDataHelper(false, cred, DBDataType::DB_CHAIN_FIRST, i.second, i.first, CKM::Password(), rawCaChain);
-        if(ec != CKM_API_SUCCESS &&
-           ec != CKM_API_ERROR_DB_ALIAS_UNKNOWN)
-            return ec;
-        for(auto &rawCaCert : rawCaChain)
-            untrustedCertVector.push_back(CertificateImpl(rawCaCert.data, DataFormat::FORM_DER));
-    }
-
-    int ec = m_certStore.verifyCertificate(cert, untrustedCertVector, chainVector, m_accessControl.isCCMode());
-    if (ec != CKM_API_SUCCESS)
-        return ec;
-
-    for (auto &i: chainVector)
-        chainRawVector.push_back(i.getDER());
-
-    return CKM_API_SUCCESS;
-}
-
 RawBuffer CKMLogic::getCertificateChain(
     const Credentials &cred,
     int commandId,
     const RawBuffer &certificate,
-    const LabelNameVector &labelNameVector)
+    const LabelNameVector &untrustedCertificates,
+    const LabelNameVector &trustedCertificates,
+    bool useTrustedSystemCertificates)
 {
-    int retCode = CKM_API_SUCCESS;
+    int retCode = CKM_API_ERROR_UNKNOWN;
+    CertificateImpl cert(certificate, DataFormat::FORM_DER);
     RawBufferVector chainRawVector;
     try {
+        retCode = getCertificateChainHelper(cred,
+                                            cert,
+                                            untrustedCertificates,
+                                            trustedCertificates,
+                                            useTrustedSystemCertificates,
+                                            chainRawVector);
 
-        retCode = getCertificateChainHelper(cred, certificate, labelNameVector, chainRawVector);
     } catch (const CryptoLogic::Exception::Base &e) {
         LogError("CryptoLogic failed with message: " << e.GetMessage());
         retCode = CKM_API_ERROR_SERVER_ERROR;
     } catch (const DBCrypto::Exception::Base &e) {
         LogError("DBCrypto failed with message: " << e.GetMessage());
         retCode = CKM_API_ERROR_DB_ERROR;
+    } catch (const std::exception& e) {
+        LogError("STD exception " << e.what());
+        retCode = CKM_API_ERROR_SERVER_ERROR;
     } catch (...) {
         LogError("Unknown error.");
     }
