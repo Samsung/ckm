@@ -125,12 +125,18 @@ namespace {
             " idx=" DB_CMD_NAME_LOOKUP_IDX ";";
 
 
+    /*
+     * GROUP BY is necessary because of the following case:
+     * -There are several permissions to L1, N1 (label, name) from other accessors. When listing
+     *  objects accessible by L1 the query will produce one result (L1, N1) for each allowed
+     *  accessor but GROUP BY will reduce them to one so L1 will have (L1, N1) on its list only once
+     */
     const char *DB_CMD_NAME_SELECT_BY_TYPE_AND_PERMISSION =
             "SELECT N.label, N.name FROM NAME_TABLE AS N "
             " JOIN OBJECT_TABLE AS O ON O.idx=N.idx "
             " LEFT JOIN PERMISSION_TABLE AS P ON P.idx=N.idx "
             " WHERE O.dataType>=?001 AND O.dataType<=?002 AND "
-            " (N.label=?003 OR (P.label=?003 AND P.accessFlags IS NOT NULL));";
+            " ((N.label=?003) OR (P.label=?003 AND P.accessFlags IS NOT NULL)) GROUP BY N.idx;";
 }
 
 namespace CKM {
