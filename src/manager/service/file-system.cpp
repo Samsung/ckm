@@ -33,6 +33,7 @@
 #include <stdexcept>
 
 #include <dpl/errno_string.h>
+#include <dpl/fstream_accessors.h>
 #include <dpl/log/log.h>
 
 #include <file-system.h>
@@ -104,8 +105,15 @@ RawBuffer FileSystem::getDBDEK() const
 }
 
 bool FileSystem::saveFile(const std::string &path, const RawBuffer &buffer) const {
-    std::ofstream os(path, std::ios::out | std::ofstream::binary);
+    std::ofstream os(path, std::ios::out | std::ofstream::binary | std::ofstream::trunc);
     std::copy(buffer.begin(), buffer.end(), std::ostreambuf_iterator<char>(os));
+    if (os.fail())
+        return false;
+
+    // Prevent desynchronization in batter remove test.
+    os.flush();
+    fsync(FstreamAccessors<std::ofstream>::GetFd(os)); // flush kernel space buffer
+    os.close();
     return !os.fail();
 }
 

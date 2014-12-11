@@ -15,17 +15,17 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License
  *
- * @file        fstream-helper.h
+ * @file        fstream-accessors.h
  * @author      Marek Smolinski (m.smolinski@samsung.com)
  * @version     1.0
- * @brief       This file is the implementation file of fstream-helper
+ * @brief       This file is the implementation file of fstream-accessors
  *
  */
 
 #ifndef CENT_KEY_FSTREAM_ACCESSORS_H
 #define CENT_KEY_FSTREAM_ACCESSORS_H
 
-namespace DPL {
+namespace CKM {
 
 /*
  * Bypass lack of public member function to get file
@@ -43,6 +43,6 @@ public:
     }
 };
 
-} // namespace DPL
+} // namespace CKM
 
 #endif // CENT_KEY_FSTREAM_ACCESSORS_H
