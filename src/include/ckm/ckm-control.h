@@ -64,10 +64,9 @@ public:
     virtual int updateCCMode() = 0;
 
     virtual int setPermission(uid_t user,
-                              const std::string &owner,
-                              const std::string &alias,
-                              const std::string &accessor,
-                              Permission newPermission) = 0;
+                              const Alias &alias,
+                              const Label &accessor,
+                              PermissionMask permissionMask) = 0;
 
     virtual ~Control(){}
 

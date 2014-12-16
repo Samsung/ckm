@@ -93,11 +93,12 @@ enum class DBCMAlgType : int {
     COUNT
 };
 
-enum class Permission: int {
-    READ = 0,
-    READ_REMOVE,
-    // .. new values here
-    NONE = -1,
+typedef int PermissionMask;
+enum Permission: int {
+    NONE            = 0x00,
+    READ            = 0x01,
+    REMOVE          = 0x02
+    // keep in sync with ckmc_permission_e !
 };
 
 const char * ErrorToString(int error);

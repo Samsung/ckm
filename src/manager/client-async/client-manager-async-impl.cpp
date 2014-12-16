@@ -258,9 +258,9 @@ void ManagerAsync::Impl::ocspCheck(const ObserverPtr& observer,
 }
 
 void ManagerAsync::Impl::setPermission(const ObserverPtr& observer,
-                                         const Alias& alias,
-                                         const Label& accessor,
-                                         Permission newPermission)
+                                       const Alias& alias,
+                                       const Label& accessor,
+                                       PermissionMask permissionMask)
 {
     observerCheck(observer);
     if (alias.empty() || accessor.empty()) {
@@ -275,7 +275,7 @@ void ManagerAsync::Impl::setPermission(const ObserverPtr& observer,
                       helper.getName(),
                       helper.getLabel(),
                       accessor,
-                      static_cast<int>(newPermission));
+                      permissionMask);
     }, [&observer](int error){ observer->ReceivedError(error); } );
 }
 

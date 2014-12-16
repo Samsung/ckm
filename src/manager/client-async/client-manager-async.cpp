@@ -220,11 +220,11 @@ void ManagerAsync::ocspCheck(const ObserverPtr& observer,
 }
 
 void ManagerAsync::setPermission(const ObserverPtr& observer,
-                                   const Alias& alias,
-                                   const Label& accessor,
-                                   Permission newPermission)
+                                 const Alias& alias,
+                                 const Label& accessor,
+                                 PermissionMask permissionMask)
 {
-    m_impl->setPermission(observer, alias, accessor, newPermission);
+    m_impl->setPermission(observer, alias, accessor, permissionMask);
 }
 
 } // namespace CKM

@@ -148,9 +148,9 @@ RawBuffer CKMService::processControl(MessageBuffer &buffer) {
         Name name;
         Label label;
         Label accessorLabel;
-        int accessorPermissions = 0;
+        PermissionMask permissionMask = 0;
 
-        buffer.Deserialize(user, name, label, accessorLabel, accessorPermissions);
+        buffer.Deserialize(user, name, label, accessorLabel, permissionMask);
         Credentials cred = { user, label };
         return m_logic->setPermission(
             cred,
@@ -159,7 +159,7 @@ RawBuffer CKMService::processControl(MessageBuffer &buffer) {
             name,
             label,
             accessorLabel,
-            static_cast<Permission>(accessorPermissions));
+            permissionMask);
     }
     default:
         Throw(Exception::BrokenProtocol);
@@ -352,8 +352,8 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer)
         }
         case LogicCommand::SET_PERMISSION:
         {
-            int accessorPermissions = 0;
-            buffer.Deserialize(name, label, accessorLabel, accessorPermissions);
+            PermissionMask permissionMask = 0;
+            buffer.Deserialize(name, label, accessorLabel, permissionMask);
             return m_logic->setPermission(
                 cred,
                 command,
@@ -361,7 +361,7 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer)
                 name,
                 label,
                 accessorLabel,
-                static_cast<Permission>(accessorPermissions));
+                permissionMask);
         }
         default:
             Throw(Exception::BrokenProtocol);

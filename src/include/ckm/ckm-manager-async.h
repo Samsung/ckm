@@ -176,7 +176,7 @@ public:
             const ObserverPtr& observer,
             const Alias& alias,
             const Label& accessor,
-            Permission newPermission);
+            PermissionMask permissionMask);
 
 private:
     std::unique_ptr<Impl> m_impl;

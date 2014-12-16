@@ -188,7 +188,7 @@ void DBFixture::add_permission(const Name &name, const Label &owner_label, const
     BOOST_REQUIRE_NO_THROW(m_db.setPermission(name,
                                               owner_label,
                                               accessor_label,
-                                              CKM::Permission::READ_REMOVE));
+                                              CKM::Permission::READ | CKM::Permission::REMOVE));
 }
 
 void DBFixture::read_row_expect_success(const Name &name, const Label &owner_label)

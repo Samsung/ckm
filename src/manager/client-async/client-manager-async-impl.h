@@ -84,7 +84,7 @@ public:
             const ObserverPtr& observer,
             const Alias& alias,
             const Label& accessor,
-            Permission newPermission);
+            PermissionMask permissionMask);
 
     // generic methods
     void saveBinaryData(

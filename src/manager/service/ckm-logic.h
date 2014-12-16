@@ -169,12 +169,12 @@ public:
 
     RawBuffer setPermission(
         const Credentials &cred,
-        int command,
-        int msgID,
+        const int command,
+        const int msgID,
         const Name &name,
         const Label &label,
         const Label &accessor_label,
-        const Permission newPermission);
+        const PermissionMask permissionMask);
 
 private:
 
@@ -310,7 +310,7 @@ private:
         const Name &name,
         const Label &ownerLabel,
         const Label &accessorLabel,
-        const Permission newPermission);
+        const PermissionMask permissionMask);
 
 
     std::map<uid_t, UserData> m_userDataMap;

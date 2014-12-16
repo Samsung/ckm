@@ -125,9 +125,9 @@ namespace CKM {
                     const Name &name,
                     const Label &ownerLabel,
                     const Label &accessorLabel,
-                    const Permission permissions);
+                    const PermissionMask permissionMask);
 
-            PermissionOptional getPermissionRow(
+            PermissionMaskOptional getPermissionRow(
                     const Name &name,
                     const Label &ownerLabel,
                     const Label &accessorLabel) const;
@@ -261,9 +261,9 @@ namespace CKM {
                         const Name &name,
                         const Label &ownerLabel,
                         const Label &accessorLabel,
-                        const Permission rights);
+                        const PermissionMask permissionMask);
 
-                PermissionOptional getPermissionRow(
+                PermissionMaskOptional getPermissionRow(
                         const Name &name,
                         const Label &ownerLabel,
                         const Label &accessorLabel) const;

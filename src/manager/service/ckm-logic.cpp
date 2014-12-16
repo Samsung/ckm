@@ -497,7 +497,7 @@ int CKMLogic::removeDataHelper(
     DBCrypto::Transaction transaction(&database);
 
     // read and check permissions
-    PermissionOptional permissionRowOpt =
+    PermissionMaskOptional permissionRowOpt =
             database.getPermissionRow(name, ownerLabel, cred.smackLabel);
     int access_ec = m_accessControl.canDelete(ownerLabel, PermissionForLabel(cred.smackLabel, permissionRowOpt));
     if(access_ec != CKM_API_SUCCESS)
@@ -621,7 +621,7 @@ int CKMLogic::checkDataPermissionsHelper(const Name &name,
                                          bool exportFlag,
                                          DBCrypto & database)
 {
-    PermissionOptional permissionRowOpt =
+    PermissionMaskOptional permissionRowOpt =
             database.getPermissionRow(name, ownerLabel, accessorLabel);
 
     if(exportFlag)
@@ -1289,7 +1289,7 @@ int CKMLogic::setPermissionHelper(
         const Name &name,
         const Label &label,
         const Label &accessorLabel,
-        const Permission newPermission)
+        const PermissionMask permissionMask)
 {
     if(cred.smackLabel.empty() || cred.smackLabel==accessorLabel)
         return CKM_API_ERROR_INPUT_PARAM;
@@ -1315,13 +1315,13 @@ int CKMLogic::setPermissionHelper(
         return CKM_API_ERROR_DB_ALIAS_UNKNOWN;
 
     // removing non-existing permissions: fail
-    if(newPermission == Permission::NONE)
+    if(permissionMask == Permission::NONE)
     {
-        if( !database.getPermissionRow(name, ownerLabel, accessorLabel) )
+        if(!database.getPermissionRow(name, ownerLabel, accessorLabel))
             return CKM_API_ERROR_INPUT_PARAM;
     }
 
-    database.setPermission(name, cred.smackLabel, accessorLabel, newPermission);
+    database.setPermission(name, cred.smackLabel, accessorLabel, permissionMask);
     transaction.commit();
 
     return CKM_API_SUCCESS;
@@ -1329,16 +1329,16 @@ int CKMLogic::setPermissionHelper(
 
 RawBuffer CKMLogic::setPermission(
         const Credentials &cred,
-        int command,
-        int msgID,
+        const int command,
+        const int msgID,
         const Name &name,
         const Label &label,
         const Label &accessorLabel,
-        const Permission newPermission)
+        const PermissionMask permissionMask)
 {
     int retCode;
     Try {
-        retCode = setPermissionHelper(cred, name, label, accessorLabel, newPermission);
+        retCode = setPermissionHelper(cred, name, label, accessorLabel, permissionMask);
     } Catch (CKM::Exception) {
         LogError("Error in set row!");
         retCode = CKM_API_ERROR_DB_ERROR;

@@ -25,6 +25,7 @@
 #include <ckmc/ckmc-error.h>
 #include <ckmc-type-converter.h>
 #include <ckm/ckm-type.h>
+#include <client-common.h>
 
 CKM::Password _toPasswordStr(const char *str)
 {
@@ -78,22 +79,34 @@ int ckmc_reset_user_password(uid_t user, const char *newPassword)
 KEY_MANAGER_CAPI
 int ckmc_allow_access_by_adm(uid_t user, const char* owner, const char *alias, const char *accessor, ckmc_access_right_e granted)
 {
-    if (!owner || !alias || !accessor)
+    if(!owner || !alias)
+        return CKMC_ERROR_INVALID_PARAMETER;
+
+    // if label given twice, service will return an error
+    return ckmc_set_permission_by_adm(user, CKM::AliasSupport::merge(CKM::Label(owner), CKM::Name(alias)).c_str(), accessor, granted);
+}
+
+KEY_MANAGER_CAPI
+int ckmc_set_permission_by_adm(uid_t user, const char *alias, const char *accessor, int permissions)
+{
+    if (!alias || !accessor)
         return CKMC_ERROR_INVALID_PARAMETER;
 
     auto control = CKM::Control::create();
-
-    CKM::Permission ar = static_cast<CKM::Permission>(static_cast<int>(granted));
-    return to_ckmc_error(control->setPermission(user, owner, alias, accessor, ar));
+    return to_ckmc_error(control->setPermission(user, alias, accessor, permissions));
 }
 
 KEY_MANAGER_CAPI
 int ckmc_deny_access_by_adm(uid_t user, const char* owner, const char *alias, const char *accessor)
 {
-    if (!owner || !alias || !accessor)
+    if(!owner || !alias)
         return CKMC_ERROR_INVALID_PARAMETER;
 
+    // if label given twice, service will return an error
     auto control = CKM::Control::create();
-
-    return to_ckmc_error(control->setPermission(user, owner, alias, accessor, CKM::Permission::NONE));
+    return to_ckmc_error(control->setPermission(
+                                user,
+                                CKM::AliasSupport::merge(CKM::Label(owner), CKM::Name(alias)).c_str(),
+                                accessor,
+                                CKM::Permission::NONE));
 }

@@ -83,7 +83,8 @@ int ckmc_save_key(const char *alias, const ckmc_key_s key, const ckmc_policy_s p
  * @privlevel public
  * @privilege %http://tizen.org/privilege/keymanager
  *
- * @remarks A client can remove only keys stored by the client.
+ * @remarks To remove key, client must have remove permission to the specified key.
+ * @remarks The key owner can remove by default.
  *
  * @param[in] alias The name of a key to be removed
  *
@@ -213,7 +214,8 @@ int ckmc_save_cert(const char *alias, const ckmc_cert_s cert, const ckmc_policy_
  * @privlevel public
  * @privilege %http://tizen.org/privilege/keymanager
  *
- * @remarks A client can remove only certificates stored by the client.
+ * @remarks To remove certificate, client must have remove permission to the specified certificate.
+ * @remarks The key owner can remove by default.
  *
  * @param[in] alias The name of a certificate to be removed
  *
@@ -338,15 +340,16 @@ int ckmc_get_cert_alias_list(ckmc_alias_list_s** ppalias_list);
 int ckmc_save_pkcs12(const char *alias, const ckmc_pkcs12_s *pkcs, const ckmc_policy_s key_policy, const ckmc_policy_s cert_policy);
 
 /**
- * @brief Removes all pkcs12 contents from key manager.
+ * @brief Removes all PKCS12 contents from key manager.
  *
  * @since_tizen 2.3
  * @privlevel public
  * @privilege %http://tizen.org/privilege/keymanager
  *
- * @remarks A client can remove only data stored by the client.
+ * @remarks To remove PKCS12, client must have remove permission to the specified PKCS12 object.
+ * @remarks The key owner can remove by default.
  *
- * @param[in] alias The name of pkcs12 to be removed
+ * @param[in] alias The name of PKCS12 to be removed
  *
  * @return @c 0 on success,
  *         otherwise a negative error value
@@ -436,7 +439,8 @@ int ckmc_save_data(const char *alias, ckmc_raw_buffer_s data, const ckmc_policy_
  * @privlevel public
  * @privilege %http://tizen.org/privilege/keymanager
  *
- * @remarks A client can remove only data stored by the client.
+ * @remarks To remove data, client must have remove permission to the specified data object.
+ * @remarks The data owner can remove by default.
  *
  * @param[in] alias The name of a data to be removed
  *
@@ -776,6 +780,7 @@ int ckmc_get_cert_chain(const ckmc_cert_s *cert, const ckmc_cert_list_s *untrust
 int ckmc_get_cert_chain_with_alias(const ckmc_cert_s *cert, const ckmc_alias_list_s *untrustedcerts, ckmc_cert_list_s **ppcert_chain_list);
 
 /**
+ * @deprecated, see ckmc_set_permission()
  * @brief Allows another application to access client's application data
  *
  * @since_tizen 2.3
@@ -804,6 +809,34 @@ int ckmc_get_cert_chain_with_alias(const ckmc_cert_s *cert, const ckmc_alias_lis
 int ckmc_allow_access(const char *alias, const char *accessor, ckmc_access_right_e granted);
 
 /**
+ * @brief Allows another application to access client's application data
+ *
+ * @since_tizen 3.0
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/keymanager
+ *
+ * @remarks Data identified by @a alias should exist
+ *
+ * @param[in] alias       Data alias for which access will be granted
+ * @param[in] accessor    Package id of the application that will gain access rights
+ * @param[in] permissions Mask of permissions granted for @a accessor application (@a ckmc_permission_e)
+ *                        (previous permission mask will be replaced with the new mask value)
+ *
+ * @return @c 0 on success, otherwise a negative error value
+ *
+ * @retval #CKMC_ERROR_NONE                 Successful
+ * @retval #CKMC_ERROR_INVALID_PARAMETER    Input parameter is invalid
+ * @retval #CKMC_ERROR_DB_LOCKED            A user key is not loaded in memory (a user is not logged in)
+ * @retval #CKMC_ERROR_DB_ERROR             Failed due to the error with unknown reason
+ * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN     Alias does not exist
+ * @retval #CKMC_ERROR_PERMISSION_DENIED    Failed to access key manager
+ *
+ * @pre User is already logged in and the user key is already loaded into memory in plain text form.
+ */
+int ckmc_set_permission(const char *alias, const char *accessor, int permissions);
+
+/**
+ * @deprecated, see ckmc_set_permission()
  * @brief Revokes another application's access to client's application data
  *
  * @since_tizen 2.3
@@ -829,9 +862,43 @@ int ckmc_allow_access(const char *alias, const char *accessor, ckmc_access_right
  * @pre User is already logged in and the user key is already loaded into memory in plain text form.
  *
  * @see ckmc_allow_access()
+ * @see ckmc_set_permission()
  */
 int ckmc_deny_access(const char *alias, const char *accessor);
 
+/**
+ * @brief Removes a an entry (no matter of type) from the key manager.
+ *
+ * @since_tizen 3.0
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/keymanager
+ *
+ * @remarks To remove item, client must have remove permission to the specified item.
+ * @remarks The item owner can remove by default.
+ *
+ * @param[in] alias Item alias to be removed
+ *
+ * @return @c 0 on success,
+ *         otherwise a negative error value
+ *
+ * @retval #CKMC_ERROR_NONE              Successful
+ * @retval #CKMC_ERROR_INVALID_PARAMETER Input parameter is invalid
+ * @retval #CKMC_ERROR_DB_LOCKED         A user key is not loaded in memory (a user is not logged in)
+ * @retval #CKMC_ERROR_DB_ERROR          Failed due to a database error
+ * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN  Alias does not exist
+ * @retval #CKMC_ERROR_PERMISSION_DENIED Failed to access key manager
+ *
+ * @pre User is already logged in and the user key is already loaded into memory in plain text form.
+ *
+ * @see ckmc_save_key()
+ * @see ckmc_save_cert
+ * @see ckmc_save_data
+ * @see ckmc_save_pkcs12
+ * @see ckmc_create_key_pair_rsa
+ * @see ckmc_create_key_pair_dsa
+ * @see ckmc_create_key_pair_ecdsa
+ */
+int ckmc_remove_alias(const char *alias);
 
 #ifdef __cplusplus
 }

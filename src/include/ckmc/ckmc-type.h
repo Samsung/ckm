@@ -102,6 +102,7 @@ typedef enum __ckmc_rsa_padding_algo {
 } ckmc_rsa_padding_algo_e;
 
 /**
+ * @deprecated, use ckmc_permission_e instead
  * @brief Enumeration for database access rights.
  * @since_tizen 2.3
  */
@@ -109,6 +110,16 @@ typedef enum __ckmc_access_right{
     CKMC_AR_READ = 0,       /**< access right for read*/
     CKMC_AR_READ_REMOVE     /**< access right for read and remove*/
 } ckmc_access_right_e;
+
+/**
+ * @brief Enumeration for permissions to access/modify alias.
+ * @since_tizen 3.0
+ */
+typedef enum __ckmc_permission{
+    CKMC_PERMISSION_NONE        = 0x00, /**< clear permissions */
+    CKMC_PERMISSION_READ        = 0x01, /**< read allowed */
+    CKMC_PERMISSION_REMOVE      = 0x02  /**< remove allowed */
+} ckmc_permission_e;
 
 /**
  * @brief the structure for binary buffer used in key manager CAPI.

@@ -101,15 +101,10 @@ int AccessControl::canRead(
     if (row.ownerLabel == permissionLabel.accessorLabel)
         return CKM_API_SUCCESS;
 
-    switch(permissionLabel.permissions)
-    {
-        case Permission::READ:
-        case Permission::READ_REMOVE:
-            return CKM_API_SUCCESS;
+    if(permissionLabel & Permission::READ)
+        return CKM_API_SUCCESS;
 
-        default:
-            return CKM_API_ERROR_DB_ALIAS_UNKNOWN;
-    }
+    return CKM_API_ERROR_DB_ALIAS_UNKNOWN;
 }
 
 int AccessControl::canExport(
@@ -139,17 +134,12 @@ int AccessControl::canDelete(
     if (ownerLabel == permissionLabel.accessorLabel)
         return CKM_API_SUCCESS;
 
-    switch(permissionLabel.permissions)
-    {
-        case Permission::READ:
-            return CKM_API_ERROR_ACCESS_DENIED;
+    if(permissionLabel & Permission::REMOVE)
+        return CKM_API_SUCCESS;
+    if(permissionLabel & Permission::READ)
+        return CKM_API_ERROR_ACCESS_DENIED;
 
-        case Permission::READ_REMOVE:
-            return CKM_API_SUCCESS;
-
-        default:
-            return CKM_API_ERROR_DB_ALIAS_UNKNOWN;
-    }
+    return CKM_API_ERROR_DB_ALIAS_UNKNOWN;
 }
 
 

@@ -124,14 +124,7 @@ int ckmc_save_key(const char *alias, const ckmc_key_s key, const ckmc_policy_s p
 KEY_MANAGER_CAPI
 int ckmc_remove_key(const char *alias)
 {
-    CKM::ManagerShPtr mgr = CKM::Manager::create();
-
-    if(alias == NULL) {
-        return CKMC_ERROR_INVALID_PARAMETER;
-    }
-
-    int ret =  mgr->removeAlias(alias);
-    return to_ckmc_error(ret);
+    return ckmc_remove_alias(alias);
 }
 
 KEY_MANAGER_CAPI
@@ -226,14 +219,7 @@ int ckmc_save_cert(const char *alias, const ckmc_cert_s cert, const ckmc_policy_
 KEY_MANAGER_CAPI
 int ckmc_remove_cert(const char *alias)
 {
-    if(alias == NULL) {
-        return CKMC_ERROR_INVALID_PARAMETER;
-    }
-
-    CKM::ManagerShPtr mgr = CKM::Manager::create();
-    int ret = mgr->removeAlias(alias);
-
-    return to_ckmc_error(ret);
+    return ckmc_remove_alias(alias);
 }
 
 KEY_MANAGER_CAPI
@@ -341,13 +327,7 @@ int ckmc_save_pkcs12(const char *alias, const ckmc_pkcs12_s *ppkcs, const ckmc_p
 KEY_MANAGER_CAPI
 int ckmc_remove_pkcs12(const char *alias)
 {
-    if(alias == NULL) {
-        return CKMC_ERROR_INVALID_PARAMETER;
-    }
-
-    CKM::ManagerShPtr mgr = CKM::Manager::create();
-    int ret = mgr->removeAlias(alias);
-    return to_ckmc_error(ret);
+    return ckmc_remove_alias(alias);
 }
 
 KEY_MANAGER_CAPI
@@ -432,13 +412,7 @@ int ckmc_save_data(const char *alias, ckmc_raw_buffer_s data, const ckmc_policy_
 KEY_MANAGER_CAPI
 int ckmc_remove_data(const char *alias)
 {
-    if(alias == NULL) {
-        return CKMC_ERROR_INVALID_PARAMETER;
-    }
-
-    CKM::ManagerShPtr mgr = CKM::Manager::create();
-    int ret = mgr->removeAlias(alias);
-    return to_ckmc_error(ret);
+    return ckmc_remove_alias(alias);
 }
 
 KEY_MANAGER_CAPI
@@ -729,13 +703,17 @@ int ckmc_get_cert_chain_with_alias(const ckmc_cert_s *cert, const ckmc_alias_lis
 KEY_MANAGER_CAPI
 int ckmc_allow_access(const char *alias, const char *accessor, ckmc_access_right_e granted)
 {
+    return ckmc_set_permission(alias, accessor, static_cast<int>(granted));
+}
+
+KEY_MANAGER_CAPI
+int ckmc_set_permission(const char *alias, const char *accessor, int permissions)
+{
     if (!alias || !accessor)
         return CKMC_ERROR_INVALID_PARAMETER;
 
     CKM::ManagerShPtr mgr = CKM::Manager::create();
-
-    CKM::Permission ar = static_cast<CKM::Permission>(static_cast<int>(granted));
-    return to_ckmc_error(mgr->setPermission(alias, accessor, ar));
+    return to_ckmc_error(mgr->setPermission(alias, accessor, permissions));
 }
 
 KEY_MANAGER_CAPI
@@ -745,6 +723,16 @@ int ckmc_deny_access(const char *alias, const char *accessor)
         return CKMC_ERROR_INVALID_PARAMETER;
 
     CKM::ManagerShPtr mgr = CKM::Manager::create();
-
     return to_ckmc_error(mgr->setPermission(alias, accessor, CKM::Permission::NONE));
+}
+
+KEY_MANAGER_CAPI
+int ckmc_remove_alias(const char *alias)
+{
+    if(!alias)
+        return CKMC_ERROR_INVALID_PARAMETER;
+
+    CKM::ManagerShPtr mgr = CKM::Manager::create();
+    int ret =  mgr->removeAlias(alias);
+    return to_ckmc_error(ret);
 }

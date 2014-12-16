@@ -25,18 +25,22 @@
 #include <boost/optional.hpp>
 
 namespace CKM {
-typedef boost::optional<Permission> PermissionOptional;
+typedef boost::optional<PermissionMask> PermissionMaskOptional;
 struct PermissionForLabel {
     Label accessorLabel;        // who is accessing the item
-    Permission permissions;
+    PermissionMask permissionMask;
 
-    PermissionForLabel(const Label & accessor, const PermissionOptional & permOpt)
+    PermissionForLabel(const Label & accessor, const PermissionMaskOptional mask)
     {
         accessorLabel = accessor;
-        if(permOpt)
-            permissions = *permOpt;
+        if(mask)
+            permissionMask = *mask;
         else
-            permissions = Permission::NONE;
+            permissionMask = Permission::NONE;
+    }
+
+    int operator&(const Permission &bit) const {
+        return permissionMask & bit;
     }
 };
 } // namespace CKM

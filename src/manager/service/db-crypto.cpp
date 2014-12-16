@@ -106,18 +106,18 @@ namespace {
     const char *DB_CMD_PERMISSION_CREATE =
             "CREATE TABLE PERMISSION_TABLE("
             "   label TEXT NOT NULL,"
-            "   accessFlags TEXT NOT NULL,"
+            "   permissionMask INTEGER NOT NULL,"
             "   idx INTEGER NOT NULL,"
             "   FOREIGN KEY(idx) REFERENCES NAME_TABLE(idx) ON DELETE CASCADE,"
             "   PRIMARY KEY(label, idx)"
             "); CREATE INDEX perm_index_idx ON PERMISSION_TABLE(idx);"; // based on ANALYZE and performance test result
 
     const char *DB_CMD_PERMISSION_SET =
-            "REPLACE INTO PERMISSION_TABLE(label, accessFlags, idx) "
+            "REPLACE INTO PERMISSION_TABLE(label, permissionMask, idx) "
             " VALUES (?001, ?002, " DB_CMD_NAME_LOOKUP_IDX ");";
 
     const char *DB_CMD_PERMISSION_SELECT =
-            "SELECT accessFlags FROM PERMISSION_TABLE WHERE label=?001 AND "
+            "SELECT permissionMask FROM PERMISSION_TABLE WHERE label=?001 AND "
             " idx=" DB_CMD_NAME_LOOKUP_IDX ";";
 
     const char *DB_CMD_PERMISSION_DELETE =
@@ -136,7 +136,7 @@ namespace {
             " JOIN OBJECT_TABLE AS O ON O.idx=N.idx "
             " LEFT JOIN PERMISSION_TABLE AS P ON P.idx=N.idx "
             " WHERE O.dataType>=?001 AND O.dataType<=?002 AND "
-            " ((N.label=?003) OR (P.label=?003 AND P.accessFlags IS NOT NULL)) GROUP BY N.idx;";
+            " ((N.label=?003) OR (P.label=?003 AND (P.permissionMask&?004!=0))) GROUP BY N.idx;";
 }
 
 namespace CKM {
@@ -312,7 +312,7 @@ using namespace DB;
         return row;
     }
 
-    PermissionOptional DBCrypto::getPermissionRow(
+    PermissionMaskOptional DBCrypto::getPermissionRow(
         const Name &name,
         const Label &ownerLabel,
         const Label &accessorLabel) const
@@ -327,7 +327,7 @@ using namespace DB;
         } Catch (SqlConnection::Exception::InternalError) {
             LogError("Couldn't execute select statement");
         }
-        return PermissionOptional();
+        return PermissionMaskOptional();
     }
 
     DBCrypto::DBRowOptional DBCrypto::getDBRow(
@@ -445,6 +445,7 @@ using namespace DB;
             selectCommand->BindInteger(1, static_cast<int>(typeRangeStart));
             selectCommand->BindInteger(2, static_cast<int>(typeRangeStop));
             selectCommand->BindString(3, smackLabel.c_str());
+            selectCommand->BindInteger(4, static_cast<int>(Permission::READ | Permission::REMOVE));
 
             while(selectCommand->Step()) {
                 Label ownerLabel = selectCommand->GetColumnString(0);
@@ -540,11 +541,11 @@ using namespace DB;
             const Name &name,
             const Label& ownerLabel,
             const Label& accessorLabel,
-            const Permission permissions)
+            const PermissionMask permissionMask)
     {
         Try {
             PermissionTable permissionTable(this->m_connection);
-            permissionTable.setPermission(name, ownerLabel, accessorLabel, permissions);
+            permissionTable.setPermission(name, ownerLabel, accessorLabel, permissionMask);
             return;
         } Catch (SqlConnection::Exception::SyntaxError) {
             LogError("Couldn't prepare set statement");
@@ -559,9 +560,9 @@ using namespace DB;
             const Name &name,
             const Label& ownerLabel,
             const Label& accessorLabel,
-            const Permission permissions)
+            const PermissionMask permissionMask)
     {
-        if(permissions == Permission::NONE)
+        if(permissionMask == Permission::NONE)
         {
             // clear permissions
             SqlConnection::DataCommandUniquePtr deletePermissionCommand =
@@ -577,14 +578,14 @@ using namespace DB;
             SqlConnection::DataCommandUniquePtr setPermissionCommand =
                 m_connection->PrepareDataCommand(DB_CMD_PERMISSION_SET);
             setPermissionCommand->BindString(1, accessorLabel.c_str());
-            setPermissionCommand->BindString(2, toDBPermission(permissions));
+            setPermissionCommand->BindInteger(2, static_cast<int>(permissionMask));
             setPermissionCommand->BindString(101, name.c_str());
             setPermissionCommand->BindString(102, ownerLabel.c_str());
             setPermissionCommand->Step();
         }
     }
 
-    PermissionOptional DBCrypto::PermissionTable::getPermissionRow(
+    PermissionMaskOptional DBCrypto::PermissionTable::getPermissionRow(
             const Name &name,
             const Label &ownerLabel,
             const Label &accessorLabel) const
@@ -600,9 +601,9 @@ using namespace DB;
         if(selectCommand->Step())
         {
             // there is entry for the <name, ownerLabel> pair
-            return PermissionOptional(toPermission(selectCommand->GetColumnString(0)));
+            return PermissionMaskOptional(PermissionMask(selectCommand->GetColumnInteger(0)));
         }
-        return PermissionOptional();
+        return PermissionMaskOptional();
     }
 
     void DBCrypto::NameTable::addRow(

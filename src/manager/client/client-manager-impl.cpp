@@ -656,8 +656,8 @@ int ManagerImpl::ocspCheck(const CertificateShPtrVector &certChain, int &ocspSta
 }
 
 int ManagerImpl::setPermission(const Alias &alias,
-                                 const Label &accessor,
-                                 Permission newPermission)
+                               const Label &accessor,
+                               PermissionMask permissionMask)
 {
     int my_counter = ++m_counter;
 
@@ -669,7 +669,7 @@ int ManagerImpl::setPermission(const Alias &alias,
                                              helper.getName(),
                                              helper.getLabel(),
                                              accessor,
-                                             static_cast<int>(newPermission));
+                                             permissionMask);
 
         int retCode = m_storageConnection.processRequest(send.Pop(), recv);
         if (CKM_API_SUCCESS != retCode)

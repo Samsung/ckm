@@ -177,23 +177,19 @@ public:
     }
 
     virtual int setPermission(uid_t user,
-                                const Label &owner,
-                                const Alias &alias,
-                                const Label &accessor,
-                                Permission newPermission)
+                              const Alias &alias,
+                              const Label &accessor,
+                              PermissionMask permissionMask)
     {
         return try_catch([&] {
             MessageBuffer recv;
             AliasSupport helper(alias);
-            if( /* label defined */ !helper.getLabel().empty() &&
-                /* two different labels given */ (helper.getLabel() != owner))
-                return CKM_API_ERROR_INPUT_PARAM;
             auto send = MessageBuffer::Serialize(static_cast<int>(ControlCommand::SET_PERMISSION),
                                                  static_cast<int>(user),
                                                  helper.getName(),
-                                                 owner,
+                                                 helper.getLabel(),
                                                  accessor,
-                                                 static_cast<int>(newPermission));
+                                                 permissionMask);
 
             int retCode = m_controlConnection.processRequest(send.Pop(), recv);
             if (CKM_API_SUCCESS != retCode)

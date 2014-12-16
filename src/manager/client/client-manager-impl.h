@@ -104,7 +104,7 @@ public:
 
     int ocspCheck(const CertificateShPtrVector &certificateChain, int &ocspCheck);
 
-    int setPermission(const Alias &alias, const Label &accessor, Permission newPermission);
+    int setPermission(const Alias &alias, const Label &accessor, PermissionMask permissionMask);
 
 protected:
     int saveBinaryData(

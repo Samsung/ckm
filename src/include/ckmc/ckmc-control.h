@@ -170,6 +170,7 @@ int ckmc_change_user_password(uid_t user, const char *old_password, const char *
 int ckmc_reset_user_password(uid_t user, const char *new_password);
 
 /**
+ * @deprecated, see ckmc_set_permission_by_adm()
  * @brief Allows another application to access client's application data
  *
  * @since_tizen 2.3
@@ -194,13 +195,44 @@ int ckmc_reset_user_password(uid_t user, const char *new_password);
  *
  * @pre User is already logged in and the user key is already loaded into memory in plain text form.
  *
- * @see ckmc_allow_access()
- * @see ckmc_deny_access()
- * @see ckmc_deny_access_by_adm()
+ * @see ckmc_set_permission_by_adm()
+ * @see ckmc_set_permission()
  */
 int ckmc_allow_access_by_adm(uid_t user, const char *owner, const char *alias, const char *accessor, ckmc_access_right_e granted);
 
 /**
+ * @brief Allows another application to access client's application data
+ *
+ * @since_tizen 3.0
+ * @privlevel platform
+ * @privilege %http://tizen.org/privilege/keymanager.admin
+ *
+ * @remarks Data identified by @a alias should exist
+ * @remarks @a alias must contain owner label (<owner label><ckmc_label_name_separator><name>)
+ *
+ * @param[in] user        User ID of a user whose data will be affected
+ * @param[in] alias       Data alias for which access will be granted
+ * @param[in] accessor    Package id of the application that will gain access rights
+ * @param[in] permissions Mask of permissions granted for @a accessor application (@a ckmc_permission_e)
+ *                        (previous permission mask will be replaced with the new mask value)
+ *
+ * @return @c 0 on success, otherwise a negative error value
+ *
+ * @retval #CKMC_ERROR_NONE                 Successful
+ * @retval #CKMC_ERROR_INVALID_PARAMETER    Input parameter is invalid
+ * @retval #CKMC_ERROR_DB_LOCKED            A user key is not loaded in memory (a user is not logged in)
+ * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN     Alias does not exist
+ * @retval #CKMC_ERROR_PERMISSION_DENIED    Failed to access key manager
+ *
+ * @pre User is already logged in and the user key is already loaded into memory in plain text form.
+ *
+ * @see ckmc_set_permission()
+ */
+int ckmc_set_permission_by_adm(uid_t user, const char *alias, const char *accessor, int mask);
+
+
+/**
+ * @deprecated, see ckmc_set_permission_by_adm()
  * @brief Revokes another application's access to client's application data
  *
  * @since_tizen 2.3
@@ -226,9 +258,8 @@ int ckmc_allow_access_by_adm(uid_t user, const char *owner, const char *alias, c
  *
  * @pre User is already logged in and the user key is already loaded into memory in plain text form.
  *
- * @see ckmc_allow_access()
- * @see ckmc_deny_access()
- * @see ckmc_allow_access_by_adm()
+ * @see ckmc_set_permission()
+ * @see ckmc_set_permission_by_adm()
  */
 int ckmc_deny_access_by_adm(uid_t user, const char *owner, const char *alias, const char *accessor);
 

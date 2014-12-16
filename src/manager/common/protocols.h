@@ -230,7 +230,7 @@ public:
         return true;
     }
 
-    // it's not virtual with a reason!
+    // it's not virtual for a reason!
     ~DBDataType(){}
 
 private:
@@ -241,10 +241,6 @@ private:
 extern char const * const LABEL_NAME_SEPARATOR;
 typedef std::string Name;
 typedef std::vector<std::pair<Label, Name> > LabelNameVector;
-
-
-const char* toDBPermission(Permission access_right_type);
-Permission toPermission(const std::string &input_DB_data);
 
 class IStream;
 

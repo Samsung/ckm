@@ -34,30 +34,6 @@ char const * const SERVICE_SOCKET_CKM_STORAGE = "/tmp/.central-key-manager-api-s
 char const * const SERVICE_SOCKET_OCSP = "/tmp/.central-key-manager-api-ocsp.sock";
 char const * const LABEL_NAME_SEPARATOR = " ";
 
-namespace {
-const char* const DB_PERM_READ        = "R";
-const char* const DB_PERM_READ_REMOVE = "RD";
-}
-
-const char* toDBPermission(Permission access_right_type) {
-    switch(access_right_type) {
-    case Permission::READ:          return DB_PERM_READ;
-    case Permission::READ_REMOVE:   return DB_PERM_READ_REMOVE;
-    default:
-        // TODO
-        throw 1;
-    }
-}
-
-Permission toPermission(const std::string &input_DB_data) {
-    if(input_DB_data == DB_PERM_READ_REMOVE)
-        return Permission::READ_REMOVE;
-    else if(input_DB_data == DB_PERM_READ)
-        return Permission::READ;
-    else
-        return Permission::NONE;
-}
-
 
 PKCS12Serializable::PKCS12Serializable() {}
 PKCS12Serializable::PKCS12Serializable(const PKCS12 &pkcs)
