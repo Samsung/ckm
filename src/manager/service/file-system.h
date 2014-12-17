@@ -38,7 +38,13 @@ public:
 
     // Domain Key Encryption Key
     RawBuffer getDKEK() const;
+    RawBuffer getDKEKBackup() const;
     bool saveDKEK(const RawBuffer &buffer) const;
+
+    // Functions required in "password change transaction"
+    bool saveDKEKBackup(const RawBuffer &buffer) const;
+    bool restoreDKEK() const; // delete DKEK and move DKEKBackup -> DKEK
+    bool removeDKEKBackup() const;  // delete DKEKBackup
 
     // Database Data Encryption Key
     RawBuffer getDBDEK() const;
@@ -57,6 +63,7 @@ public:
     virtual ~FileSystem(){}
 protected:
     std::string getDKEKPath() const;
+    std::string getDKEKBackupPath() const;
     std::string getDBDEKPath() const;
     RawBuffer loadFile(const std::string &path) const;
     bool saveFile(const std::string &path, const RawBuffer &buffer) const;
@@ -65,5 +72,5 @@ protected:
     uid_t m_uid;
 };
 
-}
+} // namespace CKM
 

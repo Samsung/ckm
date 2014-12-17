@@ -184,7 +184,7 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer)
     // So, to unlock user data when lock type is None, key-manager always try to unlock user data with null password.
     // Even if the result is fail, it will be ignored.
     Password nullPassword("");
-    m_logic->unlockUserKey(cred.uid, nullPassword);
+    m_logic->unlockUserKey(cred.uid, nullPassword, false);
 
     LogDebug("Process storage. Command: " << command);
 

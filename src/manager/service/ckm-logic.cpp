@@ -61,7 +61,62 @@ CKMLogic::CKMLogic()
 
 CKMLogic::~CKMLogic(){}
 
-RawBuffer CKMLogic::unlockUserKey(uid_t user, const Password &password) {
+void CKMLogic::loadDKEKFile(uid_t user, const Password &password, bool apiReq) {
+    auto &handle = m_userDataMap[user];
+
+    FileSystem fs(user);
+
+    auto wrappedDKEKMain = fs.getDKEK();
+    auto wrappedDKEKBackup = fs.getDKEKBackup();
+
+    if (wrappedDKEKMain.empty() && wrappedDKEKBackup.empty()) {
+        wrappedDKEKMain = KeyProvider::generateDomainKEK(std::to_string(user), password);
+        fs.saveDKEK(wrappedDKEKMain);
+    }
+
+    chooseDKEKFile(handle, password, wrappedDKEKMain, wrappedDKEKBackup);
+
+    if (!password.empty() || apiReq) {
+        handle.isDKEKConfirmed = true;
+
+        if (true == handle.isMainDKEK)
+            fs.removeDKEKBackup();
+        else
+            fs.restoreDKEK();
+    }
+}
+
+void CKMLogic::chooseDKEKFile(
+    UserData &handle,
+    const Password &password,
+    const RawBuffer &first,
+    const RawBuffer &second)
+{
+    try {
+        handle.keyProvider = KeyProvider(first, password);
+        handle.isMainDKEK = true;
+    } catch (const KeyProvider::Exception::Base &e) {
+        if (second.empty())
+            throw;
+        handle.keyProvider = KeyProvider(second, password);
+        handle.isMainDKEK = false;
+    }
+}
+
+void CKMLogic::saveDKEKFile(uid_t user, const Password &password) {
+    auto &handle = m_userDataMap[user];
+
+    FileSystem fs(user);
+    if (handle.isMainDKEK)
+        fs.saveDKEKBackup(fs.getDKEK());
+
+    fs.saveDKEK(handle.keyProvider.getWrappedDomainKEK(password));
+
+    handle.isMainDKEK = true;
+    handle.isDKEKConfirmed = false;
+}
+
+RawBuffer CKMLogic::unlockUserKey(uid_t user, const Password &password, bool apiRequest) {
     // TODO try catch for all errors that should be supported by error code
     int retCode = CKM_API_SUCCESS;
 
@@ -69,14 +124,8 @@ RawBuffer CKMLogic::unlockUserKey(uid_t user, const Password &password) {
         if (0 == m_userDataMap.count(user) || !(m_userDataMap[user].keyProvider.isInitialized())) {
             auto &handle = m_userDataMap[user];
             FileSystem fs(user);
-            auto wrappedDomainKEK = fs.getDKEK();
 
-            if (wrappedDomainKEK.empty()) {
-                wrappedDomainKEK = KeyProvider::generateDomainKEK(std::to_string(user), password);
-                fs.saveDKEK(wrappedDomainKEK);
-            }
-
-            handle.keyProvider = KeyProvider(wrappedDomainKEK, password);
+            loadDKEKFile(user, password, apiRequest);
 
             auto wrappedDatabaseDEK = fs.getDBDEK();
 
@@ -94,6 +143,9 @@ RawBuffer CKMLogic::unlockUserKey(uid_t user, const Password &password) {
             for(auto& appSmackLabel : removedApps) {
                 handle.database.deleteKey(appSmackLabel);
             }
+        } else if (apiRequest == true && m_userDataMap[user].isDKEKConfirmed == false) {
+            // now we will try to choose the DKEK key and remove old one
+            loadDKEKFile(user, password, apiRequest);
         }
     } catch (const KeyProvider::Exception::PassWordError &e) {
         LogError("Incorrect Password " << e.GetMessage());
@@ -150,14 +202,8 @@ RawBuffer CKMLogic::changeUserPassword(
 {
     int retCode = CKM_API_SUCCESS;
     try {
-        FileSystem fs(user);
-        auto wrappedDomainKEK = fs.getDKEK();
-        if (wrappedDomainKEK.empty()) {
-            retCode = CKM_API_ERROR_BAD_REQUEST;
-        } else {
-            wrappedDomainKEK = KeyProvider::reencrypt(wrappedDomainKEK, oldPassword, newPassword);
-            fs.saveDKEK(wrappedDomainKEK);
-        }
+        loadDKEKFile(user, oldPassword, true);
+        saveDKEKFile(user, newPassword);
     } catch (const KeyProvider::Exception::PassWordError &e) {
         LogError("Incorrect Password " << e.GetMessage());
         retCode = CKM_API_ERROR_AUTHENTICATION_FAILED;
@@ -181,9 +227,7 @@ RawBuffer CKMLogic::resetUserPassword(
     if (0 == m_userDataMap.count(user)) {
         retCode = CKM_API_ERROR_BAD_REQUEST;
     } else {
-        auto &handler = m_userDataMap[user];
-        FileSystem fs(user);
-        fs.saveDKEK(handler.keyProvider.getWrappedDomainKEK(newPassword));
+        saveDKEKFile(user, newPassword);
     }
 
     return MessageBuffer::Serialize(retCode).Pop();

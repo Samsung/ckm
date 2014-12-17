@@ -20,6 +20,7 @@
  * @brief       Sample service implementation.
  */
 #include <string.h>
+#include <stdio.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -42,6 +43,7 @@ namespace {
 
 const std::string CKM_DATA_PATH = "/opt/data/ckm/";
 const std::string CKM_KEY_PREFIX = "key-";
+const std::string CKM_KEY_BACKUP_PREFIX = "key-backup-";
 const std::string CKM_DB_KEY_PREFIX = "db-key-";
 const std::string CKM_DB_PREFIX = "db-";
 const std::string CKM_REMOVED_APP_PREFIX = "removed-app-";
@@ -65,6 +67,12 @@ std::string FileSystem::getDBPath() const
 std::string FileSystem::getDKEKPath() const {
     std::stringstream ss;
     ss << CKM_DATA_PATH << CKM_KEY_PREFIX << m_uid;
+    return ss.str();
+}
+
+std::string FileSystem::getDKEKBackupPath() const {
+    std::stringstream ss;
+    ss << CKM_DATA_PATH << CKM_KEY_BACKUP_PREFIX << m_uid;
     return ss.str();
 }
 
@@ -99,6 +107,11 @@ RawBuffer FileSystem::getDKEK() const
     return loadFile(getDKEKPath());
 }
 
+RawBuffer FileSystem::getDKEKBackup() const
+{
+    return loadFile(getDKEKBackupPath());
+}
+
 RawBuffer FileSystem::getDBDEK() const
 {
     return loadFile(getDBDEKPath());
@@ -119,6 +132,26 @@ bool FileSystem::saveFile(const std::string &path, const RawBuffer &buffer) cons
 
 bool FileSystem::saveDKEK(const RawBuffer &buffer) const {
     return saveFile(getDKEKPath(), buffer);
+}
+
+bool FileSystem::saveDKEKBackup(const RawBuffer &buffer) const {
+    return saveFile(getDKEKBackupPath(), buffer);
+}
+
+bool FileSystem::restoreDKEK() const {
+    if (0 == ::rename(getDKEKBackupPath().c_str(), getDKEKPath().c_str()))
+        return true;
+    int err = errno;
+    LogError("Error in rename file DKEKBackup to DKEK: " << GetErrnoString(err));
+    return false;
+}
+
+bool FileSystem::removeDKEKBackup() const {
+    if (0 == unlink(getDKEKBackupPath().c_str()))
+        return true;
+    int err = errno;
+    LogError("Error in unlink file DKEKBackup: " << GetErrnoString(err));
+    return false;
 }
 
 bool FileSystem::saveDBDEK(const RawBuffer &buffer) const {
@@ -224,6 +257,13 @@ int FileSystem::removeUserData() const {
         retCode = -1;
         err = errno;
         LogError("Error in unlink user DKEK: " << getDKEKPath()
+            << "Errno: " << errno << " " << GetErrnoString(err));
+    }
+
+    if (unlink(getDKEKBackupPath().c_str())) {
+        retCode = -1;
+        err = errno;
+        LogError("Error in unlink user backup DKEK: " << getDKEKBackupPath()
             << "Errno: " << errno << " " << GetErrnoString(err));
     }
 
