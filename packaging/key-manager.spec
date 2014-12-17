@@ -68,13 +68,13 @@ Requires:   libkey-manager-client = %{version}-%{release}
 Central Key Manager package (client-devel)
 
 %package -n key-manager-tests
-Summary:    internal test for key-manager
+Summary:    Internal test for key-manager
 Group:      Development
 Requires:   boost-test
 Requires:   key-manager = %{version}-%{release}
 
 %description -n key-manager-tests
-Internal test for key-manager
+Internal test for key-manager packages
 
 %prep
 %setup -q
@@ -107,13 +107,13 @@ cp LICENSE %{buildroot}/usr/share/license/libkey-manager-control-client
 mkdir -p %{buildroot}/etc/security/
 
 %make_install
-mkdir -p %{buildroot}/usr/lib/systemd/system/multi-user.target.wants
-mkdir -p %{buildroot}/usr/lib/systemd/system/sockets.target.wants
-ln -s ../central-key-manager.service %{buildroot}/usr/lib/systemd/system/multi-user.target.wants/central-key-manager.service
-ln -s ../central-key-manager-listener.service %{buildroot}/usr/lib/systemd/system/multi-user.target.wants/central-key-manager-listener.service
-ln -s ../central-key-manager-api-control.socket %{buildroot}/usr/lib/systemd/system/sockets.target.wants/central-key-manager-api-control.socket
-ln -s ../central-key-manager-api-storage.socket %{buildroot}/usr/lib/systemd/system/sockets.target.wants/central-key-manager-api-storage.socket
-ln -s ../central-key-manager-api-ocsp.socket %{buildroot}/usr/lib/systemd/system/sockets.target.wants/central-key-manager-api-ocsp.socket
+mkdir -p %{buildroot}%{_unitdir}/multi-user.target.wants
+mkdir -p %{buildroot}%{_unitdir}/sockets.target.wants
+ln -s ../central-key-manager.service %{buildroot}%{_unitdir}/multi-user.target.wants/central-key-manager.service
+ln -s ../central-key-manager-listener.service %{buildroot}%{_unitdir}/multi-user.target.wants/central-key-manager-listener.service
+ln -s ../central-key-manager-api-control.socket %{buildroot}%{_unitdir}/sockets.target.wants/central-key-manager-api-control.socket
+ln -s ../central-key-manager-api-storage.socket %{buildroot}%{_unitdir}/sockets.target.wants/central-key-manager-api-storage.socket
+ln -s ../central-key-manager-api-ocsp.socket %{buildroot}%{_unitdir}/sockets.target.wants/central-key-manager-api-ocsp.socket
 
 %clean
 rm -rf %{buildroot}
@@ -142,6 +142,10 @@ if [ $1 = 0 ]; then
     # unistall
     systemctl daemon-reload
 fi
+
+%post -n libkey-manager-common -p /sbin/ldconfig
+
+%postun -n libkey-manager-common -p /sbin/ldconfig
 
 %post -n libkey-manager-client -p /sbin/ldconfig
 
@@ -173,22 +177,22 @@ fi
 %files -n key-manager
 %manifest key-manager.manifest
 %{_bindir}/key-manager
-%{_libdir}/systemd/system/multi-user.target.wants/central-key-manager.service
-%{_libdir}/systemd/system/central-key-manager.service
-%{_libdir}/systemd/system/central-key-manager.target
-%{_libdir}/systemd/system/sockets.target.wants/central-key-manager-api-control.socket
-%{_libdir}/systemd/system/central-key-manager-api-control.socket
-%{_libdir}/systemd/system/sockets.target.wants/central-key-manager-api-storage.socket
-%{_libdir}/systemd/system/central-key-manager-api-storage.socket
-%{_libdir}/systemd/system/sockets.target.wants/central-key-manager-api-ocsp.socket
-%{_libdir}/systemd/system/central-key-manager-api-ocsp.socket
+%{_unitdir}/multi-user.target.wants/central-key-manager.service
+%{_unitdir}/central-key-manager.service
+%{_unitdir}/central-key-manager.target
+%{_unitdir}/sockets.target.wants/central-key-manager-api-control.socket
+%{_unitdir}/central-key-manager-api-control.socket
+%{_unitdir}/sockets.target.wants/central-key-manager-api-storage.socket
+%{_unitdir}/central-key-manager-api-storage.socket
+%{_unitdir}/sockets.target.wants/central-key-manager-api-ocsp.socket
+%{_unitdir}/central-key-manager-api-ocsp.socket
 %{_datadir}/license/%{name}
 
 %files -n key-manager-listener
 %manifest key-manager-listener.manifest
 %{_bindir}/key-manager-listener
-%{_libdir}/systemd/system/multi-user.target.wants/central-key-manager-listener.service
-%{_libdir}/systemd/system/central-key-manager-listener.service
+%{_unitdir}/multi-user.target.wants/central-key-manager-listener.service
+%{_unitdir}/central-key-manager-listener.service
 
 %files -n libkey-manager-common
 %manifest libkey-manager-common.manifest
