@@ -27,7 +27,7 @@
 #include <openssl/crypto.h>
 
 #ifndef VCONFKEY_SECURITY_MDPP_STATE
-#define VCONFKEY_SECURITY_MDPP_STATE   "file/security_mdpp/security_mdpp_state"
+#define VCONFKEY_SECURITY_MDPP_STATE "file/security_mdpp/security_mdpp_state"
 #endif
 
 namespace {
