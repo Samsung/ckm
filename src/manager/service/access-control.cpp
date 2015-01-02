@@ -94,13 +94,8 @@ int AccessControl::canModify(
 }
 
 int AccessControl::canRead(
-        const DBRow & row,
         const PermissionForLabel & permissionLabel) const
 {
-    // owner can do everything by default
-    if (row.ownerLabel == permissionLabel.accessorLabel)
-        return CKM_API_SUCCESS;
-
     if(permissionLabel & Permission::READ)
         return CKM_API_SUCCESS;
 
@@ -112,7 +107,7 @@ int AccessControl::canExport(
         const PermissionForLabel & permissionLabel) const
 {
     int ec;
-    if(CKM_API_SUCCESS != (ec = canRead(row, permissionLabel)))
+    if(CKM_API_SUCCESS != (ec = canRead(permissionLabel)))
         return ec;
 
     // check if can export
@@ -127,13 +122,8 @@ int AccessControl::canExport(
 }
 
 int AccessControl::canDelete(
-        const Label & ownerLabel,
         const PermissionForLabel & permissionLabel) const
 {
-    // owner can do everything by default
-    if (ownerLabel == permissionLabel.accessorLabel)
-        return CKM_API_SUCCESS;
-
     if(permissionLabel & Permission::REMOVE)
         return CKM_API_SUCCESS;
     if(permissionLabel & Permission::READ)

@@ -211,13 +211,14 @@ namespace CKM {
 
             void initDatabase();
             DBRow getRow(
-                    const Name &name,
-                    const Label &ownerLabel,
                     const DB::SqlConnection::DataCommandUniquePtr &selectCommand) const;
 
             void createTable(
                     const char *create_cmd,
                     const char *table_name);
+
+            void createView(
+                    const char* create_cmd);
 
             class NameTable {
             public:

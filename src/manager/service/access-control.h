@@ -51,8 +51,7 @@ public:
      * check if given row can be read (for internal use)
      * @return CKM_API_SUCCESS if access is allowed, otherwise negative error code
      */
-    int canRead(const DBRow & row,
-                const PermissionForLabel & permissionLabel) const;
+    int canRead(const PermissionForLabel & permissionLabel) const;
 
     /**
      * check if given row can be exported (data provided to the client)
@@ -65,8 +64,7 @@ public:
      * check if given accessor can delete ownerLabel's items.
      * @return CKM_API_SUCCESS if access is allowed, otherwise negative error code
      */
-    int canDelete(const Label & ownerLabel,
-                  const PermissionForLabel & permissionLabel) const;
+    int canDelete(const PermissionForLabel & permissionLabel) const;
 
     void updateCCMode();
     bool isCCMode() const;

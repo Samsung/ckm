@@ -499,7 +499,7 @@ int CKMLogic::removeDataHelper(
     // read and check permissions
     PermissionMaskOptional permissionRowOpt =
             database.getPermissionRow(name, ownerLabel, cred.smackLabel);
-    int access_ec = m_accessControl.canDelete(ownerLabel, PermissionForLabel(cred.smackLabel, permissionRowOpt));
+    int access_ec = m_accessControl.canDelete(PermissionForLabel(cred.smackLabel, permissionRowOpt));
     if(access_ec != CKM_API_SUCCESS)
     {
         LogWarning("access control check result: " << access_ec);
@@ -626,7 +626,7 @@ int CKMLogic::checkDataPermissionsHelper(const Name &name,
 
     if(exportFlag)
         return m_accessControl.canExport(row, PermissionForLabel(accessorLabel, permissionRowOpt));
-    return m_accessControl.canRead(row, PermissionForLabel(accessorLabel, permissionRowOpt));
+    return m_accessControl.canRead(PermissionForLabel(accessorLabel, permissionRowOpt));
 }
 
 int CKMLogic::readDataHelper(

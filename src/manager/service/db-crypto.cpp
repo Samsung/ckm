@@ -29,27 +29,24 @@
 #pragma GCC diagnostic warning "-Wdeprecated-declarations"
 
 namespace {
-    const char *TABLE_NAME          = "NAME_TABLE";
-    const char *TABLE_OBJECT        = "OBJECT_TABLE";
-    const char *TABLE_KEY           = "KEY_TABLE";
-    const char *TABLE_PERMISSION    = "PERMISSION_TABLE";
+    const char *TABLE_NAME                          = "NAME_TABLE";
+    const char *TABLE_OBJECT                        = "OBJECT_TABLE";
+    const char *TABLE_KEY                           = "KEY_TABLE";
+    const char *TABLE_PERMISSION                    = "PERMISSION_TABLE";
+    const CKM::PermissionMask DEFAULT_PERMISSIONS   = static_cast<CKM::PermissionMask>(CKM::Permission::READ | CKM::Permission::REMOVE);
 
     const char *DB_CMD_NAME_CREATE =
-            "CREATE TABLE NAME_TABLE("
+            "CREATE TABLE IF NOT EXISTS NAME_TABLE("
             "   name TEXT NOT NULL,"
             "   label TEXT NOT NULL,"
             "   idx INTEGER PRIMARY KEY AUTOINCREMENT,"
             "   UNIQUE(name, label)"
-            "); CREATE INDEX name_index_idx ON NAME_TABLE(idx);";
+            "); CREATE INDEX IF NOT EXISTS name_index_idx ON NAME_TABLE(idx);";
 
     const char *DB_CMD_NAME_INSERT =
             "INSERT INTO NAME_TABLE("
             "   name, label) "
             "   VALUES(?101, ?102);";
-
-    // any idea how to do it using constexpr ?
-    #define DB_CMD_NAME_LOOKUP_IDX \
-            "(SELECT idx FROM NAME_TABLE WHERE name=?101 and label=?102)"
 
     const char *DB_CMD_NAME_COUNT_ROWS =
             "SELECT COUNT(idx) FROM NAME_TABLE WHERE name=?101 AND label=?102;";
@@ -61,7 +58,7 @@ namespace {
             "DELETE FROM NAME_TABLE WHERE label=?102;";
 
     const char *DB_CMD_OBJECT_CREATE =
-            "CREATE TABLE OBJECT_TABLE("
+            "CREATE TABLE IF NOT EXISTS OBJECT_TABLE("
             "   exportable INTEGER NOT NULL,"
             "   dataType INTEGER NOT NULL,"
             "   algorithmType INTEGER NOT NULL,"
@@ -81,16 +78,17 @@ namespace {
             "   algorithmType, encryptionScheme,"
             "   iv, dataSize, data, tag, idx) "
             "   VALUES(?001, ?002, ?003, ?004, ?005, "
-            "          ?006, ?007, ?008, " DB_CMD_NAME_LOOKUP_IDX ");";
+            "          ?006, ?007, ?008,"
+            "          (SELECT idx FROM NAME_TABLE WHERE name=?101 and label=?102)"
+            "         );";
 
     const char *DB_CMD_OBJECT_SELECT_BY_NAME_AND_LABEL =
-            "SELECT * FROM OBJECT_TABLE WHERE "
-            " (dataType BETWEEN ?001 AND ?002) AND "
-            " idx=" DB_CMD_NAME_LOOKUP_IDX ";";
-
+            "SELECT * FROM [join_name_object_tables] "
+            " WHERE (dataType BETWEEN ?001 AND ?002) "
+            " AND name=?101 and label=?102;";
 
     const char *DB_CMD_KEY_CREATE =
-            "CREATE TABLE KEY_TABLE("
+            "CREATE TABLE IF NOT EXISTS KEY_TABLE("
             "   label TEXT PRIMARY KEY,"
             "   key BLOB NOT NULL"
             ");";
@@ -104,25 +102,26 @@ namespace {
 
 
     const char *DB_CMD_PERMISSION_CREATE =
-            "CREATE TABLE PERMISSION_TABLE("
-            "   label TEXT NOT NULL,"
+            "CREATE TABLE IF NOT EXISTS PERMISSION_TABLE("
+            "   permissionLabel TEXT NOT NULL,"
             "   permissionMask INTEGER NOT NULL,"
             "   idx INTEGER NOT NULL,"
             "   FOREIGN KEY(idx) REFERENCES NAME_TABLE(idx) ON DELETE CASCADE,"
-            "   PRIMARY KEY(label, idx)"
-            "); CREATE INDEX perm_index_idx ON PERMISSION_TABLE(idx);"; // based on ANALYZE and performance test result
+            "   PRIMARY KEY(permissionLabel, idx)"
+            "); CREATE INDEX IF NOT EXISTS perm_index_idx ON PERMISSION_TABLE(idx);"; // based on ANALYZE and performance test result
 
-    const char *DB_CMD_PERMISSION_SET =
-            "REPLACE INTO PERMISSION_TABLE(label, permissionMask, idx) "
-            " VALUES (?001, ?002, " DB_CMD_NAME_LOOKUP_IDX ");";
+    const char *DB_CMD_PERMISSION_SET = // SQLite does not support updating views
+            "REPLACE INTO PERMISSION_TABLE(permissionLabel, permissionMask, idx) "
+            " VALUES (?001, ?002, (SELECT idx FROM NAME_TABLE WHERE name=?101 and label=?102));";
 
     const char *DB_CMD_PERMISSION_SELECT =
-            "SELECT permissionMask FROM PERMISSION_TABLE WHERE label=?001 AND "
-            " idx=" DB_CMD_NAME_LOOKUP_IDX ";";
+            "SELECT permissionMask FROM [join_name_permission_tables] "
+            " WHERE permissionLabel=?001 "
+            " AND name=?101 and label=?102;";
 
-    const char *DB_CMD_PERMISSION_DELETE =
-            "DELETE FROM PERMISSION_TABLE WHERE label=?001 AND "
-            " idx=" DB_CMD_NAME_LOOKUP_IDX ";";
+    const char *DB_CMD_PERMISSION_DELETE = // SQLite does not support updating views
+            "DELETE FROM PERMISSION_TABLE WHERE permissionLabel=?001 AND "
+            " idx=(SELECT idx FROM NAME_TABLE WHERE name=?101 and label=?102);";
 
 
     /*
@@ -132,11 +131,28 @@ namespace {
      *  accessor but GROUP BY will reduce them to one so L1 will have (L1, N1) on its list only once
      */
     const char *DB_CMD_NAME_SELECT_BY_TYPE_AND_PERMISSION =
-            "SELECT N.label, N.name FROM NAME_TABLE AS N "
-            " JOIN OBJECT_TABLE AS O ON O.idx=N.idx "
-            " LEFT JOIN PERMISSION_TABLE AS P ON P.idx=N.idx "
-            " WHERE O.dataType>=?001 AND O.dataType<=?002 AND "
-            " ((N.label=?003) OR (P.label=?003 AND (P.permissionMask&?004!=0))) GROUP BY N.idx;";
+            "SELECT label, name FROM [join_all_tables] "
+            " WHERE dataType>=?001 AND dataType<=?002 "
+            " AND permissionLabel=?003 AND permissionMask&?004!=0 GROUP BY idx;";
+
+    const char *DB_CMD_CREATE_JOIN_NAME_OBJECT_VIEW =
+            "CREATE VIEW IF NOT EXISTS [join_name_object_tables] AS"
+            "   SELECT N.name, N.label, O.* FROM "
+            "       NAME_TABLE AS N "
+            "       JOIN OBJECT_TABLE AS O ON O.idx=N.idx;";
+
+    const char *DB_CMD_CREATE_JOIN_NAME_PERMISSION_VIEW =
+            "CREATE VIEW IF NOT EXISTS [join_name_permission_tables] AS"
+            "   SELECT N.name, N.label, P.permissionMask, P.permissionLabel FROM "
+            "       NAME_TABLE AS N "
+            "       JOIN PERMISSION_TABLE AS P ON P.idx=N.idx;";
+
+    const char *DB_CMD_CREATE_ALL_JOIN_VIEW =
+            "CREATE VIEW IF NOT EXISTS [join_all_tables] AS"
+            "   SELECT N.*, P.permissionLabel, P.permissionMask, O.dataType FROM "
+            "       NAME_TABLE AS N "
+            "       JOIN OBJECT_TABLE AS O ON O.idx=N.idx "
+            "       JOIN PERMISSION_TABLE AS P ON P.idx=N.idx;";
 }
 
 namespace CKM {
@@ -206,20 +222,29 @@ using namespace DB;
         }
     }
 
+    void DBCrypto::createView(
+            const char* create_cmd)
+    {
+        Try {
+            m_connection->ExecCommand(create_cmd);
+        } Catch(SqlConnection::Exception::SyntaxError) {
+            LogError("Couldn't create view!");
+            throw;
+        } Catch(SqlConnection::Exception::InternalError) {
+            LogError("Sqlite got into infinite busy state");
+            throw;
+        }
+    }
+
     void DBCrypto::initDatabase() {
         Transaction transaction(this);
-        if(!m_connection->CheckTableExist(TABLE_NAME)) {
-            createTable(DB_CMD_NAME_CREATE, TABLE_NAME);
-        }
-        if(!m_connection->CheckTableExist(TABLE_OBJECT)) {
-            createTable(DB_CMD_OBJECT_CREATE, TABLE_OBJECT);
-        }
-        if(!m_connection->CheckTableExist(TABLE_KEY)) {
-            createTable(DB_CMD_KEY_CREATE, TABLE_KEY);
-        }
-        if(!m_connection->CheckTableExist(TABLE_PERMISSION)) {
-            createTable(DB_CMD_PERMISSION_CREATE, TABLE_PERMISSION);
-        }
+        createTable(DB_CMD_NAME_CREATE, TABLE_NAME);
+        createTable(DB_CMD_OBJECT_CREATE, TABLE_OBJECT);
+        createTable(DB_CMD_KEY_CREATE, TABLE_KEY);
+        createTable(DB_CMD_PERMISSION_CREATE, TABLE_PERMISSION);
+        createView(DB_CMD_CREATE_ALL_JOIN_VIEW);
+        createView(DB_CMD_CREATE_JOIN_NAME_OBJECT_VIEW);
+        createView(DB_CMD_CREATE_JOIN_NAME_PERMISSION_VIEW);
         transaction.commit();
     }
 
@@ -242,9 +267,14 @@ using namespace DB;
             // transaction is present in the layer above
             NameTable nameTable(this->m_connection);
             ObjectTable objectTable(this->m_connection);
+            PermissionTable permissionTable(this->m_connection);
             nameTable.addRow(name, owner);
             for (const auto &i: rows)
                 objectTable.addRow(i);
+            permissionTable.setPermission(name,
+                                          owner,
+                                          owner,
+                                          static_cast<int>(DEFAULT_PERMISSIONS));
             return;
         } Catch(SqlConnection::Exception::SyntaxError) {
             LogError("Couldn't prepare insert statement");
@@ -260,8 +290,13 @@ using namespace DB;
             // transaction is present in the layer above
             NameTable nameTable(this->m_connection);
             ObjectTable objectTable(this->m_connection);
+            PermissionTable permissionTable(this->m_connection);
             nameTable.addRow(row.name, row.ownerLabel);
             objectTable.addRow(row);
+            permissionTable.setPermission(row.name,
+                                          row.ownerLabel,
+                                          row.ownerLabel,
+                                          static_cast<int>(DEFAULT_PERMISSIONS));
             return;
         } Catch(SqlConnection::Exception::SyntaxError) {
             LogError("Couldn't prepare insert statement");
@@ -295,20 +330,18 @@ using namespace DB;
     }
 
     DBRow DBCrypto::getRow(
-            const Name &name,
-            const Label &ownerLabel,
             const SqlConnection::DataCommandUniquePtr &selectCommand) const {
         DBRow row;
-        row.name = name;
-        row.ownerLabel = ownerLabel;
-        row.exportable = selectCommand->GetColumnInteger(0);
-        row.dataType = DBDataType(selectCommand->GetColumnInteger(1));
-        row.algorithmType = static_cast<DBCMAlgType>(selectCommand->GetColumnInteger(2));
-        row.encryptionScheme = selectCommand->GetColumnInteger(3);
-        row.iv = selectCommand->GetColumnBlob(4);
-        row.dataSize = selectCommand->GetColumnInteger(5);
-        row.data = selectCommand->GetColumnBlob(6);
-        row.tag = selectCommand->GetColumnBlob(7);
+        row.name = selectCommand->GetColumnString(0);
+        row.ownerLabel = selectCommand->GetColumnString(1);
+        row.exportable = selectCommand->GetColumnInteger(2);
+        row.dataType = DBDataType(selectCommand->GetColumnInteger(3));
+        row.algorithmType = static_cast<DBCMAlgType>(selectCommand->GetColumnInteger(4));
+        row.encryptionScheme = selectCommand->GetColumnInteger(5);
+        row.iv = selectCommand->GetColumnBlob(6);
+        row.dataSize = selectCommand->GetColumnInteger(7);
+        row.data = selectCommand->GetColumnBlob(8);
+        row.tag = selectCommand->GetColumnBlob(9);
         return row;
     }
 
@@ -357,7 +390,7 @@ using namespace DB;
             if(selectCommand->Step())
             {
                 // extract data
-                DBRow current_row = getRow(name, ownerLabel, selectCommand);
+                DBRow current_row = getRow(selectCommand);
 
                 // all okay, proceed
                 return DBRowOptional(current_row);
@@ -407,7 +440,7 @@ using namespace DB;
             while(selectCommand->Step())
             {
                 // extract data
-                output.push_back(getRow(name, ownerLabel, selectCommand));
+                output.push_back(getRow(selectCommand));
             }
             return;
         } Catch (SqlConnection::Exception::InvalidColumn) {
