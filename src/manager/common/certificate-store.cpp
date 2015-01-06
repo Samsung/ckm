@@ -75,7 +75,8 @@ int CertificateStore::setSystemCertificateDir(const char *path) {
 int CertificateStore::verifyCertificate(
     const CertificateImpl &cert,
     const CertificateImplVector &untrustedVector,
-    CertificateImplVector &chainVector)
+    CertificateImplVector &chainVector,
+    bool stateCCMode)
 {
     STACK_OF(X509) *untrusted = NULL;
 
@@ -99,6 +100,10 @@ int CertificateStore::verifyCertificate(
     if (0 == X509_STORE_CTX_init(csc, m_store, cert.getX509(), untrusted)) {
         LogError("failed to X509_STORE_CTX_init");
         return CKM_API_ERROR_UNKNOWN;
+    }
+
+    if(stateCCMode) {
+        X509_VERIFY_PARAM_set_flags(csc->param, X509_V_FLAG_X509_STRICT);
     }
 
     int result = X509_verify_cert(csc); // 1 == ok; 0 == fail; -1 == error

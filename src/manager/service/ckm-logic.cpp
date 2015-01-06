@@ -1087,7 +1087,7 @@ RawBuffer CKMLogic::getCertificateChain(
 
     LogDebug("Cert is empty: " << cert.empty());
 
-    int retCode = m_certStore.verifyCertificate(cert, untrustedCertVector, chainVector);
+    int retCode = m_certStore.verifyCertificate(cert, untrustedCertVector, chainVector, m_accessControl.isCCMode());
 
     if (retCode == CKM_API_SUCCESS) {
         for (auto &e : chainVector)
@@ -1131,7 +1131,7 @@ int CKMLogic::getCertificateChainHelper(
             untrustedCertVector.push_back(CertificateImpl(rawCaCert.data, DataFormat::FORM_DER));
     }
 
-    int ec = m_certStore.verifyCertificate(cert, untrustedCertVector, chainVector);
+    int ec = m_certStore.verifyCertificate(cert, untrustedCertVector, chainVector, m_accessControl.isCCMode());
     if (ec != CKM_API_SUCCESS)
         return ec;
 

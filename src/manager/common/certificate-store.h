@@ -43,7 +43,8 @@ public:
     int verifyCertificate(
         const CertificateImpl &cert,
         const CertificateImplVector &untrustedVector,
-        CertificateImplVector &chainVector);
+        CertificateImplVector &chainVector,
+        bool stateCCMode);
 
 protected:
     X509_STORE *m_store;

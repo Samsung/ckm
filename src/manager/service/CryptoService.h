@@ -74,18 +74,7 @@ public:
                         const HashAlgorithm hashAlgo,
                         const RSAPaddingAlgorithm padAlgo);
 
-    int verifyCertificateChain(const CertificateImpl &certificate,
-                               const CertificateImplVector &untrustedCertificates,
-                               const CertificateImplVector &userTrustedCertificates,
-                               CertificateImplVector &certificateChainVector);
-
 private:
-    std::vector<X509 *> verifyCertChain(X509 *cert,
-                                        std::vector<X509 *> &trustedCerts,
-                                        std::vector<X509 *> &userTrustedCerts,
-                                        std::vector<X509 *> &untrustedchain);
-
-    bool hasValidCAFlag(std::vector<X509 *> &certChain);
 
     const EVP_MD *getMdAlgo(const HashAlgorithm hashAlgo);
     int getRsaPadding(const RSAPaddingAlgorithm padAlgo);
