@@ -9,6 +9,7 @@ class DBFixture
 {
     public:
         DBFixture();
+        DBFixture(const char *db_fname);
 
         constexpr static const char* m_default_name = "name";
         constexpr static const char* m_default_label = "label";
@@ -38,6 +39,7 @@ class DBFixture
 
         CKM::DBCrypto    m_db;
     private:
+        void    init();
         double  performance_get_time_elapsed_ms();
 
         constexpr static const char* m_crypto_db_fname = "/tmp/testme.db";

@@ -113,6 +113,11 @@ cp LICENSE %{buildroot}/usr/share/license/%{name}
 cp LICENSE %{buildroot}/usr/share/license/libkey-manager-client
 cp LICENSE %{buildroot}/usr/share/license/libkey-manager-control-client
 mkdir -p %{buildroot}/etc/security/
+mkdir -p %{buildroot}/usr/share/ckm/scripts
+cp data/scripts/*.sql %{buildroot}/usr/share/ckm/scripts
+mkdir -p %{buildroot}/usr/share/ckm-db-test
+cp tests/testme_ver1.db %{buildroot}/usr/share/ckm-db-test/
+cp tests/testme_ver2.db %{buildroot}/usr/share/ckm-db-test/
 
 %make_install
 mkdir -p %{buildroot}%{_unitdir}/multi-user.target.wants
@@ -192,6 +197,8 @@ fi
 %{_unitdir}/sockets.target.wants/central-key-manager-api-ocsp.socket
 %{_unitdir}/central-key-manager-api-ocsp.socket
 %{_datadir}/license/%{name}
+%{_datadir}/ckm/scripts/*.sql
+%attr(444, root, root) %{_datadir}/ckm/scripts/*.sql
 
 %files -n key-manager-listener
 %manifest key-manager-listener.manifest
@@ -234,3 +241,5 @@ fi
 %files -n key-manager-tests
 %defattr(-,root,root,-)
 %{_bindir}/ckm-tests-internal
+%{_datadir}/ckm-db-test/testme_ver1.db
+%{_datadir}/ckm-db-test/testme_ver2.db

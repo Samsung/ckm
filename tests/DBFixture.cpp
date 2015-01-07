@@ -2,6 +2,7 @@
 #include <db-crypto.h>
 #include <ckm/ckm-error.h>
 #include <DBFixture.h>
+#include <fstream>
 
 using namespace CKM;
 using namespace std::chrono;
@@ -9,10 +10,28 @@ using namespace std::chrono;
 
 DBFixture::DBFixture()
 {
+    BOOST_CHECK(unlink(m_crypto_db_fname) == 0 || errno == ENOENT);
+    init();
+}
+DBFixture::DBFixture(const char *db_fname)
+{
+    BOOST_CHECK(unlink(m_crypto_db_fname) == 0 || errno == ENOENT);
+
+    // copy file
+    std::ifstream f1(db_fname, std::fstream::binary);
+    std::ofstream f2(m_crypto_db_fname, std::fstream::trunc|std::fstream::binary);
+    f2 << f1.rdbuf();
+    f2.close();
+    f1.close();
+
+    init();
+}
+
+void DBFixture::init()
+{
     high_resolution_clock::time_point srand_feed = high_resolution_clock::now();
     srand(srand_feed.time_since_epoch().count());
 
-    BOOST_CHECK(unlink(m_crypto_db_fname) == 0 || errno == ENOENT);
     BOOST_REQUIRE_NO_THROW(m_db = DBCrypto(m_crypto_db_fname, defaultPass));
 }
 
@@ -51,7 +70,7 @@ void DBFixture::generate_label(unsigned int id, Label & output)
     output = ss.str();
 }
 
-void DBFixture::generate_perf_DB(unsigned int num_name, unsigned int num_label)
+void DBFixture::generate_perf_DB(unsigned int num_name, unsigned int num_elements)
 {
     // to speed up data creation - cache the row
     DBRow rowPattern = create_default_row(DBDataType::BINARY_DATA);
@@ -62,7 +81,7 @@ void DBFixture::generate_perf_DB(unsigned int num_name, unsigned int num_label)
     for(unsigned int i=0; i<num_name; i++)
     {
         generate_name(i, rowPattern.name);
-        generate_label(i/num_label, rowPattern.ownerLabel);
+        generate_label(i/num_elements, rowPattern.ownerLabel);
 
         BOOST_REQUIRE_NO_THROW(m_db.saveDBRow(rowPattern));
     }

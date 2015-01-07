@@ -20,6 +20,7 @@
  * @brief       Implementation of encrypted db access layer
  */
 
+#include <fstream>
 #include <db-crypto.h>
 #include <dpl/db/sql_connection.h>
 #include <dpl/log/log.h>
@@ -29,19 +30,43 @@
 #pragma GCC diagnostic warning "-Wdeprecated-declarations"
 
 namespace {
-    const char *TABLE_NAME                          = "NAME_TABLE";
-    const char *TABLE_OBJECT                        = "OBJECT_TABLE";
-    const char *TABLE_KEY                           = "KEY_TABLE";
-    const char *TABLE_PERMISSION                    = "PERMISSION_TABLE";
-    const CKM::PermissionMask DEFAULT_PERMISSIONS   = static_cast<CKM::PermissionMask>(CKM::Permission::READ | CKM::Permission::REMOVE);
+    const CKM::PermissionMask DEFAULT_PERMISSIONS =
+                        static_cast<CKM::PermissionMask>(CKM::Permission::READ | CKM::Permission::REMOVE);
 
-    const char *DB_CMD_NAME_CREATE =
-            "CREATE TABLE IF NOT EXISTS NAME_TABLE("
-            "   name TEXT NOT NULL,"
-            "   label TEXT NOT NULL,"
-            "   idx INTEGER PRIMARY KEY AUTOINCREMENT,"
-            "   UNIQUE(name, label)"
-            "); CREATE INDEX IF NOT EXISTS name_index_idx ON NAME_TABLE(idx);";
+    const char *SCRIPTS_PATH = "/usr/share/ckm/scripts/";
+
+    enum DBVersion : int {
+        DB_VERSION_1                   = 1,
+        DB_VERSION_2                   = 2,
+        /* ... since version 3, there is no need to manually
+         * recognize database version.
+         * Remember only that if doing changes to the database,
+         * increment and update DB_VERSION_CURRENT,
+         * then provide migration mechanism!
+         */
+        DB_VERSION_CURRENT             = 3
+    };
+
+    const char *SCRIPT_CREATE_SCHEMA                = "create_schema";
+    const char *SCRIPT_DROP_ALL_ITEMS               = "drop_all";
+    const char *SCRIPT_MIGRATE                      = "migrate_";
+
+    // common substitutions:
+    // 100 - idx
+    // 101 - name
+    // 102 - label
+    // 103 - value
+    // 104 - permissionLabel
+    // 105 - permissionMask
+    const char *DB_CMD_SCHEMA_SET =
+            "REPLACE INTO SCHEMA_INFO(name, value) "
+            "   VALUES(?101, ?103);";
+
+    const char *DB_CMD_SCHEMA_GET =
+            "SELECT * FROM SCHEMA_INFO WHERE name=?101;";
+
+    const char *DB_SCHEMA_VERSION_FIELD = "schema_version";
+
 
     const char *DB_CMD_NAME_INSERT =
             "INSERT INTO NAME_TABLE("
@@ -57,20 +82,6 @@ namespace {
     const char *DB_CMD_NAME_DELETE_BY_LABEL =
             "DELETE FROM NAME_TABLE WHERE label=?102;";
 
-    const char *DB_CMD_OBJECT_CREATE =
-            "CREATE TABLE IF NOT EXISTS OBJECT_TABLE("
-            "   exportable INTEGER NOT NULL,"
-            "   dataType INTEGER NOT NULL,"
-            "   algorithmType INTEGER NOT NULL,"
-            "   encryptionScheme INTEGER NOT NULL,"
-            "   iv BLOB NOT NULL,"
-            "   dataSize INTEGER NOT NULL,"
-            "   data BLOB NOT NULL,"
-            "   tag BLOB NOT NULL,"
-            "   idx INTEGER NOT NULL,"
-            "   FOREIGN KEY(idx) REFERENCES NAME_TABLE(idx) ON DELETE CASCADE,"
-            "   PRIMARY KEY(idx, dataType)"
-            ");"; // TODO: index and performance tests
 
     const char *DB_CMD_OBJECT_INSERT =
             "INSERT INTO OBJECT_TABLE("
@@ -87,11 +98,6 @@ namespace {
             " WHERE (dataType BETWEEN ?001 AND ?002) "
             " AND name=?101 and label=?102;";
 
-    const char *DB_CMD_KEY_CREATE =
-            "CREATE TABLE IF NOT EXISTS KEY_TABLE("
-            "   label TEXT PRIMARY KEY,"
-            "   key BLOB NOT NULL"
-            ");";
 
     const char *DB_CMD_KEY_INSERT =
             "INSERT INTO KEY_TABLE(label, key) VALUES (?, ?);";
@@ -101,26 +107,17 @@ namespace {
             "DELETE FROM KEY_TABLE WHERE label=?";
 
 
-    const char *DB_CMD_PERMISSION_CREATE =
-            "CREATE TABLE IF NOT EXISTS PERMISSION_TABLE("
-            "   permissionLabel TEXT NOT NULL,"
-            "   permissionMask INTEGER NOT NULL,"
-            "   idx INTEGER NOT NULL,"
-            "   FOREIGN KEY(idx) REFERENCES NAME_TABLE(idx) ON DELETE CASCADE,"
-            "   PRIMARY KEY(permissionLabel, idx)"
-            "); CREATE INDEX IF NOT EXISTS perm_index_idx ON PERMISSION_TABLE(idx);"; // based on ANALYZE and performance test result
-
     const char *DB_CMD_PERMISSION_SET = // SQLite does not support updating views
             "REPLACE INTO PERMISSION_TABLE(permissionLabel, permissionMask, idx) "
-            " VALUES (?001, ?002, (SELECT idx FROM NAME_TABLE WHERE name=?101 and label=?102));";
+            " VALUES (?104, ?105, (SELECT idx FROM NAME_TABLE WHERE name=?101 and label=?102));";
 
     const char *DB_CMD_PERMISSION_SELECT =
             "SELECT permissionMask FROM [join_name_permission_tables] "
-            " WHERE permissionLabel=?001 "
+            " WHERE permissionLabel=?104 "
             " AND name=?101 and label=?102;";
 
     const char *DB_CMD_PERMISSION_DELETE = // SQLite does not support updating views
-            "DELETE FROM PERMISSION_TABLE WHERE permissionLabel=?001 AND "
+            "DELETE FROM PERMISSION_TABLE WHERE permissionLabel=?104 AND "
             " idx=(SELECT idx FROM NAME_TABLE WHERE name=?101 and label=?102);";
 
 
@@ -133,26 +130,7 @@ namespace {
     const char *DB_CMD_NAME_SELECT_BY_TYPE_AND_PERMISSION =
             "SELECT label, name FROM [join_all_tables] "
             " WHERE dataType>=?001 AND dataType<=?002 "
-            " AND permissionLabel=?003 AND permissionMask&?004!=0 GROUP BY idx;";
-
-    const char *DB_CMD_CREATE_JOIN_NAME_OBJECT_VIEW =
-            "CREATE VIEW IF NOT EXISTS [join_name_object_tables] AS"
-            "   SELECT N.name, N.label, O.* FROM "
-            "       NAME_TABLE AS N "
-            "       JOIN OBJECT_TABLE AS O ON O.idx=N.idx;";
-
-    const char *DB_CMD_CREATE_JOIN_NAME_PERMISSION_VIEW =
-            "CREATE VIEW IF NOT EXISTS [join_name_permission_tables] AS"
-            "   SELECT N.name, N.label, P.permissionMask, P.permissionLabel FROM "
-            "       NAME_TABLE AS N "
-            "       JOIN PERMISSION_TABLE AS P ON P.idx=N.idx;";
-
-    const char *DB_CMD_CREATE_ALL_JOIN_VIEW =
-            "CREATE VIEW IF NOT EXISTS [join_all_tables] AS"
-            "   SELECT N.*, P.permissionLabel, P.permissionMask, O.dataType FROM "
-            "       NAME_TABLE AS N "
-            "       JOIN OBJECT_TABLE AS O ON O.idx=N.idx "
-            "       JOIN PERMISSION_TABLE AS P ON P.idx=N.idx;";
+            " AND permissionLabel=?104 AND permissionMask&?004!=0 GROUP BY idx;";
 }
 
 namespace CKM {
@@ -164,8 +142,8 @@ using namespace DB;
         Try {
             m_connection = new SqlConnection(path, SqlConnection::Flag::Option::CRW);
             m_connection->SetKey(rawPass);
-            m_connection->ExecCommand("VACUUM;");
             initDatabase();
+            m_connection->ExecCommand("VACUUM;");
         } Catch(SqlConnection::Exception::ConnectionBroken) {
             LogError("Couldn't connect to database: " << path);
             ReThrow(DBCrypto::Exception::InternalError);
@@ -176,7 +154,7 @@ using namespace DB;
             LogError("Couldn't initiate the database");
             ReThrow(DBCrypto::Exception::InternalError);
         } Catch(SqlConnection::Exception::InternalError) {
-            LogError("Couldn't create the database");
+            LogError("Couldn't intialize the database");
             ReThrow(DBCrypto::Exception::InternalError);
         }
     }
@@ -236,15 +214,116 @@ using namespace DB;
         }
     }
 
-    void DBCrypto::initDatabase() {
+    bool DBCrypto::getDBVersion(int & schemaVersion)
+    {
+        SchemaInfo SchemaInfo(this);
+        if(SchemaInfo.getVersionInfo(schemaVersion)) {
+            LogDebug("Current DB version: " << schemaVersion);
+            return true;
+        }
+        else
+        {
+            LogDebug("No DB version known or DB not present");
+
+            // special case: old CKM_TABLE exists
+            if(m_connection->CheckTableExist("CKM_TABLE")) {
+                schemaVersion = DB_VERSION_1;
+                return true;
+            }
+
+            // special case: new scheme exists, but no SCHEMA_INFO table present
+            else if(m_connection->CheckTableExist("NAME_TABLE")) {
+                schemaVersion = DB_VERSION_2;
+                return true;
+            }
+        }
+        // not recognized - proceed with an empty DBs
+        return false;
+    }
+
+    void DBCrypto::initDatabase()
+    {
+        // run migration if old database is present
+        int schemaVersion;
+        if( getDBVersion(schemaVersion)==false ||       // DB empty or corrupted
+            schemaVersion > DB_VERSION_CURRENT)         // or too new scheme
+        {
+            LogDebug("no database or database corrupted, initializing the DB");
+            resetDB();
+        }
+        else
+        {
+            // migration needed
+            LogDebug("DB migration from version " << schemaVersion << " to version " << DB_VERSION_CURRENT << " started.");
+            Transaction transaction(this);
+            for(int vi=schemaVersion; vi<DB_VERSION_CURRENT; vi++)
+            {
+                ScriptOptional script = getMigrationScript(vi);
+                if(!script)
+                {
+                    LogError("Error, script to migrate database from version: " << vi <<
+                             " to version: " << vi+1 << " not available, resetting the DB");
+                    resetDB();
+                    break;
+                }
+
+                LogInfo("migrating from version " << vi << " to version " << vi+1);
+                m_connection->ExecCommand((*script).c_str());
+            }
+            // update DB version info
+            SchemaInfo SchemaInfo(this);
+            SchemaInfo.setVersionInfo();
+            transaction.commit();
+        }
+    }
+
+    DBCrypto::ScriptOptional DBCrypto::getScript(const std::string &scriptName) const
+    {
+        std::string scriptPath = SCRIPTS_PATH + scriptName + std::string(".sql");
+        std::ifstream is(scriptPath);
+        if(is.fail()) {
+            LogError("Script " << scriptPath << " not found!");
+            return ScriptOptional();
+        }
+
+        std::istreambuf_iterator<char> begin(is),end;
+        return ScriptOptional(std::string(begin, end));
+    }
+    DBCrypto::ScriptOptional DBCrypto::getMigrationScript(int db_version) const
+    {
+        std::string scriptPath = std::string(SCRIPT_MIGRATE) + std::to_string(db_version);
+        return getScript(scriptPath);
+    }
+
+    void DBCrypto::createDBSchema() {
         Transaction transaction(this);
-        createTable(DB_CMD_NAME_CREATE, TABLE_NAME);
-        createTable(DB_CMD_OBJECT_CREATE, TABLE_OBJECT);
-        createTable(DB_CMD_KEY_CREATE, TABLE_KEY);
-        createTable(DB_CMD_PERMISSION_CREATE, TABLE_PERMISSION);
-        createView(DB_CMD_CREATE_ALL_JOIN_VIEW);
-        createView(DB_CMD_CREATE_JOIN_NAME_OBJECT_VIEW);
-        createView(DB_CMD_CREATE_JOIN_NAME_PERMISSION_VIEW);
+
+        ScriptOptional script = getScript(SCRIPT_CREATE_SCHEMA);
+        if(!script)
+        {
+            std::string errmsg = "Can not create the database schema: no initialization script";
+            LogError(errmsg);
+            ThrowMsg(Exception::InternalError, errmsg);
+        }
+
+        m_connection->ExecCommand((*script).c_str());
+        SchemaInfo SchemaInfo(this);
+        SchemaInfo.setVersionInfo();
+        transaction.commit();
+    }
+
+    void DBCrypto::resetDB() {
+        Transaction transaction(this);
+        ScriptOptional script = getScript(SCRIPT_DROP_ALL_ITEMS);
+        if(!script)
+        {
+            std::string errmsg = "Can not clear the database: no clearing script";
+            LogError(errmsg);
+            ThrowMsg(Exception::InternalError, errmsg);
+        }
+
+        m_connection->ExecCommand((*script).c_str());
+        createDBSchema();
         transaction.commit();
     }
 
@@ -477,7 +556,7 @@ using namespace DB;
                             m_connection->PrepareDataCommand(DB_CMD_NAME_SELECT_BY_TYPE_AND_PERMISSION);
             selectCommand->BindInteger(1, static_cast<int>(typeRangeStart));
             selectCommand->BindInteger(2, static_cast<int>(typeRangeStop));
-            selectCommand->BindString(3, smackLabel.c_str());
+            selectCommand->BindString(104, smackLabel.c_str());
             selectCommand->BindInteger(4, static_cast<int>(Permission::READ | Permission::REMOVE));
 
             while(selectCommand->Step()) {
@@ -589,6 +668,38 @@ using namespace DB;
                 "Couldn't set permissions for name " << name );
     }
 
+
+    void DBCrypto::SchemaInfo::setVersionInfo() {
+        SqlConnection::DataCommandUniquePtr insertContextCommand =
+                m_db->m_connection->PrepareDataCommand(DB_CMD_SCHEMA_SET);
+        insertContextCommand->BindString(101, DB_SCHEMA_VERSION_FIELD);
+        insertContextCommand->BindString(103, std::to_string(DB_VERSION_CURRENT).c_str());
+        insertContextCommand->Step();
+    }
+
+    bool DBCrypto::SchemaInfo::getVersionInfo(int & version) const
+    {
+        // Try..Catch mandatory here - we don't need to escalate the error
+        // if it happens - we just won't return the version, allowing CKM to work
+        Try {
+            SqlConnection::DataCommandUniquePtr selectCommand =
+                    m_db->m_connection->PrepareDataCommand(DB_CMD_SCHEMA_GET);
+            selectCommand->BindString(101, DB_SCHEMA_VERSION_FIELD);
+
+            if(selectCommand->Step()) {
+                version = static_cast<int>(atoi(selectCommand->GetColumnString(1).c_str()));
+                return true;
+            }
+        } Catch (SqlConnection::Exception::InvalidColumn) {
+            LogError("Select statement invalid column error");
+        } Catch (SqlConnection::Exception::SyntaxError) {
+            LogError("Couldn't prepare select statement");
+        } Catch (SqlConnection::Exception::InternalError) {
+            LogError("Couldn't execute select statement");
+        }
+        return false;
+    }
+
     void DBCrypto::PermissionTable::setPermission(
             const Name &name,
             const Label& ownerLabel,
@@ -600,7 +711,7 @@ using namespace DB;
             // clear permissions
             SqlConnection::DataCommandUniquePtr deletePermissionCommand =
                 m_connection->PrepareDataCommand(DB_CMD_PERMISSION_DELETE);
-            deletePermissionCommand->BindString(1, accessorLabel.c_str());
+            deletePermissionCommand->BindString(104, accessorLabel.c_str());
             deletePermissionCommand->BindString(101, name.c_str());
             deletePermissionCommand->BindString(102, ownerLabel.c_str());
             deletePermissionCommand->Step();
@@ -610,8 +721,8 @@ using namespace DB;
             // add new permissions
             SqlConnection::DataCommandUniquePtr setPermissionCommand =
                 m_connection->PrepareDataCommand(DB_CMD_PERMISSION_SET);
-            setPermissionCommand->BindString(1, accessorLabel.c_str());
-            setPermissionCommand->BindInteger(2, static_cast<int>(permissionMask));
+            setPermissionCommand->BindString(104, accessorLabel.c_str());
+            setPermissionCommand->BindInteger(105, static_cast<int>(permissionMask));
             setPermissionCommand->BindString(101, name.c_str());
             setPermissionCommand->BindString(102, ownerLabel.c_str());
             setPermissionCommand->Step();
@@ -625,7 +736,7 @@ using namespace DB;
     {
         SqlConnection::DataCommandUniquePtr selectCommand =
                 m_connection->PrepareDataCommand(DB_CMD_PERMISSION_SELECT);
-        selectCommand->BindString(1, accessorLabel.c_str());
+        selectCommand->BindString(104, accessorLabel.c_str());
 
         // name table reference
         selectCommand->BindString(101, name.c_str());

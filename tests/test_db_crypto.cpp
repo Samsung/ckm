@@ -199,5 +199,112 @@ BOOST_AUTO_TEST_CASE(DBperfGetAliasList)
     }
     performance_stop(c_test_retries/num_labels);
 }
+BOOST_AUTO_TEST_SUITE_END()
+
+
+BOOST_AUTO_TEST_SUITE(DBCRYPTO_MIGRATION_TEST)
+namespace
+{
+const unsigned migration_names = 16107;
+const unsigned migration_labels = 273;
+const unsigned migration_reference_label_idx = 0;
+const unsigned migration_accessed_element_idx = 7;
+
+void verifyDBisValid(DBFixture & fixture)
+{
+    /**
+     * there are (migration_labels), each having (migration_names)/(migration_labels) entries.
+     * reference label (migration_reference_label_idx) exists such that it has access to
+     * all others' label element with index (migration_accessed_element_idx).
+     *
+     * Example:
+     * - migration_label_63 has access to all items owned by migration_label_63,
+     *   which gives (migration_names)/(migration_labels) entries.
+     *
+     * - migration_label_0 (0 is the reference label) has access to all items
+     *   owned by migration_label_0 and all others' label element index 7,
+     *   which gives (migration_names)/(migration_labels)  + (migration_labels-1) entries.
+     *
+     */
+    Label reference_label;
+    fixture.generate_label(migration_reference_label_idx, reference_label);
+
+    // check number of elements accessible to the reference label
+    LabelNameVector ret_list;
+    BOOST_REQUIRE_NO_THROW(fixture.m_db.listNames(reference_label, ret_list, DBDataType::BINARY_DATA));
+    BOOST_REQUIRE((migration_names/migration_labels)/*own items*/ + (migration_labels-1)/*other labels'*/ == ret_list.size());
+    ret_list.clear();
+
+    // check number of elements accessible to the other labels
+    for(unsigned int l=0; l<migration_labels; l++)
+    {
+        // bypass the reference owner label
+        if(l == migration_reference_label_idx)
+            continue;
+
+        Label current_label;
+        fixture.generate_label(l, current_label);
+        BOOST_REQUIRE_NO_THROW(fixture.m_db.listNames(current_label, ret_list, DBDataType::BINARY_DATA));
+        BOOST_REQUIRE((migration_names/migration_labels) == ret_list.size());
+        for(auto it: ret_list)
+            BOOST_REQUIRE(it.first == current_label);
+        ret_list.clear();
+    }
+}
+struct DBVer1Migration : public DBFixture
+{
+    DBVer1Migration() : DBFixture("/usr/share/ckm-db-test/testme_ver1.db")
+    {}
+};
+
+struct DBVer2Migration : public DBFixture
+{
+    DBVer2Migration() : DBFixture("/usr/share/ckm-db-test/testme_ver2.db")
+    {}
+};
+}
+
+BOOST_AUTO_TEST_CASE(DBMigrationDBVer1)
+{
+    DBVer1Migration DBver1;
+    verifyDBisValid(DBver1);
+}
+
+BOOST_AUTO_TEST_CASE(DBMigrationDBVer2)
+{
+    DBVer2Migration DBver2;
+    verifyDBisValid(DBver2);
+}
+
+BOOST_AUTO_TEST_CASE(DBMigrationDBCurrent)
+{
+    DBFixture currentDB;
+
+    // prepare data using current DB mechanism
+    Label reference_label;
+    currentDB.generate_label(migration_reference_label_idx, reference_label);
+    {
+        currentDB.generate_perf_DB(migration_names, migration_names/migration_labels);
+
+        // only the reference label has access to the other labels element <migration_accessed_element_idx>
+        for(unsigned int l=0; l<migration_labels; l++)
+        {
+            // bypass the reference owner label
+            if(l == migration_reference_label_idx)
+                continue;
+
+            unsigned element_index = migration_accessed_element_idx + l*migration_names/migration_labels;
+
+            // add permission
+            Name accessed_name;
+            currentDB.generate_name(element_index, accessed_name);
+            Label current_label;
+            currentDB.generate_label(l, current_label);
+            currentDB.add_permission(accessed_name, current_label, reference_label);
+        }
+    }
+
+    verifyDBisValid(currentDB);
+}
 
 BOOST_AUTO_TEST_SUITE_END()

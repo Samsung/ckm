@@ -53,7 +53,7 @@ namespace CKM {
                 m_connection(NULL),
                 m_inUserTransaction(false)
               {};
-            //user name instead of path?
+            // user name instead of path?
             DBCrypto(const std::string &path, const RawBuffer &rawPass);
             DBCrypto(const DBCrypto &other) = delete;
             DBCrypto(DBCrypto &&other);
@@ -209,7 +209,21 @@ namespace CKM {
             DB::SqlConnection* m_connection;
             bool m_inUserTransaction;
 
+            void resetDB();
             void initDatabase();
+            void createDBSchema();
+            /**
+             * return current database version
+             *
+             * @param[out] schemaVersion    if success, will contain DB schema version code
+             *
+             * @return false on DB empty or corrupted, true if information read
+             */
+            bool getDBVersion(int & schemaVersion);
+            typedef boost::optional<std::string> ScriptOptional;
+            ScriptOptional getScript(const std::string &scriptName) const;
+            ScriptOptional getMigrationScript(int db_version) const;
+
             DBRow getRow(
                     const DB::SqlConnection::DataCommandUniquePtr &selectCommand) const;
 
@@ -220,6 +234,18 @@ namespace CKM {
             void createView(
                     const char* create_cmd);
 
+            class SchemaInfo {
+            public:
+                explicit SchemaInfo(const DBCrypto *db) : m_db(db) {}
+
+                void        setVersionInfo();
+                bool        getVersionInfo(int & version) const;
+
+            private:
+                const DBCrypto *m_db;
+            };
+
+        public:
             class NameTable {
             public:
                 explicit NameTable(DB::SqlConnection* connection) : m_connection(connection) {}
