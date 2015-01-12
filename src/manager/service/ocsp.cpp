@@ -40,6 +40,25 @@
 
 namespace CKM {
 
+namespace {
+typedef std::unique_ptr<BIO, std::function<void(BIO*)>> BioUniquePtr;
+
+void BIO_write_and_free(BIO* bio) {
+    if (!bio)
+        return;
+
+    std::vector<char> message(1024);
+    int size = BIO_read(bio, message.data(), message.size());
+    if (size > 0) {
+        message.resize(size);
+        LogError("OCSP error description:" << std::string(message.begin(), message.end()));
+    }
+
+    BIO_free_all(bio);
+}
+
+} // namespace anonymous
+
 OCSPModule::OCSPModule() {
     // Do nothing.
 }
@@ -105,6 +124,7 @@ int OCSPModule::ocsp_verify(X509 *cert, X509 *issuer, STACK_OF(X509) *systemCert
     int reason = 0;
     //    const char *reason_str = NULL;0
     X509_STORE *trustedStore=NULL;
+    BioUniquePtr bioLogger(BIO_new(BIO_s_mem()), BIO_write_and_free);
 
     std::vector<char> url(constUrl.begin(), constUrl.end());
 
@@ -153,8 +173,7 @@ int OCSPModule::ocsp_verify(X509 *cert, X509 *issuer, STACK_OF(X509) *systemCert
 
     if (BIO_do_connect(cbio) <= 0) {
         LogDebug("Error in BIO_do_connect.");
-        ERR_print_errors_fp(stderr);
-        /*BIO_printf(bio_err, "Error connecting BIO\n");*/
+        ERR_print_errors(bioLogger.get());
         /* report error */
 
         /* free stuff */
@@ -238,9 +257,8 @@ int OCSPModule::ocsp_verify(X509 *cert, X509 *issuer, STACK_OF(X509) *systemCert
     i = OCSP_response_status(resp);
 
     if (i != OCSP_RESPONSE_STATUS_SUCCESSFUL) {
-        /*BIO_printf(out, "Responder Error: %s (%ld)\n",
-          OCSP_response_status_str(i), i); */
         /* report error */
+        ERR_print_errors(bioLogger.get());
         /* free stuff */
         OCSP_REQUEST_free(req);
         OCSP_RESPONSE_free(resp);
@@ -249,8 +267,8 @@ int OCSPModule::ocsp_verify(X509 *cert, X509 *issuer, STACK_OF(X509) *systemCert
 
     bs = OCSP_response_get1_basic(resp);
     if (!bs) {
-        /* BIO_printf(bio_err, "Error parsing response\n");*/
         /* report error */
+        ERR_print_errors(bioLogger.get());
         /* free stuff */
         OCSP_REQUEST_free(req);
         OCSP_RESPONSE_free(resp);
@@ -273,21 +291,16 @@ int OCSPModule::ocsp_verify(X509 *cert, X509 *issuer, STACK_OF(X509) *systemCert
         OCSP_RESPONSE_free(resp);
         OCSP_BASICRESP_free(bs);
         X509_STORE_free(trustedStore);
-        // find the reason of error
-        int err = ERR_get_error();
-        char errStr[100];
-        ERR_error_string(err,errStr);
-        // printf("OCSP_basic_verify fail.error = %s\n", errStr);
-        LogDebug("Error in OCSP_basic_verify.");
+        ERR_print_errors(bioLogger.get());
         return CKM_API_OCSP_STATUS_INVALID_RESPONSE;
     }
 
     if ((i = OCSP_check_nonce(req, bs)) <= 0) {
         if (i == -1) {
-            /*BIO_printf(bio_err, "WARNING: no nonce in response\n");*/
+            ERR_print_errors(bioLogger.get());
         } else {
-            /*BIO_printf(bio_err, "Nonce Verify error\n");*/
             /* report error */
+            ERR_print_errors(bioLogger.get());
             /* free stuff */
             OCSP_REQUEST_free(req);
             OCSP_RESPONSE_free(resp);
@@ -302,7 +315,7 @@ int OCSPModule::ocsp_verify(X509 *cert, X509 *issuer, STACK_OF(X509) *systemCert
     if(!OCSP_resp_find_status(bs, certid, &ocspStatus, &reason,
           &rev, &thisupd, &nextupd)) {
         /* report error */
-
+        ERR_print_errors(bioLogger.get());
         /* free stuff */
         OCSP_RESPONSE_free(resp);
         OCSP_REQUEST_free(req);
@@ -318,9 +331,8 @@ int OCSPModule::ocsp_verify(X509 *cert, X509 *issuer, STACK_OF(X509) *systemCert
      * know which response this refers to.
      */
     if (!OCSP_check_validity(thisupd, nextupd, nsec, maxage)) {
-        /* ERR_print_errors(out); */
         /* report error */
-
+        ERR_print_errors(bioLogger.get());
         /* free stuff */
         OCSP_REQUEST_free(req);
         OCSP_RESPONSE_free(resp);
