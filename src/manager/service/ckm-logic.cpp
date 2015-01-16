@@ -19,7 +19,6 @@
  * @version     1.0
  * @brief       Sample service implementation.
  */
-#include <vconf/vconf.h>
 #include <dpl/serialization.h>
 #include <dpl/log/log.h>
 #include <ckm/ckm-error.h>

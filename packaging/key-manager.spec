@@ -100,6 +100,9 @@ export LDFLAGS+="-Wl,--rpath=%{_libdir} "
 %cmake . -DVERSION=%{version} \
         -DCMAKE_BUILD_TYPE=%{?build_type:%build_type}%{!?build_type:RELEASE} \
         -DCMAKE_VERBOSE_MAKEFILE=ON \
+%if "%{sec_product_feature_security_mdfpp_enable}" == "1"
+        -DSECURITY_MDFPP_STATE_ENABLE=1 \
+%endif
         -DSYSTEMD_UNIT_DIR=%{_unitdir}
 make %{?jobs:-j%jobs}
 

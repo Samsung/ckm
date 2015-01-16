@@ -27,12 +27,15 @@
 #include <package_manager.h>
 #include <ckm/ckm-control.h>
 #include <ckm/ckm-type.h>
-#include <vconf/vconf.h>
 #include <dlog.h>
+
+#ifdef SECURITY_MDFPP_STATE_ENABLE
+#include <vconf/vconf.h>
+#endif
 
 #define CKM_LISTENER_TAG "CKM_LISTENER"
 
-#ifndef VCONFKEY_SECURITY_MDPP_STATE
+#if defined(SECURITY_MDFPP_STATE_ENABLE) && !defined(VCONFKEY_SECURITY_MDPP_STATE)
 #define VCONFKEY_SECURITY_MDPP_STATE "file/security_mdpp/security_mdpp_state"
 #endif
 
@@ -53,6 +56,7 @@ bool isCkmRunning()
     return (0 != ret);
 }
 
+#ifdef SECURITY_MDFPP_STATE_ENABLE
 void callUpdateCCMode()
 {
     if(!isCkmRunning())
@@ -68,6 +72,13 @@ void callUpdateCCMode()
     else
         SLOG(LOG_DEBUG, CKM_LISTENER_TAG, "CKM::Control::updateCCMode success.\n");
 }
+
+void ccModeChangedEventCallback(keynode_t*, void*)
+{
+    callUpdateCCMode();
+}
+#endif
+
 
 void packageUninstalledEventCallback(
     const char *type,
@@ -102,11 +113,6 @@ void packageUninstalledEventCallback(
     }
 }
 
-void ccModeChangedEventCallback(keynode_t*, void*)
-{
-    callUpdateCCMode();
-}
-
 int main(void) {
     SLOG(LOG_DEBUG, CKM_LISTENER_TAG, "%s", "Start!");
 
@@ -123,6 +129,7 @@ int main(void) {
     }
     SLOG(LOG_DEBUG, CKM_LISTENER_TAG, "register uninstalledApp event callback success");
 
+#ifdef SECURITY_MDFPP_STATE_ENABLE
     int ret = 0;
     char *mdpp_state = vconf_get_str(VCONFKEY_SECURITY_MDPP_STATE);
     if ( mdpp_state ) { // Update cc mode and register event callback only when mdpp vconf key exists
@@ -138,6 +145,7 @@ int main(void) {
     else
         SLOG(LOG_DEBUG, CKM_LISTENER_TAG,
             "vconfCCModeChanged event callback is not registered. No vconf key exists : %s", VCONFKEY_SECURITY_MDPP_STATE);
+#endif
 
     SLOG(LOG_DEBUG, CKM_LISTENER_TAG, "%s", "Ready to listen!");
     g_main_loop_run(main_loop);

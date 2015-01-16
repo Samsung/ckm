@@ -19,14 +19,17 @@
  * @version     1.0
  * @brief       DB access control layer implementation.
  */
-#include <vconf/vconf.h>
 #include <access-control.h>
 #include <dpl/log/log.h>
 #include <ckm/ckm-error.h>
 #include <ckm/ckm-type.h>
 #include <openssl/crypto.h>
 
-#ifndef VCONFKEY_SECURITY_MDPP_STATE
+#ifdef SECURITY_MDFPP_STATE_ENABLE
+#include <vconf/vconf.h>
+#endif
+
+#if defined(SECURITY_MDFPP_STATE_ENABLE) && !defined(VCONFKEY_SECURITY_MDPP_STATE)
 #define VCONFKEY_SECURITY_MDPP_STATE "file/security_mdpp/security_mdpp_state"
 #endif
 
@@ -43,7 +46,11 @@ void AccessControl::updateCCMode() {
     int rc = 0;
     bool newMode;
 
+#ifdef SECURITY_MDFPP_STATE_ENABLE
     char *mdppState = vconf_get_str(VCONFKEY_SECURITY_MDPP_STATE);
+#else
+    char *mdppState = NULL;
+#endif
     newMode = ( mdppState && (!strcmp(mdppState, MDPP_MODE_ENABLED) ||
                               !strcmp(mdppState, MDPP_MODE_ENFORCING) ||
                               !strcmp(mdppState, MDPP_MODE_DISABLED)));
