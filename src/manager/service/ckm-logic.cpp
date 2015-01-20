@@ -1285,22 +1285,28 @@ RawBuffer CKMLogic::verifySignature(
 }
 
 int CKMLogic::setPermissionHelper(
-        const Credentials &cred,
+        const Credentials &cred,                // who's the client
         const Name &name,
-        const Label &label,
-        const Label &accessorLabel,
+        const Label &label,                     // who's the owner
+        const Label &accessorLabel,             // who will get the access
         const PermissionMask permissionMask)
 {
-    if(cred.smackLabel.empty() || cred.smackLabel==accessorLabel)
+    // we don't know the client
+    if (cred.smackLabel.empty() || !isLabelValid(cred.smackLabel))
         return CKM_API_ERROR_INPUT_PARAM;
 
     // use client label if not explicitly provided
     const Label& ownerLabel = label.empty() ? cred.smackLabel : label;
 
     // verify name and label are correct
-    if (!isNameValid(name) || !isLabelValid(ownerLabel))
+    if (!isNameValid(name) || !isLabelValid(ownerLabel) || !isLabelValid(accessorLabel))
         return CKM_API_ERROR_INPUT_PARAM;
 
+    // currently we don't support modification of owner's permissions to his own rows
+    if (ownerLabel==accessorLabel)
+        return CKM_API_ERROR_INPUT_PARAM;
+
+    // can the client modify permissions to owner's row?
     int access_ec = m_accessControl.canModify(ownerLabel, cred.smackLabel);
     if(access_ec != CKM_API_SUCCESS)
         return access_ec;
@@ -1311,7 +1317,7 @@ int CKMLogic::setPermissionHelper(
     auto &database = m_userDataMap[cred.uid].database;
     DBCrypto::Transaction transaction(&database);
 
-    if( ! database.isNameLabelPresent(name, ownerLabel) )
+    if( !database.isNameLabelPresent(name, ownerLabel) )
         return CKM_API_ERROR_DB_ALIAS_UNKNOWN;
 
     // removing non-existing permissions: fail
@@ -1321,7 +1327,8 @@ int CKMLogic::setPermissionHelper(
             return CKM_API_ERROR_INPUT_PARAM;
     }
 
-    database.setPermission(name, cred.smackLabel, accessorLabel, permissionMask);
+    // set permissions to the row owned by ownerLabel for accessorLabel
+    database.setPermission(name, ownerLabel, accessorLabel, permissionMask);
     transaction.commit();
 
     return CKM_API_SUCCESS;
