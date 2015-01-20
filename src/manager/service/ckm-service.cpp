@@ -95,7 +95,7 @@ bool CKMService::processOne(
         LogError("Broken protocol. Closing socket.");
     } Catch (Exception::BrokenProtocol) {
         LogError("Broken protocol. Closing socket.");
-    } catch (const DBDataType::Exception::Base &e) {
+    } catch (const DataType::Exception::Base &e) {
         LogError("Closing socket. DBDataType::Exception: " << e.DumpToString());
     } catch (const std::string &e) {
         LogError("String exception(" << e << "). Closing socket");
@@ -200,7 +200,7 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer)
                 name,
                 label,
                 rawData,
-                DBDataType(tmpDataType),
+                DataType(tmpDataType),
                 policy);
         }
         case LogicCommand::SAVE_PKCS12:
@@ -234,7 +234,7 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer)
             return m_logic->getData(
                 cred,
                 msgID,
-                DBDataType(tmpDataType),
+                DataType(tmpDataType),
                 name,
                 label,
                 password);
@@ -254,7 +254,7 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer)
             return m_logic->getDataList(
                 cred,
                 msgID,
-                DBDataType(tmpDataType));
+                DataType(tmpDataType));
         }
         case LogicCommand::CREATE_KEY_PAIR_RSA:
         case LogicCommand::CREATE_KEY_PAIR_DSA:

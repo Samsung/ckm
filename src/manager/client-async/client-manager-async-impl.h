@@ -90,7 +90,7 @@ public:
     void saveBinaryData(
             const ManagerAsync::ObserverPtr& observer,
             const Alias& alias,
-            DBDataType dataType,
+            DataType dataType,
             const RawBuffer& rawData,
             const Policy& policy);
 
@@ -101,7 +101,7 @@ public:
     void getBinaryData(
             const ManagerAsync::ObserverPtr& observer,
             const Alias &alias,
-            DBDataType sendDataType,
+            DataType sendDataType,
             const Password &password);
 
     void getPKCS12(
@@ -110,7 +110,7 @@ public:
 
     void getBinaryDataAliasVector(
             const ManagerAsync::ObserverPtr& observer,
-            DBDataType dataType);
+            DataType dataType);
 
     void createKeyPair(
             const ManagerAsync::ObserverPtr& observer,

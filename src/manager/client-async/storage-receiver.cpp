@@ -113,7 +113,7 @@ void StorageReceiver::parseGetCommand()
          return;
     }
 
-    DBDataType type(dataType);
+    DataType type(dataType);
     if (type.isKey())
         m_observer->ReceivedKey(KeyImpl(rawData));
     else if (type.isCertificate())
@@ -155,7 +155,7 @@ void StorageReceiver::parseGetListCommand()
     for(const auto &it : labelNameVector)
         aliasVector.push_back( AliasSupport::merge(it.first, it.second) );
 
-    DBDataType type(dataType);
+    DataType type(dataType);
 
     if (type.isKey())
         m_observer->ReceivedKeyAliasVector(std::move(aliasVector));
@@ -178,7 +178,7 @@ void StorageReceiver::parseSaveCommand()
          return;
     }
 
-    DBDataType type(dataType);
+    DataType type(dataType);
     if (type.isKey())
         m_observer->ReceivedSaveKey();
     else if (type.isCertificate())

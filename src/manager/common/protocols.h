@@ -68,7 +68,7 @@ enum class LogicCommand : int {
     // for backward compatibility append new at the end
 };
 
-class DBDataType {
+class DataType {
 public:
     class Exception {
     public:
@@ -76,7 +76,7 @@ public:
         DECLARE_EXCEPTION_TYPE(Base, OutOfRange)
     };
 
-    enum DataType {
+    enum Type {
         KEY_RSA_PUBLIC,
         KEY_RSA_PRIVATE,
         KEY_ECDSA_PUBLIC,
@@ -113,40 +113,40 @@ public:
         DB_LAST  = CHAIN_CERT_15,
     };
 
-    DBDataType()
+    DataType()
       : m_dataType(BINARY_DATA)
     {}
 
-    DBDataType(DataType data)
+    DataType(Type data)
       : m_dataType(data)
     {
         if (!isInRange(data))
             ThrowMsg(Exception::OutOfRange, "Invalid conversion from DataType to DBDataType");
     }
 
-    explicit DBDataType(KeyType key) {
+    explicit DataType(KeyType key) {
         switch(key) {
-        case KeyType::KEY_RSA_PUBLIC:    m_dataType = DBDataType::KEY_RSA_PUBLIC;    break;
-        case KeyType::KEY_RSA_PRIVATE:   m_dataType = DBDataType::KEY_RSA_PRIVATE;   break;
-        case KeyType::KEY_DSA_PUBLIC:    m_dataType = DBDataType::KEY_DSA_PUBLIC;    break;
-        case KeyType::KEY_DSA_PRIVATE:   m_dataType = DBDataType::KEY_DSA_PRIVATE;   break;
-        case KeyType::KEY_ECDSA_PUBLIC:  m_dataType = DBDataType::KEY_ECDSA_PUBLIC;  break;
-        case KeyType::KEY_ECDSA_PRIVATE: m_dataType = DBDataType::KEY_ECDSA_PRIVATE; break;
-        case KeyType::KEY_AES:           m_dataType = DBDataType::KEY_AES;           break;
+        case KeyType::KEY_RSA_PUBLIC:    m_dataType = DataType::KEY_RSA_PUBLIC;    break;
+        case KeyType::KEY_RSA_PRIVATE:   m_dataType = DataType::KEY_RSA_PRIVATE;   break;
+        case KeyType::KEY_DSA_PUBLIC:    m_dataType = DataType::KEY_DSA_PUBLIC;    break;
+        case KeyType::KEY_DSA_PRIVATE:   m_dataType = DataType::KEY_DSA_PRIVATE;   break;
+        case KeyType::KEY_ECDSA_PUBLIC:  m_dataType = DataType::KEY_ECDSA_PUBLIC;  break;
+        case KeyType::KEY_ECDSA_PRIVATE: m_dataType = DataType::KEY_ECDSA_PRIVATE; break;
+        case KeyType::KEY_AES:           m_dataType = DataType::KEY_AES;           break;
         default:
             ThrowMsg(Exception::OutOfRange, "Invalid conversion from KeyType to DBDataType");
         }
     }
 
-    explicit DBDataType(int data)
-      : m_dataType(static_cast<DataType>(data))
+    explicit DataType(int data)
+      : m_dataType(static_cast<Type>(data))
     {
         if (!isInRange(data))
             ThrowMsg(Exception::OutOfRange, "Invalid conversion from int to DBDataType");
     }
 
-    DBDataType(const DBDataType &) = default;
-    DBDataType& operator=(const DBDataType &) = default;
+    DataType(const DataType &) = default;
+    DataType& operator=(const DataType &) = default;
 
     operator int () const {
         return static_cast<int>(m_dataType);
@@ -154,19 +154,19 @@ public:
 
     operator KeyType () const {
         switch(m_dataType) {
-        case DBDataType::KEY_RSA_PUBLIC: return KeyType::KEY_RSA_PUBLIC;
-        case DBDataType::KEY_RSA_PRIVATE: return KeyType::KEY_RSA_PRIVATE;
-        case DBDataType::KEY_DSA_PUBLIC: return KeyType::KEY_DSA_PUBLIC;
-        case DBDataType::KEY_DSA_PRIVATE: return KeyType::KEY_DSA_PRIVATE;
-        case DBDataType::KEY_ECDSA_PRIVATE: return KeyType::KEY_ECDSA_PRIVATE;
-        case DBDataType::KEY_ECDSA_PUBLIC: return KeyType::KEY_ECDSA_PUBLIC;
-        case DBDataType::KEY_AES: return KeyType::KEY_AES;
+        case DataType::KEY_RSA_PUBLIC: return KeyType::KEY_RSA_PUBLIC;
+        case DataType::KEY_RSA_PRIVATE: return KeyType::KEY_RSA_PRIVATE;
+        case DataType::KEY_DSA_PUBLIC: return KeyType::KEY_DSA_PUBLIC;
+        case DataType::KEY_DSA_PRIVATE: return KeyType::KEY_DSA_PRIVATE;
+        case DataType::KEY_ECDSA_PRIVATE: return KeyType::KEY_ECDSA_PRIVATE;
+        case DataType::KEY_ECDSA_PUBLIC: return KeyType::KEY_ECDSA_PUBLIC;
+        case DataType::KEY_AES: return KeyType::KEY_AES;
         default:
             ThrowMsg(Exception::OutOfRange, "Invalid conversion from DBDataType to KeyType");
         }
     }
 
-    bool operator==(const DBDataType &second) const {
+    bool operator==(const DataType &second) const {
         return m_dataType == second.m_dataType;
     }
 
@@ -182,9 +182,9 @@ public:
         return false;
     }
 
-    static DBDataType getChainDatatype(unsigned int index)
+    static DataType getChainDatatype(unsigned int index)
     {
-        DBDataType result(static_cast<int>(index) + DB_CHAIN_FIRST);
+        DataType result(static_cast<int>(index) + DB_CHAIN_FIRST);
 
         if ( !result.isChainCert() )
             ThrowMsg(Exception::OutOfRange, "Certificate number is out of range");
@@ -231,10 +231,10 @@ public:
     }
 
     // it's not virtual for a reason!
-    ~DBDataType(){}
+    ~DataType(){}
 
 private:
-    DataType m_dataType;
+    Type m_dataType;
 };
 
 // (client side) Alias = (service side) Label::Name

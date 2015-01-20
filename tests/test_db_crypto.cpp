@@ -23,7 +23,7 @@ const unsigned int c_names_per_label = 15;
 
 BOOST_FIXTURE_TEST_SUITE(DBCRYPTO_TEST, DBFixture)
 BOOST_AUTO_TEST_CASE(DBtestSimple) {
-    DBRow rowPattern = create_default_row();
+    DB::Row rowPattern = create_default_row();
     rowPattern.data = RawBuffer(32, 1);
     rowPattern.dataSize = rowPattern.data.size();
     rowPattern.tag = RawBuffer(AES_GCM_TAG_SIZE, 1);
@@ -31,7 +31,7 @@ BOOST_AUTO_TEST_CASE(DBtestSimple) {
     check_DB_integrity(rowPattern);
 }
 BOOST_AUTO_TEST_CASE(DBtestBIG) {
-    DBRow rowPattern = create_default_row();
+    DB::Row rowPattern = create_default_row();
     rowPattern.data = createBigBlob(4096);
     rowPattern.dataSize = rowPattern.data.size();
     rowPattern.tag = RawBuffer(AES_GCM_TAG_SIZE, 1);
@@ -39,29 +39,29 @@ BOOST_AUTO_TEST_CASE(DBtestBIG) {
     check_DB_integrity(rowPattern);
 }
 BOOST_AUTO_TEST_CASE(DBtestGlobal) {
-    DBRow rowPattern = create_default_row();
+    DB::Row rowPattern = create_default_row();
     rowPattern.data = RawBuffer(1024, 2);
     rowPattern.dataSize = rowPattern.data.size();
     rowPattern.tag = RawBuffer(AES_GCM_TAG_SIZE, 1);
 
-    BOOST_REQUIRE_NO_THROW(m_db.saveDBRow(rowPattern));
+    BOOST_REQUIRE_NO_THROW(m_db.saveRow(rowPattern));
 
-    DBRow name_duplicate = rowPattern;
+    DB::Row name_duplicate = rowPattern;
     rowPattern.ownerLabel = rowPattern.ownerLabel + "1";
 }
 BOOST_AUTO_TEST_CASE(DBtestTransaction) {
-    DBRow rowPattern = create_default_row();
+    DB::Row rowPattern = create_default_row();
     rowPattern.data = RawBuffer(100, 20);
     rowPattern.dataSize = rowPattern.data.size();
     rowPattern.tag = RawBuffer(AES_GCM_TAG_SIZE, 1);
-    DBCrypto::Transaction transaction(&m_db);
+    DB::Crypto::Transaction transaction(&m_db);
 
-    BOOST_REQUIRE_NO_THROW(m_db.saveDBRow(rowPattern));
+    BOOST_REQUIRE_NO_THROW(m_db.saveRow(rowPattern));
     BOOST_REQUIRE_NO_THROW(transaction.rollback());
 
-    DBCrypto::DBRowOptional row_optional;
-    BOOST_REQUIRE_NO_THROW(row_optional = m_db.getDBRow(m_default_name, m_default_label,
-                                                        DBDataType::BINARY_DATA));
+    DB::Crypto::RowOptional row_optional;
+    BOOST_REQUIRE_NO_THROW(row_optional = m_db.getRow(m_default_name, m_default_label,
+                                                      DataType::BINARY_DATA));
     BOOST_CHECK_MESSAGE(!row_optional, "Row still present after rollback");
 }
 
@@ -74,7 +74,7 @@ BOOST_FIXTURE_TEST_SUITE(DBCRYPTO_PERF_TEST, DBFixture)
 BOOST_AUTO_TEST_CASE(DBperfAddNames)
 {
     // actual test
-    performance_start("saveDBRow");
+    performance_start("saveRow");
     {
         generate_perf_DB(c_num_names_add_test, c_names_per_label);
     }
@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE(DBperfLookupAliasByOwner)
     Label label;
 
     // actual test - successful lookup
-    performance_start("getDBRow");
+    performance_start("getRow");
     for(unsigned int t=0; t<c_test_retries; t++)
     {
         int label_num = rand() % num_labels;
@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(DBperfLookupAliasRandomOwnershipNoPermissions)
     unsigned int num_labels = c_num_names / c_names_per_label;
 
     // actual test - random lookup
-    performance_start("getDBRow");
+    performance_start("getRow");
     for(unsigned int t=0; t<c_test_retries; t++)
     {
         int name_idx = rand()%c_num_names;
@@ -127,7 +127,7 @@ BOOST_AUTO_TEST_CASE(DBperfLookupAliasRandomOwnershipNoPermissions)
         generate_label(rand()%num_labels, smack_label);
 
         // do not care of result
-        m_db.getDBRow(name, owner_label, DBDataType::BINARY_DATA);
+        m_db.getRow(name, owner_label, DataType::BINARY_DATA);
     }
     performance_stop(c_test_retries * c_num_names);
 }
@@ -150,7 +150,7 @@ BOOST_AUTO_TEST_CASE(DBperfAliasRemoval)
     add_full_access_rights(c_num_names, c_names_per_label);
 
     // actual test - random lookup
-    performance_start("deleteDBRow");
+    performance_start("deleteRow");
     Name name;
     Label label;
     for(unsigned int t=0; t<c_num_names; t++)
@@ -158,7 +158,7 @@ BOOST_AUTO_TEST_CASE(DBperfAliasRemoval)
         generate_name(t, name);
         generate_label(t/c_names_per_label, label);
 
-        BOOST_REQUIRE_NO_THROW(m_db.deleteDBRow(name, label));
+        BOOST_REQUIRE_NO_THROW(m_db.deleteRow(name, label));
     }
     performance_stop(c_num_names);
 
@@ -168,7 +168,7 @@ BOOST_AUTO_TEST_CASE(DBperfAliasRemoval)
     {
         generate_label(l, label);
         LabelNameVector expect_no_data;
-        BOOST_REQUIRE_NO_THROW(m_db.listNames(label, expect_no_data, DBDataType::BINARY_DATA));
+        BOOST_REQUIRE_NO_THROW(m_db.listNames(label, expect_no_data, DataType::BINARY_DATA));
         BOOST_REQUIRE(0 == expect_no_data.size());
     }
 }
@@ -189,7 +189,7 @@ BOOST_AUTO_TEST_CASE(DBperfGetAliasList)
         LabelNameVector ret_list;
         generate_label(rand()%num_labels, label);
 
-        BOOST_REQUIRE_NO_THROW(m_db.listNames(label, ret_list, DBDataType::BINARY_DATA));
+        BOOST_REQUIRE_NO_THROW(m_db.listNames(label, ret_list, DataType::BINARY_DATA));
         BOOST_REQUIRE(c_num_names == ret_list.size());
         ret_list.clear();
     }
@@ -227,7 +227,7 @@ void verifyDBisValid(DBFixture & fixture)
 
     // check number of elements accessible to the reference label
     LabelNameVector ret_list;
-    BOOST_REQUIRE_NO_THROW(fixture.m_db.listNames(reference_label, ret_list, DBDataType::BINARY_DATA));
+    BOOST_REQUIRE_NO_THROW(fixture.m_db.listNames(reference_label, ret_list, DataType::BINARY_DATA));
     BOOST_REQUIRE((migration_names/migration_labels)/*own items*/ + (migration_labels-1)/*other labels'*/ == ret_list.size());
     ret_list.clear();
 
@@ -240,7 +240,7 @@ void verifyDBisValid(DBFixture & fixture)
 
         Label current_label;
         fixture.generate_label(l, current_label);
-        BOOST_REQUIRE_NO_THROW(fixture.m_db.listNames(current_label, ret_list, DBDataType::BINARY_DATA));
+        BOOST_REQUIRE_NO_THROW(fixture.m_db.listNames(current_label, ret_list, DataType::BINARY_DATA));
         BOOST_REQUIRE((migration_names/migration_labels) == ret_list.size());
         for(auto it: ret_list)
             BOOST_REQUIRE(it.first == current_label);

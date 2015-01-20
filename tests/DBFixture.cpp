@@ -32,7 +32,7 @@ void DBFixture::init()
     high_resolution_clock::time_point srand_feed = high_resolution_clock::now();
     srand(srand_feed.time_since_epoch().count());
 
-    BOOST_REQUIRE_NO_THROW(m_db = DBCrypto(m_crypto_db_fname, defaultPass));
+    BOOST_REQUIRE_NO_THROW(m_db = DB::Crypto(m_crypto_db_fname, defaultPass));
 }
 
 double DBFixture::performance_get_time_elapsed_ms()
@@ -73,7 +73,7 @@ void DBFixture::generate_label(unsigned int id, Label & output)
 void DBFixture::generate_perf_DB(unsigned int num_name, unsigned int num_elements)
 {
     // to speed up data creation - cache the row
-    DBRow rowPattern = create_default_row(DBDataType::BINARY_DATA);
+    DB::Row rowPattern = create_default_row(DataType::BINARY_DATA);
     rowPattern.data = RawBuffer(100, 20);
     rowPattern.dataSize = rowPattern.data.size();
     rowPattern.tag = RawBuffer(AES_GCM_TAG_SIZE, 1);
@@ -83,7 +83,7 @@ void DBFixture::generate_perf_DB(unsigned int num_name, unsigned int num_element
         generate_name(i, rowPattern.name);
         generate_label(i/num_elements, rowPattern.ownerLabel);
 
-        BOOST_REQUIRE_NO_THROW(m_db.saveDBRow(rowPattern));
+        BOOST_REQUIRE_NO_THROW(m_db.saveRow(rowPattern));
     }
 }
 
@@ -113,16 +113,16 @@ long DBFixture::add_full_access_rights(unsigned int num_name, unsigned int num_n
     return iterations;
 }
 
-DBRow DBFixture::create_default_row(DBDataType type)
+DB::Row DBFixture::create_default_row(DataType type)
 {
     return create_default_row(m_default_name, m_default_label, type);
 }
 
-DBRow DBFixture::create_default_row(const Name &name,
+DB::Row DBFixture::create_default_row(const Name &name,
                                     const Label &label,
-                                    DBDataType type)
+                                    DataType type)
 {
-    DBRow row;
+    DB::Row row;
     row.name = name;
     row.ownerLabel = label;
     row.exportable = 1;
@@ -135,7 +135,7 @@ DBRow DBFixture::create_default_row(const Name &name,
     return row;
 }
 
-void DBFixture::compare_row(const DBRow &lhs, const DBRow &rhs)
+void DBFixture::compare_row(const DB::Row &lhs, const DB::Row &rhs)
 {
     BOOST_CHECK_MESSAGE(lhs.name == rhs.name,
             "namees didn't match! Got: " << rhs.name
@@ -158,26 +158,26 @@ void DBFixture::compare_row(const DBRow &lhs, const DBRow &rhs)
                 << " , expected : " << lhs.data.size());
 }
 
-void DBFixture::check_DB_integrity(const DBRow &rowPattern)
+void DBFixture::check_DB_integrity(const DB::Row &rowPattern)
 {
-    BOOST_REQUIRE_NO_THROW(m_db.saveDBRow(rowPattern));
-    DBRow selectRow = rowPattern;
+    BOOST_REQUIRE_NO_THROW(m_db.saveRow(rowPattern));
+    DB::Row selectRow = rowPattern;
 
-    DBCrypto::DBRowOptional optional_row;
-    BOOST_REQUIRE_NO_THROW(optional_row = m_db.getDBRow("name", "label", DBDataType::BINARY_DATA));
+    DB::Crypto::RowOptional optional_row;
+    BOOST_REQUIRE_NO_THROW(optional_row = m_db.getRow("name", "label", DataType::BINARY_DATA));
     BOOST_REQUIRE_MESSAGE(optional_row, "Select didn't return any row");
 
     compare_row(selectRow, rowPattern);
-    DBRow name_duplicate = rowPattern;
+    DB::Row name_duplicate = rowPattern;
     name_duplicate.data = createDefaultPass();
     name_duplicate.dataSize = name_duplicate.data.size();
 
     unsigned int erased;
-    BOOST_REQUIRE_NO_THROW(erased = m_db.deleteDBRow("name", "label"));
+    BOOST_REQUIRE_NO_THROW(erased = m_db.deleteRow("name", "label"));
     BOOST_REQUIRE_MESSAGE(erased > 0, "Inserted row didn't exist in db");
 
-    DBCrypto::DBRowOptional row_optional;
-    BOOST_REQUIRE_NO_THROW(row_optional = m_db.getDBRow("name", "label", DBDataType::BINARY_DATA));
+    DB::Crypto::RowOptional row_optional;
+    BOOST_REQUIRE_NO_THROW(row_optional = m_db.getRow("name", "label", DataType::BINARY_DATA));
     BOOST_REQUIRE_MESSAGE(!row_optional, "Select should not return row after deletion");
 }
 
@@ -188,17 +188,17 @@ void DBFixture::insert_row()
 
 void DBFixture::insert_row(const Name &name, const Label &owner_label)
 {
-    DBRow rowPattern = create_default_row(name, owner_label, DBDataType::BINARY_DATA);
+    DB::Row rowPattern = create_default_row(name, owner_label, DataType::BINARY_DATA);
     rowPattern.data = RawBuffer(100, 20);
     rowPattern.dataSize = rowPattern.data.size();
     rowPattern.tag = RawBuffer(AES_GCM_TAG_SIZE, 1);
-    BOOST_REQUIRE_NO_THROW(m_db.saveDBRow(rowPattern));
+    BOOST_REQUIRE_NO_THROW(m_db.saveRow(rowPattern));
 }
 
 void DBFixture::delete_row(const Name &name, const Label &owner_label)
 {
     bool exit_flag;
-    BOOST_REQUIRE_NO_THROW(exit_flag = m_db.deleteDBRow(name, owner_label));
+    BOOST_REQUIRE_NO_THROW(exit_flag = m_db.deleteRow(name, owner_label));
     BOOST_REQUIRE_MESSAGE(true == exit_flag, "remove name failed: no rows removed");
 }
 
@@ -212,8 +212,8 @@ void DBFixture::add_permission(const Name &name, const Label &owner_label, const
 
 void DBFixture::read_row_expect_success(const Name &name, const Label &owner_label)
 {
-    DBCrypto::DBRowOptional row;
-    BOOST_REQUIRE_NO_THROW(row = m_db.getDBRow(name, owner_label, DBDataType::BINARY_DATA));
+    DB::Crypto::RowOptional row;
+    BOOST_REQUIRE_NO_THROW(row = m_db.getRow(name, owner_label, DataType::BINARY_DATA));
     BOOST_REQUIRE_MESSAGE(row, "row is empty");
     BOOST_REQUIRE_MESSAGE(row->name == name, "name is not valid");
 }

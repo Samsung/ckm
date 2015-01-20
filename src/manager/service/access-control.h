@@ -57,7 +57,7 @@ public:
      * check if given row can be exported (data provided to the client)
      * @return CKM_API_SUCCESS if access is allowed, otherwise negative error code
      */
-    int canExport(const DBRow & row,
+    int canExport(const DB::Row & row,
                 const PermissionForLabel & permissionLabel) const;
 
     /**

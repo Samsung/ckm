@@ -22,36 +22,54 @@
 
 
 -- isolate old data
-ALTER TABLE PERMISSION_TABLE RENAME TO OLD_PERMISSION_TABLE;
 DROP INDEX perm_index_idx;
 
 
 -- create new structure
 CREATE TABLE SCHEMA_INFO(name TEXT PRIMARY KEY NOT NULL,
                          value TEXT);
-CREATE TABLE PERMISSION_TABLE(permissionLabel TEXT NOT NULL,
-                              permissionMask INTEGER NOT NULL,
-                              idx INTEGER NOT NULL,
-                              FOREIGN KEY(idx) REFERENCES NAME_TABLE(idx) ON DELETE CASCADE,
-                              PRIMARY KEY(permissionLabel, idx));
-CREATE INDEX perm_index_idx ON PERMISSION_TABLE(idx);
+ALTER TABLE NAME_TABLE RENAME TO NAMES;
+-- need to create OBJECT table from scratch,
+-- as SQLite does not support "ALTER COLUMN"
+-- (REFERENCES NAME_TABLE --> NAMES)
+CREATE TABLE OBJECTS(exportable INTEGER NOT NULL,
+                     dataType INTEGER NOT NULL,
+                     algorithmType INTEGER NOT NULL,
+                     encryptionScheme INTEGER NOT NULL,
+                     iv BLOB NOT NULL,
+                     dataSize INTEGER NOT NULL,
+                     data BLOB NOT NULL,
+                     tag BLOB NOT NULL,
+                     idx INTEGER NOT NULL,
+                     FOREIGN KEY(idx) REFERENCES NAMES(idx) ON DELETE CASCADE,
+                     PRIMARY KEY(idx, dataType));
+ALTER TABLE KEY_TABLE RENAME TO KEYS;
+CREATE TABLE PERMISSIONS(permissionLabel TEXT NOT NULL,
+                         permissionMask INTEGER NOT NULL,
+                         idx INTEGER NOT NULL,
+                         FOREIGN KEY(idx) REFERENCES NAMES(idx) ON DELETE CASCADE,
+                         PRIMARY KEY(permissionLabel, idx));
+CREATE INDEX perm_index_idx ON PERMISSIONS(idx);
 CREATE VIEW [join_name_object_tables] AS
-        SELECT N.name, N.label, O.* FROM NAME_TABLE AS N
-            JOIN OBJECT_TABLE AS O ON O.idx=N.idx;
+        SELECT N.name, N.label, O.* FROM NAMES AS N
+            JOIN OBJECTS AS O ON O.idx=N.idx;
 CREATE VIEW [join_name_permission_tables] AS
-        SELECT N.name, N.label, P.permissionMask, P.permissionLabel FROM NAME_TABLE AS N
-            JOIN PERMISSION_TABLE AS P ON P.idx=N.idx;
+        SELECT N.name, N.label, P.permissionMask, P.permissionLabel FROM NAMES AS N
+            JOIN PERMISSIONS AS P ON P.idx=N.idx;
 CREATE VIEW [join_all_tables] AS
-        SELECT N.*, P.permissionLabel, P.permissionMask, O.dataType FROM NAME_TABLE AS N
-            JOIN OBJECT_TABLE AS O ON O.idx=N.idx
-            JOIN PERMISSION_TABLE AS P ON P.idx=N.idx;
+        SELECT N.*, P.permissionLabel, P.permissionMask, O.dataType FROM NAMES AS N
+            JOIN OBJECTS AS O ON O.idx=N.idx
+            JOIN PERMISSIONS AS P ON P.idx=N.idx;
 
 
 -- move data
-INSERT INTO PERMISSION_TABLE(permissionLabel, permissionMask, idx) SELECT label, 1, idx FROM OLD_PERMISSION_TABLE WHERE accessFlags='R';
-INSERT INTO PERMISSION_TABLE(permissionLabel, permissionMask, idx) SELECT label, 3, idx FROM OLD_PERMISSION_TABLE WHERE accessFlags='RD';
-INSERT INTO PERMISSION_TABLE(permissionLabel, permissionMask, idx) SELECT label, 3, idx FROM NAME_TABLE;
+INSERT INTO OBJECTS SELECT * FROM OBJECT_TABLE;
+INSERT INTO PERMISSIONS(permissionLabel, permissionMask, idx) SELECT label, 1, idx FROM PERMISSION_TABLE WHERE accessFlags='R';
+INSERT INTO PERMISSIONS(permissionLabel, permissionMask, idx) SELECT label, 3, idx FROM PERMISSION_TABLE WHERE accessFlags='RD';
+INSERT INTO PERMISSIONS(permissionLabel, permissionMask, idx) SELECT label, 3, idx FROM NAMES;
 
 
 -- cleanup
-DROP TABLE OLD_PERMISSION_TABLE;
+DROP TABLE OBJECT_TABLE;
+DROP TABLE PERMISSION_TABLE;
+

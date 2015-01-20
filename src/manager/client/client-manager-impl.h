@@ -113,19 +113,19 @@ public:
 protected:
     int saveBinaryData(
         const Alias &alias,
-        DBDataType dataType,
+        DataType dataType,
         const RawBuffer &rawData,
         const Policy &policy);
 
     int getBinaryData(
         const Alias &alias,
-        DBDataType sendDataType,
+        DataType sendDataType,
         const Password &password,
-        DBDataType &recvDataType,
+        DataType &recvDataType,
         RawBuffer &rawData);
 
     int getBinaryDataAliasVector(
-        DBDataType sendDataType,
+        DataType sendDataType,
         AliasVector &aliasVector);
 
     int createKeyPair(

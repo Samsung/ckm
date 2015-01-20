@@ -96,21 +96,21 @@ void ManagerAsync::removeAlias(const ObserverPtr& observer, const Alias& alias)
 
 void ManagerAsync::getKey(const ObserverPtr& observer, const Alias& alias, const Password& password)
 {
-    m_impl->getBinaryData(observer, alias, DBDataType::DB_KEY_FIRST, password);
+    m_impl->getBinaryData(observer, alias, DataType::DB_KEY_FIRST, password);
 }
 
 void ManagerAsync::getCertificate(const ObserverPtr& observer,
                                   const Alias& alias,
                                   const Password& password)
 {
-    m_impl->getBinaryData(observer, alias, DBDataType::CERTIFICATE, password);
+    m_impl->getBinaryData(observer, alias, DataType::CERTIFICATE, password);
 }
 
 void ManagerAsync::getData(const ObserverPtr& observer,
                            const Alias& alias,
                            const Password& password)
 {
-    m_impl->getBinaryData(observer, alias, DBDataType::BINARY_DATA, password);
+    m_impl->getBinaryData(observer, alias, DataType::BINARY_DATA, password);
 }
 
 void ManagerAsync::getPKCS12(const ObserverPtr& observer,
@@ -121,17 +121,17 @@ void ManagerAsync::getPKCS12(const ObserverPtr& observer,
 
 void ManagerAsync::getKeyAliasVector(const ObserverPtr& observer)
 {
-    m_impl->getBinaryDataAliasVector(observer, DBDataType::DB_KEY_FIRST);
+    m_impl->getBinaryDataAliasVector(observer, DataType::DB_KEY_FIRST);
 }
 
 void ManagerAsync::getCertificateAliasVector(const ObserverPtr& observer)
 {
-    m_impl->getBinaryDataAliasVector(observer, DBDataType::CERTIFICATE);
+    m_impl->getBinaryDataAliasVector(observer, DataType::CERTIFICATE);
 }
 
 void ManagerAsync::getDataAliasVector(const ObserverPtr& observer)
 {
-    m_impl->getBinaryDataAliasVector(observer, DBDataType::BINARY_DATA);
+    m_impl->getBinaryDataAliasVector(observer, DataType::BINARY_DATA);
 }
 
 void ManagerAsync::createKeyPairRSA(const ObserverPtr& observer,

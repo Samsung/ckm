@@ -91,7 +91,7 @@ void PKCS12Serializable::Serialize(IStream &stream) const
     // throw an error and close the connection).
     Serialization::Serialize(stream, static_cast<size_t>(isAnyKeyPresent?1:0));
     if(keyPtr) {
-        Serialization::Serialize(stream, DBDataType(keyPtr->getType()));
+        Serialization::Serialize(stream, DataType(keyPtr->getType()));
         Serialization::Serialize(stream, keyPtr->getDER());
     }
 

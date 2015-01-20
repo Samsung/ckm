@@ -44,7 +44,7 @@ struct UserData {
     {}
 
     KeyProvider    keyProvider;
-    DBCrypto       database;
+    DB::Crypto     database;
     CryptoLogic    crypto;
     bool           isMainDKEK;
     bool           isDKEKConfirmed;
@@ -83,7 +83,7 @@ public:
         const Name &name,
         const Label &label,
         const RawBuffer &data,
-        DBDataType dataType,
+        DataType dataType,
         const PolicySerializable &policy);
 
     RawBuffer savePKCS12(
@@ -104,7 +104,7 @@ public:
     RawBuffer getData(
         const Credentials &cred,
         int commandId,
-        DBDataType dataType,
+        DataType dataType,
         const Name &name,
         const Label &label,
         const Password &password);
@@ -118,7 +118,7 @@ public:
     RawBuffer getDataList(
         const Credentials &cred,
         int commandId,
-        DBDataType dataType);
+        DataType dataType);
 
     RawBuffer createKeyPair(
         const Credentials &cred,
@@ -198,7 +198,7 @@ private:
         const Password &password);
 
     int verifyBinaryData(
-        DBDataType dataType,
+        DataType dataType,
         const RawBuffer &input_data) const;
 
     int checkSaveConditions(
@@ -211,7 +211,7 @@ private:
         const Credentials &cred,
         const Name &name,
         const Label &label,
-        DBDataType dataType,
+        DataType dataType,
         const RawBuffer &data,
         const PolicySerializable &policy);
 
@@ -223,11 +223,11 @@ private:
         const PolicySerializable &keyPolicy,
         const PolicySerializable &certPolicy);
 
-    DBRow createEncryptedDBRow(
+    DB::Row createEncryptedRow(
         CryptoLogic &crypto,
         const Name &name,
         const Label &label,
-        DBDataType dataType,
+        DataType dataType,
         const RawBuffer &data,
         const Policy &policy) const;
 
@@ -246,7 +246,7 @@ private:
         const PKCS12Serializable &pkcs,
         const PolicySerializable &keyPolicy,
         const PolicySerializable &certPolicy,
-        DBRowVector &output) const;
+        DB::RowVector &output) const;
 
     int removeDataHelper(
         const Credentials &cred,
@@ -256,41 +256,41 @@ private:
     int readSingleRow(
         const Name &name,
         const Label &ownerLabel,
-        DBDataType dataType,
-        DBCrypto & database,
-        DBRow &row);
+        DataType dataType,
+        DB::Crypto & database,
+        DB::Row &row);
 
     int readMultiRow(const Name &name,
         const Label &ownerLabel,
-        DBDataType dataType,
-        DBCrypto & database,
-        DBRowVector &output);
+        DataType dataType,
+        DB::Crypto & database,
+        DB::RowVector &output);
 
     int checkDataPermissionsHelper(
         const Name &name,
         const Label &ownerLabel,
         const Label &accessorLabel,
-        const DBRow &row,
+        const DB::Row &row,
         bool exportFlag,
-        DBCrypto & database);
+        DB::Crypto & database);
 
     int readDataHelper(
         bool exportFlag,
         const Credentials &cred,
-        DBDataType dataType,
+        DataType dataType,
         const Name &name,
         const Label &label,
         const Password &password,
-        DBRow &row);
+        DB::Row &row);
 
     int readDataHelper(
         bool exportFlag,
         const Credentials &cred,
-        DBDataType dataType,
+        DataType dataType,
         const Name &name,
         const Label &label,
         const Password &password,
-        DBRowVector &rows);
+        DB::RowVector &rows);
 
     int createKeyPairHelper(
         const Credentials &cred,

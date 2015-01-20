@@ -110,7 +110,7 @@ int AccessControl::canRead(
 }
 
 int AccessControl::canExport(
-        const DBRow & row,
+        const DB::Row & row,
         const PermissionForLabel & permissionLabel) const
 {
     int ec;

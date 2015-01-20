@@ -19,6 +19,7 @@
  * @version    1.0
  */
 
+#include <iostream>
 #include <key-provider.h>
 #include <boost/test/unit_test.hpp>
 #include <boost/test/unit_test_log.hpp>

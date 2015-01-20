@@ -50,8 +50,8 @@ void ManagerAsync::Impl::saveKey(const ObserverPtr& observer,
         return;
     }
     Try {
-        saveBinaryData(observer, alias, DBDataType(key->getType()), key->getDER(), policy);
-    } Catch(DBDataType::Exception::Base) {
+        saveBinaryData(observer, alias, DataType(key->getType()), key->getDER(), policy);
+    } Catch(DataType::Exception::Base) {
         observer->ReceivedError(CKM_API_ERROR_INPUT_PARAM);
     }
 }
@@ -66,7 +66,7 @@ void ManagerAsync::Impl::saveCertificate(const ObserverPtr& observer,
         observer->ReceivedError(CKM_API_ERROR_INPUT_PARAM);
         return;
     }
-    saveBinaryData(observer, alias, DBDataType::CERTIFICATE, cert->getDER(), policy);
+    saveBinaryData(observer, alias, DataType::CERTIFICATE, cert->getDER(), policy);
 }
 
 void ManagerAsync::Impl::saveData(const ObserverPtr& observer,
@@ -79,12 +79,12 @@ void ManagerAsync::Impl::saveData(const ObserverPtr& observer,
         observer->ReceivedError(CKM_API_ERROR_INPUT_PARAM);
         return;
     }
-    saveBinaryData(observer, alias, DBDataType::BINARY_DATA, data, policy);
+    saveBinaryData(observer, alias, DataType::BINARY_DATA, data, policy);
 }
 
 void ManagerAsync::Impl::saveBinaryData(const ManagerAsync::ObserverPtr& observer,
                                         const Alias& alias,
-                                        DBDataType dataType,
+                                        DataType dataType,
                                         const RawBuffer& rawData,
                                         const Policy& policy)
 {
@@ -141,7 +141,7 @@ void ManagerAsync::Impl::removeAlias(const ManagerAsync::ObserverPtr& observer,
 
 void ManagerAsync::Impl::getBinaryData(const ManagerAsync::ObserverPtr& observer,
                                        const Alias &alias,
-                                       DBDataType sendDataType,
+                                       DataType sendDataType,
                                        const Password &password)
 {
     observerCheck(observer);
@@ -280,7 +280,7 @@ void ManagerAsync::Impl::setPermission(const ObserverPtr& observer,
 }
 
 void ManagerAsync::Impl::getBinaryDataAliasVector(const ManagerAsync::ObserverPtr& observer,
-                                                  DBDataType dataType)
+                                                  DataType dataType)
 {
     observerCheck(observer);
     try_catch_async([&] {

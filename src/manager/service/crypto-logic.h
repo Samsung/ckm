@@ -48,8 +48,8 @@ public:
 
     virtual ~CryptoLogic(){}
 
-    void decryptRow(const Password &password, DBRow &row);
-    void encryptRow(const Password &password, DBRow &row);
+    void decryptRow(const Password &password, DB::Row &row);
+    void encryptRow(const Password &password, DB::Row &row);
 
     bool haveKey(const Label &smackLabel);
     void pushKey(const Label &smackLabel,

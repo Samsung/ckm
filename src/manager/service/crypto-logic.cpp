@@ -170,10 +170,10 @@ RawBuffer CryptoLogic::generateRandIV() const {
     return civ;
 }
 
-void CryptoLogic::encryptRow(const Password &password, DBRow &row)
+void CryptoLogic::encryptRow(const Password &password, DB::Row &row)
 {
     try {
-        DBRow crow = row;
+        DB::Row crow = row;
         RawBuffer key;
         RawBuffer result1;
         RawBuffer result2;
@@ -224,10 +224,10 @@ void CryptoLogic::encryptRow(const Password &password, DBRow &row)
     }
 }
 
-void CryptoLogic::decryptRow(const Password &password, DBRow &row)
+void CryptoLogic::decryptRow(const Password &password, DB::Row &row)
 {
     try {
-        DBRow crow = row;
+        DB::Row crow = row;
         RawBuffer key;
         RawBuffer digest, dataDigest;
 

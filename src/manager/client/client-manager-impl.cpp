@@ -94,7 +94,7 @@ ManagerImpl::ManagerImpl()
 
 int ManagerImpl::saveBinaryData(
     const Alias &alias,
-    DBDataType dataType,
+    DataType dataType,
     const RawBuffer &rawData,
     const Policy &policy)
 {
@@ -134,8 +134,8 @@ int ManagerImpl::saveKey(const Alias &alias, const KeyShPtr &key, const Policy &
     if (key.get() == NULL)
         return CKM_API_ERROR_INPUT_PARAM;
     Try {
-        return saveBinaryData(alias, DBDataType(key->getType()), key->getDER(), policy);
-    } Catch (DBDataType::Exception::Base) {
+        return saveBinaryData(alias, DataType(key->getType()), key->getDER(), policy);
+    } Catch (DataType::Exception::Base) {
         LogError("Error in key conversion. Could not convert KeyType::NONE to DBDataType!");
     }
     return CKM_API_ERROR_INPUT_PARAM;
@@ -148,13 +148,13 @@ int ManagerImpl::saveCertificate(
 {
     if (cert.get() == NULL)
         return CKM_API_ERROR_INPUT_PARAM;
-    return saveBinaryData(alias, DBDataType::CERTIFICATE, cert->getDER(), policy);
+    return saveBinaryData(alias, DataType::CERTIFICATE, cert->getDER(), policy);
 }
 
 int ManagerImpl::saveData(const Alias &alias, const RawBuffer &rawData, const Policy &policy) {
     if (!policy.extractable)
         return CKM_API_ERROR_INPUT_PARAM;
-    return saveBinaryData(alias, DBDataType::BINARY_DATA, rawData, policy);
+    return saveBinaryData(alias, DataType::BINARY_DATA, rawData, policy);
 }
 
 
@@ -261,9 +261,9 @@ int ManagerImpl::removeAlias(const Alias &alias)
 
 int ManagerImpl::getBinaryData(
     const Alias &alias,
-    DBDataType sendDataType,
+    DataType sendDataType,
     const Password &password,
-    DBDataType &recvDataType,
+    DataType &recvDataType,
     RawBuffer &rawData)
 {
     if (alias.empty())
@@ -289,7 +289,7 @@ int ManagerImpl::getBinaryData(
         int counter;
         int tmpDataType;
         recv.Deserialize(command, counter, retCode, tmpDataType, rawData);
-        recvDataType = DBDataType(tmpDataType);
+        recvDataType = DataType(tmpDataType);
 
         if (counter != my_counter)
             return CKM_API_ERROR_UNKNOWN;
@@ -299,12 +299,12 @@ int ManagerImpl::getBinaryData(
 }
 
 int ManagerImpl::getKey(const Alias &alias, const Password &password, KeyShPtr &key) {
-    DBDataType recvDataType;
+    DataType recvDataType;
     RawBuffer rawData;
 
     int retCode = getBinaryData(
         alias,
-        DBDataType::KEY_RSA_PUBLIC,
+        DataType::KEY_RSA_PUBLIC,
         password,
         recvDataType,
         rawData);
@@ -326,12 +326,12 @@ int ManagerImpl::getKey(const Alias &alias, const Password &password, KeyShPtr &
 
 int ManagerImpl::getCertificate(const Alias &alias, const Password &password, CertificateShPtr &cert)
 {
-    DBDataType recvDataType;
+    DataType recvDataType;
     RawBuffer rawData;
 
     int retCode = getBinaryData(
         alias,
-        DBDataType::CERTIFICATE,
+        DataType::CERTIFICATE,
         password,
         recvDataType,
         rawData);
@@ -339,7 +339,7 @@ int ManagerImpl::getCertificate(const Alias &alias, const Password &password, Ce
     if (retCode != CKM_API_SUCCESS)
         return retCode;
 
-    if (recvDataType != DBDataType::CERTIFICATE)
+    if (recvDataType != DataType::CERTIFICATE)
         return CKM_API_ERROR_BAD_RESPONSE;
 
     CertificateShPtr certParsed(new CertificateImpl(rawData, DataFormat::FORM_DER));
@@ -354,11 +354,11 @@ int ManagerImpl::getCertificate(const Alias &alias, const Password &password, Ce
 
 int ManagerImpl::getData(const Alias &alias, const Password &password, RawBuffer &rawData)
 {
-    DBDataType recvDataType = DBDataType::BINARY_DATA;
+    DataType recvDataType = DataType::BINARY_DATA;
 
     int retCode = getBinaryData(
         alias,
-        DBDataType::BINARY_DATA,
+        DataType::BINARY_DATA,
         password,
         recvDataType,
         rawData);
@@ -366,13 +366,13 @@ int ManagerImpl::getData(const Alias &alias, const Password &password, RawBuffer
     if (retCode != CKM_API_SUCCESS)
         return retCode;
 
-    if (recvDataType != DBDataType::BINARY_DATA)
+    if (recvDataType != DataType::BINARY_DATA)
         return CKM_API_ERROR_BAD_RESPONSE;
 
     return CKM_API_SUCCESS;
 }
 
-int ManagerImpl::getBinaryDataAliasVector(DBDataType dataType, AliasVector &aliasVector)
+int ManagerImpl::getBinaryDataAliasVector(DataType dataType, AliasVector &aliasVector)
 {
     int my_counter = ++m_counter;
 
@@ -405,15 +405,15 @@ int ManagerImpl::getBinaryDataAliasVector(DBDataType dataType, AliasVector &alia
 int ManagerImpl::getKeyAliasVector(AliasVector &aliasVector) {
     // in fact datatype has no meaning here - if not certificate or binary data
     // then manager decides to list all between DB_KEY_FIRST and DB_KEY_LAST
-    return getBinaryDataAliasVector(DBDataType::DB_KEY_LAST, aliasVector);
+    return getBinaryDataAliasVector(DataType::DB_KEY_LAST, aliasVector);
 }
 
 int ManagerImpl::getCertificateAliasVector(AliasVector &aliasVector) {
-    return getBinaryDataAliasVector(DBDataType::CERTIFICATE, aliasVector);
+    return getBinaryDataAliasVector(DataType::CERTIFICATE, aliasVector);
 }
 
 int ManagerImpl::getDataAliasVector(AliasVector &aliasVector) {
-    return getBinaryDataAliasVector(DBDataType::BINARY_DATA, aliasVector);
+    return getBinaryDataAliasVector(DataType::BINARY_DATA, aliasVector);
 }
 
 int ManagerImpl::createKeyPairRSA(

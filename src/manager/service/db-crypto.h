@@ -37,9 +37,10 @@
 #pragma GCC diagnostic warning "-Wdeprecated-declarations"
 
 namespace CKM {
-    class DBCrypto {
+namespace DB {
+    class Crypto {
          public:
-            typedef boost::optional<DBRow> DBRowOptional;
+            typedef boost::optional<Row> RowOptional;
             typedef boost::optional<RawBuffer> RawBufferOptional;
             class Exception
             {
@@ -49,68 +50,68 @@ namespace CKM {
                 DECLARE_EXCEPTION_TYPE(Base, TransactionError)
                 DECLARE_EXCEPTION_TYPE(Base, InvalidArgs)
             };
-            DBCrypto() :
+            Crypto() :
                 m_connection(NULL),
                 m_inUserTransaction(false)
               {};
             // user name instead of path?
-            DBCrypto(const std::string &path, const RawBuffer &rawPass);
-            DBCrypto(const DBCrypto &other) = delete;
-            DBCrypto(DBCrypto &&other);
+            Crypto(const std::string &path, const RawBuffer &rawPass);
+            Crypto(const Crypto &other) = delete;
+            Crypto(Crypto &&other);
 
-            DBCrypto& operator=(const DBCrypto& ) = delete;
-            DBCrypto& operator=(DBCrypto&& other);
+            Crypto& operator=(const Crypto& ) = delete;
+            Crypto& operator=(Crypto&& other);
 
-            virtual ~DBCrypto();
+            virtual ~Crypto();
 
-            void saveDBRow(
-                    const DBRow &row);
+            void saveRow(
+                    const Row &row);
 
-            void saveDBRows(
+            void saveRows(
                     const Name &name,
                     const Label &owner,
-                    const DBRowVector &rows);
+                    const RowVector &rows);
 
             bool isNameLabelPresent(
                     const Name &name,
                     const Label &owner) const;
 
-            DBRowOptional getDBRow(
+            RowOptional getRow(
                     const Name &name,
                     const Label &ownerLabel,
-                    DBDataType type);
+                    DataType type);
 
-            DBRowOptional getDBRow(
+            RowOptional getRow(
                     const Name &name,
                     const Label &ownerLabel,
-                    DBDataType typeRangeStart,
-                    DBDataType typeRangeStop);
+                    DataType typeRangeStart,
+                    DataType typeRangeStop);
 
-            void getDBRows(
+            void getRows(
                     const Name &name,
                     const Label &ownerLabel,
-                    DBDataType type,
-                    DBRowVector &output);
+                    DataType type,
+                    RowVector &output);
 
-            void getDBRows(
+            void getRows(
                     const Name &name,
                     const Label &ownerLabel,
-                    DBDataType typeRangeStart,
-                    DBDataType typeRangeStop,
-                    DBRowVector &output);
+                    DataType typeRangeStart,
+                    DataType typeRangeStop,
+                    RowVector &output);
 
             void listNames(
                     const Label &smackLabel,
                     LabelNameVector& labelNameVector,
-                    DBDataType type);
+                    DataType type);
 
             void listNames(
                     const Label &smackLabel,
                     LabelNameVector& labelNameVector,
-                    DBDataType typeRangeStart,
-                    DBDataType typeRangeStop);
+                    DataType typeRangeStart,
+                    DataType typeRangeStop);
 
-            bool deleteDBRow(
+            bool deleteRow(
                     const Name &name,
                     const Label &ownerLabel);
 
@@ -140,7 +141,7 @@ namespace CKM {
 
             class Transaction {
             public:
-                Transaction(DBCrypto *db)
+                Transaction(Crypto *db)
                     : m_db(db),
                       m_inTransaction(false) {
                     if(!m_db->m_inUserTransaction) {
@@ -148,12 +149,12 @@ namespace CKM {
                             m_db->m_connection->ExecCommand("BEGIN EXCLUSIVE");
                             m_db->m_inUserTransaction = true;
                             m_inTransaction = true;
-                        } Catch (DB::SqlConnection::Exception::InternalError) {
+                        } Catch (SqlConnection::Exception::InternalError) {
                             LogError("sqlite got into infinite busy state");
-                            ReThrow(DBCrypto::Exception::TransactionError);
-                        } Catch (DB::SqlConnection::Exception::Base) {
+                            ReThrow(Crypto::Exception::TransactionError);
+                        } Catch (SqlConnection::Exception::Base) {
                             LogError("Couldn't begin transaction");
-                            ReThrow(DBCrypto::Exception::TransactionError);
+                            ReThrow(Crypto::Exception::TransactionError);
                         }
                     }
                 }
@@ -163,12 +164,12 @@ namespace CKM {
                             m_db->m_connection->CommitTransaction();
                             m_db->m_inUserTransaction = false;
                             m_inTransaction = false;
-                        } Catch (DB::SqlConnection::Exception::InternalError) {
+                        } Catch (SqlConnection::Exception::InternalError) {
                             LogError("sqlite got into infinite busy state");
-                            ReThrow(DBCrypto::Exception::TransactionError);
-                        } Catch (DB::SqlConnection::Exception::Base) {
+                            ReThrow(Crypto::Exception::TransactionError);
+                        } Catch (SqlConnection::Exception::Base) {
                             LogError("Couldn't commit transaction");
-                            ReThrow(DBCrypto::Exception::TransactionError);
+                            ReThrow(Crypto::Exception::TransactionError);
                         }
                     }
                 }
@@ -178,12 +179,12 @@ namespace CKM {
                             m_db->m_connection->RollbackTransaction();
                             m_db->m_inUserTransaction = false;
                             m_inTransaction = false;
-                        } Catch (DB::SqlConnection::Exception::InternalError) {
+                        } Catch (SqlConnection::Exception::InternalError) {
                             LogError("sqlite got into infinite busy state");
-                            ReThrow(DBCrypto::Exception::TransactionError);
-                        } Catch (DB::SqlConnection::Exception::Base) {
+                            ReThrow(Crypto::Exception::TransactionError);
+                        } Catch (SqlConnection::Exception::Base) {
                             LogError("Couldn't rollback transaction");
-                            ReThrow(DBCrypto::Exception::TransactionError);
+                            ReThrow(Crypto::Exception::TransactionError);
                         }
                     }
                 }
@@ -193,20 +194,20 @@ namespace CKM {
                             m_db->m_inUserTransaction = false;
                             m_db->m_connection->RollbackTransaction();
                         }
-                    } Catch (DB::SqlConnection::Exception::InternalError) {
+                    } Catch (SqlConnection::Exception::InternalError) {
                         LogError("sqlite got into infinite busy state");
-                        ReThrow(DBCrypto::Exception::TransactionError);
-                    } Catch (DB::SqlConnection::Exception::Base) {
+                        ReThrow(Crypto::Exception::TransactionError);
+                    } Catch (SqlConnection::Exception::Base) {
                         LogError("Transaction rollback failed!");
                     }
                 }
             private:
-                DBCrypto *m_db;
+                Crypto *m_db;
                 bool m_inTransaction;
             };
 
          private:
-            DB::SqlConnection* m_connection;
+            SqlConnection* m_connection;
             bool m_inUserTransaction;
 
             void resetDB();
@@ -224,8 +225,8 @@ namespace CKM {
             ScriptOptional getScript(const std::string &scriptName) const;
             ScriptOptional getMigrationScript(int db_version) const;
 
-            DBRow getRow(
-                    const DB::SqlConnection::DataCommandUniquePtr &selectCommand) const;
+            Row getRow(
+                    const SqlConnection::DataCommandUniquePtr &selectCommand) const;
 
             void createTable(
                     const char *create_cmd,
@@ -236,19 +237,19 @@ namespace CKM {
 
             class SchemaInfo {
             public:
-                explicit SchemaInfo(const DBCrypto *db) : m_db(db) {}
+                explicit SchemaInfo(const Crypto *db) : m_db(db) {}
 
                 void        setVersionInfo();
                 bool        getVersionInfo(int & version) const;
 
             private:
-                const DBCrypto *m_db;
+                const Crypto *m_db;
             };
 
         public:
             class NameTable {
             public:
-                explicit NameTable(DB::SqlConnection* connection) : m_connection(connection) {}
+                explicit NameTable(SqlConnection* connection) : m_connection(connection) {}
 
                 void addRow(
                         const Name &name,
@@ -266,23 +267,23 @@ namespace CKM {
                         const Label &ownerLabel) const;
 
             private:
-                DB::SqlConnection* m_connection;
+                SqlConnection* m_connection;
             };
 
             class ObjectTable {
             public:
-                explicit ObjectTable(DB::SqlConnection* connection) : m_connection(connection) {}
+                explicit ObjectTable(SqlConnection* connection) : m_connection(connection) {}
 
                 void addRow(
-                        const DBRow &row);
+                        const Row &row);
 
             private:
-                DB::SqlConnection* m_connection;
+                SqlConnection* m_connection;
             };
 
             class PermissionTable {
             public:
-                explicit PermissionTable(DB::SqlConnection* connection) : m_connection(connection) {}
+                explicit PermissionTable(SqlConnection* connection) : m_connection(connection) {}
 
                 void setPermission(
                         const Name &name,
@@ -296,9 +297,10 @@ namespace CKM {
                         const Label &accessorLabel) const;
 
             private:
-                DB::SqlConnection* m_connection;
+                SqlConnection* m_connection;
             };
     };
+} // namespace DB
 } // namespace CKM
 
 #pragma GCC diagnostic pop

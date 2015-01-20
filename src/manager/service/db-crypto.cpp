@@ -69,28 +69,28 @@ namespace {
 
 
     const char *DB_CMD_NAME_INSERT =
-            "INSERT INTO NAME_TABLE("
+            "INSERT INTO NAMES("
             "   name, label) "
             "   VALUES(?101, ?102);";
 
     const char *DB_CMD_NAME_COUNT_ROWS =
-            "SELECT COUNT(idx) FROM NAME_TABLE WHERE name=?101 AND label=?102;";
+            "SELECT COUNT(idx) FROM NAMES WHERE name=?101 AND label=?102;";
 
     const char *DB_CMD_NAME_DELETE =
-            "DELETE FROM NAME_TABLE WHERE name=?101 AND label=?102;";
+            "DELETE FROM NAMES WHERE name=?101 AND label=?102;";
 
     const char *DB_CMD_NAME_DELETE_BY_LABEL =
-            "DELETE FROM NAME_TABLE WHERE label=?102;";
+            "DELETE FROM NAMES WHERE label=?102;";
 
 
     const char *DB_CMD_OBJECT_INSERT =
-            "INSERT INTO OBJECT_TABLE("
+            "INSERT INTO OBJECTS("
             "   exportable, dataType,"
             "   algorithmType, encryptionScheme,"
             "   iv, dataSize, data, tag, idx) "
             "   VALUES(?001, ?002, ?003, ?004, ?005, "
             "          ?006, ?007, ?008,"
-            "          (SELECT idx FROM NAME_TABLE WHERE name=?101 and label=?102)"
+            "          (SELECT idx FROM NAMES WHERE name=?101 and label=?102)"
             "         );";
 
     const char *DB_CMD_OBJECT_SELECT_BY_NAME_AND_LABEL =
@@ -100,16 +100,16 @@ namespace {
 
 
     const char *DB_CMD_KEY_INSERT =
-            "INSERT INTO KEY_TABLE(label, key) VALUES (?, ?);";
+            "INSERT INTO KEYS(label, key) VALUES (?, ?);";
     const char *DB_CMD_KEY_SELECT =
-            "SELECT key FROM KEY_TABLE WHERE label=?;";
+            "SELECT key FROM KEYS WHERE label=?;";
     const char *DB_CMD_KEY_DELETE =
-            "DELETE FROM KEY_TABLE WHERE label=?";
+            "DELETE FROM KEYS WHERE label=?";
 
 
     const char *DB_CMD_PERMISSION_SET = // SQLite does not support updating views
-            "REPLACE INTO PERMISSION_TABLE(permissionLabel, permissionMask, idx) "
-            " VALUES (?104, ?105, (SELECT idx FROM NAME_TABLE WHERE name=?101 and label=?102));";
+            "REPLACE INTO PERMISSIONS(permissionLabel, permissionMask, idx) "
+            " VALUES (?104, ?105, (SELECT idx FROM NAMES WHERE name=?101 and label=?102));";
 
     const char *DB_CMD_PERMISSION_SELECT =
             "SELECT permissionMask FROM [join_name_permission_tables] "
@@ -117,8 +117,8 @@ namespace {
             " AND name=?101 and label=?102;";
 
     const char *DB_CMD_PERMISSION_DELETE = // SQLite does not support updating views
-            "DELETE FROM PERMISSION_TABLE WHERE permissionLabel=?104 AND "
-            " idx=(SELECT idx FROM NAME_TABLE WHERE name=?101 and label=?102);";
+            "DELETE FROM PERMISSIONS WHERE permissionLabel=?104 AND "
+            " idx=(SELECT idx FROM NAMES WHERE name=?101 and label=?102);";
 
 
     /*
@@ -134,8 +134,8 @@ namespace {
 }
 
 namespace CKM {
-using namespace DB;
-    DBCrypto::DBCrypto(const std::string& path, const RawBuffer &rawPass)
+namespace DB {
+    Crypto::Crypto(const std::string& path, const RawBuffer &rawPass)
     {
         m_connection = NULL;
         m_inUserTransaction = false;
@@ -146,20 +146,20 @@ using namespace DB;
             m_connection->ExecCommand("VACUUM;");
         } Catch(SqlConnection::Exception::ConnectionBroken) {
             LogError("Couldn't connect to database: " << path);
-            ReThrow(DBCrypto::Exception::InternalError);
+            ReThrow(Crypto::Exception::InternalError);
         } Catch(SqlConnection::Exception::InvalidArguments) {
             LogError("Couldn't set the key for database");
-            ReThrow(DBCrypto::Exception::InternalError);
+            ReThrow(Crypto::Exception::InternalError);
         } Catch(SqlConnection::Exception::SyntaxError) {
             LogError("Couldn't initiate the database");
-            ReThrow(DBCrypto::Exception::InternalError);
+            ReThrow(Crypto::Exception::InternalError);
         } Catch(SqlConnection::Exception::InternalError) {
-            LogError("Couldn't intialize the database");
-            ReThrow(DBCrypto::Exception::InternalError);
+            LogError("Couldn't create the database");
+            ReThrow(Crypto::Exception::InternalError);
         }
     }
 
-    DBCrypto::DBCrypto(DBCrypto &&other) :
+    Crypto::Crypto(Crypto &&other) :
             m_connection(other.m_connection),
             m_inUserTransaction(other.m_inUserTransaction)
     {
@@ -167,11 +167,11 @@ using namespace DB;
         other.m_inUserTransaction = false;
     }
 
-    DBCrypto::~DBCrypto() {
+    Crypto::~Crypto() {
         delete m_connection;
     }
 
-    DBCrypto& DBCrypto::operator=(DBCrypto&& other) {
+    Crypto& Crypto::operator=(Crypto&& other) {
         if (this == &other)
             return *this;
         delete m_connection;
@@ -185,7 +185,7 @@ using namespace DB;
         return *this;
     }
 
-    void DBCrypto::createTable(
+    void Crypto::createTable(
             const char* create_cmd,
             const char *table_name)
     {
@@ -200,7 +200,7 @@ using namespace DB;
         }
     }
 
-    void DBCrypto::createView(
+    void Crypto::createView(
             const char* create_cmd)
     {
         Try {
@@ -214,7 +214,7 @@ using namespace DB;
         }
     }
 
-    bool DBCrypto::getDBVersion(int & schemaVersion)
+    bool Crypto::getDBVersion(int & schemaVersion)
     {
         SchemaInfo SchemaInfo(this);
         if(SchemaInfo.getVersionInfo(schemaVersion)) {
@@ -241,7 +241,7 @@ using namespace DB;
         return false;
     }
 
-    void DBCrypto::initDatabase()
+    void Crypto::initDatabase()
     {
         // run migration if old database is present
         int schemaVersion;
@@ -277,7 +277,7 @@ using namespace DB;
         }
     }
 
-    DBCrypto::ScriptOptional DBCrypto::getScript(const std::string &scriptName) const
+    Crypto::ScriptOptional Crypto::getScript(const std::string &scriptName) const
     {
         std::string scriptPath = SCRIPTS_PATH + scriptName + std::string(".sql");
         std::ifstream is(scriptPath);
@@ -289,13 +289,14 @@ using namespace DB;
         std::istreambuf_iterator<char> begin(is),end;
         return ScriptOptional(std::string(begin, end));
     }
-    DBCrypto::ScriptOptional DBCrypto::getMigrationScript(int db_version) const
+
+    Crypto::ScriptOptional Crypto::getMigrationScript(int db_version) const
     {
         std::string scriptPath = std::string(SCRIPT_MIGRATE) + std::to_string(db_version);
         return getScript(scriptPath);
     }
 
-    void DBCrypto::createDBSchema() {
+    void Crypto::createDBSchema() {
         Transaction transaction(this);
 
         ScriptOptional script = getScript(SCRIPT_CREATE_SCHEMA);
@@ -312,7 +313,7 @@ using namespace DB;
         transaction.commit();
     }
 
-    void DBCrypto::resetDB() {
+    void Crypto::resetDB() {
         Transaction transaction(this);
         ScriptOptional script = getScript(SCRIPT_DROP_ALL_ITEMS);
         if(!script)
@@ -327,7 +328,7 @@ using namespace DB;
         transaction.commit();
     }
 
-    bool DBCrypto::isNameLabelPresent(const Name &name, const Label &owner) const {
+    bool Crypto::isNameLabelPresent(const Name &name, const Label &owner) const {
         Try {
             NameTable nameTable(this->m_connection);
             return nameTable.isPresent(name, owner);
@@ -336,11 +337,11 @@ using namespace DB;
         } Catch(SqlConnection::Exception::InternalError) {
             LogError("Couldn't execute insert statement");
         }
-        ThrowMsg(DBCrypto::Exception::InternalError,
+        ThrowMsg(Crypto::Exception::InternalError,
                 "Couldn't check if name and label pair is present");
     }
 
-    void DBCrypto::saveDBRows(const Name &name, const Label &owner, const DBRowVector &rows)
+    void Crypto::saveRows(const Name &name, const Label &owner, const RowVector &rows)
     {
         Try {
             // transaction is present in the layer above
@@ -360,11 +361,11 @@ using namespace DB;
         } Catch(SqlConnection::Exception::InternalError) {
             LogError("Couldn't execute insert statement: " << _rethrown_exception.GetMessage());
         }
-        ThrowMsg(DBCrypto::Exception::InternalError,
-                "Couldn't save DBRow");
+        ThrowMsg(Crypto::Exception::InternalError,
+                "Couldn't save Row");
     }
 
-    void DBCrypto::saveDBRow(const DBRow &row) {
+    void Crypto::saveRow(const Row &row) {
         Try {
             // transaction is present in the layer above
             NameTable nameTable(this->m_connection);
@@ -382,11 +383,11 @@ using namespace DB;
         } Catch(SqlConnection::Exception::InternalError) {
             LogError("Couldn't execute insert statement");
         }
-        ThrowMsg(DBCrypto::Exception::InternalError,
-                "Couldn't save DBRow");
+        ThrowMsg(Crypto::Exception::InternalError,
+                "Couldn't save Row");
     }
 
-    bool DBCrypto::deleteDBRow(
+    bool Crypto::deleteRow(
             const Name &name,
             const Label &ownerLabel)
     {
@@ -404,17 +405,17 @@ using namespace DB;
         } Catch (SqlConnection::Exception::InternalError) {
             LogError("Couldn't execute delete statement");
         }
-        ThrowMsg(DBCrypto::Exception::InternalError,
-                "Couldn't delete DBRow for name " << name << " using ownerLabel " << ownerLabel);
+        ThrowMsg(Crypto::Exception::InternalError,
+                "Couldn't delete Row for name " << name << " using ownerLabel " << ownerLabel);
     }
 
-    DBRow DBCrypto::getRow(
+    Row Crypto::getRow(
             const SqlConnection::DataCommandUniquePtr &selectCommand) const {
-        DBRow row;
+        Row row;
         row.name = selectCommand->GetColumnString(0);
         row.ownerLabel = selectCommand->GetColumnString(1);
         row.exportable = selectCommand->GetColumnInteger(2);
-        row.dataType = DBDataType(selectCommand->GetColumnInteger(3));
+        row.dataType = DataType(selectCommand->GetColumnInteger(3));
         row.algorithmType = static_cast<DBCMAlgType>(selectCommand->GetColumnInteger(4));
         row.encryptionScheme = selectCommand->GetColumnInteger(5);
         row.iv = selectCommand->GetColumnBlob(6);
@@ -424,7 +425,7 @@ using namespace DB;
         return row;
     }
 
-    PermissionMaskOptional DBCrypto::getPermissionRow(
+    PermissionMaskOptional Crypto::getPermissionRow(
         const Name &name,
         const Label &ownerLabel,
         const Label &accessorLabel) const
@@ -442,19 +443,19 @@ using namespace DB;
         return PermissionMaskOptional();
     }
 
-    DBCrypto::DBRowOptional DBCrypto::getDBRow(
+    Crypto::RowOptional Crypto::getRow(
         const Name &name,
         const Label &ownerLabel,
-        DBDataType type)
+        DataType type)
     {
-        return getDBRow(name, ownerLabel, type, type);
+        return getRow(name, ownerLabel, type, type);
     }
 
-    DBCrypto::DBRowOptional DBCrypto::getDBRow(
+    Crypto::RowOptional Crypto::getRow(
         const Name &name,
         const Label &ownerLabel,
-        DBDataType typeRangeStart,
-        DBDataType typeRangeStop)
+        DataType typeRangeStart,
+        DataType typeRangeStop)
     {
         Try {
             SqlConnection::DataCommandUniquePtr selectCommand =
@@ -469,12 +470,12 @@ using namespace DB;
             if(selectCommand->Step())
             {
                 // extract data
-                DBRow current_row = getRow(selectCommand);
+                Row current_row = getRow(selectCommand);
 
                 // all okay, proceed
-                return DBRowOptional(current_row);
+                return RowOptional(current_row);
             } else {
-                return DBRowOptional();
+                return RowOptional();
             }
         } Catch (SqlConnection::Exception::InvalidColumn) {
             LogError("Select statement invalid column error");
@@ -483,28 +484,28 @@ using namespace DB;
         } Catch (SqlConnection::Exception::InternalError) {
             LogError("Couldn't execute select statement");
         }
-        ThrowMsg(DBCrypto::Exception::InternalError,
+        ThrowMsg(Crypto::Exception::InternalError,
                 "Couldn't get row of type <" <<
                 static_cast<int>(typeRangeStart) << "," <<
                 static_cast<int>(typeRangeStop)  << ">" <<
                 " name " << name << " with owner label " << ownerLabel);
     }
 
-    void DBCrypto::getDBRows(
+    void Crypto::getRows(
         const Name &name,
         const Label &ownerLabel,
-        DBDataType type,
-        DBRowVector &output)
+        DataType type,
+        RowVector &output)
     {
-        getDBRows(name, ownerLabel, type, type, output);
+        getRows(name, ownerLabel, type, type, output);
     }
 
-    void DBCrypto::getDBRows(
+    void Crypto::getRows(
         const Name &name,
         const Label &ownerLabel,
-        DBDataType typeRangeStart,
-        DBDataType typeRangeStop,
-        DBRowVector &output)
+        DataType typeRangeStart,
+        DataType typeRangeStop,
+        RowVector &output)
     {
         Try {
             SqlConnection::DataCommandUniquePtr selectCommand =
@@ -529,26 +530,26 @@ using namespace DB;
         } Catch (SqlConnection::Exception::InternalError) {
             LogError("Couldn't execute select statement");
         }
-        ThrowMsg(DBCrypto::Exception::InternalError,
+        ThrowMsg(Crypto::Exception::InternalError,
                 "Couldn't get row of type <" <<
                 static_cast<int>(typeRangeStart) << "," <<
                 static_cast<int>(typeRangeStop)  << ">" <<
                 " name " << name << " with owner label " << ownerLabel);
     }
 
-    void DBCrypto::listNames(
+    void Crypto::listNames(
         const Label &smackLabel,
         LabelNameVector& labelNameVector,
-        DBDataType type)
+        DataType type)
     {
         listNames(smackLabel, labelNameVector, type, type);
     }
 
-    void DBCrypto::listNames(
+    void Crypto::listNames(
         const Label &smackLabel,
         LabelNameVector& labelNameVector,
-        DBDataType typeRangeStart,
-        DBDataType typeRangeStop)
+        DataType typeRangeStart,
+        DataType typeRangeStop)
     {
         Try{
             Transaction transaction(this);
@@ -572,7 +573,7 @@ using namespace DB;
         } Catch (SqlConnection::Exception::InternalError) {
             LogError("Couldn't execute select statement");
         }
-        ThrowMsg(DBCrypto::Exception::InternalError,
+        ThrowMsg(Crypto::Exception::InternalError,
                 "Couldn't list names of type <" <<
                 static_cast<int>(typeRangeStart) << "," <<
                 static_cast<int>(typeRangeStop)  << ">" <<
@@ -581,7 +582,7 @@ using namespace DB;
 
 
 
-    void DBCrypto::saveKey(
+    void Crypto::saveKey(
             const Label& label,
             const RawBuffer &key)
     {
@@ -597,11 +598,11 @@ using namespace DB;
         } Catch (SqlConnection::Exception::InternalError) {
             LogError("Couldn't execute insert statement");
         }
-        ThrowMsg(DBCrypto::Exception::InternalError,
+        ThrowMsg(Crypto::Exception::InternalError,
                 "Couldn't save key for label " << label);
     }
 
-    DBCrypto::RawBufferOptional DBCrypto::getKey(const Label& label)
+    Crypto::RawBufferOptional Crypto::getKey(const Label& label)
     {
         Try {
             SqlConnection::DataCommandUniquePtr selectCommand =
@@ -622,11 +623,11 @@ using namespace DB;
         } Catch (SqlConnection::Exception::InternalError) {
             LogError("Couldn't execute insert statement");
         }
-        ThrowMsg(DBCrypto::Exception::InternalError,
+        ThrowMsg(Crypto::Exception::InternalError,
                 "Couldn't get key for label " << label);
     }
 
-    void DBCrypto::deleteKey(const Label& label) {
+    void Crypto::deleteKey(const Label& label) {
         Try {
             Transaction transaction(this);
 
@@ -645,11 +646,11 @@ using namespace DB;
         } Catch (SqlConnection::Exception::InternalError) {
             LogError("Couldn't execute insert statement");
         }
-        ThrowMsg(DBCrypto::Exception::InternalError,
+        ThrowMsg(Crypto::Exception::InternalError,
                 "Couldn't delete key for label " << label);
     }
 
-    void DBCrypto::setPermission(
+    void Crypto::setPermission(
             const Name &name,
             const Label& ownerLabel,
             const Label& accessorLabel,
@@ -664,12 +665,12 @@ using namespace DB;
         } Catch (SqlConnection::Exception::InternalError) {
             LogError("Couldn't execute set statement");
         }
-        ThrowMsg(DBCrypto::Exception::InternalError,
+        ThrowMsg(Crypto::Exception::InternalError,
                 "Couldn't set permissions for name " << name );
     }
 
 
-    void DBCrypto::SchemaInfo::setVersionInfo() {
+    void Crypto::SchemaInfo::setVersionInfo() {
         SqlConnection::DataCommandUniquePtr insertContextCommand =
                 m_db->m_connection->PrepareDataCommand(DB_CMD_SCHEMA_SET);
         insertContextCommand->BindString(101, DB_SCHEMA_VERSION_FIELD);
@@ -677,7 +678,7 @@ using namespace DB;
         insertContextCommand->Step();
     }
 
-    bool DBCrypto::SchemaInfo::getVersionInfo(int & version) const
+    bool Crypto::SchemaInfo::getVersionInfo(int & version) const
     {
         // Try..Catch mandatory here - we don't need to escalate the error
         // if it happens - we just won't return the version, allowing CKM to work
@@ -700,7 +701,7 @@ using namespace DB;
         return false;
     }
 
-    void DBCrypto::PermissionTable::setPermission(
+    void Crypto::PermissionTable::setPermission(
             const Name &name,
             const Label& ownerLabel,
             const Label& accessorLabel,
@@ -729,7 +730,7 @@ using namespace DB;
         }
     }
 
-    PermissionMaskOptional DBCrypto::PermissionTable::getPermissionRow(
+    PermissionMaskOptional Crypto::PermissionTable::getPermissionRow(
             const Name &name,
             const Label &ownerLabel,
             const Label &accessorLabel) const
@@ -750,11 +751,11 @@ using namespace DB;
         return PermissionMaskOptional();
     }
 
-    void DBCrypto::NameTable::addRow(
+    void Crypto::NameTable::addRow(
             const Name &name,
             const Label &ownerLabel)
     {
-        // insert NAME_TABLE item
+        // insert NAMES item
         SqlConnection::DataCommandUniquePtr insertNameCommand =
                 m_connection->PrepareDataCommand(DB_CMD_NAME_INSERT);
         insertNameCommand->BindString (101, name.c_str());
@@ -762,7 +763,7 @@ using namespace DB;
         insertNameCommand->Step();
     }
 
-    void DBCrypto::NameTable::deleteRow(
+    void Crypto::NameTable::deleteRow(
             const Name &name,
             const Label &ownerLabel)
     {
@@ -776,7 +777,7 @@ using namespace DB;
         deleteCommand->Step();
     }
 
-    void DBCrypto::NameTable::deleteAllRows(const Label &ownerLabel)
+    void Crypto::NameTable::deleteAllRows(const Label &ownerLabel)
     {
         SqlConnection::DataCommandUniquePtr deleteData =
                 m_connection->PrepareDataCommand(DB_CMD_NAME_DELETE_BY_LABEL);
@@ -787,7 +788,7 @@ using namespace DB;
         deleteData->Step();
     }
 
-    bool DBCrypto::NameTable::isPresent(const Name &name, const Label &ownerLabel) const
+    bool Crypto::NameTable::isPresent(const Name &name, const Label &ownerLabel) const
     {
         SqlConnection::DataCommandUniquePtr checkCmd =
                 m_connection->PrepareDataCommand(DB_CMD_NAME_COUNT_ROWS);
@@ -803,7 +804,7 @@ using namespace DB;
         return false;
     }
 
-    void DBCrypto::ObjectTable::addRow(const DBRow &row)
+    void Crypto::ObjectTable::addRow(const Row &row)
     {
         SqlConnection::DataCommandUniquePtr insertObjectCommand =
                 m_connection->PrepareDataCommand(DB_CMD_OBJECT_INSERT);
@@ -822,6 +823,7 @@ using namespace DB;
 
         insertObjectCommand->Step();
     }
+} // namespace DB
 } // namespace CKM
 
 #pragma GCC diagnostic pop
