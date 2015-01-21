@@ -83,9 +83,6 @@ int getCertChain(
     });
 }
 
-const CertificateShPtrVector EMPTY_CERT_VECTOR;
-const AliasVector EMPTY_ALIAS_VECTOR;
-
 } // namespace anonymous
 
 ManagerImpl::ManagerImpl()
@@ -511,30 +508,6 @@ int ManagerImpl::createKeyPair(
 
         return retCode;
     });
-}
-
-int ManagerImpl::getCertificateChain(
-    const CertificateShPtr &certificate,
-    const CertificateShPtrVector &untrustedCertificates,
-    CertificateShPtrVector &certificateChainVector)
-{
-    return getCertificateChain(certificate,
-                               untrustedCertificates,
-                               EMPTY_CERT_VECTOR,
-                               true,
-                               certificateChainVector);
-}
-
-int ManagerImpl::getCertificateChain(
-    const CertificateShPtr &certificate,
-    const AliasVector &untrustedCertificates,
-    CertificateShPtrVector &certificateChainVector)
-{
-    return getCertificateChain(certificate,
-                               untrustedCertificates,
-                               EMPTY_ALIAS_VECTOR,
-                               true,
-                               certificateChainVector);
 }
 
 int ManagerImpl::getCertificateChain(

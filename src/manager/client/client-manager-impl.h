@@ -79,16 +79,6 @@ public:
     int getCertificateChain(
         const CertificateShPtr &certificate,
         const CertificateShPtrVector &untrustedCertificates,
-        CertificateShPtrVector &certificateChainVector);
-
-    int getCertificateChain(
-        const CertificateShPtr &certificate,
-        const AliasVector &untrustedCertificates,
-        CertificateShPtrVector &certificateChainVector);
-
-    int getCertificateChain(
-        const CertificateShPtr &certificate,
-        const CertificateShPtrVector &untrustedCertificates,
         const CertificateShPtrVector &trustedCertificates,
         bool useTrustedSystemCertificates,
         CertificateShPtrVector &certificateChainVector);

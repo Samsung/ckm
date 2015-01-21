@@ -43,8 +43,6 @@ LabelNameVector toLabelNameVector(const AliasVector& aliases)
     }
     return labelNames;
 }
-const RawBufferVector EMPTY_CERT_VECTOR;
-const LabelNameVector EMPTY_ALIAS_VECTOR;
 
 } // namespace anonymous
 
@@ -182,30 +180,6 @@ void ManagerAsync::createKeyPairECDSA(const ObserverPtr& observer,
                           publicKeyAlias,
                           policyPrivateKey,
                           policyPublicKey);
-}
-
-void ManagerAsync::getCertificateChain(const ObserverPtr& observer,
-                                       const CertificateShPtr& certificate,
-                                       const CertificateShPtrVector& untrustedCertificates)
-{
-    m_impl->getCertChain(observer,
-                         LogicCommand::GET_CHAIN_CERT,
-                         certificate,
-                         toRawBufferVector(untrustedCertificates),
-                         EMPTY_CERT_VECTOR,
-                         true);
-}
-
-void ManagerAsync::getCertificateChain(const ObserverPtr& observer,
-                                       const CertificateShPtr& certificate,
-                                       const AliasVector& untrustedCertificates)
-{
-    m_impl->getCertChain(observer,
-                         LogicCommand::GET_CHAIN_ALIAS,
-                         certificate,
-                         toLabelNameVector(untrustedCertificates),
-                         EMPTY_ALIAS_VECTOR,
-                         true);
 }
 
 void ManagerAsync::getCertificateChain(const ObserverPtr& observer,
