@@ -66,7 +66,8 @@ typedef enum __ckmc_key_type {
 typedef enum __ckmc_data_format {
     CKMC_FORM_DER_BASE64 = 0,  /**< DER format base64 encoded data */
     CKMC_FORM_DER,             /**< DER encoded data */
-    CKMC_FORM_PEM              /**< PEM encoded data. It consists of the DER format base64 encoded with additional header and footer lines. */
+    CKMC_FORM_PEM              /**< PEM encoded data. It consists of the DER format base64 encoded
+                                    with additional header and footer lines. */
 } ckmc_data_format_e;
 
 /**
@@ -74,9 +75,11 @@ typedef enum __ckmc_data_format {
  * @since_tizen 2.3
  */
 typedef enum __ckmc_ec_type {
-    CKMC_EC_PRIME192V1 = 0, /**< Elliptic curve domain "secp192r1" listed in "SEC 2" recommended elliptic curve domain  */
+    CKMC_EC_PRIME192V1 = 0, /**< Elliptic curve domain "secp192r1" listed in "SEC 2" recommended
+                                 elliptic curve domain  */
     CKMC_EC_PRIME256V1,     /**< "SEC 2" recommended elliptic curve domain - secp256r1 */
-    CKMC_EC_SECP384R1       /**< NIST curve P-384 (covers "secp384r1", the elliptic curve domain listed in See SEC 2 */
+    CKMC_EC_SECP384R1       /**< NIST curve P-384 (covers "secp384r1", the elliptic curve domain
+                                 listed in See SEC 2 */
 } ckmc_ec_type_e;
 
 /**
@@ -135,7 +138,9 @@ typedef struct __ckmc_raw_buff {
  * @since_tizen 2.3
  */
 typedef struct __ckmc_policy {
-    char* password;   /**< Byte array used to encrypt data inside CKM. If it is not null, the data(or key, or certificate) is stored encrypted with this password inside key manager */
+    char* password;   /**< Byte array used to encrypt data inside CKM. If it is not null, the data
+                           (or key, or certificate) is stored encrypted with this password inside
+                           key manager */
     bool extractable; /**< If true key may be extracted from storage */
 } ckmc_policy_s;
 
@@ -211,7 +216,8 @@ typedef struct __ckmc_pkcs12 {
  *
  * @since_tizen 2.3
  *
- * @remarks You must destroy the newly created @a ckmc_key_s by calling ckmc_key_free() if it is no longer needed.
+ * @remarks You must destroy the newly created @a ckmc_key_s by calling ckmc_key_free() if it is no
+ *          longer needed.
  *
  * @param[in] raw_key  The byte array of key \n
  *                     @a raw_key may be encrypted with password.
@@ -230,8 +236,10 @@ typedef struct __ckmc_pkcs12 {
  * @see ckmc_key_free()
  * @see #ckmc_key_s
  */
-int ckmc_key_new(unsigned char *raw_key, size_t key_size,
-        ckmc_key_type_e key_type, char *password, ckmc_key_s **ppkey);
+int ckmc_key_new(unsigned char *raw_key,
+                 size_t key_size,
+                 ckmc_key_type_e key_type,
+                 char *password, ckmc_key_s **ppkey);
 
 /**
  * @brief Destroys the @a ckmc_key_s handle and releases all its resources.
@@ -249,7 +257,8 @@ void ckmc_key_free(ckmc_key_s *key);
  *
  * @since_tizen 2.3
  *
- * @remarks You must destroy the newly created @a ckmc_raw_buffer_s by calling ckmc_buffer_free() if it is no longer needed.
+ * @remarks You must destroy the newly created @a ckmc_raw_buffer_s by calling ckmc_buffer_free() if
+ *          it is no longer needed.
  *
  * @param[in]  data      The byte array of buffer
  * @param[in]  size      The byte size of buffer
@@ -282,7 +291,8 @@ void ckmc_buffer_free(ckmc_raw_buffer_s *buffer);
  *
  * @since_tizen 2.3
  *
- * @remarks You must destroy the newly created @a ckmc_cert_s by calling ckmc_cert_free() if it is no longer needed.
+ * @remarks You must destroy the newly created @a ckmc_cert_s by calling ckmc_cert_free() if it is
+ *          no longer needed.
  *
  * @param[in]  raw_cert     The byte array of certificate
  * @param[in]  cert_size    The byte size of raw_cert
@@ -299,8 +309,10 @@ void ckmc_buffer_free(ckmc_raw_buffer_s *buffer);
  * @see ckmc_load_cert_from_file()
  * @see #ckmc_cert_s
  */
-int ckmc_cert_new(unsigned char *raw_cert, size_t cert_size,
-        ckmc_data_format_e data_format, ckmc_cert_s **ppcert);
+int ckmc_cert_new(unsigned char *raw_cert,
+                  size_t cert_size,
+                  ckmc_data_format_e data_format,
+                  ckmc_cert_s **ppcert);
 
 /**
  * @brief Destroys the @a ckmc_cert handle and releases all its resources.
@@ -319,7 +331,8 @@ void ckmc_cert_free(ckmc_cert_s *cert);
  *
  * @since_tizen 2.3
  *
- * @remarks You must destroy the newly created @a ckmc_cert_s by calling ckmc_cert_free() if it is no longer needed.
+ * @remarks You must destroy the newly created @a ckmc_cert_s by calling ckmc_cert_free() if it is
+ *          no longer needed.
  *
  * @param[in]  file_path  The path of certificate file to be loaded \n
  *                        The only DER or PEM encoded certificate file is supported.
@@ -343,8 +356,10 @@ int ckmc_load_cert_from_file(const char *file_path, ckmc_cert_s **cert);
  *
  * @since_tizen 2.3
  *
- * @remarks You must destroy the newly created @a ckmc_pkcs12_s by calling ckmc_pkcs12_free() if it is no longer needed.
- * @remarks On success, private_key, cert && ca_cert_list ownership is transferred into newly returned ckmc_pkcs12_s.
+ * @remarks You must destroy the newly created @a ckmc_pkcs12_s by calling ckmc_pkcs12_free() if it
+ *          is no longer needed.
+ * @remarks On success, private_key, cert && ca_cert_list ownership is transferred into newly
+ *          returned ckmc_pkcs12_s.
  *
  * @param[in]  private_key      @a ckmc_key_s handle to the private key (optional)
  * @param[in]  cert             @a ckmc_cert_s handle to the certificate (optional)
@@ -354,7 +369,8 @@ int ckmc_load_cert_from_file(const char *file_path, ckmc_cert_s **cert);
  * @return @c 0 on success,
  *         otherwise a negative error value
  *
- * @retval #CKMC_ERROR_INVALID_PARAMETER  Input parameter is invalid or private_key, cert and ca_cert_list all are null.
+ * @retval #CKMC_ERROR_INVALID_PARAMETER  Input parameter is invalid or private_key, cert and
+ *                                        ca_cert_list all are null.
  * @retval #CKMC_ERROR_OUT_OF_MEMORY      Not enough memory
  *
  * @see ckmc_pkcs12_free()
@@ -365,16 +381,21 @@ int ckmc_load_cert_from_file(const char *file_path, ckmc_cert_s **cert);
  * @see #ckmc_cert_list_s
  * @see #ckmc_pkcs12_s
  */
-int ckmc_pkcs12_new(ckmc_key_s *private_key, ckmc_cert_s *cert,
-        ckmc_cert_list_s *ca_cert_list, ckmc_pkcs12_s **pkcs12_bundle);
+int ckmc_pkcs12_new(ckmc_key_s *private_key,
+                    ckmc_cert_s *cert,
+                    ckmc_cert_list_s *ca_cert_list,
+                    ckmc_pkcs12_s **pkcs12_bundle);
 
 /**
  * @deprecated, use @a ckmc_load_from_pkcs12_file2() instead
- * @brief Creates a new @a ckmc_key_s(private key), @a ckmc_cert_s(certificate), and @a ckmc_cert_list_s(CA certificates) handle from a given PKCS#12 file and returns them.
+ * @brief Creates a new @a ckmc_key_s(private key), @a ckmc_cert_s(certificate), and
+ *        @a ckmc_cert_list_s(CA certificates) handle from a given PKCS#12 file and returns them.
  *
  * @since_tizen 2.3
  *
- * @remarks You must destroy the newly created @a ckmc_key_s, @a ckmc_cert_s, and @a ckmc_cert_list_s by calling ckmc_key_free(), ckmc_cert_free(), and ckmc_cert_list_all_free() if they are no longer needed.
+ * @remarks You must destroy the newly created @a ckmc_key_s, @a ckmc_cert_s, and
+ *          @a ckmc_cert_list_s by calling ckmc_key_free(), ckmc_cert_free(), and
+ *          ckmc_cert_list_all_free() if they are no longer needed.
  *
  * @param[in]  file_path    The path of PKCS12 file to be loaded
  * @param[in]  passphrase   The passphrase used to decrypt the PCKS12 file \n
@@ -382,7 +403,8 @@ int ckmc_pkcs12_new(ckmc_key_s *private_key, ckmc_cert_s *cert,
  * @param[out] private_key  The pointer of newly created @a ckmc_key_s handle for a private key
  * @param[out] cert         The pointer of newly created @a ckmc_cert_s handle for a certificate \n
  *                          It is null if the PKCS12 file does not contain a certificate.
- * @param[out] ca_cert_list The pointer of newly created @a ckmc_cert_list_s handle for CA certificates \n
+ * @param[out] ca_cert_list The pointer of newly created @a ckmc_cert_list_s handle for CA
+ *                          certificates \n
  *                          It is null if the PKCS12 file does not contain CA certificates.
  *
  * @return #CKMC_ERROR_NONE on success,
@@ -402,21 +424,24 @@ int ckmc_pkcs12_new(ckmc_key_s *private_key, ckmc_cert_s *cert,
  * @see #ckmc_cert_s
  * @see #ckmc_cert_list_s
  */
-int ckmc_load_from_pkcs12_file(const char *file_path, const char *passphrase,
-        ckmc_key_s **private_key, ckmc_cert_s **cert,
-        ckmc_cert_list_s **ca_cert_list);
+int ckmc_load_from_pkcs12_file(const char *file_path,
+                               const char *passphrase,
+                               ckmc_key_s **private_key, ckmc_cert_s **cert,
+                               ckmc_cert_list_s **ca_cert_list);
 
 /**
  * @brief Creates a new @a ckmc_pkcs12_s handle from a given PKCS#12 file and returns it.
  *
  * @since_tizen 2.3
  *
- * @remarks You must destroy the newly created @a ckmc_pkcs12_s by calling ckmc_pkcs12_free() if they are no longer needed.
+ * @remarks You must destroy the newly created @a ckmc_pkcs12_s by calling ckmc_pkcs12_free() if
+ *          they are no longer needed.
  *
  * @param[in]  file_path    The path of PKCS12 file to be loaded
  * @param[in]  passphrase   The passphrase used to decrypt the PCKS12 file \n
  *                          If PKCS12 file is not encrypted, passphrase can be null.
- * @param[out] ca_cert_list The pointer of newly created @a ckmc_cert_list_s handle for CA certificates \n
+ * @param[out] ca_cert_list The pointer of newly created @a ckmc_cert_list_s handle for CA
+ *                          certificates \n
  *                          It is null if the PKCS12 file does not contain CA certificates.
  *
  * @return #CKMC_ERROR_NONE on success,
@@ -430,7 +455,9 @@ int ckmc_load_from_pkcs12_file(const char *file_path, const char *passphrase,
  * @see ckmc_pkcs12_free()
  * @see #ckmc_pkcs12_s
  */
-int ckmc_load_from_pkcs12_file2(const char *file_path, const char *passphrase, ckmc_pkcs12_s **pkcs12_bundle);
+int ckmc_load_from_pkcs12_file2(const char *file_path,
+                                const char *passphrase,
+                                ckmc_pkcs12_s **pkcs12_bundle);
 
 /**
  * @brief Destroys the @a ckmc_pkcs12_s handle and releases all its resources.
@@ -447,11 +474,14 @@ void ckmc_pkcs12_free(ckmc_pkcs12_s *pkcs12);
 /**
  * @internal
  * @brief Creates a new @a ckmc_alias_list_s handle and returns it.
- *        The alias pointer in the returned @a ckmc_alias_list_s handle points to the provided characters and next is null.
+ *        The alias pointer in the returned @a ckmc_alias_list_s handle points to the provided
+ *        characters and next is null.
  *
  * @since_tizen 2.3
  *
- * @remarks You must destroy the newly created @a ckmc_alias_list_s by calling ckmc_alias_list_free() or ckmc_alias_list_all_free() if it is no longer needed.
+ * @remarks You must destroy the newly created @a ckmc_alias_list_s
+ *          by calling ckmc_alias_list_free() or ckmc_alias_list_all_free() if it is no longer
+ *          needed.
  *
  * @param[in]  alias        The first item to be set in the newly created @a ckmc_alias_list_s
  * @param[out] ppalias_list The pointer to a newly created @a ckmc_alias_list_s handle
@@ -469,12 +499,14 @@ int ckmc_alias_list_new(char *alias, ckmc_alias_list_s **ppalias_list);
 
 /**
  * @internal
- * @brief Creates a new @a ckmc_alias_list_s handle, adds it to a previous @a ckmc_alias_list_s and returns it.
- *        The alias pointer in the returned @a ckmc_alias_list_s handle points to the provided characters and next is null.
+ * @brief Creates a new @a ckmc_alias_list_s handle, adds it to a previous @a ckmc_alias_list_s and
+ *        returns it. The alias pointer in the returned @a ckmc_alias_list_s handle points to the
+ *        provided characters and next is null.
  *
  * @since_tizen 2.3
  *
- * @param[in]  previous  The last @a ckmc_alias_list_s handle to which a newly created @a ckmc_alias_list_s is added
+ * @param[in]  previous  The last @a ckmc_alias_list_s handle to which a newly created
+ *                       @a ckmc_alias_list_s is added
  * @param[in]  alias     The item to be set in the newly created @a ckmc_alias_list_s
  * @param[out] pplast    The pointer to a newly created and added @a ckmc_alias_list_s handle
  *
@@ -488,11 +520,13 @@ int ckmc_alias_list_new(char *alias, ckmc_alias_list_s **ppalias_list);
  * @see #ckmc_alias_list_s
  */
 int ckmc_alias_list_add(ckmc_alias_list_s *previous,
-        char *alias, ckmc_alias_list_s **pplast);
+                        char *alias,
+                        ckmc_alias_list_s **pplast);
 
 /**
  * @internal
- * @brief Destroys the @a ckmc_alias_list_s handle and releases resources of @a ckmc_alias_list_s from the provided first handle cascadingly.
+ * @brief Destroys the @a ckmc_alias_list_s handle and releases resources of @a ckmc_alias_list_s
+ *        from the provided first handle cascadingly.
  *
  * @since_tizen 2.3
  *
@@ -506,7 +540,8 @@ int ckmc_alias_list_add(ckmc_alias_list_s *previous,
 void ckmc_alias_list_free(ckmc_alias_list_s *first);
 
 /**
- * @brief Destroys the @a ckmc_alias_list_s handle and releases all its resources from the provided first handle cascadingly.
+ * @brief Destroys the @a ckmc_alias_list_s handle and releases all its resources from the provided
+ *        first handle cascadingly.
  *
  * @since_tizen 2.3
  *
@@ -521,11 +556,13 @@ void ckmc_alias_list_all_free(ckmc_alias_list_s *first);
 /**
  * @internal
  * @brief Creates a new @a ckmc_cert_list_s handle and returns it.
- *        The cert pointer in the returned @a ckmc_cert_list_s handle points to the provided @a ckmc_cert_s and next is null.
+ *        The cert pointer in the returned @a ckmc_cert_list_s handle points to the provided
+ *        @a ckmc_cert_s and next is null.
  *
  * @since_tizen 2.3
  *
- * @remarks You must destroy the newly created @a ckmc_cert_list_s by calling ckmc_cert_list_free() or ckmc_cert_list_all_free() if it is no longer needed.
+ * @remarks You must destroy the newly created @a ckmc_cert_list_s by calling ckmc_cert_list_free()
+ *          or ckmc_cert_list_all_free() if it is no longer needed.
  *
  * @param[in]  cert          The first item to be set in the newly created @a ckmc_cert_list_s
  * @param[out] ppalias_list  The pointer to a newly created @a ckmc_alias_list_s handle
@@ -543,12 +580,14 @@ int ckmc_cert_list_new(ckmc_cert_s *cert, ckmc_cert_list_s **ppalias_list);
 
 /**
  * @internal
- * @brief Creates a new @a ckmc_cert_list_s handle, adds it to a previous @a ckmc_cert_list_s and returns it.
- *        The cert pointer in the returned @a ckmc_alias_list_s handle points to the provided @a ckmc_cert_s and next is null.
+ * @brief Creates a new @a ckmc_cert_list_s handle, adds it to a previous @a ckmc_cert_list_s and
+ *        returns it. The cert pointer in the returned @a ckmc_alias_list_s handle points to the
+ *        provided @a ckmc_cert_s and next is null.
  *
  * @since_tizen 2.3
  *
- * @param[in]  previous  The last @a ckmc_cert_list_s handle to which a newly created @a ckmc_cert_list_s is added
+ * @param[in]  previous  The last @a ckmc_cert_list_s handle to which a newly created
+ *                       @a ckmc_cert_list_s is added
  * @param[in]  cert      The item to be set in the newly created @a ckmc_cert_list_s
  * @param[out] pplast    The pointer to a newly created and added @a ckmc_alias_list_s handle
  *
@@ -561,12 +600,12 @@ int ckmc_cert_list_new(ckmc_cert_s *cert, ckmc_cert_list_s **ppalias_list);
  * @see ckmc_cert_list_all_free()
  * @see #ckmc_cert_list_s
  */
-int ckmc_cert_list_add(ckmc_cert_list_s *previous,
-        ckmc_cert_s *cert, ckmc_cert_list_s **pplast);
+int ckmc_cert_list_add(ckmc_cert_list_s *previous, ckmc_cert_s *cert, ckmc_cert_list_s **pplast);
 
 /**
  * @internal
- * @brief Destroys the @a ckmc_cert_list_s handle and releases resources of @a ckmc_cert_list_s from the provided first handle cascadingly.
+ * @brief Destroys the @a ckmc_cert_list_s handle and releases resources of @a ckmc_cert_list_s
+ *        from the provided first handle cascadingly.
  *
  * @since_tizen 2.3
  *
@@ -580,7 +619,8 @@ int ckmc_cert_list_add(ckmc_cert_list_s *previous,
 void ckmc_cert_list_free(ckmc_cert_list_s *first);
 
 /**
- * @brief Destroys the @a ckmc_cert_list_s handle and releases all its resources from the provided first handle cascadingly.
+ * @brief Destroys the @a ckmc_cert_list_s handle and releases all its resources from the provided
+ *        first handle cascadingly.
  *
  * @since_tizen 2.3
  *

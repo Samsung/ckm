@@ -40,13 +40,15 @@ extern "C" {
 
 /**
  * @brief Decrypts a user key(DKEK) with password.
- *        A decrypted user key exists only on memory. If this API is called for the first time, a user key will be generated internally.
+ *        A decrypted user key exists only on memory. If this API is called for the first time, a
+ *        user key will be generated internally.
  *
  * @since_tizen 2.3
  * @privlevel platform
  * @privilege %http://tizen.org/privilege/keymanager.admin
  *
- * @remarks The user key is a randomly generated key used in encrypting user data. And the user key is protected by a user's password.
+ * @remarks The user key is a randomly generated key used in encrypting user data. And the user key
+ *          is protected by a user's password.
  *
  * @param[in] user      The user ID of a user whose key is decrypted
  * @param[in] password  The password used in decrypting a user key
@@ -115,7 +117,8 @@ int ckmc_remove_user_data(uid_t user);
 
 /**
  * @brief Changes a password for a user.
- *        The key manager decrypts a user key (DKEK) with old password and re-encrypts a user key with new password.
+ *        The key manager decrypts a user key (DKEK) with old password and re-encrypts a user key
+ *        with new password.
  *
  * @since_tizen 2.3
  * @privlevel platform
@@ -189,7 +192,8 @@ int ckmc_reset_user_password(uid_t user, const char *new_password);
  *
  * @retval #CKMC_ERROR_NONE                 Successful
  * @retval #CKMC_ERROR_INVALID_PARAMETER    Input parameter is invalid
- * @retval #CKMC_ERROR_DB_LOCKED            A user key is not loaded in memory (a user is not logged in)
+ * @retval #CKMC_ERROR_DB_LOCKED            A user key is not loaded in memory (a user is not logged
+ *                                          in)
  * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN     Alias does not exist
  * @retval #CKMC_ERROR_PERMISSION_DENIED    Failed to access key manager
  *
@@ -198,7 +202,11 @@ int ckmc_reset_user_password(uid_t user, const char *new_password);
  * @see ckmc_set_permission_by_adm()
  * @see ckmc_set_permission()
  */
-int ckmc_allow_access_by_adm(uid_t user, const char *owner, const char *alias, const char *accessor, ckmc_access_right_e granted);
+int ckmc_allow_access_by_adm(uid_t user,
+                             const char *owner,
+                             const char *alias,
+                             const char *accessor,
+                             ckmc_access_right_e granted);
 
 /**
  * @brief Allows another application to access client's application data
@@ -213,14 +221,16 @@ int ckmc_allow_access_by_adm(uid_t user, const char *owner, const char *alias, c
  * @param[in] user        User ID of a user whose data will be affected
  * @param[in] alias       Data alias for which access will be granted
  * @param[in] accessor    Package id of the application that will gain access rights
- * @param[in] permissions Mask of permissions granted for @a accessor application (@a ckmc_permission_e)
+ * @param[in] permissions Mask of permissions granted for @a accessor application
+ *                        (@a ckmc_permission_e)
  *                        (previous permission mask will be replaced with the new mask value)
  *
  * @return @c 0 on success, otherwise a negative error value
  *
  * @retval #CKMC_ERROR_NONE                 Successful
  * @retval #CKMC_ERROR_INVALID_PARAMETER    Input parameter is invalid
- * @retval #CKMC_ERROR_DB_LOCKED            A user key is not loaded in memory (a user is not logged in)
+ * @retval #CKMC_ERROR_DB_LOCKED            A user key is not loaded in memory (a user is not logged
+ *                                          in)
  * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN     Alias does not exist
  * @retval #CKMC_ERROR_PERMISSION_DENIED    Failed to access key manager
  *
@@ -252,7 +262,8 @@ int ckmc_set_permission_by_adm(uid_t user, const char *alias, const char *access
  * @retval #CKMC_ERROR_NONE                 Successful
  * @retval #CKMC_ERROR_INVALID_PARAMETER    Input parameter is invalid or the @a accessor doesn't
  *                                          have access to @a alias
- * @retval #CKMC_ERROR_DB_LOCKED            A user key is not loaded in memory (a user is not logged in)
+ * @retval #CKMC_ERROR_DB_LOCKED            A user key is not loaded in memory (a user is not logged
+ *                                          in)
  * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN     Alias does not exist
  * @retval #CKMC_ERROR_PERMISSION_DENIED    Failed to access key manager
  *

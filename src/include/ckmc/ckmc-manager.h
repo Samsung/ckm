@@ -16,7 +16,8 @@
  *
  * @file        ckmc-manager.h
  * @version     1.0
- * @brief       Provides management functions(storing, retrieving, and removing) for keys, certificates and data of a user and additional crypto functions.
+ * @brief       Provides management functions(storing, retrieving, and removing) for keys,
+ *              certificates and data of a user and additional crypto functions.
  */
 
 
@@ -46,10 +47,15 @@ extern "C" {
  * @privlevel public
  * @privilege %http://tizen.org/privilege/keymanager
  *
- * @remarks Currently only six types of keys are supported for this API. These are RSA public/private key, DSA public/private key and ECDSA public/private key.
- * @remarks key_type in key may be set to #CKMC_KEY_NONE as an input. key_type is determined inside key manager during storing keys.
- * @remarks Some private key files are protected by a password. If raw_key in key read from those encrypted files is encrypted with a password, the password should be provided in the #ckmc_key_s structure.
- * @remarks If password in policy is provided, the key is additionally encrypted with the password in policy.
+ * @remarks Currently only six types of keys are supported for this API. These are RSA
+ *          public/private key, DSA public/private key and ECDSA public/private key.
+ * @remarks key_type in key may be set to #CKMC_KEY_NONE as an input. key_type is determined inside
+ *          key manager during storing keys.
+ * @remarks Some private key files are protected by a password. If raw_key in key read from those
+ *          encrypted files is encrypted with a password, the password should be provided in the
+ *          #ckmc_key_s structure.
+ * @remarks If password in policy is provided, the key is additionally encrypted with the password
+ *          in policy.
  *
  * @param[in] alias   The name of a key to be stored
  * @param[in] key     The key's binary value to be stored
@@ -60,7 +66,8 @@ extern "C" {
  *
  * @retval #CKMC_ERROR_NONE              Successful
  * @retval #CKMC_ERROR_INVALID_PARAMETER Input parameter is invalid
- * @retval #CKMC_ERROR_DB_LOCKED         A user key is not loaded in memory (a user is not logged in)
+ * @retval #CKMC_ERROR_DB_LOCKED         A user key is not loaded in memory (a user is not logged
+ *                                       in)
  * @retval #CKMC_ERROR_DB_ALIAS_EXISTS   Alias already exists
  * @retval #CKMC_ERROR_INVALID_FORMAT    The format of raw_key is not valid
  * @retval #CKMC_ERROR_DB_ERROR          Failed due to a database error
@@ -93,7 +100,8 @@ int ckmc_save_key(const char *alias, const ckmc_key_s key, const ckmc_policy_s p
  *
  * @retval #CKMC_ERROR_NONE              Successful
  * @retval #CKMC_ERROR_INVALID_PARAMETER Input parameter is invalid
- * @retval #CKMC_ERROR_DB_LOCKED         A user key is not loaded in memory (a user is not logged in)
+ * @retval #CKMC_ERROR_DB_LOCKED         A user key is not loaded in memory (a user is not logged
+ *                                       in)
  * @retval #CKMC_ERROR_DB_ERROR          Failed due to a database error
  * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN  Alias does not exist
  * @retval #CKMC_ERROR_PERMISSION_DENIED Failed to access key manager
@@ -114,11 +122,13 @@ int ckmc_remove_key(const char *alias);
  * @privilege %http://tizen.org/privilege/keymanager
  *
  * @remarks A client can access only data stored by the client.
- * @remarks You must destroy the newly created @a ppkey by calling ckmc_key_free() if it is no longer needed.
+ * @remarks You must destroy the newly created @a ppkey by calling ckmc_key_free() if it is no
+ *          longer needed.
  *
  * @param[in] alias     The name of a key to retrieve
  * @param[in] password  The password used in decrypting a key value \n
- *                      If password of policy is provided in ckmc_save_key(), the same password should be provided.
+ *                      If password of policy is provided in ckmc_save_key(), the same password
+ *                      should be provided.
  * @param[out] ppkey    The pointer to a newly created ckmc_key_s handle
  *
  * @return @c 0 on success,
@@ -126,7 +136,8 @@ int ckmc_remove_key(const char *alias);
  *
  * @retval #CKMC_ERROR_NONE              Successful
  * @retval #CKMC_ERROR_INVALID_PARAMETER Input parameter is invalid
- * @retval #CKMC_ERROR_DB_LOCKED         A user key is not loaded in memory (a user is not logged in)
+ * @retval #CKMC_ERROR_DB_LOCKED         A user key is not loaded in memory (a user is not logged
+ *                                       in)
  * @retval #CKMC_ERROR_DB_ERROR          Failed due to a database error
  * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN  Alias does not exist
  * @retval #CKMC_ERROR_PERMISSION_DENIED Failed to access key manager
@@ -147,9 +158,11 @@ int ckmc_get_key(const char *alias, const char *password, ckmc_key_s **ppkey);
  * @privilege %http://tizen.org/privilege/keymanager
  *
  * @remarks A client can access only data stored by the client.
- * @remarks You must destroy the newly created @a ppalias_list by calling ckmc_alias_list_all_free() if it is no longer needed.
+ * @remarks You must destroy the newly created @a ppalias_list by calling ckmc_alias_list_all_free()
+ *          if it is no longer needed.
  *
- * @param[out] ppalias_list  The pointer to a newly created ckmc_alias_list_s handle containing all available alias of keys \n
+ * @param[out] ppalias_list  The pointer to a newly created ckmc_alias_list_s handle containing all
+ *                           available alias of keys \n
  *                           If there is no available key alias, *ppalias_list will be null.
  *
  * @return @c 0 on success,
@@ -157,7 +170,8 @@ int ckmc_get_key(const char *alias, const char *password, ckmc_key_s **ppkey);
  *
  * @retval #CKMC_ERROR_NONE              Successful
  * @retval #CKMC_ERROR_INVALID_PARAMETER Input parameter is invalid
- * @retval #CKMC_ERROR_DB_LOCKED         A user key is not loaded in memory (a user is not logged in)
+ * @retval #CKMC_ERROR_DB_LOCKED         A user key is not loaded in memory (a user is not logged
+ *                                       in)
  * @retval #CKMC_ERROR_DB_ERROR          Failed due to a database error
  * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN  Alias does not exist
  * @retval #CKMC_ERROR_PERMISSION_DENIED Failed to access key manager
@@ -180,7 +194,8 @@ int ckmc_get_key_alias_list(ckmc_alias_list_s** ppalias_list);
  * @privlevel public
  * @privilege %http://tizen.org/privilege/keymanager
  *
- * @remarks the certificate's binary value will be converted and saved as binary DER encoded certificates.
+ * @remarks the certificate's binary value will be converted and saved as binary DER encoded
+ *          certificates.
  *
  * @param[in] alias  The name of a certificate to be stored
  * @param[in] cert   The certificate's binary value to be stored
@@ -191,7 +206,8 @@ int ckmc_get_key_alias_list(ckmc_alias_list_s** ppalias_list);
  *
  * @retval #CKMC_ERROR_NONE               Successful
  * @retval #CKMC_ERROR_INVALID_PARAMETER  Input parameter is invalid
- * @retval #CKMC_ERROR_DB_LOCKED          A user key is not loaded in memory (a user is not logged in)
+ * @retval #CKMC_ERROR_DB_LOCKED          A user key is not loaded in memory (a user is not logged
+ *                                        in)
  * @retval #CKMC_ERROR_DB_ALIAS_EXISTS    Alias already exists
  * @retval #CKMC_ERROR_INVALID_FORMAT     The format of raw_cert is not valid
  * @retval #CKMC_ERROR_DB_ERROR           Failed due to a database error
@@ -224,7 +240,8 @@ int ckmc_save_cert(const char *alias, const ckmc_cert_s cert, const ckmc_policy_
  *
  * @retval #CKMC_ERROR_NONE               Successful
  * @retval #CKMC_ERROR_INVALID_PARAMETER  Input parameter is invalid
- * @retval #CKMC_ERROR_DB_LOCKED          A user key is not loaded in memory (a user is not logged in)
+ * @retval #CKMC_ERROR_DB_LOCKED          A user key is not loaded in memory (a user is not logged
+ *                                        in)
  * @retval #CKMC_ERROR_DB_ERROR           Failed due to a database error
  * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN   Alias does not exist
  * @retval #CKMC_ERROR_PERMISSION_DENIED  Failed to access key manager
@@ -246,11 +263,13 @@ int ckmc_remove_cert(const char *alias);
  *
  * @remarks A client can access only certificate stored by the client.
  * @remarks A DER encoded certificate will be returned as a return value.
- * @remarks You must destroy the newly created @a ppcert by calling ckmc_cert_free() if it is no longer needed.
+ * @remarks You must destroy the newly created @a ppcert by calling ckmc_cert_free() if it is no
+ *          longer needed.
  *
  * @param[in] alias    The name of a certificate to retrieve
  * @param[in] password The password used in decrypting a certificate value \n
- *                     If password of policy is provided in ckmc_save_cert(), the same password should be provided.
+ *                     If password of policy is provided in ckmc_save_cert(), the same password
+ *                     should be provided.
  * @param[out] ppcert  The pointer to a newly created ckmc_cert_s handle
  *
  * @return @c 0 on success,
@@ -258,7 +277,8 @@ int ckmc_remove_cert(const char *alias);
  *
  * @retval #CKMC_ERROR_NONE               Successful
  * @retval #CKMC_ERROR_INVALID_PARAMETER  Input parameter is invalid
- * @retval #CKMC_ERROR_DB_LOCKED          A user key is not loaded in memory (a user is not logged in)
+ * @retval #CKMC_ERROR_DB_LOCKED          A user key is not loaded in memory (a user is not logged
+ *                                        in)
  * @retval #CKMC_ERROR_DB_ERROR           Failed due to a database error
  * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN   Alias does not exists
  * @retval #CKMC_ERROR_PERMISSION_DENIED  Failed to access key manager
@@ -279,9 +299,11 @@ int ckmc_get_cert(const char *alias, const char *password, ckmc_cert_s **ppcert)
  * @privilege %http://tizen.org/privilege/keymanager
  *
  * @remarks A client can access only data stored by the client.
- * @remarks You must destroy the newly created @a ppalias_list by calling ckmc_alias_list_all_free() if it is no longer needed.
+ * @remarks You must destroy the newly created @a ppalias_list by calling ckmc_alias_list_all_free()
+ *          if it is no longer needed.
  *
- * @param[out] ppalias_list The pointer to a newly created ckmc_alias_list_s handle containing all available alias of keys \n
+ * @param[out] ppalias_list The pointer to a newly created ckmc_alias_list_s handle containing all
+ *                          available alias of keys \n
  *                          If there is no available key alias, *ppalias_list will be null.
  *
  * @return @c 0 on success,
@@ -289,7 +311,8 @@ int ckmc_get_cert(const char *alias, const char *password, ckmc_cert_s **ppcert)
  *
  * @retval #CKMC_ERROR_NONE               Successful
  * @retval #CKMC_ERROR_INVALID_PARAMETER  Input parameter is invalid
- * @retval #CKMC_ERROR_DB_LOCKED          A user key is not loaded in memory (a user is not logged in)
+ * @retval #CKMC_ERROR_DB_LOCKED          A user key is not loaded in memory (a user is not logged
+ *                                        in)
  * @retval #CKMC_ERROR_DB_ERROR           Failed due to a database error
  * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN   Alias does not exist
  * @retval #CKMC_ERROR_PERMISSION_DENIED  Failed to access key manager
@@ -323,7 +346,8 @@ int ckmc_get_cert_alias_list(ckmc_alias_list_s** ppalias_list);
  *
  * @retval #CKMC_ERROR_NONE               Successful
  * @retval #CKMC_ERROR_INVALID_PARAMETER  Input parameter is invalid
- * @retval #CKMC_ERROR_DB_LOCKED          A user key is not loaded in memory (a user is not logged in)
+ * @retval #CKMC_ERROR_DB_LOCKED          A user key is not loaded in memory (a user is not logged
+ *                                        in)
  * @retval #CKMC_ERROR_DB_ALIAS_EXISTS    Alias already exists
  * @retval #CKMC_ERROR_DB_ERROR           Failed due to a database error
  * @retval #CKMC_ERROR_PERMISSION_DENIED  Failed to access key manager
@@ -337,7 +361,10 @@ int ckmc_get_cert_alias_list(ckmc_alias_list_s** ppalias_list);
  * @see #ckmc_pkcs12_s
  * @see #ckmc_policy_s
  */
-int ckmc_save_pkcs12(const char *alias, const ckmc_pkcs12_s *pkcs, const ckmc_policy_s key_policy, const ckmc_policy_s cert_policy);
+int ckmc_save_pkcs12(const char *alias,
+                     const ckmc_pkcs12_s *pkcs,
+                     const ckmc_policy_s key_policy,
+                     const ckmc_policy_s cert_policy);
 
 /**
  * @brief Removes all PKCS12 contents from key manager.
@@ -356,7 +383,8 @@ int ckmc_save_pkcs12(const char *alias, const ckmc_pkcs12_s *pkcs, const ckmc_po
  *
  * @retval #CKMC_ERROR_NONE               Successful
  * @retval #CKMC_ERROR_INVALID_PARAMETER  Input parameter is invalid
- * @retval #CKMC_ERROR_DB_LOCKED          A user key is not loaded in memory (a user is not logged in)
+ * @retval #CKMC_ERROR_DB_LOCKED          A user key is not loaded in memory (a user is not logged
+ *                                        in)
  * @retval #CKMC_ERROR_DB_ERROR           Failed due to a database error
  * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN   Alias does not exist
  * @retval #CKMC_ERROR_PERMISSION_DENIED  Failed to access key manager
@@ -376,7 +404,8 @@ int ckmc_remove_pkcs12(const char *alias);
  * @privilege %http://tizen.org/privilege/keymanager
  *
  * @remarks A client can access only data stored by the client.
- * @remarks You must destroy the newly created @a pkcs12 by calling ckmc_pkcs12_free() if it is no longer needed.
+ * @remarks You must destroy the newly created @a pkcs12 by calling ckmc_pkcs12_free() if it is no
+ *          longer needed.
  *
  * @param[in]  alias     The name of a data to retrieve
  * @param[out] pkcs12    The pointer to a newly created ckmc_pkcs12_s handle
@@ -386,7 +415,8 @@ int ckmc_remove_pkcs12(const char *alias);
  *
  * @retval #CKMC_ERROR_NONE               Successful
  * @retval #CKMC_ERROR_INVALID_PARAMETER  Input parameter is invalid
- * @retval #CKMC_ERROR_DB_LOCKED          A user key is not loaded in memory (a user is not logged in)
+ * @retval #CKMC_ERROR_DB_LOCKED          A user key is not loaded in memory (a user is not logged
+ *                                        in)
  * @retval #CKMC_ERROR_DB_ERROR           Failed due to a database error
  * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN   Alias does not exist
  * @retval #CKMC_ERROR_PERMISSION_DENIED  Failed to access key manager
@@ -417,7 +447,8 @@ int ckmc_get_pkcs12(const char *alias, ckmc_pkcs12_s **pkcs12);
  *
  * @retval #CKMC_ERROR_NONE               Successful
  * @retval #CKMC_ERROR_INVALID_PARAMETER  Input parameter is invalid
- * @retval #CKMC_ERROR_DB_LOCKED          A user key is not loaded in memory (a user is not logged in)
+ * @retval #CKMC_ERROR_DB_LOCKED          A user key is not loaded in memory (a user is not logged
+ *                                        in)
  * @retval #CKMC_ERROR_DB_ALIAS_EXISTS    Alias already exists
  * @retval #CKMC_ERROR_DB_ERROR           Failed due to a database error
  * @retval #CKMC_ERROR_PERMISSION_DENIED  Failed to access key manager
@@ -449,7 +480,8 @@ int ckmc_save_data(const char *alias, ckmc_raw_buffer_s data, const ckmc_policy_
  *
  * @retval #CKMC_ERROR_NONE               Successful
  * @retval #CKMC_ERROR_INVALID_PARAMETER  Input parameter is invalid
- * @retval #CKMC_ERROR_DB_LOCKED          A user key is not loaded in memory (a user is not logged in)
+ * @retval #CKMC_ERROR_DB_LOCKED          A user key is not loaded in memory (a user is not logged
+ *                                        in)
  * @retval #CKMC_ERROR_DB_ERROR           Failed due to the error with unknown reason
  * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN   Alias does not exist
  * @retval #CKMC_ERROR_PERMISSION_DENIED  Failed to access key manager
@@ -470,11 +502,13 @@ int ckmc_remove_data(const char *alias);
  * @privilege %http://tizen.org/privilege/keymanager
  *
  * @remarks A client can access only data stored by the client.
- * @remarks You must destroy the newly created @a ppdata by calling ckmc_buffer_free() if it is no longer needed.
+ * @remarks You must destroy the newly created @a ppdata by calling ckmc_buffer_free() if it is no
+ *          longer needed.
  *
  * @param[in]  alias     The name of a data to retrieve
  * @param[in]  password  The password used in decrypting a data value \n
- *                       If password of policy is provided in ckmc_save_data(), the same password should be provided.
+ *                       If password of policy is provided in ckmc_save_data(), the same password
+ *                       should be provided.
  * @param[out] ppdata    The pointer to a newly created ckmc_raw_buffer_s handle
  *
  * @return @c 0 on success,
@@ -482,7 +516,8 @@ int ckmc_remove_data(const char *alias);
  *
  * @retval #CKMC_ERROR_NONE               Successful
  * @retval #CKMC_ERROR_INVALID_PARAMETER  Input parameter is invalid
- * @retval #CKMC_ERROR_DB_LOCKED          A user key is not loaded in memory (a user is not logged in)
+ * @retval #CKMC_ERROR_DB_LOCKED          A user key is not loaded in memory (a user is not logged
+ *                                        in)
  * @retval #CKMC_ERROR_DB_ERROR           Failed due to the error with unknown reason
  * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN   Alias does not exist
  * @retval #CKMC_ERROR_PERMISSION_DENIED  Failed to access key manager
@@ -503,9 +538,11 @@ int ckmc_get_data(const char *alias, const char *password, ckmc_raw_buffer_s **p
  * @privilege %http://tizen.org/privilege/keymanager
  *
  * @remarks A client can access only data stored by the client.
- * @remarks You must destroy the newly created @a ppalias_list by calling ckmc_alias_list_all_free() if it is no longer needed.
+ * @remarks You must destroy the newly created @a ppalias_list by calling ckmc_alias_list_all_free()
+ *          if it is no longer needed.
  *
- * @param[out] ppalias_list The pointer to a newly created ckmc_alias_list_s handle containing all available alias of keys \n
+ * @param[out] ppalias_list The pointer to a newly created ckmc_alias_list_s handle containing all
+ *                          available alias of keys \n
  *                          If there is no available key alias, *ppalias_list will be null.
  *
  * @return @c 0 on success,
@@ -513,7 +550,8 @@ int ckmc_get_data(const char *alias, const char *password, ckmc_raw_buffer_s **p
  *
  * @retval #CKMC_ERROR_NONE               Successful
  * @retval #CKMC_ERROR_INVALID_PARAMETER  Input parameter is invalid
- * @retval #CKMC_ERROR_DB_LOCKED          A user key is not loaded in memory (a user is not logged in)
+ * @retval #CKMC_ERROR_DB_LOCKED          A user key is not loaded in memory (a user is not logged
+ *                                        in)
  * @retval #CKMC_ERROR_DB_ERROR           Failed due to the error with unknown reason
  * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN   Alias does not exist
  * @retval #CKMC_ERROR_PERMISSION_DENIED  Failed to access key manager
@@ -530,13 +568,15 @@ int ckmc_get_data_alias_list(ckmc_alias_list_s** ppalias_list);
 
 
 /**
- * @brief Creates RSA private/public key pair and stores them inside key manager based on each policy.
+ * @brief Creates RSA private/public key pair and stores them inside key manager based on each
+ *        policy.
  *
  * @since_tizen 2.3
  * @privlevel public
  * @privilege %http://tizen.org/privilege/keymanager
  *
- * @remarks If password in policy is provided, the key is additionally encrypted with the password in policy.
+ * @remarks If password in policy is provided, the key is additionally encrypted with the password
+ *          in policy.
  *
  * @param[in] size                The size of key strength to be created \n
  *                                @c 1024, @c 2048, and @c 4096 are supported.
@@ -550,7 +590,8 @@ int ckmc_get_data_alias_list(ckmc_alias_list_s** ppalias_list);
  *
  * @retval #CKMC_ERROR_NONE               Successful
  * @retval #CKMC_ERROR_INVALID_PARAMETER  Input parameter is invalid
- * @retval #CKMC_ERROR_DB_LOCKED          A user key is not loaded in memory (a user is not logged in)
+ * @retval #CKMC_ERROR_DB_LOCKED          A user key is not loaded in memory (a user is not logged
+ *                                        in)
  * @retval #CKMC_ERROR_DB_ALIAS_EXISTS    Alias already exists
  * @retval #CKMC_ERROR_DB_ERROR           Failed due to other DB transaction unexpectedly
  * @retval #CKMC_ERROR_PERMISSION_DENIED  Failed to access key manager
@@ -562,16 +603,22 @@ int ckmc_get_data_alias_list(ckmc_alias_list_s** ppalias_list);
  * @see ckmc_create_signature()
  * @see ckmc_verify_signature()
  */
-int ckmc_create_key_pair_rsa(const size_t size, const char *private_key_alias, const char *public_key_alias, const ckmc_policy_s policy_private_key, const ckmc_policy_s policy_public_key);
+int ckmc_create_key_pair_rsa(const size_t size,
+                             const char *private_key_alias,
+                             const char *public_key_alias,
+                             const ckmc_policy_s policy_private_key,
+                             const ckmc_policy_s policy_public_key);
 
 /**
- * @brief Creates DSA private/public key pair and stores them inside key manager based on each policy.
+ * @brief Creates DSA private/public key pair and stores them inside key manager based on each
+ *        policy.
  *
  * @since_tizen 2.3
  * @privlevel public
  * @privilege %http://tizen.org/privilege/keymanager
  *
- * @remarks If password in policy is provided, the key is additionally encrypted with the password in policy.
+ * @remarks If password in policy is provided, the key is additionally encrypted with the password
+ *          in policy.
  *
  * @param[in] size                The size of key strength to be created \n
  *                                @c 1024, @c 2048, @c 3072 and @c 4096 are supported.
@@ -585,7 +632,8 @@ int ckmc_create_key_pair_rsa(const size_t size, const char *private_key_alias, c
  *
  * @retval #CKMC_ERROR_NONE               Successful
  * @retval #CKMC_ERROR_INVALID_PARAMETER  Input parameter is invalid
- * @retval #CKMC_ERROR_DB_LOCKED          A user key is not loaded in memory (a user is not logged in)
+ * @retval #CKMC_ERROR_DB_LOCKED          A user key is not loaded in memory (a user is not logged
+ *                                        in)
  * @retval #CKMC_ERROR_DB_ALIAS_EXISTS    Alias already exists
  * @retval #CKMC_ERROR_DB_ERROR           Failed due to other DB transaction unexpectedly
  * @retval #CKMC_ERROR_PERMISSION_DENIED  Failed to access key manager
@@ -597,16 +645,22 @@ int ckmc_create_key_pair_rsa(const size_t size, const char *private_key_alias, c
  * @see ckmc_create_signature()
  * @see ckmc_verify_signature()
  */
-int ckmc_create_key_pair_dsa(const size_t size, const char *private_key_alias, const char *public_key_alias, const ckmc_policy_s policy_private_key, const ckmc_policy_s policy_public_key);
+int ckmc_create_key_pair_dsa(const size_t size,
+                             const char *private_key_alias,
+                             const char *public_key_alias,
+                             const ckmc_policy_s policy_private_key,
+                             const ckmc_policy_s policy_public_key);
 
 /**
- * @brief Creates ECDSA private/public key pair and stores them inside key manager based on each policy.
+ * @brief Creates ECDSA private/public key pair and stores them inside key manager based on each
+ *        policy.
  *
  * @since_tizen 2.3
  * @privlevel public
  * @privilege %http://tizen.org/privilege/keymanager
  *
- * @remarks If password in policy is provided, the key is additionally encrypted with the password in policy.
+ * @remarks If password in policy is provided, the key is additionally encrypted with the password
+ *          in policy.
  *
  * @param[in] type                The type of elliptic curve of ECDSA
  * @param[in] private_key_alias   The name of private key to be stored
@@ -619,7 +673,8 @@ int ckmc_create_key_pair_dsa(const size_t size, const char *private_key_alias, c
  *
  * @retval #CKMC_ERROR_NONE               Successful
  * @retval #CKMC_ERROR_INVALID_PARAMETER  Input parameter is invalid
- * @retval #CKMC_ERROR_DB_LOCKED          A user key is not loaded in memory (a user is not logged in)
+ * @retval #CKMC_ERROR_DB_LOCKED          A user key is not loaded in memory (a user is not logged
+ *                                        in)
  * @retval #CKMC_ERROR_DB_ALIAS_EXISTS    Alias already exists
  * @retval #CKMC_ERROR_DB_ERROR           Failed due to other DB transaction unexpectedly
  * @retval #CKMC_ERROR_PERMISSION_DENIED  Failed to access key manager
@@ -632,7 +687,11 @@ int ckmc_create_key_pair_dsa(const size_t size, const char *private_key_alias, c
  * @see ckmc_verify_signature()
  * @see #ckmc_ec_type_e
  */
-int ckmc_create_key_pair_ecdsa(const ckmc_ec_type_e type, const char *private_key_alias, const char *public_key_alias, const ckmc_policy_s policy_private_key, const ckmc_policy_s policy_public_key);
+int ckmc_create_key_pair_ecdsa(const ckmc_ec_type_e type,
+                               const char *private_key_alias,
+                               const char *public_key_alias,
+                               const ckmc_policy_s policy_private_key,
+                               const ckmc_policy_s policy_public_key);
 
 /**
  * @brief Creates a signature on a given message using a private key and returns the signature.
@@ -641,8 +700,10 @@ int ckmc_create_key_pair_ecdsa(const ckmc_ec_type_e type, const char *private_ke
  * @privlevel public
  * @privilege %http://tizen.org/privilege/keymanager
  *
- * @remarks If password of policy is provided during storing a key, the same password should be provided.
- * @remarks You must destroy the newly created @a ppsignature by calling ckmc_buffer_free() if it is no longer needed.
+ * @remarks If password of policy is provided during storing a key, the same password should be
+ *          provided.
+ * @remarks You must destroy the newly created @a ppsignature by calling ckmc_buffer_free() if it is
+ *          no longer needed.
  *
  * @param[in]  private_key_alias  The name of private key
  * @param[in]  password           The password used in decrypting a private key value
@@ -658,7 +719,8 @@ int ckmc_create_key_pair_ecdsa(const ckmc_ec_type_e type, const char *private_ke
  *
  * @retval #CKMC_ERROR_NONE               Successful
  * @retval #CKMC_ERROR_INVALID_PARAMETER  Input parameter is invalid
- * @retval #CKMC_ERROR_DB_LOCKED          A user key is not loaded in memory (a user is not logged in)
+ * @retval #CKMC_ERROR_DB_LOCKED          A user key is not loaded in memory (a user is not logged
+ *                                        in)
  * @retval #CKMC_ERROR_DB_ERROR           Failed due to the error with unknown reason
  * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN   Alias does not exist
  * @retval #CKMC_ERROR_PERMISSION_DENIED  Failed to access key manager
@@ -672,16 +734,23 @@ int ckmc_create_key_pair_ecdsa(const ckmc_ec_type_e type, const char *private_ke
  * @see #ckmc_hash_algo_e
  * @see #ckmc_rsa_padding_algo_e
  */
-int ckmc_create_signature(const char *private_key_alias, const char *password, const ckmc_raw_buffer_s message, const ckmc_hash_algo_e hash, const ckmc_rsa_padding_algo_e padding, ckmc_raw_buffer_s **ppsignature);
+int ckmc_create_signature(const char *private_key_alias,
+                          const char *password,
+                          const ckmc_raw_buffer_s message,
+                          const ckmc_hash_algo_e hash,
+                          const ckmc_rsa_padding_algo_e padding,
+                          ckmc_raw_buffer_s **ppsignature);
 
 /**
- * @brief Verifies a given signature on a given message using a public key and returns the signature status.
+ * @brief Verifies a given signature on a given message using a public key and returns the signature
+ *        status.
  *
  * @since_tizen 2.3
  * @privlevel public
  * @privilege %http://tizen.org/privilege/keymanager
  *
- * @remarks If password of policy is provided during storing a key, the same password should be provided.
+ * @remarks If password of policy is provided during storing a key, the same password should be
+ *          provided.
  *
  * @param[in] public_key_alias  The name of public key
  * @param[in] password          The password used in decrypting a public key value
@@ -697,7 +766,8 @@ int ckmc_create_signature(const char *private_key_alias, const char *password, c
  * @retval #CKMC_ERROR_NONE                 Successful
  * @retval #CKMC_ERROR_VERIFICATION_FAILED  The signature is invalid
  * @retval #CKMC_ERROR_INVALID_PARAMETER    Input parameter is invalid
- * @retval #CKMC_ERROR_DB_LOCKED            A user key is not loaded in memory (a user is not logged in)
+ * @retval #CKMC_ERROR_DB_LOCKED            A user key is not loaded in memory (a user is not logged
+ *                                          in)
  * @retval #CKMC_ERROR_DB_ERROR             Failed due to the error with unknown reason
  * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN     Alias does not exist
  * @retval #CKMC_ERROR_PERMISSION_DENIED    Failed to access key manager
@@ -710,7 +780,12 @@ int ckmc_create_signature(const char *private_key_alias, const char *password, c
  * @see #ckmc_hash_algo_e
  * @see #ckmc_rsa_padding_algo_e
  */
-int ckmc_verify_signature(const char *public_key_alias, const char *password, const ckmc_raw_buffer_s message, const ckmc_raw_buffer_s signature, const ckmc_hash_algo_e hash, const ckmc_rsa_padding_algo_e padding);
+int ckmc_verify_signature(const char *public_key_alias,
+                          const char *password,
+                          const ckmc_raw_buffer_s message,
+                          const ckmc_raw_buffer_s signature,
+                          const ckmc_hash_algo_e hash,
+                          const ckmc_rsa_padding_algo_e padding);
 
 /**
  * @deprecated, see ckmc_get_certificate_chain()
@@ -720,11 +795,14 @@ int ckmc_verify_signature(const char *public_key_alias, const char *password, co
  * @privlevel public
  * @privilege %http://tizen.org/privilege/keymanager
  *
- * @remarks The trusted root certificate of the chain should exist in the system's certificate storage.
- * @remarks You must destroy the newly created @a ppcert_chain_list by calling ckmc_cert_list_all_free() if it is no longer needed.
+ * @remarks The trusted root certificate of the chain should exist in the system's certificate
+ *          storage.
+ * @remarks You must destroy the newly created @a ppcert_chain_list by calling
+ *          ckmc_cert_list_all_free() if it is no longer needed.
  *
  * @param[in] cert               The certificate to be verified
- * @param[in] untrustedcerts     The untrusted CA certificates to be used in verifying a certificate chain
+ * @param[in] untrustedcerts     The untrusted CA certificates to be used in verifying a certificate
+ *                               chain
  * @param[out] ppcert_chain_list The pointer to a newly created certificate chain's handle \n
  *                               If an error occurs, @a *ppcert_chain_list will be null.
  *
@@ -734,7 +812,8 @@ int ckmc_verify_signature(const char *public_key_alias, const char *password, co
  * @retval #CKMC_ERROR_NONE                 Successful
  * @retval #CKMC_ERROR_VERIFICATION_FAILED  The certificate chain is not valid
  * @retval #CKMC_ERROR_INVALID_PARAMETER    Input parameter is invalid
- * @retval #CKMC_ERROR_DB_LOCKED            A user key is not loaded in memory (a user is not logged in)
+ * @retval #CKMC_ERROR_DB_LOCKED            A user key is not loaded in memory (a user is not logged
+ *                                          in)
  * @retval #CKMC_ERROR_DB_ERROR             Failed due to the error with unknown reason
  * @retval #CKMC_ERROR_INVALID_FORMAT       The format of certificate is not valid
  * @retval #CKMC_ERROR_PERMISSION_DENIED    Failed to access key manager
@@ -744,21 +823,27 @@ int ckmc_verify_signature(const char *public_key_alias, const char *password, co
  * @see ckmc_get_cert_chain_with_alias())
  * @see ckmc_cert_list_all_free()
  */
-int ckmc_get_cert_chain(const ckmc_cert_s *cert, const ckmc_cert_list_s *untrustedcerts, ckmc_cert_list_s **ppcert_chain_list);
+int ckmc_get_cert_chain(const ckmc_cert_s *cert,
+                        const ckmc_cert_list_s *untrustedcerts,
+                        ckmc_cert_list_s **ppcert_chain_list);
 
 /**
  * @deprecated, see ckmc_get_certificate_chain_with_alias()
- * @brief Verifies a certificate chain using an alias list of untrusted certificates and return that chain.
+ * @brief Verifies a certificate chain using an alias list of untrusted certificates and return that
+ *        chain.
  *
  * @since_tizen 2.3
  * @privlevel public
  * @privilege %http://tizen.org/privilege/keymanager
  *
- * @remarks The trusted root certificate of the chain should exist in the system's certificate storage.
- * @remarks You must destroy the newly created @a ppcert_chain_list by calling ckmc_cert_list_all_free() if it is no longer needed.
+ * @remarks The trusted root certificate of the chain should exist in the system's certificate
+ *          storage.
+ * @remarks You must destroy the newly created @a ppcert_chain_list by calling
+ *          ckmc_cert_list_all_free() if it is no longer needed.
  *
  * @param[in] cert               The certificate to be verified
- * @param[in] untrustedcerts     The alias list of untrusted CA certificates stored in key manager to be used in verifying a certificate chain
+ * @param[in] untrustedcerts     The alias list of untrusted CA certificates stored in key manager
+ *                               to be used in verifying a certificate chain
  * @param[out] ppcert_chain_list The pointer to a newly created certificate chain's handle \n
  *                               If an error occurs, @a *ppcert_chain_list will be null.
  *
@@ -768,7 +853,8 @@ int ckmc_get_cert_chain(const ckmc_cert_s *cert, const ckmc_cert_list_s *untrust
  * @retval #CKMC_ERROR_NONE                 Successful
  * @retval #CKMC_ERROR_VERIFICATION_FAILED  The certificate chain is not valid
  * @retval #CKMC_ERROR_INVALID_PARAMETER    Input parameter is invalid
- * @retval #CKMC_ERROR_DB_LOCKED            A user key is not loaded in memory (a user is not logged in)
+ * @retval #CKMC_ERROR_DB_LOCKED            A user key is not loaded in memory (a user is not logged
+ *                                          in)
  * @retval #CKMC_ERROR_DB_ERROR             Failed due to the error with unknown reason
  * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN     Alias does not exist
  * @retval #CKMC_ERROR_INVALID_FORMAT       The format of certificate is not valid
@@ -779,22 +865,30 @@ int ckmc_get_cert_chain(const ckmc_cert_s *cert, const ckmc_cert_list_s *untrust
  * @see ckmc_get_cert_chain())
  * @see ckmc_cert_list_all_free()
  */
-int ckmc_get_cert_chain_with_alias(const ckmc_cert_s *cert, const ckmc_alias_list_s *untrustedcerts, ckmc_cert_list_s **ppcert_chain_list);
+int ckmc_get_cert_chain_with_alias(const ckmc_cert_s *cert,
+                                   const ckmc_alias_list_s *untrustedcerts,
+                                   ckmc_cert_list_s **ppcert_chain_list);
 
 /**
- * @brief Verifies a certificate chain and returns that chain using user entered trusted and untrusted CA certificates
+ * @brief Verifies a certificate chain and returns that chain using user entered trusted and
+ *        untrusted CA certificates
  *
  * @since_tizen 3.0
  * @privlevel public
  * @privilege %http://tizen.org/privilege/keymanager
  *
- * @remarks If the trusted root certificates are provided as a user input, these certificates do not need to exist in the system's certificate storage.
- * @remarks You must destroy the newly created @a ppcert_chain_list by calling ckmc_cert_list_all_free() if it is no longer needed.
+ * @remarks If the trusted root certificates are provided as a user input, these certificates do not
+ *          need to exist in the system's certificate storage.
+ * @remarks You must destroy the newly created @a ppcert_chain_list by calling
+ *          ckmc_cert_list_all_free() if it is no longer needed.
  *  *
  * @param[in] cert                    The certificate to be verified
- * @param[in] untrustedcerts          The untrusted CA certificates to be used in verifying a certificate chain
- * @param[in] trustedcerts            The trusted CA certificates to be used in verifying a certificate chain
- * @param[in] use_trustedsystemcerts  The flag indicating the use of the trusted root certificates in the system's certificate storage.
+ * @param[in] untrustedcerts          The untrusted CA certificates to be used in verifying a
+ *                                    certificate chain
+ * @param[in] trustedcerts            The trusted CA certificates to be used in verifying a
+ *                                    certificate chain
+ * @param[in] use_trustedsystemcerts  The flag indicating the use of the trusted root certificates
+ *                                    in the system's certificate storage.
  * @param[out] ppcert_chain_list The pointer to a newly created certificate chain's handle \n
  *                               If an error occurs, @a *ppcert_chain_list will be null.
  *
@@ -804,7 +898,8 @@ int ckmc_get_cert_chain_with_alias(const ckmc_cert_s *cert, const ckmc_alias_lis
  * @retval #CKMC_ERROR_NONE                 Successful
  * @retval #CKMC_ERROR_VERIFICATION_FAILED  The certificate chain is not valid
  * @retval #CKMC_ERROR_INVALID_PARAMETER    Input parameter is invalid
- * @retval #CKMC_ERROR_DB_LOCKED            A user key is not loaded in memory (a user is not logged in)
+ * @retval #CKMC_ERROR_DB_LOCKED            A user key is not loaded in memory (a user is not logged
+ *                                          in)
  * @retval #CKMC_ERROR_DB_ERROR             Failed due to the error with unknown reason
  * @retval #CKMC_ERROR_INVALID_FORMAT       The format of certificate is not valid
  * @retval #CKMC_ERROR_PERMISSION_DENIED    Failed to access key manager
@@ -814,22 +909,32 @@ int ckmc_get_cert_chain_with_alias(const ckmc_cert_s *cert, const ckmc_alias_lis
  * @see ckmc_get_cert_chain_with_alias())
  * @see ckmc_cert_list_all_free()
  */
-int ckmc_get_certificate_chain(const ckmc_cert_s *cert, const ckmc_cert_list_s *untrustedcerts, const ckmc_cert_list_s *trustedcerts, const bool use_trustedsystemcerts, ckmc_cert_list_s **ppcert_chain_list);
+int ckmc_get_certificate_chain(const ckmc_cert_s *cert,
+                               const ckmc_cert_list_s *untrustedcerts,
+                               const ckmc_cert_list_s *trustedcerts,
+                               const bool use_trustedsystemcerts,
+                               ckmc_cert_list_s **ppcert_chain_list);
 
 /**
- * @brief Verifies a certificate chain and returns that chain using alias lists of untrusted and trusted certificates
+ * @brief Verifies a certificate chain and returns that chain using alias lists of untrusted and
+ *        trusted certificates
  *
  * @since_tizen 3.0
  * @privlevel public
  * @privilege %http://tizen.org/privilege/keymanager
  *
- * @remarks If the alias list of trusted root certificates is provided as a user input, these certificates do not need to exist in the system's certificate storage.
- * @remarks You must destroy the newly created @a ppcert_chain_list by calling ckmc_cert_list_all_free() if it is no longer needed.
+ * @remarks If the alias list of trusted root certificates is provided as a user input, these
+ *          certificates do not need to exist in the system's certificate storage.
+ * @remarks You must destroy the newly created @a ppcert_chain_list by calling
+ *          ckmc_cert_list_all_free() if it is no longer needed.
  *
  * @param[in] cert                    The certificate to be verified
- * @param[in] untrustedcerts          The alias list of untrusted CA certificates stored in key manager to be used in verifying a certificate chain
- * @param[in] trustedcerts            The alias list of trusted CA certificates stored in key manager to be used in verifying a certificate chain
- * @param[in] use_trustedsystemcerts  The flag indicating the use of the trusted root certificates in the system's certificate storage.
+ * @param[in] untrustedcerts          The alias list of untrusted CA certificates stored in key
+ *                                    manager to be used in verifying a certificate chain
+ * @param[in] trustedcerts            The alias list of trusted CA certificates stored in key
+ *                                    manager to be used in verifying a certificate chain
+ * @param[in] use_trustedsystemcerts  The flag indicating the use of the trusted root certificates
+ *                                    in the system's certificate storage.
  * @param[out] ppcert_chain_list The pointer to a newly created certificate chain's handle \n
  *                               If an error occurs, @a *ppcert_chain_list will be null.
  *
@@ -839,7 +944,8 @@ int ckmc_get_certificate_chain(const ckmc_cert_s *cert, const ckmc_cert_list_s *
  * @retval #CKMC_ERROR_NONE                 Successful
  * @retval #CKMC_ERROR_VERIFICATION_FAILED  The certificate chain is not valid
  * @retval #CKMC_ERROR_INVALID_PARAMETER    Input parameter is invalid
- * @retval #CKMC_ERROR_DB_LOCKED            A user key is not loaded in memory (a user is not logged in)
+ * @retval #CKMC_ERROR_DB_LOCKED            A user key is not loaded in memory (a user is not logged
+ *                                          in)
  * @retval #CKMC_ERROR_DB_ERROR             Failed due to the error with unknown reason
  * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN     Alias does not exist
  * @retval #CKMC_ERROR_INVALID_FORMAT       The format of certificate is not valid
@@ -850,7 +956,11 @@ int ckmc_get_certificate_chain(const ckmc_cert_s *cert, const ckmc_cert_list_s *
  * @see ckmc_get_cert_chain())
  * @see ckmc_cert_list_all_free()
  */
-int ckmc_get_certificate_chain_with_alias(const ckmc_cert_s *cert, const ckmc_alias_list_s *untrustedcerts, const ckmc_alias_list_s *trustedcerts, const bool use_trustedsystemcerts, ckmc_cert_list_s **ppcert_chain_list);
+int ckmc_get_certificate_chain_with_alias(const ckmc_cert_s *cert,
+                                          const ckmc_alias_list_s *untrustedcerts,
+                                          const ckmc_alias_list_s *trustedcerts,
+                                          const bool use_trustedsystemcerts,
+                                          ckmc_cert_list_s **ppcert_chain_list);
 
 /**
  * @brief Perform OCSP which checks certificate is whether revoked or not
@@ -893,7 +1003,8 @@ int ckmc_ocsp_check(const ckmc_cert_list_s *pcert_chain_list, ckmc_ocsp_status_e
  *
  * @retval #CKMC_ERROR_NONE                 Successful
  * @retval #CKMC_ERROR_INVALID_PARAMETER    Input parameter is invalid
- * @retval #CKMC_ERROR_DB_LOCKED            A user key is not loaded in memory (a user is not logged in)
+ * @retval #CKMC_ERROR_DB_LOCKED            A user key is not loaded in memory (a user is not logged
+ *                                          in)
  * @retval #CKMC_ERROR_DB_ERROR             Failed due to the error with unknown reason
  * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN     Alias does not exist
  * @retval #CKMC_ERROR_PERMISSION_DENIED    Failed to access key manager
@@ -915,14 +1026,16 @@ int ckmc_allow_access(const char *alias, const char *accessor, ckmc_access_right
  *
  * @param[in] alias       Data alias for which access will be granted
  * @param[in] accessor    Package id of the application that will gain access rights
- * @param[in] permissions Mask of permissions granted for @a accessor application (@a ckmc_permission_e)
+ * @param[in] permissions Mask of permissions granted for @a accessor application
+ *                        (@a ckmc_permission_e)
  *                        (previous permission mask will be replaced with the new mask value)
  *
  * @return @c 0 on success, otherwise a negative error value
  *
  * @retval #CKMC_ERROR_NONE                 Successful
  * @retval #CKMC_ERROR_INVALID_PARAMETER    Input parameter is invalid
- * @retval #CKMC_ERROR_DB_LOCKED            A user key is not loaded in memory (a user is not logged in)
+ * @retval #CKMC_ERROR_DB_LOCKED            A user key is not loaded in memory (a user is not logged
+ *                                          in)
  * @retval #CKMC_ERROR_DB_ERROR             Failed due to the error with unknown reason
  * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN     Alias does not exist
  * @retval #CKMC_ERROR_PERMISSION_DENIED    Failed to access key manager
@@ -950,7 +1063,8 @@ int ckmc_set_permission(const char *alias, const char *accessor, int permissions
  * @retval #CKMC_ERROR_NONE                 Successful
  * @retval #CKMC_ERROR_INVALID_PARAMETER    Input parameter is invalid or the @a accessor doesn't
  *                                          have access to @a alias
- * @retval #CKMC_ERROR_DB_LOCKED            A user key is not loaded in memory (a user is not logged in)
+ * @retval #CKMC_ERROR_DB_LOCKED            A user key is not loaded in memory (a user is not logged
+ *                                          in)
  * @retval #CKMC_ERROR_DB_ERROR             Failed due to the error with unknown reason
  * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN     Alias does not exist
  * @retval #CKMC_ERROR_PERMISSION_DENIED    Failed to access key manager
@@ -979,7 +1093,8 @@ int ckmc_deny_access(const char *alias, const char *accessor);
  *
  * @retval #CKMC_ERROR_NONE              Successful
  * @retval #CKMC_ERROR_INVALID_PARAMETER Input parameter is invalid
- * @retval #CKMC_ERROR_DB_LOCKED         A user key is not loaded in memory (a user is not logged in)
+ * @retval #CKMC_ERROR_DB_LOCKED         A user key is not loaded in memory (a user is not logged
+ *                                       in)
  * @retval #CKMC_ERROR_DB_ERROR          Failed due to a database error
  * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN  Alias does not exist
  * @retval #CKMC_ERROR_PERMISSION_DENIED Failed to access key manager
