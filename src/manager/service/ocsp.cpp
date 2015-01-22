@@ -127,6 +127,7 @@ int OCSPModule::ocsp_verify(X509 *cert, X509 *issuer, STACK_OF(X509) *systemCert
     BioUniquePtr bioLogger(BIO_new(BIO_s_mem()), BIO_write_and_free);
 
     std::vector<char> url(constUrl.begin(), constUrl.end());
+    url.push_back(0);
 
     if (!OCSP_parse_url(url.data(), &host, &port, &path, &use_ssl)) {
         /* report error */
