@@ -91,8 +91,15 @@ std::string FileSystem::getRemovedAppsPath() const {
 RawBuffer FileSystem::loadFile(const std::string &path) const {
     std::ifstream is(path);
 
-    if (is.fail())
+    if (is.fail() && ENOENT == errno)
         return RawBuffer();
+
+    if (is.fail()) {
+        auto description = GetErrnoString(errno);
+        LogError("Error opening file: " << path << " Reason: " << description);
+        ThrowMsg(Exception::OpenFailed,
+                 "Error opening file: " << path << " Reason: " << description);
+    }
 
     std::istreambuf_iterator<char> begin(is),end;
     std::vector<char> buff(begin,end); // This trick does not work with boost vector
@@ -117,54 +124,66 @@ RawBuffer FileSystem::getDBDEK() const
     return loadFile(getDBDEKPath());
 }
 
-bool FileSystem::saveFile(const std::string &path, const RawBuffer &buffer) const {
+void FileSystem::saveFile(const std::string &path, const RawBuffer &buffer) const {
     std::ofstream os(path, std::ios::out | std::ofstream::binary | std::ofstream::trunc);
     std::copy(buffer.begin(), buffer.end(), std::ostreambuf_iterator<char>(os));
-    if (os.fail())
-        return false;
 
     // Prevent desynchronization in batter remove test.
     os.flush();
     fsync(FstreamAccessors<std::ofstream>::GetFd(os)); // flush kernel space buffer
     os.close();
-    return !os.fail();
+
+    if (os.fail())
+        ThrowMsg(Exception::SaveFailed, "Failed to save file: " << path);
 }
 
-bool FileSystem::saveDKEK(const RawBuffer &buffer) const {
-    return saveFile(getDKEKPath(), buffer);
+void FileSystem::saveDKEK(const RawBuffer &buffer) const {
+    saveFile(getDKEKPath(), buffer);
 }
 
-bool FileSystem::saveDKEKBackup(const RawBuffer &buffer) const {
-    return saveFile(getDKEKBackupPath(), buffer);
+void FileSystem::moveFile(const std::string &from, const std::string &to) const {
+    if (0 == ::rename(from.c_str(), to.c_str())) {
+        return;
+    }
+    auto description = GetErrnoString(errno);
+    LogError("Error during rename file DKEKBackup to DKEK: " << description);
+    ThrowMsg(Exception::RenameFailed,
+             "Error during rename file DKEKBackup to DKEK: " << description);
 }
 
-bool FileSystem::restoreDKEK() const {
-    if (0 == ::rename(getDKEKBackupPath().c_str(), getDKEKPath().c_str()))
-        return true;
-    int err = errno;
-    LogError("Error in rename file DKEKBackup to DKEK: " << GetErrnoString(err));
-    return false;
+void FileSystem::restoreDKEK() const {
+    moveFile(getDKEKBackupPath(), getDKEKPath());
 }
 
-bool FileSystem::removeDKEKBackup() const {
-    if (0 == unlink(getDKEKBackupPath().c_str()))
-        return true;
-    int err = errno;
-    LogError("Error in unlink file DKEKBackup: " << GetErrnoString(err));
-    return false;
+void FileSystem::createDKEKBackup() const {
+    moveFile(getDKEKPath(), getDKEKBackupPath());
 }
 
-bool FileSystem::saveDBDEK(const RawBuffer &buffer) const {
-    return saveFile(getDBDEKPath(), buffer);
+void FileSystem::removeDKEKBackup() const {
+    if (0 == unlink(getDKEKBackupPath().c_str())) {
+        return;
+    }
+    // Backup is accessible only during "change password transaction"
+    auto description = GetErrnoString(errno);
+    LogDebug("Error in unlink file DKEKBackup: " << description);
 }
 
-bool FileSystem::addRemovedApp(const std::string &smackLabel) const
+void FileSystem::saveDBDEK(const RawBuffer &buffer) const {
+    saveFile(getDBDEKPath(), buffer);
+}
+
+void FileSystem::addRemovedApp(const std::string &smackLabel) const
 {
     std::ofstream outfile;
     outfile.open(getRemovedAppsPath(), std::ios_base::app);
     outfile << smackLabel << std::endl;
     outfile.close();
-    return !outfile.fail();
+    if (outfile.fail()) {
+        auto desc = GetErrnoString(errno);
+        LogError("Could not update file: " << getRemovedAppsPath() << " Reason: " << desc);
+        ThrowMsg(Exception::SaveFailed,
+                 "Could not update file: " << getRemovedAppsPath() << " Reason: " << desc);
+    }
 }
 
 AppLabelVector FileSystem::clearRemovedsApps() const
@@ -192,8 +211,7 @@ int FileSystem::init() {
     errno = 0;
     if ((mkdir(CKM_DATA_PATH.c_str(), 0700)) && (errno != EEXIST)) {
         int err = errno;
-        LogError("Error in mkdir. Data directory could not be created. Errno: "
-            << err << " (" << GetErrnoString(err) << ")");
+        LogError("Error in mkdir " << CKM_DATA_PATH << ". Reason: " << GetErrnoString(err));
         return -1; // TODO set up some error code
     }
     return 0;
@@ -222,7 +240,6 @@ UidVector FileSystem::getUIDsFromDBFile() {
     struct dirent* pDirEntry = NULL;
 
     while ( (!readdir_r(dirp.get(), pEntry.get(), &pDirEntry)) && pDirEntry ) {
-
         // Ignore files with diffrent prefix
         if (strncmp(pDirEntry->d_name, CKM_KEY_PREFIX.c_str(), CKM_KEY_PREFIX.size())) {
             continue;
@@ -263,7 +280,7 @@ int FileSystem::removeUserData() const {
     if (unlink(getDKEKBackupPath().c_str())) {
         retCode = -1;
         err = errno;
-        LogError("Error in unlink user backup DKEK: " << getDKEKBackupPath()
+        LogDebug("Unlink user backup DKEK failed (file probably does not exists): " << getDKEKBackupPath()
             << "Errno: " << errno << " " << GetErrnoString(err));
     }
 

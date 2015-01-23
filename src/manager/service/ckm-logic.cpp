@@ -68,7 +68,7 @@ void CKMLogic::loadDKEKFile(uid_t user, const Password &password, bool apiReq) {
     auto wrappedDKEKMain = fs.getDKEK();
     auto wrappedDKEKBackup = fs.getDKEKBackup();
 
-    if (wrappedDKEKMain.empty() && wrappedDKEKBackup.empty()) {
+    if (wrappedDKEKMain.empty()) {
         wrappedDKEKMain = KeyProvider::generateDomainKEK(std::to_string(user), password);
         fs.saveDKEK(wrappedDKEKMain);
     }
@@ -95,6 +95,7 @@ void CKMLogic::chooseDKEKFile(
         handle.keyProvider = KeyProvider(first, password);
         handle.isMainDKEK = true;
     } catch (const KeyProvider::Exception::Base &e) {
+        // Second buffer is empty. Lets rethrow first error
         if (second.empty())
             throw;
         handle.keyProvider = KeyProvider(second, password);
@@ -107,7 +108,7 @@ void CKMLogic::saveDKEKFile(uid_t user, const Password &password) {
 
     FileSystem fs(user);
     if (handle.isMainDKEK)
-        fs.saveDKEKBackup(fs.getDKEK());
+        fs.createDKEKBackup();
 
     fs.saveDKEK(handle.keyProvider.getWrappedDomainKEK(password));
 
@@ -116,7 +117,6 @@ void CKMLogic::saveDKEKFile(uid_t user, const Password &password) {
 }
 
 RawBuffer CKMLogic::unlockUserKey(uid_t user, const Password &password, bool apiRequest) {
-    // TODO try catch for all errors that should be supported by error code
     int retCode = CKM_API_SUCCESS;
 
     try {
@@ -155,6 +155,9 @@ RawBuffer CKMLogic::unlockUserKey(uid_t user, const Password &password, bool api
     } catch (const CryptoLogic::Exception::Base &e) {
         LogError("CryptoLogic error: " << e.GetMessage());
         retCode = CKM_API_ERROR_SERVER_ERROR;
+    } catch (const FileSystem::Exception::Base &e) {
+        LogError("FileSystem error: " << e.GetMessage());
+        retCode = CKM_API_ERROR_FILE_SYSTEM;
     } catch (const CKM::Exception &e) {
         LogError("CKM::Exception: " << e.GetMessage());
         retCode = CKM_API_ERROR_SERVER_ERROR;
@@ -209,6 +212,9 @@ RawBuffer CKMLogic::changeUserPassword(
     } catch (const KeyProvider::Exception::Base &e) {
         LogError("Error in KeyProvider " << e.GetMessage());
         retCode = CKM_API_ERROR_SERVER_ERROR;
+    } catch (const FileSystem::Exception::Base &e) {
+        LogError("Error in FileSystem " << e.GetMessage());
+        retCode = CKM_API_ERROR_FILE_SYSTEM;
     } catch (const CKM::Exception &e) {
         LogError("CKM::Exception: " << e.GetMessage());
         retCode = CKM_API_ERROR_SERVER_ERROR;
@@ -222,11 +228,19 @@ RawBuffer CKMLogic::resetUserPassword(
     const Password &newPassword)
 {
     int retCode = CKM_API_SUCCESS;
-    // TODO try-catch
-    if (0 == m_userDataMap.count(user)) {
-        retCode = CKM_API_ERROR_BAD_REQUEST;
-    } else {
-        saveDKEKFile(user, newPassword);
+
+    try {
+        if (0 == m_userDataMap.count(user)) {
+            retCode = CKM_API_ERROR_BAD_REQUEST;
+        } else {
+            saveDKEKFile(user, newPassword);
+        }
+    } catch (const FileSystem::Exception::Base &e) {
+        LogError("Error in FileSystem " << e.GetMessage());
+        retCode = CKM_API_ERROR_FILE_SYSTEM;
+    } catch (const CKM::Exception &e) {
+        LogError("CKM::Exception: " << e.GetMessage());
+        retCode = CKM_API_ERROR_SERVER_ERROR;
     }
 
     return MessageBuffer::Serialize(retCode).Pop();
@@ -258,6 +272,12 @@ RawBuffer CKMLogic::removeApplicationData(const Label &smackLabel) {
     } catch (const DBCrypto::Exception::TransactionError &e) {
         LogError("DBCrypto transaction failed with message " << e.GetMessage());
         retCode = CKM_API_ERROR_DB_ERROR;
+    } catch (const FileSystem::Exception::Base &e) {
+        LogError("Error in FileSystem " << e.GetMessage());
+        retCode = CKM_API_ERROR_FILE_SYSTEM;
+    } catch (const CKM::Exception &e) {
+        LogError("CKM::Exception: " << e.GetMessage());
+        retCode = CKM_API_ERROR_SERVER_ERROR;
     }
 
     return MessageBuffer::Serialize(retCode).Pop();
@@ -386,6 +406,12 @@ RawBuffer CKMLogic::saveData(
         } catch (const DBCrypto::Exception::TransactionError &e) {
             LogError("DBCrypto transaction failed with message " << e.GetMessage());
             retCode = CKM_API_ERROR_DB_ERROR;
+        } catch (const FileSystem::Exception::Base &e) {
+            LogError("Error in FileSystem " << e.GetMessage());
+            retCode = CKM_API_ERROR_FILE_SYSTEM;
+        } catch (const CKM::Exception &e) {
+            LogError("CKM::Exception: " << e.GetMessage());
+            retCode = CKM_API_ERROR_SERVER_ERROR;
         }
     }
 
@@ -469,6 +495,9 @@ RawBuffer CKMLogic::savePKCS12(
         } catch (const DBCrypto::Exception::TransactionError &e) {
             LogError("DBCrypto transaction failed with message " << e.GetMessage());
             retCode = CKM_API_ERROR_DB_ERROR;
+        } catch (const CKM::Exception &e) {
+            LogError("CKM::Exception: " << e.GetMessage());
+            retCode = CKM_API_ERROR_SERVER_ERROR;
         }
     }
 
@@ -751,6 +780,9 @@ RawBuffer CKMLogic::getData(
     } catch (const DBCrypto::Exception::Base &e) {
         LogError("DBCrypto failed with message: " << e.GetMessage());
         retCode = CKM_API_ERROR_DB_ERROR;
+    } catch (const CKM::Exception &e) {
+        LogError("CKM::Exception: " << e.GetMessage());
+        retCode = CKM_API_ERROR_SERVER_ERROR;
     }
 
     if (CKM_API_SUCCESS != retCode) {
@@ -834,6 +866,9 @@ RawBuffer CKMLogic::getPKCS12(
     } catch (const DBCrypto::Exception::Base &e) {
         LogError("DBCrypto failed with message: " << e.GetMessage());
         retCode = CKM_API_ERROR_DB_ERROR;
+    } catch (const CKM::Exception &e) {
+        LogError("CKM::Exception: " << e.GetMessage());
+        retCode = CKM_API_ERROR_SERVER_ERROR;
     }
 
     auto response = MessageBuffer::Serialize(static_cast<int>(LogicCommand::GET_PKCS12),
@@ -1063,6 +1098,9 @@ RawBuffer CKMLogic::createKeyPair(
     } catch (DBCrypto::Exception::InternalError &e) {
         LogDebug("DBCrypto internal error: " << e.GetMessage());
         retCode = CKM_API_ERROR_DB_ERROR;
+    } catch (const CKM::Exception &e) {
+        LogError("CKM::Exception: " << e.GetMessage());
+        retCode = CKM_API_ERROR_SERVER_ERROR;
     }
 
     return MessageBuffer::Serialize(static_cast<int>(protocol_cmd), commandId, retCode).Pop();

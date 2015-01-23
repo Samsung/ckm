@@ -32,6 +32,14 @@ typedef std::vector<uid_t> UidVector;
 
 class FileSystem {
 public:
+    class Exception {
+    public:
+        DECLARE_EXCEPTION_TYPE(CKM::Exception, Base)
+        DECLARE_EXCEPTION_TYPE(Base, OpenFailed)
+        DECLARE_EXCEPTION_TYPE(Base, SaveFailed)
+        DECLARE_EXCEPTION_TYPE(Base, RenameFailed)
+    };
+
     FileSystem(uid_t uid);
 
     std::string getDBPath() const;
@@ -39,21 +47,21 @@ public:
     // Domain Key Encryption Key
     RawBuffer getDKEK() const;
     RawBuffer getDKEKBackup() const;
-    bool saveDKEK(const RawBuffer &buffer) const;
+    void saveDKEK(const RawBuffer &buffer) const;
 
     // Functions required in "password change transaction"
-    bool saveDKEKBackup(const RawBuffer &buffer) const;
-    bool restoreDKEK() const; // delete DKEK and move DKEKBackup -> DKEK
-    bool removeDKEKBackup() const;  // delete DKEKBackup
+    void createDKEKBackup() const;
+    void restoreDKEK() const; // delete DKEK and move DKEKBackup -> DKEK
+    void removeDKEKBackup() const;  // delete DKEKBackup
 
     // Database Data Encryption Key
     RawBuffer getDBDEK() const;
-    bool saveDBDEK(const RawBuffer &buffer) const;
+    void saveDBDEK(const RawBuffer &buffer) const;
 
     // Remove all ckm data related to user
     int removeUserData() const;
 
-    bool addRemovedApp(const std::string &smackLabel) const;
+    void addRemovedApp(const std::string &smackLabel) const;
     AppLabelVector clearRemovedsApps() const;
 
     static int init();
@@ -66,8 +74,9 @@ protected:
     std::string getDKEKBackupPath() const;
     std::string getDBDEKPath() const;
     RawBuffer loadFile(const std::string &path) const;
-    bool saveFile(const std::string &path, const RawBuffer &buffer) const;
+    void saveFile(const std::string &path, const RawBuffer &buffer) const;
     std::string getRemovedAppsPath() const;
+    void moveFile(const std::string &from, const std::string &to) const;
 
     uid_t m_uid;
 };

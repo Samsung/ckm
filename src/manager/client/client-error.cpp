@@ -47,11 +47,14 @@ const char * ErrorToString(int error) {
         ERRORDESCRIBE(CKM_API_ERROR_INVALID_FORMAT);
         ERRORDESCRIBE(CKM_API_ERROR_FILE_ACCESS_DENIED);
         ERRORDESCRIBE(CKM_API_ERROR_NOT_EXPORTABLE);
+        ERRORDESCRIBE(CKM_API_ERROR_FILE_SYSTEM);
         ERRORDESCRIBE(CKM_API_ERROR_UNKNOWN);
     default:
         return "Error not defined";
     }
 }
+
+#undef ERRORDESCRIBE
 
 } // namespace CKM
 

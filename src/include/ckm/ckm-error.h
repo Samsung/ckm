@@ -84,11 +84,14 @@ extern "C" {
 /*! \brief   indicating that a provided file or binary has not a valid format */
 #define CKM_API_ERROR_INVALID_FORMAT -17
 
-/*! \brief   indicating that provided file doesn't exists or cannot be accessed in the file system */
+/*! \brief   deprecated please do not use it. This value was replaced with CKM_API_ERROR_FILE_SYSTEM */
 #define CKM_API_ERROR_FILE_ACCESS_DENIED -18
 
 /*! \brief   indicating that keys are not exportable and could not be returned to client */
 #define CKM_API_ERROR_NOT_EXPORTABLE -19
+
+/*! \brief   indicating that files are corrupted or access to files was denied */
+#define CKM_API_ERROR_FILE_SYSTEM -20
 
 #define CKM_API_OCSP_STATUS_GOOD                (1<<0)
 #define CKM_API_OCSP_STATUS_UNSUPPORTED         (1<<1)
