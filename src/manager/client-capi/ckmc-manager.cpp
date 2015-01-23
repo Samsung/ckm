@@ -97,11 +97,8 @@ ckmc_cert_list_s *_toNewCkmCertList(const CKM::CertificateShPtrVector &certVecto
     CKM::CertificateShPtrVector::const_iterator it;
     for(it = certVector.begin(); it != certVector.end(); it++) {
         CKM::RawBuffer rawBuffer = (*it)->getDER();
-        unsigned char *rawCert = static_cast<unsigned char *>(malloc(rawBuffer.size()));
-        memcpy(rawCert, rawBuffer.data(), rawBuffer.size());
-        ckmc_cert_s *pcert;
-        ret = ckmc_cert_new(rawCert, rawBuffer.size(), CKMC_FORM_DER, &pcert);
-        free(rawCert);
+        ckmc_cert_s *pcert = NULL;
+        ret = ckmc_cert_new(rawBuffer.data(), rawBuffer.size(), CKMC_FORM_DER, &pcert);
         if(pcert == NULL) {
             ckmc_cert_list_all_free(start);
             return NULL;
@@ -171,10 +168,10 @@ int ckmc_get_key(const char *alias, const char *password, ckmc_key_s **key)
         return to_ckmc_error(ret);
     }
 
-    unsigned char *rawKey = reinterpret_cast<unsigned char*>(ckmKey->getDER().data());
+    CKM::RawBuffer buffer = ckmKey->getDER();
     ckmc_key_type_e keyType = static_cast<ckmc_key_type_e>(static_cast<int>(ckmKey->getType()));
 
-    ret = ckmc_key_new( rawKey, ckmKey->getDER().size(), keyType, NULL, key);
+    ret = ckmc_key_new( buffer.data(), buffer.size(), keyType, NULL, key);
 
     return to_ckmc_error(ret);
 }
@@ -266,8 +263,8 @@ int ckmc_get_cert(const char *alias, const char *password, ckmc_cert_s **cert)
         return to_ckmc_error(ret);
     }
 
-    unsigned char *rawCert = reinterpret_cast<unsigned char*>(ckmCert->getDER().data());
-    ret = ckmc_cert_new( rawCert, ckmCert->getDER().size(), CKMC_FORM_DER, cert);
+    CKM::RawBuffer buffer = ckmCert->getDER();
+    ret = ckmc_cert_new( buffer.data(), buffer.size(), CKMC_FORM_DER, cert);
 
     return ret;
 }
@@ -386,9 +383,9 @@ int ckmc_get_pkcs12(const char *alias, ckmc_pkcs12_s **pkcs12)
     {
         CKM::KeyShPtr helper = pkcs12Ptr->getKey();
 
-        unsigned char *rawKey = reinterpret_cast<unsigned char*>(helper->getDER().data());
+        CKM::RawBuffer buffer = helper->getDER();
         ckmc_key_type_e keyType = static_cast<ckmc_key_type_e>(static_cast<int>(helper->getType()));
-        ret = ckmc_key_new(rawKey, helper->getDER().size(), keyType, NULL, &private_key);
+        ret = ckmc_key_new(buffer.data(), buffer.size(), keyType, NULL, &private_key);
         if(ret != CKMC_ERROR_NONE)
             return ret;
     }
@@ -397,8 +394,8 @@ int ckmc_get_pkcs12(const char *alias, ckmc_pkcs12_s **pkcs12)
     {
         CKM::CertificateShPtr helper = pkcs12Ptr->getCertificate();
 
-        unsigned char *rawCert = reinterpret_cast<unsigned char*>(helper->getDER().data());
-        ret = ckmc_cert_new(rawCert, helper->getDER().size(), CKMC_FORM_DER, &cert);
+        CKM::RawBuffer buffer = helper->getDER();
+        ret = ckmc_cert_new(buffer.data(), buffer.size(), CKMC_FORM_DER, &cert);
         if(ret != CKMC_ERROR_NONE) {
             ckmc_key_free(private_key);
             return ret;
@@ -459,8 +456,7 @@ int ckmc_get_data(const char *alias, const char *password, ckmc_raw_buffer_s **d
         return to_ckmc_error(ret);
     }
 
-    unsigned char *rawBuff = reinterpret_cast<unsigned char*>(ckmBuff.data());
-    ret = ckmc_buffer_new(rawBuff, ckmBuff.size(), data);
+    ret = ckmc_buffer_new(ckmBuff.data(), ckmBuff.size(), data);
 
     return ret;
 }
@@ -607,8 +603,7 @@ int ckmc_create_signature(const char *private_key_alias,
         return to_ckmc_error(ret);
     }
 
-    unsigned char *rawBuff = reinterpret_cast<unsigned char*>(ckmSignature.data());
-    ret = ckmc_buffer_new( rawBuff, ckmSignature.size(), signature);
+    ret = ckmc_buffer_new( ckmSignature.data(), ckmSignature.size(), signature);
 
     return ret;
 }
