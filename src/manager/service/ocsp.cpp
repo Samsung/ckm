@@ -31,7 +31,7 @@
 #include <key-manager-util.h>
 #include <dpl/log/log.h>
 #include <certificate-impl.h>
-
+#include <openssl_utils.h>
 #include <ckm/ckm-error.h>
 
 /* Maximum leeway in validity period: default 5 minutes */
@@ -69,12 +69,20 @@ OCSPModule::~OCSPModule(){
 int OCSPModule::verify(const CertificateImplVector &certificateChain) {
     bool unsupported = false; // ocsp is unsupported in certificate in chain (except root CA)
 
-    if((systemCerts = loadSystemCerts(CKM_SYSTEM_CERTS_PATH)) == NULL) {
-        LogError("Error in loadSystemCerts function");
-        return CKM_API_OCSP_STATUS_INTERNAL_ERROR;
+    // create trusted store
+    X509_STACK_PTR trustedCerts = create_x509_stack();
+
+    // skip first 2 certificates
+    for (auto it=certificateChain.cbegin()+2; it != certificateChain.cend(); it++)
+    {
+        if (it->empty()) {
+            LogError("Error. Broken certificate chain.");
+            return CKM_API_OCSP_STATUS_INTERNAL_ERROR;
+        }
+        sk_X509_push(trustedCerts.get(), it->getX509());
     }
 
-    for(unsigned int i=0; i < certificateChain.size() -1; i++) {// except root certificate
+    for (unsigned int i=0; i < certificateChain.size() -1; i++) {// except root certificate
         if (certificateChain[i].empty() || certificateChain[i+1].empty()) {
             LogError("Error. Broken certificate chain.");
             return CKM_API_OCSP_STATUS_INTERNAL_ERROR;
@@ -82,6 +90,7 @@ int OCSPModule::verify(const CertificateImplVector &certificateChain) {
 
         X509 *cert   = certificateChain[i].getX509();
         X509 *issuer = certificateChain[i+1].getX509();
+
         std::string url = certificateChain[i].getOCSPURL();
 
         if (url.empty()) {
@@ -90,7 +99,9 @@ int OCSPModule::verify(const CertificateImplVector &certificateChain) {
             continue;
         }
 
-        int result = ocsp_verify(cert, issuer, systemCerts, url);
+        int result = ocsp_verify(cert, issuer, trustedCerts.get(), url);
+        // remove first element from trustedCerts store
+        sk_X509_delete(trustedCerts.get(), 0);
 
         if(result != CKM_API_OCSP_STATUS_GOOD) {
             LogError("Fail to OCSP certification check. Errorcode=[" << result <<
@@ -105,7 +116,7 @@ int OCSPModule::verify(const CertificateImplVector &certificateChain) {
     return CKM_API_OCSP_STATUS_GOOD;
 }
 
-int OCSPModule::ocsp_verify(X509 *cert, X509 *issuer, STACK_OF(X509) *systemCerts, const std::string &constUrl) {
+int OCSPModule::ocsp_verify(X509 *cert, X509 *issuer, STACK_OF(X509) *trustedCerts, const std::string &constUrl) {
     OCSP_REQUEST *req = NULL;
     OCSP_RESPONSE *resp = NULL;
     OCSP_BASICRESP *bs = NULL;
@@ -278,10 +289,10 @@ int OCSPModule::ocsp_verify(X509 *cert, X509 *issuer, STACK_OF(X509) *systemCert
         return CKM_API_OCSP_STATUS_INVALID_RESPONSE;
     }
 
-    if(systemCerts != NULL) {
+    if(trustedCerts != NULL) {
         trustedStore = X509_STORE_new();
-        for(tmpIdx=0; tmpIdx<sk_X509_num(systemCerts); tmpIdx++) {
-            X509_STORE_add_cert(trustedStore, sk_X509_value(systemCerts, tmpIdx));
+        for(tmpIdx=0; tmpIdx<sk_X509_num(trustedCerts); tmpIdx++) {
+            X509_STORE_add_cert(trustedStore, sk_X509_value(trustedCerts, tmpIdx));
         }
         X509_STORE_add_cert(trustedStore, issuer);
     }

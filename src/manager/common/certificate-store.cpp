@@ -28,13 +28,9 @@
 #include <certificate-config.h>
 #include <ckm/ckm-error.h>
 #include <ckm/ckm-type.h>
+#include <openssl_utils.h>
 
 namespace CKM {
-
-namespace {
-typedef std::unique_ptr<X509_STORE_CTX, void(*)(X509_STORE_CTX*)> X509_STORE_CTX_PTR;
-typedef std::unique_ptr<STACK_OF(X509), void(*)(STACK_OF(X509)*)> X509_STACK_PTR;
-}
 
 CertificateStore::CertificateStore() : m_store(X509_STORE_new())
 {
@@ -63,7 +59,7 @@ int CertificateStore::verifyCertificate(
              trustedVector.size() << "trusted certificates" << " and system certificates set to: "
              << useTrustedSystemCertificates);
 
-    X509_STORE_CTX_PTR csc(X509_STORE_CTX_new(),X509_STORE_CTX_free);
+    X509_STORE_CTX_PTR csc= create_x509_store_ctx();
     if (!csc) {
         LogError("failed to create csc");
         return CKM_API_ERROR_UNKNOWN;
@@ -84,7 +80,7 @@ int CertificateStore::verifyCertificate(
         return ret;
 
     // create stack of untrusted certificates
-    X509_STACK_PTR untrusted(sk_X509_new_null(), [](STACK_OF(X509)* stack) { sk_X509_free(stack); });
+    X509_STACK_PTR untrusted = create_x509_stack();
     if (!untrustedVector.empty()) {
         for (auto &e : untrustedVector) {
             // we don't want to free certificates because we wont create copies

@@ -969,7 +969,7 @@ int ckmc_get_certificate_chain_with_alias(const ckmc_cert_s *cert,
  * @privlevel public
  * @privilege %http://tizen.org/privilege/keymanager
  *
- * @param[in] pcert_chain_list   Certificate chain to perform OCSP check
+ * @param[in] pcert_chain_list   Valid certificate chain to perform OCSP check
  * @param[out] ocsp_status       The pointer to status result of OCSP check
  *
  * @return @c 0 on success, otherwise a negative error value
@@ -979,6 +979,8 @@ int ckmc_get_certificate_chain_with_alias(const ckmc_cert_s *cert,
  * @retval #CKMC_ERROR_PERMISSION_DENIED    Failed to access key manager
  *
  * @pre User is already logged in and the user key is already loaded into memory in plain text form.
+ * @pre @a pcert_chain_list is created with ckmc_get_certificate_chain() or
+ *      ckmc_get_certificate_chain_with_alias()
  *
  * @see ckmc_get_cert_chain())
  * @see ckmc_cert_list_all_free()
