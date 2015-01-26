@@ -22,7 +22,6 @@
 #include <ckm/ckm-type.h>
 #include <key-impl.h>
 #include <CryptoService.h>
-#include <key-manager-util.h>
 #include <assert.h>
 #include <dpl/log/log.h>
 

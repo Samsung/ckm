@@ -28,7 +28,6 @@
 #include <openssl/ssl.h>
 #include <fts.h>
 #include <unistd.h>
-#include <key-manager-util.h>
 #include <dpl/log/log.h>
 #include <certificate-impl.h>
 #include <openssl_utils.h>
