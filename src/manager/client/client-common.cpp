@@ -32,7 +32,6 @@
 #include <dpl/log/log.h>
 #include <dpl/serialization.h>
 #include <dpl/singleton.h>
-#include <dpl/singleton_safe_impl.h>
 
 #include <message-buffer.h>
 
@@ -40,8 +39,6 @@
 #include <ckmc/ckmc-type.h>
 #include <protocols.h>
 #include <client-common.h>
-
-IMPLEMENT_SAFE_SINGLETON(CKM::Log::LogSystem);
 
 namespace {
 

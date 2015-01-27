@@ -28,12 +28,12 @@
 #include <cassert>
 
 #include <dpl/log/log.h>
-#include <dpl/singleton_impl.h>
+#include <dpl/singleton_safe_impl.h>
 #include <dpl/log/old_style_log_provider.h>
 #include <dpl/log/dlog_log_provider.h>
 #include <dpl/log/journal_log_provider.h>
 
-IMPLEMENT_SINGLETON(CKM::Log::LogSystem)
+IMPLEMENT_SAFE_SINGLETON(CKM::Log::LogSystem);
 
 namespace CKM {
 namespace Log {

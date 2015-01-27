@@ -29,7 +29,6 @@
 
 #include <dpl/log/log.h>
 #include <dpl/singleton.h>
-#include <dpl/singleton_safe_impl.h>
 
 #include <socket-manager.h>
 
@@ -39,8 +38,6 @@
 #include <key-provider.h>
 #include <CryptoService.h>
 #include <file-system.h>
-
-IMPLEMENT_SAFE_SINGLETON(CKM::Log::LogSystem);
 
 #define REGISTER_SOCKET_SERVICE(manager, service) \
     registerSocketService<service>(manager, #service)
