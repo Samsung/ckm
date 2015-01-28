@@ -1,5 +1,4 @@
 #include <boost/test/unit_test.hpp>
-#include <boost/test/results_reporter.hpp>
 #include <unistd.h>
 #include <db-crypto.h>
 #include <iostream>
@@ -8,8 +7,6 @@
 #include <errno.h>
 #include <test_common.h>
 #include <DBFixture.h>
-
-BOOST_GLOBAL_FIXTURE(TestConfig)
 
 using namespace CKM;
 
@@ -22,8 +19,7 @@ const unsigned int c_test_retries = 1000;
 const unsigned int c_num_names = 500;
 const unsigned int c_num_names_add_test = 5000;
 const unsigned int c_names_per_label = 15;
-}
-
+} // namespace anonymous
 
 BOOST_FIXTURE_TEST_SUITE(DBCRYPTO_TEST, DBFixture)
 BOOST_AUTO_TEST_CASE(DBtestSimple) {

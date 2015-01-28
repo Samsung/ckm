@@ -5,8 +5,6 @@
 
 #include <ckm/ckm-raw-buffer.h>
 
-BOOST_GLOBAL_FIXTURE(TestConfig)
-
 using namespace CKM;
 
 namespace {

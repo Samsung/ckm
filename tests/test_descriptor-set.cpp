@@ -34,8 +34,6 @@
 
 #include <descriptor-set.h>
 
-BOOST_GLOBAL_FIXTURE(TestConfig)
-
 using namespace CKM;
 
 namespace {

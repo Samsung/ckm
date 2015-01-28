@@ -13,28 +13,7 @@ const std::string USERNAME_LONG = "SOFTWARE_CENTER_SYSTEM_SW_LAB_SECURITY_PART";
 const std::string SMACK_LABEL_1 = "SAMPLE_SMACK_LABEL_1";
 const std::string SMACK_LABEL_2 = "SAMPLE_SMACK_LABEL_2";
 
-static bool isLibInitialized = false;
-
-struct KeyProviderLib {
-    KeyProviderLib() {
-        Try {
-            CKM::KeyProvider::initializeLibrary();
-            isLibInitialized = true;
-        }
-        Catch (CKM::Exception) {
-            std::cout << "Library initialization failed!" << std::endl;
-        }
-    }
-    ~KeyProviderLib() {
-        Try { CKM::KeyProvider::closeLibrary(); }
-        Catch (CKM::Exception) {
-            std::cout << "Library deinitialization failed!" << std::endl;
-        }
-    }
-};
-
-BOOST_GLOBAL_FIXTURE(TestConfig)
-BOOST_GLOBAL_FIXTURE(KeyProviderLib)
+extern bool isLibInitialized;
 
 BOOST_AUTO_TEST_SUITE(KEY_PROVIDER_TEST)
 BOOST_AUTO_TEST_CASE(KeyDomainKEK){
