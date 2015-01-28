@@ -39,6 +39,14 @@ namespace CKM {
 namespace Log {
 namespace // anonymous
 {
+/*
+ * Set these variables to desired values in /etc/sysconfig/central-key-manager and restart
+ * central-key-manager service to use them.
+ *
+ * Example:
+ * CKM_LOG_LEVEL=3
+ * CKM_LOG_PROVIDER=JOURNALD
+ */
 const char * const CKM_LOG_LEVEL =      "CKM_LOG_LEVEL";
 const char * const CKM_LOG_PROVIDER =   "CKM_LOG_PROVIDER";
 
