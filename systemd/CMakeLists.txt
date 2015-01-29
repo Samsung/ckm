@@ -1,3 +1,6 @@
+CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/systemd/central-key-manager.service.in
+               ${CMAKE_SOURCE_DIR}/systemd/central-key-manager.service @ONLY)
+
 INSTALL(FILES
     ${CMAKE_SOURCE_DIR}/systemd/central-key-manager.service
     ${CMAKE_SOURCE_DIR}/systemd/central-key-manager.target

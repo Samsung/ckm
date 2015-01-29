@@ -67,15 +67,7 @@ std::unordered_map<std::string, provider_fn> new_provider = {
 
 LogSystem::LogSystem()
 {
-    try {
-        m_level = static_cast<AbstractLogProvider::LogLevel>(std::stoi(getenv(CKM_LOG_LEVEL)));
-    } catch(const std::exception&) {
-        m_level = AbstractLogProvider::LogLevel::Debug;
-    }
-#ifndef BUILD_TYPE_DEBUG
-    if (m_level > AbstractLogProvider::LogLevel::Error)
-        m_level = AbstractLogProvider::LogLevel::Error;
-#endif // BUILD_TYPE_DEBUG
+    SetLogLevel(getenv(CKM_LOG_LEVEL));
 
     AbstractLogProvider* prv = NULL;
     try {
@@ -88,25 +80,13 @@ LogSystem::LogSystem()
 
 LogSystem::~LogSystem()
 {
-    // Delete all providers
-    for (AbstractLogProviderPtrList::iterator iterator = m_providers.begin();
-         iterator != m_providers.end();
-         ++iterator)
-    {
-        delete *iterator;
-    }
-
-    m_providers.clear();
+    RemoveProviders();
 }
 
 void LogSystem::SetTag(const char* tag)
 {
-    for (AbstractLogProviderPtrList::iterator iterator = m_providers.begin();
-         iterator != m_providers.end();
-         ++iterator)
-    {
-        (*iterator)->SetTag(tag);
-    }
+    for (auto it : m_providers)
+        it->SetTag(tag);
 }
 
 void LogSystem::AddProvider(AbstractLogProvider *provider)
@@ -119,6 +99,34 @@ void LogSystem::RemoveProvider(AbstractLogProvider *provider)
     m_providers.remove(provider);
 }
 
+void LogSystem::SelectProvider(const std::string& name)
+{
+    // let it throw
+    provider_fn& prv = new_provider.at(name);
+
+    RemoveProviders();
+    AddProvider(prv());
+}
+
+void LogSystem::SetLogLevel(const char* level)
+{
+    try {
+        m_level = static_cast<AbstractLogProvider::LogLevel>(std::stoi(level));
+    } catch(const std::exception&) {
+        m_level = AbstractLogProvider::LogLevel::Debug;
+    }
+
+    if (m_level < AbstractLogProvider::LogLevel::None)
+        m_level = AbstractLogProvider::LogLevel::None;
+    else if (m_level > AbstractLogProvider::LogLevel::Pedantic)
+        m_level = AbstractLogProvider::LogLevel::Pedantic;
+
+#ifndef BUILD_TYPE_DEBUG
+    if (m_level > AbstractLogProvider::LogLevel::Error)
+        m_level = AbstractLogProvider::LogLevel::Error;
+#endif // BUILD_TYPE_DEBUG
+}
+
 void LogSystem::Log(AbstractLogProvider::LogLevel level,
                     const char *message,
                     const char *filename,
@@ -129,5 +137,14 @@ void LogSystem::Log(AbstractLogProvider::LogLevel level,
         it->Log(level, message, filename, line, function);
 }
 
+void LogSystem::RemoveProviders()
+{
+    // Delete all providers
+    for (auto it : m_providers)
+        delete it;
+
+    m_providers.clear();
 }
+
+} // namespace Log
 } // namespace CKM

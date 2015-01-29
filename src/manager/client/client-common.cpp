@@ -34,6 +34,7 @@
 #include <dpl/singleton.h>
 
 #include <message-buffer.h>
+#include <log-setup.h>
 
 #include <ckm/ckm-error.h>
 #include <ckmc/ckmc-type.h>
@@ -43,10 +44,6 @@
 namespace {
 
 const int POLL_TIMEOUT = 600000;
-
-void centKeyClientEnableLogSystem(void) {
-    CKM::Singleton<CKM::Log::LogSystem>::Instance().SetTag("CKM_CLIENT");
-}
 
 } // namespace anonymous
 
@@ -353,7 +350,7 @@ void try_catch_async(const std::function<void()>& func, const std::function<void
 static void init_lib(void) __attribute__ ((constructor));
 static void init_lib(void)
 {
-    centKeyClientEnableLogSystem();
+    CKM::SetupClientLogSystem();
 }
 
 static void fini_lib(void) __attribute__ ((destructor));

@@ -102,7 +102,9 @@ export LDFLAGS+="-Wl,--rpath=%{_libdir} "
 %if "%{sec_product_feature_security_mdfpp_enable}" == "1"
         -DSECURITY_MDFPP_STATE_ENABLE=1 \
 %endif
-        -DSYSTEMD_UNIT_DIR=%{_unitdir}
+        -DSYSTEMD_UNIT_DIR=%{_unitdir} \
+        -DSYSTEMD_ENV_FILE="/etc/sysconfig/central-key-manager"
+
 make %{?jobs:-j%jobs}
 
 %install

@@ -8,7 +8,7 @@ ExecStart=/usr/bin/key-manager
 Sockets=central-key-manager-api-storage.socket
 Sockets=central-key-manager-api-control.socket
 Sockets=central-key-manager-api-ocsp.socket
-EnvironmentFile=-/etc/sysconfig/central-key-manager
+EnvironmentFile=-@SYSTEMD_ENV_FILE@
 
 [Install]
 WantedBy=multi-user.target

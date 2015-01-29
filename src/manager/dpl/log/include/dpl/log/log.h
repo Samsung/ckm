@@ -32,6 +32,7 @@
 
 namespace CKM {
 namespace Log {
+
 /**
  * CKM log system
  */
@@ -68,7 +69,21 @@ class COMMON_API LogSystem
      */
     void RemoveProvider(AbstractLogProvider *provider);
 
+    /**
+     * Selects given provider by name (overwrites environment setting)
+     *
+     * Throws std::out_of_range exception if not found.
+     */
+    void SelectProvider(const std::string& name);
+
+    /**
+     * Sets log level (overwrites environment settings)
+     */
+    void SetLogLevel(const char* level);
+
   private:
+    void RemoveProviders();
+
     typedef std::list<AbstractLogProvider *> AbstractLogProviderPtrList;
     AbstractLogProviderPtrList m_providers;
     AbstractLogProvider::LogLevel m_level;
