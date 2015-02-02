@@ -45,6 +45,7 @@ int to_ckm_error(int ckmc_error) {
     case CKMC_ERROR_INVALID_FORMAT:        return CKM_API_ERROR_INVALID_FORMAT;
     case CKMC_ERROR_FILE_ACCESS_DENIED:    return CKM_API_ERROR_FILE_ACCESS_DENIED;
     case CKMC_ERROR_NOT_EXPORTABLE:        return CKM_API_ERROR_NOT_EXPORTABLE;
+    case CKMC_ERROR_FILE_SYSTEM:           return CKM_API_ERROR_FILE_SYSTEM;
     case CKMC_ERROR_UNKNOWN:               return CKM_API_ERROR_UNKNOWN;
     }
     return CKMC_ERROR_UNKNOWN;
@@ -72,6 +73,7 @@ int to_ckmc_error(int ckm_error) {
     case CKM_API_ERROR_INVALID_FORMAT:        return CKMC_ERROR_INVALID_FORMAT;
     case CKM_API_ERROR_FILE_ACCESS_DENIED:    return CKMC_ERROR_FILE_ACCESS_DENIED;
     case CKM_API_ERROR_NOT_EXPORTABLE:        return CKMC_ERROR_NOT_EXPORTABLE;
+    case CKM_API_ERROR_FILE_SYSTEM:           return CKMC_ERROR_FILE_SYSTEM;
     case CKM_API_ERROR_UNKNOWN:               return CKMC_ERROR_UNKNOWN;
     }
     return CKMC_ERROR_UNKNOWN;
