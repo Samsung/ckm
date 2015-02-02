@@ -82,8 +82,13 @@ int ckmc_allow_access_by_adm(uid_t user, const char* owner, const char *alias, c
     if(!owner || !alias)
         return CKMC_ERROR_INVALID_PARAMETER;
 
+    int ec, permissionMask;
+    ec = access_to_permission_mask(granted, permissionMask);
+    if(ec != CKMC_ERROR_NONE)
+        return ec;
+
     // if label given twice, service will return an error
-    return ckmc_set_permission_by_adm(user, CKM::AliasSupport::merge(CKM::Label(owner), CKM::Name(alias)).c_str(), accessor, granted);
+    return ckmc_set_permission_by_adm(user, CKM::AliasSupport::merge(CKM::Label(owner), CKM::Name(alias)).c_str(), accessor, permissionMask);
 }
 
 KEY_MANAGER_CAPI

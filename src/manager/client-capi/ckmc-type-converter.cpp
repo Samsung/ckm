@@ -20,6 +20,7 @@
  * @brief       new and free methods for the struct of CAPI
  */
 
+#include <ckmc/ckmc-type.h>
 #include <ckmc-type-converter.h>
 
 int to_ckm_error(int ckmc_error) {
@@ -90,3 +91,20 @@ ckmc_ocsp_status_e to_ckmc_ocsp_status(int ckm_ocsp_status) {
     }
 }
 
+int access_to_permission_mask(ckmc_access_right_e ar, int & permissionMask)
+{
+    switch(ar)
+    {
+        case CKMC_AR_READ:
+            permissionMask = CKMC_PERMISSION_READ;
+            break;
+
+        case CKMC_AR_READ_REMOVE:
+            permissionMask = CKMC_PERMISSION_READ | CKMC_PERMISSION_REMOVE;
+            break;
+
+        default:
+            return CKMC_ERROR_INVALID_PARAMETER;
+    }
+    return CKMC_ERROR_NONE;
+}

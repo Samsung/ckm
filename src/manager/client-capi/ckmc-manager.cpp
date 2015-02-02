@@ -797,7 +797,12 @@ int ckmc_ocsp_check(const ckmc_cert_list_s *pcert_chain_list, ckmc_ocsp_status_e
 KEY_MANAGER_CAPI
 int ckmc_allow_access(const char *alias, const char *accessor, ckmc_access_right_e granted)
 {
-    return ckmc_set_permission(alias, accessor, static_cast<int>(granted));
+    int ec, permissionMask;
+    ec = access_to_permission_mask(granted, permissionMask);
+    if(ec != CKMC_ERROR_NONE)
+        return ec;
+
+    return ckmc_set_permission(alias, accessor, permissionMask);
 }
 
 KEY_MANAGER_CAPI
