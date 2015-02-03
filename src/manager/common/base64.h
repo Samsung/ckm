@@ -22,12 +22,14 @@
 
 #include <ckm/ckm-type.h>
 
+#include <symbol-visibility.h>
+
 struct bio_st;
 typedef bio_st BIO;
 
 namespace CKM {
 
-class Base64Encoder : public CKM::Noncopyable
+class COMMON_API Base64Encoder : public CKM::Noncopyable
 {
   public:
     class Exception
@@ -51,7 +53,7 @@ class Base64Encoder : public CKM::Noncopyable
     bool m_finalized;
 };
 
-class Base64Decoder : public CKM::Noncopyable
+class COMMON_API Base64Decoder : public CKM::Noncopyable
 {
   public:
     class Exception

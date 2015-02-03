@@ -25,10 +25,11 @@
 #include <ckm/ckm-type.h>
 #include <ckm/ckm-key.h>
 #include <openssl/evp.h>
+#include <symbol-visibility.h>
 
 namespace CKM {
 
-class KeyImpl : public Key {
+class COMMON_API KeyImpl : public Key {
 public:
     typedef std::shared_ptr<EVP_PKEY> EvpShPtr;
 

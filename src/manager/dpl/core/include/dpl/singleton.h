@@ -22,9 +22,11 @@
 #ifndef CENT_KEY_SINGLETON_H
 #define CENT_KEY_SINGLETON_H
 
+#include <symbol-visibility.h>
+
 namespace CKM {
 template<typename Class>
-class Singleton :
+class COMMON_API Singleton :
     private Class
 {
     //

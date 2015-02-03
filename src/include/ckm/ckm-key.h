@@ -28,7 +28,7 @@ namespace CKM {
 class Key;
 typedef std::shared_ptr<Key> KeyShPtr;
 
-class Key {
+class KEY_MANAGER_API Key {
 public:
     virtual bool empty() const = 0;
     virtual KeyType getType() const = 0;

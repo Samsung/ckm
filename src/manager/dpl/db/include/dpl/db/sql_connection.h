@@ -35,12 +35,14 @@
 #include <stdint.h>
 #include <dpl/raw-buffer.h>
 
+#include <symbol-visibility.h>
+
 namespace CKM {
 namespace DB {
 /**
  * SQL connection class
  */
-class SqlConnection
+class COMMON_API SqlConnection
 {
   public:
     /**

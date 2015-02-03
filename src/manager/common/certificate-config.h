@@ -21,12 +21,13 @@
 
 #include <set>
 #include <string>
+#include <symbol-visibility.h>
 
 #pragma once
 
 namespace CKM {
 
-class CertificateConfig
+class COMMON_API CertificateConfig
 {
 public:
     static void addSystemCertificateDir(const std::string& dir) { m_sysCertDirs.insert(dir); }

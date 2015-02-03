@@ -1,9 +1,5 @@
 /*
- *  ckm-manager
- *
  *  Copyright (c) 2000 - 2013 Samsung Electronics Co., Ltd All Rights Reserved
- *
- *  Contact: Bumjin Im <bj.im@samsung.com>
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -16,30 +12,12 @@
  *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *  See the License for the specific language governing permissions and
  *  limitations under the License
+ *
+ *
+ * @file        symbol-visibility.h
+ * @author      Kyungwook Tak (k.tak@samsung.com)
+ * @version     1.0
+ * @brief       define symbol visiblity for common library.
  */
 
-#ifndef _SMACK_CHECK_H_
-#define _SMACK_CHECK_H_
-
-#include <symbol-visibility.h>
-
-namespace CKM {
-
-/*
- * A very simple runtime check for SMACK on the platform
- * Returns 1 if SMACK is present, 0 otherwise
- */
-
-int smack_runtime_check(void);
-
-/*
- * A very simple runtime check for SMACK on the platform
- * Returns 1 if SMACK is present, 0 otherwise. If SMACK_ENABLED is not defined
- * It returns 0.
- */
-COMMON_API
-int smack_check(void);
-
-} // namespace CKM
-
-#endif // _SMACK_CHECK_H_
+#define COMMON_API __attribute__((visibility("default")))

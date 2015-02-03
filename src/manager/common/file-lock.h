@@ -22,10 +22,11 @@
 #pragma once
 
 #include <noncopyable.h>
+#include <symbol-visibility.h>
 
 namespace CKM {
 
-class FileLock
+class COMMON_API FileLock
 {
 public:
     explicit FileLock(const char* const file);

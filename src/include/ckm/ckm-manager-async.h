@@ -34,7 +34,7 @@ namespace CKM {
 
 // Asynchronous interface to Central Key Manager. This implementation uses
 // internal thread for connection. Key Manager is not thread safe.
-class ManagerAsync
+class KEY_MANAGER_API ManagerAsync
 {
 public:
     class Impl;

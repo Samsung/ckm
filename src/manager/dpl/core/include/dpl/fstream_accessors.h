@@ -25,6 +25,8 @@
 #ifndef CENT_KEY_FSTREAM_ACCESSORS_H
 #define CENT_KEY_FSTREAM_ACCESSORS_H
 
+#include <symbol-visibility.h>
+
 namespace CKM {
 
 /*
@@ -35,7 +37,7 @@ namespace CKM {
 */
 
 template<typename T>
-class FstreamAccessors : T::__filebuf_type {
+class COMMON_API FstreamAccessors : T::__filebuf_type {
     typedef FstreamAccessors<T> MyType;
 public:
     static int GetFd(T &strm) {

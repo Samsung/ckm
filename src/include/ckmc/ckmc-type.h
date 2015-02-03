@@ -42,7 +42,7 @@ extern "C" {
  * case, separator " " (space bar) is used to separate label and alias.
  * @see key-manager_doc.h
  */
-extern char const * const ckmc_label_name_separator;
+KEY_MANAGER_CAPI extern char const * const ckmc_label_name_separator;
 
 /**
  * @brief Enumeration for key types of key manager.

@@ -28,17 +28,18 @@
 #include <exception>
 #include <cstdlib>
 #include <sstream>
+#include <symbol-visibility.h>
 
 namespace CKM {
-void LogUnhandledException(const std::string &str);
-void LogUnhandledException(const std::string &str,
+COMMON_API void LogUnhandledException(const std::string &str);
+COMMON_API void LogUnhandledException(const std::string &str,
                            const char *filename,
                            int line,
                            const char *function);
 }
 
 namespace CKM {
-class Exception
+class COMMON_API Exception
 {
   private:
     static unsigned int m_exceptionCount;

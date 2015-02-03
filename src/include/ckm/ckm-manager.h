@@ -36,7 +36,7 @@ namespace CKM {
 class Manager;
 typedef std::shared_ptr<Manager> ManagerShPtr;
 
-class Manager {
+class KEY_MANAGER_API Manager {
 public:
     virtual ~Manager(){}
 

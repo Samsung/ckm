@@ -23,10 +23,11 @@
 #include <memory>
 
 #include <ckm/ckm-pkcs12.h>
+#include <symbol-visibility.h>
 
 namespace CKM {
 
-class PKCS12Impl : public PKCS12 {
+class COMMON_API PKCS12Impl : public PKCS12 {
 public:
     PKCS12Impl() {}
     explicit PKCS12Impl(const PKCS12 &);

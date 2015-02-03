@@ -34,7 +34,7 @@ namespace CKM {
 class PKCS12;
 typedef std::shared_ptr<PKCS12> PKCS12ShPtr;
 
-class PKCS12 {
+class KEY_MANAGER_API PKCS12 {
 public:
     virtual KeyShPtr getKey() const = 0;
 

@@ -25,11 +25,12 @@
 #include <dpl/exception.h>
 #include <string>
 #include <cerrno>
+#include <symbol-visibility.h>
 
 namespace CKM {
 DECLARE_EXCEPTION_TYPE(CKM::Exception, InvalidErrnoValue)
 
-std::string GetErrnoString(int error = errno);
+COMMON_API std::string GetErrnoString(int error = errno);
 } // namespace CKM
 
 #endif // CKM_ERRNO_STRING_H

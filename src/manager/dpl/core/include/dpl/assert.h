@@ -24,12 +24,13 @@
 
 #include <dpl/noreturn.h>
 #include <string>
+#include <symbol-visibility.h>
 
 namespace CKM {
 // Assertion handler procedure
 // Do not call directly
 // Always use Assert macro
-CENT_KEY_NORETURN void AssertProc(const char *condition,
+COMMON_API CENT_KEY_NORETURN void AssertProc(const char *condition,
                              const char *file,
                              int line,
                              const char *function);

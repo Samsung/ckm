@@ -28,12 +28,14 @@
 #include <sstream>
 #include <list>
 
+#include <symbol-visibility.h>
+
 namespace CKM {
 namespace Log {
 /**
  * CKM log system
  */
-class LogSystem : private Noncopyable
+class COMMON_API LogSystem : private Noncopyable
 {
   public:
     LogSystem();

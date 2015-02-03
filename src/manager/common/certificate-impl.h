@@ -27,10 +27,11 @@
 #include <ckm/ckm-certificate.h>
 
 #include <key-impl.h>
+#include <symbol-visibility.h>
 
 namespace CKM {
 
-class CertificateImpl : public Certificate {
+class COMMON_API CertificateImpl : public Certificate {
 public:
     CertificateImpl() : m_x509(NULL) {}
     explicit CertificateImpl(X509* x509, bool duplicate = true);

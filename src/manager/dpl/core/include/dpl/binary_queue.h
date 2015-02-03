@@ -27,6 +27,7 @@
 #include <dpl/noncopyable.h>
 #include <memory>
 #include <list>
+#include <symbol-visibility.h>
 
 namespace CKM {
 /**
@@ -40,7 +41,7 @@ typedef std::auto_ptr<BinaryQueue> BinaryQueueAutoPtr;
  *
  * @todo Add optimized implementation for FlattenConsume
  */
-class BinaryQueue
+class COMMON_API BinaryQueue
 //  : public AbstractInputOutput
 {
   public:

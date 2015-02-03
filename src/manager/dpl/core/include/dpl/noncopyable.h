@@ -22,8 +22,10 @@
 #ifndef CENT_KEY_NONCOPYABLE_H
 #define CENT_KEY_NONCOPYABLE_H
 
+#include <symbol-visibility.h>
+
 namespace CKM {
-class Noncopyable
+class COMMON_API Noncopyable
 {
   private:
     Noncopyable(const Noncopyable &);

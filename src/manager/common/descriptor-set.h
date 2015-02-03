@@ -26,6 +26,7 @@
 #include <dpl/exception.h>
 #include <poll.h>
 #include <noncopyable.h>
+#include <symbol-visibility.h>
 
 namespace CKM {
 
@@ -46,7 +47,7 @@ protected:
 /**
  * @brief Wrapper for poll()
  */
-class DescriptorSet : public IDescriptorSet
+class COMMON_API DescriptorSet : public IDescriptorSet
 {
 public:
     DescriptorSet();

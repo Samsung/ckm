@@ -391,6 +391,7 @@ int ckmc_load_from_pkcs12_file(const char *file_path, const char *passphrase, ck
     return CKMC_ERROR_NONE;
 }
 
+KEY_MANAGER_CAPI
 int ckmc_load_from_pkcs12_file2(const char *file_path, const char *passphrase, ckmc_pkcs12_s **pkcs12_bundle)
 {
     int ec;

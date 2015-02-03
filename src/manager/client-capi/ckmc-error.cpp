@@ -22,8 +22,10 @@
 
 #include <ckmc/ckmc-error.h>
 #include <ckm/ckm-type.h>
+#include <ckmc/ckmc-type.h>
 #include <ckmc-type-converter.h>
 
+KEY_MANAGER_CAPI
 const char * ckmc_error_to_string(int error) {
 	return CKM::ErrorToString(to_ckm_error(error));
 }

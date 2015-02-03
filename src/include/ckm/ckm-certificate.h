@@ -37,7 +37,7 @@ namespace CKM {
 class Certificate;
 typedef std::shared_ptr<Certificate> CertificateShPtr;
 
-class Certificate {
+class KEY_MANAGER_API Certificate {
 public:
 
     virtual bool empty() const = 0;

@@ -34,7 +34,7 @@ class Control;
 typedef std::shared_ptr<Control> ControlShPtr;
 
 // used by login manager to unlock user data with global password
-class Control
+class KEY_MANAGER_API Control
 {
 public:
     // decrypt user key with password

@@ -30,13 +30,14 @@
 
 #include <dpl/exception.h>
 #include <dpl/serialization.h>
+#include <symbol-visibility.h>
 
 namespace CKM {
 
-extern char const * const SERVICE_SOCKET_ECHO;
-extern char const * const SERVICE_SOCKET_CKM_CONTROL;
-extern char const * const SERVICE_SOCKET_CKM_STORAGE;
-extern char const * const SERVICE_SOCKET_OCSP;
+COMMON_API extern char const * const SERVICE_SOCKET_ECHO;
+COMMON_API extern char const * const SERVICE_SOCKET_CKM_CONTROL;
+COMMON_API extern char const * const SERVICE_SOCKET_CKM_STORAGE;
+COMMON_API extern char const * const SERVICE_SOCKET_OCSP;
 
 enum class ControlCommand : int {
     UNLOCK_USER_KEY,
@@ -68,7 +69,7 @@ enum class LogicCommand : int {
     // for backward compatibility append new at the end
 };
 
-class DataType {
+class COMMON_API DataType {
 public:
     class Exception {
     public:
@@ -238,13 +239,13 @@ private:
 };
 
 // (client side) Alias = (service side) Label::Name
-extern char const * const LABEL_NAME_SEPARATOR;
+COMMON_API extern char const * const LABEL_NAME_SEPARATOR;
 typedef std::string Name;
 typedef std::vector<std::pair<Label, Name> > LabelNameVector;
 
 class IStream;
 
-struct PolicySerializable : public Policy, ISerializable {
+struct COMMON_API PolicySerializable : public Policy, ISerializable {
     PolicySerializable() {};
     explicit PolicySerializable(const Policy &policy) : Policy(policy) {}
     explicit PolicySerializable(IStream &stream) {
@@ -257,7 +258,7 @@ struct PolicySerializable : public Policy, ISerializable {
     }
 };
 
-struct PKCS12Serializable : public PKCS12Impl, ISerializable {
+struct COMMON_API PKCS12Serializable : public PKCS12Impl, ISerializable {
     PKCS12Serializable();
     explicit PKCS12Serializable(const PKCS12 &);
     explicit PKCS12Serializable(IStream &);

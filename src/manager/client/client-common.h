@@ -36,8 +36,6 @@
 #include <message-buffer.h>
 #include <protocols.h>
 
-#define KEY_MANAGER_API __attribute__((visibility("default")))
-
 extern "C" {
     struct msghdr;
 }

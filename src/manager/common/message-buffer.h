@@ -29,12 +29,12 @@
 #include <dpl/binary_queue.h>
 #include <dpl/exception.h>
 #include <dpl/serialization.h>
-
 #include <dpl/raw-buffer.h>
+#include <symbol-visibility.h>
 
 namespace CKM {
 
-class MessageBuffer : public CKM::IStream {
+class COMMON_API MessageBuffer : public CKM::IStream {
 public:
     class Exception
     {
