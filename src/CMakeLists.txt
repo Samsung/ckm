@@ -5,7 +5,6 @@ PKG_CHECK_MODULES(KEY_MANAGER_DEP
     libcrypto
     libsystemd-daemon
     capi-base-common
-    db-util
     vconf
     REQUIRED
     )
@@ -18,6 +17,11 @@ SET(KEY_MANAGER_SOURCES
     ${KEY_MANAGER_PATH}/main/generic-socket-manager.cpp
     ${KEY_MANAGER_PATH}/main/socket-manager.cpp
     ${KEY_MANAGER_PATH}/main/key-manager-main.cpp
+    ${KEY_MANAGER_PATH}/main/smack-check.cpp
+    ${KEY_MANAGER_PATH}/service/certificate-store.cpp
+    ${KEY_MANAGER_PATH}/service/certificate-config.cpp
+    ${KEY_MANAGER_PATH}/service/digest.cpp
+    ${KEY_MANAGER_PATH}/service/file-lock.cpp
     ${KEY_MANAGER_PATH}/service/access-control.cpp
     ${KEY_MANAGER_PATH}/service/ckm-service.cpp
     ${KEY_MANAGER_PATH}/service/ckm-logic.cpp
@@ -29,6 +33,10 @@ SET(KEY_MANAGER_SOURCES
     ${KEY_MANAGER_PATH}/service/db-crypto.cpp
     ${KEY_MANAGER_PATH}/service/ocsp-service.cpp
     ${KEY_MANAGER_PATH}/service/ocsp-logic.cpp
+    ${KEY_MANAGER_PATH}/dpl/core/src/assert.cpp
+    ${KEY_MANAGER_PATH}/dpl/db/src/sql_connection.cpp
+    ${KEY_MANAGER_PATH}/dpl/db/src/naive_synchronization_object.cpp
+    ${KEY_MANAGER_PATH}/sqlcipher/sqlcipher.c
     )
 
 # -fPIE and -pie flag is added for ASLR
@@ -91,6 +99,7 @@ SET(KEY_MANAGER_CLIENT_SOURCES
     ${KEY_MANAGER_CLIENT_ASYNC_SRC_PATH}/service.cpp
     ${KEY_MANAGER_CLIENT_ASYNC_SRC_PATH}/storage-receiver.cpp
     ${KEY_MANAGER_CLIENT_ASYNC_SRC_PATH}/ocsp-receiver.cpp
+    ${KEY_MANAGER_CLIENT_ASYNC_SRC_PATH}/descriptor-set.cpp
     ${KEY_MANAGER_CLIENT_CAPI_SRC_PATH}/ckmc-type.cpp
     ${KEY_MANAGER_CLIENT_CAPI_SRC_PATH}/ckmc-error.cpp
     ${KEY_MANAGER_CLIENT_CAPI_SRC_PATH}/ckmc-manager.cpp

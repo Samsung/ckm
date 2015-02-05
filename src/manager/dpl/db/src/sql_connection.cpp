@@ -25,14 +25,13 @@
 #include <stddef.h>
 #include <dpl/db/sql_connection.h>
 #include <dpl/db/naive_synchronization_object.h>
-#include <dpl/noncopyable.h>
 #include <dpl/assert.h>
 #include <dpl/scoped_ptr.h>
-#include <db-util.h>
 #include <unistd.h>
 #include <cstdio>
 #include <cstdarg>
 #include <memory>
+#include <noncopyable.h>
 
 
 namespace {
@@ -43,13 +42,14 @@ namespace CKM {
 namespace DB {
 namespace // anonymous
 {
-class ScopedNotifyAll :
-    public Noncopyable
+class ScopedNotifyAll
 {
   private:
     SqlConnection::SynchronizationObject *m_synchronizationObject;
 
   public:
+    NONCOPYABLE(ScopedNotifyAll)
+
     explicit ScopedNotifyAll(
         SqlConnection::SynchronizationObject *synchronizationObject) :
         m_synchronizationObject(synchronizationObject)
@@ -251,13 +251,6 @@ void SqlConnection::DataCommand::BindBlob(
                 << position << "] -> " << raw.size());
 }
 
-void SqlConnection::DataCommand::BindString(
-    SqlConnection::ArgumentIndex position,
-    const String &value)
-{
-    BindString(position, ToUTF8String(value).c_str());
-}
-
 void SqlConnection::DataCommand::BindInteger(
     SqlConnection::ArgumentIndex position,
     const boost::optional<int> &value)
@@ -332,17 +325,6 @@ void SqlConnection::DataCommand::BindDouble(
         BindNull(position);
     } else {
         BindDouble(position, *value);
-    }
-}
-
-void SqlConnection::DataCommand::BindString(
-    SqlConnection::ArgumentIndex position,
-    const boost::optional<String> &value)
-{
-    if (!!value) {
-        BindString(position, ToUTF8String(*value).c_str());
-    } else {
-        BindNull(position);
     }
 }
 
@@ -634,22 +616,6 @@ boost::optional<double> SqlConnection::DataCommand::GetColumnOptionalDouble(
     double value = sqlcipher3_column_double(m_stmt, column);
     LogPedantic("    Value: " << value);
     return boost::optional<double>(value);
-}
-
-boost::optional<String> SqlConnection::DataCommand::GetColumnOptionalString(
-    SqlConnection::ColumnIndex column)
-{
-    LogPedantic("SQL data command get column optional string: ["
-                << column << "]");
-    CheckColumnIndex(column);
-    if (sqlcipher3_column_type(m_stmt, column) == SQLCIPHER_NULL) {
-        return boost::optional<String>();
-    }
-    const char *value = reinterpret_cast<const char *>(
-            sqlcipher3_column_text(m_stmt, column));
-    LogPedantic("Value: " << value);
-    String s = FromUTF8String(value);
-    return boost::optional<String>(s);
 }
 
 boost::optional<RawBuffer> SqlConnection::DataCommand::GetColumnOptionalBlob(

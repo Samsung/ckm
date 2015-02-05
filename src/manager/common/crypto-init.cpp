@@ -14,31 +14,31 @@
  *  limitations under the License
  */
 /*
- * @file       file-lock.h
- * @author     Krzysztof Jackiewicz (k.jackiewicz@samsung.com)
+ * @file       crypto-init.cpp
+ * @author     Maciej Karpiuk (m.karpiuk2@samsung.com)
  * @version    1.0
  */
 
-#pragma once
-
-#include <noncopyable.h>
-#include <symbol-visibility.h>
+#include "crypto-init.h"
+#include <mutex>
+#include <openssl/evp.h>
 
 namespace CKM {
 
-class COMMON_API FileLock
-{
-public:
-    explicit FileLock(const char* const file);
-    ~FileLock();
+namespace {
+bool isCryptoInitialized = false;
+std::mutex cryptoInitMutex;
+}
 
-    NONCOPYABLE(FileLock);
-
-    FileLock(FileLock&&) = default;
-    FileLock& operator=(FileLock&&) = default;
-
-private:
-    int m_lockFd;
-};
+void initCryptoLib() {
+    std::lock_guard<std::mutex> lock(cryptoInitMutex);
+    if(!isCryptoInitialized)
+    {
+        isCryptoInitialized = true;
+        OpenSSL_add_all_ciphers();
+        OpenSSL_add_all_algorithms();
+        OpenSSL_add_all_digests();
+    }
+}
 
 } /* namespace CKM */

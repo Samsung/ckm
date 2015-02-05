@@ -17,11 +17,10 @@
 #define _BASE64_H_
 
 #include <string>
-#include <dpl/noncopyable.h>
 #include <dpl/exception.h>
 
 #include <ckm/ckm-type.h>
-
+#include <noncopyable.h>
 #include <symbol-visibility.h>
 
 struct bio_st;
@@ -29,9 +28,11 @@ typedef bio_st BIO;
 
 namespace CKM {
 
-class COMMON_API Base64Encoder : public CKM::Noncopyable
+class COMMON_API Base64Encoder
 {
   public:
+    NONCOPYABLE(Base64Encoder)
+
     class Exception
     {
       public:
@@ -53,9 +54,11 @@ class COMMON_API Base64Encoder : public CKM::Noncopyable
     bool m_finalized;
 };
 
-class COMMON_API Base64Decoder : public CKM::Noncopyable
+class COMMON_API Base64Decoder
 {
   public:
+    NONCOPYABLE(Base64Decoder)
+
     class Exception
     {
       public:

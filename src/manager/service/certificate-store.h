@@ -19,7 +19,6 @@
  * @brief       Certificate Stack Implmentation.
  */
 #include <certificate-impl.h>
-#include <symbol-visibility.h>
 
 extern "C" {
 struct x509_store_st;
@@ -28,7 +27,7 @@ typedef struct x509_store_st X509_STORE;
 
 namespace CKM {
 
-class COMMON_API CertificateStore {
+class CertificateStore {
 public:
     CertificateStore();
     CertificateStore(const CertificateStore &) = delete;

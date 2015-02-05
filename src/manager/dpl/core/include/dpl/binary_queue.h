@@ -24,10 +24,10 @@
 
 //#include <dpl/abstract_input_output.h>
 #include <dpl/exception.h>
-#include <dpl/noncopyable.h>
 #include <memory>
 #include <list>
 #include <symbol-visibility.h>
+#include <noncopyable.h>
 
 namespace CKM {
 /**
@@ -77,9 +77,10 @@ class COMMON_API BinaryQueue
     };
 
   private:
-    struct Bucket :
-        private Noncopyable
+    struct Bucket
     {
+        NONCOPYABLE(Bucket);
+
         const void *buffer;
         const void *ptr;
         size_t size;

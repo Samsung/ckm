@@ -1,9 +1,4 @@
-/*
- *  ckm-manager
- *
- *  Copyright (c) 2000 - 2013 Samsung Electronics Co., Ltd All Rights Reserved
- *
- *  Contact: Bumjin Im <bj.im@samsung.com>
+/* Copyright (c) 2000 - 2013 Samsung Electronics Co., Ltd All Rights Reserved
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -16,30 +11,20 @@
  *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *  See the License for the specific language governing permissions and
  *  limitations under the License
+ *
+ *
+ * @file        crypto-init.h
+ * @author      Bartlomiej Grzelewski (b.grzelewski@samsung.com)
+ * @version     1.0
+ * @brief       Crypto module implementation.
  */
-
-#ifndef _SMACK_CHECK_H_
-#define _SMACK_CHECK_H_
+#pragma once
 
 #include <symbol-visibility.h>
 
 namespace CKM {
 
-/*
- * A very simple runtime check for SMACK on the platform
- * Returns 1 if SMACK is present, 0 otherwise
- */
-
-int smack_runtime_check(void);
-
-/*
- * A very simple runtime check for SMACK on the platform
- * Returns 1 if SMACK is present, 0 otherwise. If SMACK_ENABLED is not defined
- * It returns 0.
- */
-COMMON_API
-int smack_check(void);
+COMMON_API void initCryptoLib();
 
 } // namespace CKM
 
-#endif // _SMACK_CHECK_H_

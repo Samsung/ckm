@@ -16,7 +16,6 @@ BuildRequires: pkgconfig(openssl)
 BuildRequires: libattr-devel
 BuildRequires: pkgconfig(libsmack)
 BuildRequires: pkgconfig(libsystemd-daemon)
-BuildRequires: pkgconfig(db-util)
 BuildRequires: pkgconfig(vconf)
 BuildRequires: pkgconfig(libsystemd-journal)
 BuildRequires: boost-devel

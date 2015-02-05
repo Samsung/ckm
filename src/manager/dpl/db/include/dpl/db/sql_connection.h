@@ -22,27 +22,23 @@
 #ifndef CKM_SQL_CONNECTION_H
 #define CKM_SQL_CONNECTION_H
 
-#include <dpl/noncopyable.h>
 #include <dpl/exception.h>
 #include <dpl/availability.h>
 #include <memory>
 #include <boost/optional.hpp>
-#include <dpl/string.h>
 #include <dpl/log/log.h>
 #include <sqlcipher.h>
-#include <string>
 #include <dpl/assert.h>
 #include <stdint.h>
 #include <dpl/raw-buffer.h>
-
-#include <symbol-visibility.h>
+#include <noncopyable.h>
 
 namespace CKM {
 namespace DB {
 /**
  * SQL connection class
  */
-class COMMON_API SqlConnection
+class SqlConnection
 {
   public:
     /**
@@ -65,8 +61,7 @@ class COMMON_API SqlConnection
     /*
      * SQL processed data command
      */
-    class DataCommand :
-        private Noncopyable
+    class DataCommand
     {
       private:
         SqlConnection *m_masterConnection;
@@ -80,6 +75,8 @@ class COMMON_API SqlConnection
         friend class SqlConnection;
 
       public:
+        NONCOPYABLE(DataCommand);
+
         virtual ~DataCommand();
 
         /**
@@ -159,14 +156,6 @@ class COMMON_API SqlConnection
          * @param position Index of argument to bind value to
          * @param value Value to bind
          */
-        void BindString(ArgumentIndex position, const String& value);
-
-        /**
-         * Bind string to the prepared statement argument
-         *
-         * @param position Index of argument to bind value to
-         * @param value Value to bind
-         */
         void BindBlob(ArgumentIndex position, const RawBuffer &value);
 
         /**
@@ -231,15 +220,6 @@ class COMMON_API SqlConnection
          * @param value Value to bind
          */
         void BindDouble(ArgumentIndex position, const boost::optional<double> &value);
-
-        /**
-         * Bind optional string to the prepared statement argument.
-         * If optional is not set null will be bound
-         *
-         * @param position Index of argument to bind value to
-         * @param value Value to bind
-         */
-        void BindString(ArgumentIndex position, const boost::optional<String> &value);
 
         /**
          * Bind optional string to the prepared statement argument.
@@ -381,13 +361,6 @@ class COMMON_API SqlConnection
          * @throw Exception::InvalidColumn
          */
         boost::optional<double> GetColumnOptionalDouble(ColumnIndex column);
-
-        /**
-         * Get optional string value from column in current row.
-         *
-         * @throw Exception::InvalidColumn
-         */
-        boost::optional<String> GetColumnOptionalString(ColumnIndex column);
 
         /**
          * Get string value from column in current row.

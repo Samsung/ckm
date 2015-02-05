@@ -24,30 +24,28 @@
 #ifndef CKM_COLORS_H
 #define CKM_COLORS_H
 
-#include <symbol-visibility.h>
-
 namespace CKM {
 namespace Colors {
 namespace Text {
-COMMON_API extern const char* BOLD_GREEN_BEGIN;
-COMMON_API extern const char* BOLD_GREEN_END;
-COMMON_API extern const char* PURPLE_BEGIN;
-COMMON_API extern const char* PURPLE_END;
-COMMON_API extern const char* RED_BEGIN;
-COMMON_API extern const char* RED_END;
-COMMON_API extern const char* GREEN_BEGIN;
-COMMON_API extern const char* GREEN_END;
-COMMON_API extern const char* CYAN_BEGIN;
-COMMON_API extern const char* CYAN_END;
-COMMON_API extern const char* BOLD_RED_BEGIN;
-COMMON_API extern const char* BOLD_RED_END;
-COMMON_API extern const char* BOLD_YELLOW_BEGIN;
-COMMON_API extern const char* BOLD_YELLOW_END;
-COMMON_API extern const char* BOLD_GOLD_BEGIN;
-COMMON_API extern const char* BOLD_GOLD_END;
-COMMON_API extern const char* BOLD_WHITE_BEGIN;
-COMMON_API extern const char* BOLD_WHITE_END;
-COMMON_API extern const char* COLOR_END;
+extern const char* BOLD_GREEN_BEGIN;
+extern const char* BOLD_GREEN_END;
+extern const char* PURPLE_BEGIN;
+extern const char* PURPLE_END;
+extern const char* RED_BEGIN;
+extern const char* RED_END;
+extern const char* GREEN_BEGIN;
+extern const char* GREEN_END;
+extern const char* CYAN_BEGIN;
+extern const char* CYAN_END;
+extern const char* BOLD_RED_BEGIN;
+extern const char* BOLD_RED_END;
+extern const char* BOLD_YELLOW_BEGIN;
+extern const char* BOLD_YELLOW_END;
+extern const char* BOLD_GOLD_BEGIN;
+extern const char* BOLD_GOLD_END;
+extern const char* BOLD_WHITE_BEGIN;
+extern const char* BOLD_WHITE_END;
+extern const char* COLOR_END;
 } //namespace Text
 } //namespace Colors
 } //namespace CKM

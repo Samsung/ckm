@@ -33,9 +33,9 @@
 namespace CKM {
 COMMON_API void LogUnhandledException(const std::string &str);
 COMMON_API void LogUnhandledException(const std::string &str,
-                           const char *filename,
-                           int line,
-                           const char *function);
+                                      const char *filename,
+                                      int line,
+                                      const char *function);
 }
 
 namespace CKM {

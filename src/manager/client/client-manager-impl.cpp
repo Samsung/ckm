@@ -23,7 +23,7 @@
 #include <dpl/serialization.h>
 #include <dpl/log/log.h>
 
-#include <crypto.h>
+#include <crypto-init.h>
 #include <client-manager-impl.h>
 #include <client-common.h>
 #include <message-buffer.h>

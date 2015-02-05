@@ -28,14 +28,10 @@
 #include <dpl/exception.h>
 #include <dpl/raw-buffer.h>
 
-#include <symbol-visibility.h>
-
 // TODO move it to static const int
 #define AES_GCM_TAG_SIZE 16
 
 namespace CKM {
-
-COMMON_API void initCryptoLib();
 
 namespace Crypto {
 
@@ -49,7 +45,7 @@ public:
 namespace Cipher {
 
 template<class T>
-struct COMMON_API Base {
+struct Base {
     Base()
       : m_ctx(EVP_CIPHER_CTX_new())
     {
@@ -76,7 +72,7 @@ protected:
 };
 
 template<class T>
-class COMMON_API EvpCipherWrapper : public Base<T> {
+class EvpCipherWrapper : public Base<T> {
 public:
     using Base<T>::m_ctx;
 
@@ -129,7 +125,7 @@ public:
 };
 
 #define DEFINE_CIPHER(__classname, __type, __evpcipher, __encryption) \
-class COMMON_API __classname : public EvpCipherWrapper<__type> {                 \
+class __classname : public EvpCipherWrapper<__type> {                 \
 public:                                                               \
     __classname(const __type &key, const __type &iv)                  \
       : EvpCipherWrapper(__evpcipher, key, iv, __encryption)          \

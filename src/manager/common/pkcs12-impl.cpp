@@ -25,7 +25,7 @@
 
 #include <dpl/log/log.h>
 
-#include <crypto.h>
+#include <crypto-init.h>
 #include <pkcs12-impl.h>
 
 #include <certificate-impl.h>

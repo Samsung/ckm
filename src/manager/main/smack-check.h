@@ -1,5 +1,9 @@
 /*
- *  Copyright (c) 2000 - 2014 Samsung Electronics Co., Ltd All Rights Reserved
+ *  ckm-manager
+ *
+ *  Copyright (c) 2000 - 2013 Samsung Electronics Co., Ltd All Rights Reserved
+ *
+ *  Contact: Bumjin Im <bj.im@samsung.com>
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -13,31 +17,26 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License
  */
-/*
- * @file       crypto.cpp
- * @author     Maciej Karpiuk (m.karpiuk2@samsung.com)
- * @version    1.0
- */
 
-#include "crypto.h"
-#include <mutex>
+#ifndef _SMACK_CHECK_H_
+#define _SMACK_CHECK_H_
 
 namespace CKM {
 
-namespace {
-bool isCryptoInitialized = false;
-std::mutex cryptoInitMutex;
-}
+/*
+ * A very simple runtime check for SMACK on the platform
+ * Returns 1 if SMACK is present, 0 otherwise
+ */
 
-void initCryptoLib() {
-    std::lock_guard<std::mutex> lock(cryptoInitMutex);
-    if(!isCryptoInitialized)
-    {
-        isCryptoInitialized = true;
-        OpenSSL_add_all_ciphers();
-        OpenSSL_add_all_algorithms();
-        OpenSSL_add_all_digests();
-    }
-}
+int smack_runtime_check(void);
 
-} /* namespace CKM */
+/*
+ * A very simple runtime check for SMACK on the platform
+ * Returns 1 if SMACK is present, 0 otherwise. If SMACK_ENABLED is not defined
+ * It returns 0.
+ */
+int smack_check(void);
+
+} // namespace CKM
+
+#endif // _SMACK_CHECK_H_

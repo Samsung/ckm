@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2000 - 2015 Samsung Electronics Co., Ltd All Rights Reserved
+ *  Copyright (c) 2000 - 2014 Samsung Electronics Co., Ltd All Rights Reserved
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -14,35 +14,30 @@
  *  limitations under the License
  */
 /*
- * @file       certificate-config.h
+ * @file       file-lock.h
  * @author     Krzysztof Jackiewicz (k.jackiewicz@samsung.com)
  * @version    1.0
  */
 
-#include <set>
-#include <string>
-#include <symbol-visibility.h>
-
 #pragma once
+
+#include <noncopyable.h>
 
 namespace CKM {
 
-class COMMON_API CertificateConfig
+class FileLock
 {
 public:
-    static void addSystemCertificateDir(const std::string& dir) { m_sysCertDirs.insert(dir); }
-    static void addSystemCertificateFile(const std::string& file) { m_sysCertFiles.insert(file); }
+    explicit FileLock(const char* const file);
+    ~FileLock();
 
-    typedef std::set<std::string> PathSet;
+    NONCOPYABLE(FileLock);
 
-    static const PathSet& getSystemCertificateDirs() { return m_sysCertDirs; }
-    static const PathSet& getSystemCertificateFiles() { return m_sysCertFiles; }
+    FileLock(FileLock&&) = default;
+    FileLock& operator=(FileLock&&) = default;
 
 private:
-    CertificateConfig();
-
-    static PathSet m_sysCertDirs;
-    static PathSet m_sysCertFiles;
+    int m_lockFd;
 };
 
 } /* namespace CKM */

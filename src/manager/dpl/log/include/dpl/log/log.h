@@ -23,11 +23,11 @@
 #define CENT_KEY_LOG_H
 
 #include <dpl/singleton.h>
-#include <dpl/noncopyable.h>
 #include <dpl/log/abstract_log_provider.h>
 #include <sstream>
 #include <list>
 
+#include <noncopyable.h>
 #include <symbol-visibility.h>
 
 namespace CKM {
@@ -35,9 +35,11 @@ namespace Log {
 /**
  * CKM log system
  */
-class COMMON_API LogSystem : private Noncopyable
+class COMMON_API LogSystem
 {
   public:
+    NONCOPYABLE(LogSystem)
+
     LogSystem();
     virtual ~LogSystem();
 

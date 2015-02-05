@@ -16,11 +16,10 @@
 
 #pragma once
 
-#include <dpl/noncopyable.h>
 #include <dpl/exception.h>
 #include <ckm/ckm-type.h>
-#include <symbol-visibility.h>
 
+#include <noncopyable.h>
 /*
  * Taken from openssl/ossl_typ.h
  */
@@ -31,9 +30,11 @@ typedef env_md_st EVP_MD;
 
 namespace CKM {
 
-class COMMON_API Digest : public CKM::Noncopyable
+class Digest
 {
     public:
+        NONCOPYABLE(Digest)
+
         class Exception
         {
             public:
