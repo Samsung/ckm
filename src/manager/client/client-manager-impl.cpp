@@ -197,6 +197,11 @@ int ManagerImpl::savePKCS12(
 
 int ManagerImpl::getPKCS12(const Alias &alias, PKCS12ShPtr &pkcs)
 {
+    return getPKCS12(alias, Password(), Password(), pkcs);
+}
+
+int ManagerImpl::getPKCS12(const Alias &alias, const Password &keyPass, const Password &certPass, PKCS12ShPtr &pkcs)
+{
     if (alias.empty())
         return CKM_API_ERROR_INPUT_PARAM;
 
@@ -208,7 +213,9 @@ int ManagerImpl::getPKCS12(const Alias &alias, PKCS12ShPtr &pkcs)
         auto send = MessageBuffer::Serialize(static_cast<int>(LogicCommand::GET_PKCS12),
                                              my_counter,
                                              helper.getName(),
-                                             helper.getLabel());
+                                             helper.getLabel(),
+                                             keyPass,
+                                             certPass);
 
         int retCode = m_storageConnection.processRequest(send.Pop(), recv);
         if (CKM_API_SUCCESS != retCode)

@@ -809,6 +809,8 @@ int CKMLogic::getPKCS12Helper(
     const Credentials &cred,
     const Name &name,
     const Label &label,
+    const Password &keyPassword,
+    const Password &certPassword,
     KeyShPtr & privKey,
     CertificateShPtr & cert,
     CertificateShPtrVector & caChain)
@@ -817,21 +819,21 @@ int CKMLogic::getPKCS12Helper(
 
     // read private key (mandatory)
     DB::Row privKeyRow;
-    retCode = readDataHelper(true, cred, DataType::DB_KEY_FIRST, name, label, CKM::Password(), privKeyRow);
+    retCode = readDataHelper(true, cred, DataType::DB_KEY_FIRST, name, label, keyPassword, privKeyRow);
     if(retCode != CKM_API_SUCCESS)
         return retCode;
     privKey = CKM::Key::create(privKeyRow.data);
 
     // read certificate (mandatory)
     DB::Row certRow;
-    retCode = readDataHelper(true, cred, DataType::CERTIFICATE, name, label, CKM::Password(), certRow);
+    retCode = readDataHelper(true, cred, DataType::CERTIFICATE, name, label, certPassword, certRow);
     if(retCode != CKM_API_SUCCESS)
         return retCode;
     cert = CKM::Certificate::create(certRow.data, DataFormat::FORM_DER);
 
     // read CA cert chain (optional)
     DB::RowVector rawCaChain;
-    retCode = readDataHelper(true, cred, DataType::DB_CHAIN_FIRST, name, label, CKM::Password(), rawCaChain);
+    retCode = readDataHelper(true, cred, DataType::DB_CHAIN_FIRST, name, label, certPassword, rawCaChain);
     if(retCode != CKM_API_SUCCESS &&
        retCode != CKM_API_ERROR_DB_ALIAS_UNKNOWN)
         return retCode;
@@ -849,7 +851,9 @@ RawBuffer CKMLogic::getPKCS12(
         const Credentials &cred,
         int commandId,
         const Name &name,
-        const Label &label)
+        const Label &label,
+        const Password &keyPassword,
+        const Password &certPassword)
 {
     int retCode;
     PKCS12Serializable output;
@@ -858,7 +862,7 @@ RawBuffer CKMLogic::getPKCS12(
         KeyShPtr privKey;
         CertificateShPtr cert;
         CertificateShPtrVector caChain;
-        retCode = getPKCS12Helper(cred, name, label, privKey, cert, caChain);
+        retCode = getPKCS12Helper(cred, name, label, keyPassword, certPassword, privKey, cert, caChain);
 
         // prepare response
         if(retCode == CKM_API_SUCCESS)
@@ -1267,7 +1271,9 @@ RawBuffer CKMLogic::getCertificateChain(
                                             trustedCertificates,
                                             useTrustedSystemCertificates,
                                             chainRawVector);
-
+    } catch (const CryptoLogic::Exception::DecryptDBRowError &e) {
+        LogError("CryptoLogic failed with message: " << e.GetMessage());
+        retCode = CKM_API_ERROR_AUTHENTICATION_FAILED;
     } catch (const CryptoLogic::Exception::Base &e) {
         LogError("CryptoLogic failed with message: " << e.GetMessage());
         retCode = CKM_API_ERROR_SERVER_ERROR;

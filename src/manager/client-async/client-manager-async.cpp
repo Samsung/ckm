@@ -114,9 +114,11 @@ void ManagerAsync::getData(const ObserverPtr& observer,
 }
 
 void ManagerAsync::getPKCS12(const ObserverPtr& observer,
-                             const Alias &alias)
+                             const Alias &alias,
+                             const Password &keyPassword,
+                             const Password &certPassword)
 {
-    m_impl->getPKCS12(observer, alias);
+    m_impl->getPKCS12(observer, alias, keyPassword, certPassword);
 }
 
 void ManagerAsync::getKeyAliasVector(const ObserverPtr& observer)

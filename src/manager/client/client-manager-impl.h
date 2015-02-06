@@ -51,7 +51,7 @@ public:
         const Policy &keyPolicy,
         const Policy &certPolicy);
     int getPKCS12(const Alias &alias, PKCS12ShPtr &pkcs);
-
+    int getPKCS12(const Alias &alias, const Password &keyPass, const Password &certPass, PKCS12ShPtr &pkcs);
 
     int removeAlias(const Alias &alias);
 

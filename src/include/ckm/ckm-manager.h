@@ -63,6 +63,11 @@ public:
         CertificateShPtr &certificate) = 0;
     virtual int getData(const Alias &alias, const Password &password, RawBuffer &data) = 0;
     virtual int getPKCS12(const Alias &alias, PKCS12ShPtr &pkcs) = 0;
+    virtual int getPKCS12(
+        const Alias &alias,
+        const Password &keyPass,
+        const Password &certPass,
+        PKCS12ShPtr &pkcs) = 0;
 
     // send request for list of all keys/certificates/data that application/user may use
     virtual int getKeyAliasVector(AliasVector &aliasVector) = 0;

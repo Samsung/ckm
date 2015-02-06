@@ -113,7 +113,9 @@ public:
         const Credentials &cred,
         int commandId,
         const Name &name,
-        const Label &label);
+        const Label &label,
+        const Password &keyPassword,
+        const Password &certPassword);
 
     RawBuffer getDataList(
         const Credentials &cred,
@@ -235,6 +237,8 @@ private:
         const Credentials &cred,
         const Name &name,
         const Label &label,
+        const Password &keyPassword,
+        const Password &certPassword,
         KeyShPtr & privKey,
         CertificateShPtr & cert,
         CertificateShPtrVector & caChain);

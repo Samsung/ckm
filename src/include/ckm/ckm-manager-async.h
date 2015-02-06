@@ -111,7 +111,12 @@ public:
     void getKey(const ObserverPtr& observer, const Alias& alias, const Password& password);
     void getCertificate(const ObserverPtr& observer, const Alias& alias, const Password& password);
     void getData(const ObserverPtr& observer, const Alias& alias, const Password& password);
-    void getPKCS12(const ObserverPtr& observer, const Alias &alias);
+
+    void getPKCS12(
+        const ObserverPtr& observer,
+        const Alias &alias,
+        const Password& passwordKey = Password(),
+        const Password& passwordCert = Password());
 
     // send request for list of all keys/certificates/data that application/user may use
     void getKeyAliasVector(const ObserverPtr& observer);

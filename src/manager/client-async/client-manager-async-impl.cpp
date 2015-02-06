@@ -162,7 +162,9 @@ void ManagerAsync::Impl::getBinaryData(const ManagerAsync::ObserverPtr& observer
 }
 
 void ManagerAsync::Impl::getPKCS12(const ManagerAsync::ObserverPtr& observer,
-                                   const Alias &alias)
+                                   const Alias &alias,
+                                   const Password &passwordKey,
+                                   const Password &passwordCert)
 {
     observerCheck(observer);
     if (alias.empty()) {
@@ -175,7 +177,9 @@ void ManagerAsync::Impl::getPKCS12(const ManagerAsync::ObserverPtr& observer,
                       static_cast<int>(LogicCommand::GET_PKCS12),
                       m_counter,
                       helper.getName(),
-                      helper.getLabel());
+                      helper.getLabel(),
+                      passwordKey,
+                      passwordCert);
     }, [&observer](int error){ observer->ReceivedError(error); } );
 }
 

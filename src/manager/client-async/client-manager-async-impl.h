@@ -106,7 +106,9 @@ public:
 
     void getPKCS12(
             const ManagerAsync::ObserverPtr& observer,
-            const Alias &alias);
+            const Alias &alias,
+            const Password &keyPassword,
+            const Password &certPassword);
 
     void getBinaryDataAliasVector(
             const ManagerAsync::ObserverPtr& observer,

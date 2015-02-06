@@ -241,12 +241,19 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer)
         }
         case LogicCommand::GET_PKCS12:
         {
-            buffer.Deserialize(name, label);
+            Password passKey;
+            Password passCert;
+            buffer.Deserialize(name,
+                               label,
+                               passKey,
+                               passCert);
             return m_logic->getPKCS12(
                 cred,
                 msgID,
                 name,
-                label);
+                label,
+                passKey,
+                passCert);
         }
         case LogicCommand::GET_LIST:
         {
