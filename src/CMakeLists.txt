@@ -67,7 +67,7 @@ TARGET_LINK_LIBRARIES(${TARGET_KEY_MANAGER}
     ${CMAKE_THREAD_LIBS_INIT}
     ${KEY_MANAGER_DEP_LIBRARIES}
     ${TARGET_KEY_MANAGER_COMMON}
-    -pie
+    -ldl -pie
     )
 
 ################################################################################
