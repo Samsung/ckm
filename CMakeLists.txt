@@ -78,6 +78,12 @@ SET(TARGET_LISTENER "key-manager-listener")
 
 SET(TARGET_TEST_MERGED "ckm-tests-internal")
 
+INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/data/scripts/230.key-manager-migrate-dkek.patch.sh
+    DESTINATION /etc/opt/upgrade
+    PERMISSIONS OWNER_READ
+                OWNER_WRITE
+                OWNER_EXECUTE)
+
 ADD_SUBDIRECTORY(src)
 ADD_SUBDIRECTORY(build)
 ADD_SUBDIRECTORY(systemd)

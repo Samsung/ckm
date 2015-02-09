@@ -11,4 +11,7 @@
 	<request>
 		<domain name="key-manager" />
 	</request>
+	<assign>
+		<filesystem path="/etc/opt/upgrade/230.key-manager-migrate-dkek.patch.sh" label="_" exec_label="_"/>
+	</assign>
 </manifest>

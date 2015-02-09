@@ -200,6 +200,7 @@ fi
 %{_datadir}/license/%{name}
 %{_datadir}/ckm/scripts/*.sql
 %attr(444, root, root) %{_datadir}/ckm/scripts/*.sql
+/etc/opt/upgrade/230.key-manager-migrate-dkek.patch.sh
 
 %files -n key-manager-listener
 %manifest key-manager-listener.manifest
