@@ -245,3 +245,4 @@ fi
 %{_bindir}/ckm-tests-internal
 %{_datadir}/ckm-db-test/testme_ver1.db
 %{_datadir}/ckm-db-test/testme_ver2.db
+%{_bindir}/ckm_so_loader
