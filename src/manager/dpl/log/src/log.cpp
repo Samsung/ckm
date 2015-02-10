@@ -22,9 +22,8 @@
 #include <stddef.h>
 #include <string.h>
 
-#include <string>
 #include <stdexcept>
-#include <unordered_map>
+
 #include <cassert>
 
 #include <dpl/log/log.h>
@@ -50,30 +49,26 @@ namespace // anonymous
 const char * const CKM_LOG_LEVEL =      "CKM_LOG_LEVEL";
 const char * const CKM_LOG_PROVIDER =   "CKM_LOG_PROVIDER";
 
-const std::string CONSOLE =     "CONSOLE";
-const std::string DLOG =        "DLOG";
-const std::string JOURNALD =    "JOURNALD";
-
-typedef AbstractLogProvider*(*provider_fn)();
-std::unordered_map<std::string, provider_fn> new_provider = {
-#ifdef BUILD_TYPE_DEBUG
-        { CONSOLE,  []{ return static_cast<AbstractLogProvider*>(new OldStyleLogProvider()); } },
-#endif // BUILD_TYPE_DEBUG
-        { DLOG,     []{ return static_cast<AbstractLogProvider*>(new DLOGLogProvider()); } },
-        { JOURNALD, []{ return static_cast<AbstractLogProvider*>(new JournalLogProvider()); } }
-};
-
+const char * const CONSOLE =  "CONSOLE";
+const char * const DLOG =     "DLOG";
+const char * const JOURNALD = "JOURNALD";
 } // namespace anonymous
 
-LogSystem::LogSystem()
+LogSystem::LogSystem() : m_providerCtor({
+#ifdef BUILD_TYPE_DEBUG
+            { CONSOLE,  []{ return static_cast<AbstractLogProvider*>(new OldStyleLogProvider()); } },
+#endif // BUILD_TYPE_DEBUG
+            { DLOG,     []{ return static_cast<AbstractLogProvider*>(new DLOGLogProvider()); } },
+            { JOURNALD, []{ return static_cast<AbstractLogProvider*>(new JournalLogProvider()); } }
+    })
 {
     SetLogLevel(getenv(CKM_LOG_LEVEL));
 
     AbstractLogProvider* prv = NULL;
     try {
-        prv = new_provider.at(getenv(CKM_LOG_PROVIDER))();
+        prv = m_providerCtor.at(getenv(CKM_LOG_PROVIDER))();
     } catch(const std::exception&) {
-        prv = new_provider[DLOG]();
+        prv = m_providerCtor[DLOG]();
     }
     AddProvider(prv);
 }
@@ -102,7 +97,7 @@ void LogSystem::RemoveProvider(AbstractLogProvider *provider)
 void LogSystem::SelectProvider(const std::string& name)
 {
     // let it throw
-    provider_fn& prv = new_provider.at(name);
+    ProviderFn& prv = m_providerCtor.at(name);
 
     RemoveProviders();
     AddProvider(prv());

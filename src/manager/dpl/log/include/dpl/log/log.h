@@ -26,6 +26,8 @@
 #include <dpl/log/abstract_log_provider.h>
 #include <sstream>
 #include <list>
+#include <unordered_map>
+#include <string>
 
 #include <noncopyable.h>
 #include <symbol-visibility.h>
@@ -87,6 +89,13 @@ class COMMON_API LogSystem
     typedef std::list<AbstractLogProvider *> AbstractLogProviderPtrList;
     AbstractLogProviderPtrList m_providers;
     AbstractLogProvider::LogLevel m_level;
+
+    typedef AbstractLogProvider*(*ProviderFn)();
+    /*
+     * It cannot be global as it is used in library constructor and we can't be sure which
+     * constructor is called first: library's or new_provider's.
+     */
+    std::unordered_map<std::string, ProviderFn> m_providerCtor;
 };
 
 /*
