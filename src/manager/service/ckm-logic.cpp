@@ -231,7 +231,11 @@ RawBuffer CKMLogic::resetUserPassword(
 
     try {
         if (0 == m_userDataMap.count(user)) {
-            retCode = CKM_API_ERROR_BAD_REQUEST;
+            // Check if key exists. If exists we must return error
+            FileSystem fs(user);
+            auto wrappedDKEKMain = fs.getDKEK();
+            if (!wrappedDKEKMain.empty())
+                retCode = CKM_API_ERROR_BAD_REQUEST;
         } else {
             saveDKEKFile(user, newPassword);
         }
