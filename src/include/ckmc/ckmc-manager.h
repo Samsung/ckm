@@ -407,8 +407,10 @@ int ckmc_remove_pkcs12(const char *alias);
  * @remarks You must destroy the newly created @a pkcs12 by calling ckmc_pkcs12_free() if it is no
  *          longer needed.
  *
- * @param[in]  alias     The name of a data to retrieve
- * @param[out] pkcs12    The pointer to a newly created ckmc_pkcs12_s handle
+ * @param[in]  alias        The name of a data to retrieve
+ * @param[in]  keyPassword  Password that was used to encrypt privateKey (may be NULL)
+ * @param[in]  certPassword Password used to encrypt certificates (may be NULL)
+ * @param[out] pkcs12       The pointer to a newly created ckmc_pkcs12_s handle
  *
  * @return @c 0 on success,
  *         otherwise a negative error value
@@ -420,16 +422,16 @@ int ckmc_remove_pkcs12(const char *alias);
  * @retval #CKMC_ERROR_DB_ERROR           Failed due to a database error
  * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN   Alias does not exist
  * @retval #CKMC_ERROR_PERMISSION_DENIED  Failed to access key manager
+ * @retval #CKMC_ERROR_AUTHENTICATION_FAILED
+ *                                        keyPassword or certPassword does not match with password
+ *                                        used to encrypt data.
  *
  * @pre User is already logged in and the user key is already loaded into memory in plain text form.
  *
  * @see ckmc_save_pkcs12()
  * @see ckmc_remove_pkcs12()
  */
-int ckmc_get_pkcs12(const char *alias, ckmc_pkcs12_s **pkcs12);
-
-
-
+int ckmc_get_pkcs12(const char *alias, const char *keyPassword, const char *certPassword, ckmc_pkcs12_s **pkcs12);
 
 /**
  * @brief Stores a data inside key manager based on the provided policy.
