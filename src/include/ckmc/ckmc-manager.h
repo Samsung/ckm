@@ -141,6 +141,8 @@ int ckmc_remove_key(const char *alias);
  * @retval #CKMC_ERROR_DB_ERROR          Failed due to a database error
  * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN  Alias does not exist
  * @retval #CKMC_ERROR_PERMISSION_DENIED Failed to access key manager
+ * @retval #CKMC_ERROR_AUTHENTICATION_FAILED
+ *                                       Decryption failed because password is incorrect.
  *
  * @pre User is already logged in and the user key is already loaded into memory in plain text form.
  *
@@ -282,6 +284,8 @@ int ckmc_remove_cert(const char *alias);
  * @retval #CKMC_ERROR_DB_ERROR           Failed due to a database error
  * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN   Alias does not exists
  * @retval #CKMC_ERROR_PERMISSION_DENIED  Failed to access key manager
+ * @retval #CKMC_ERROR_AUTHENTICATION_FAILED
+ *                                        Decryption failed because password is incorrect.
  *
  * @pre User is already logged in and the user key is already loaded into memory in plain text form.
  *
@@ -423,8 +427,7 @@ int ckmc_remove_pkcs12(const char *alias);
  * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN   Alias does not exist
  * @retval #CKMC_ERROR_PERMISSION_DENIED  Failed to access key manager
  * @retval #CKMC_ERROR_AUTHENTICATION_FAILED
- *                                        keyPassword or certPassword does not match with password
- *                                        used to encrypt data.
+ *                                        Decryption failed because password is incorrect.
  *
  * @pre User is already logged in and the user key is already loaded into memory in plain text form.
  *
@@ -523,7 +526,8 @@ int ckmc_remove_data(const char *alias);
  * @retval #CKMC_ERROR_DB_ERROR           Failed due to the error with unknown reason
  * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN   Alias does not exist
  * @retval #CKMC_ERROR_PERMISSION_DENIED  Failed to access key manager
- *
+ * @retval #CKMC_ERROR_AUTHENTICATION_FAILED
+ *                                        Decryption failed because password is incorrect.
  * @pre User is already logged in and the user key is already loaded into memory in plain text form.
  *
  * @see ckmc_save_data()
@@ -726,6 +730,8 @@ int ckmc_create_key_pair_ecdsa(const ckmc_ec_type_e type,
  * @retval #CKMC_ERROR_DB_ERROR           Failed due to the error with unknown reason
  * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN   Alias does not exist
  * @retval #CKMC_ERROR_PERMISSION_DENIED  Failed to access key manager
+ * @retval #CKMC_ERROR_AUTHENTICATION_FAILED
+ *                                        Decryption failed because password is incorrect.
  *
  * @pre User is already logged in and the user key is already loaded into memory in plain text form.
  *
@@ -773,6 +779,8 @@ int ckmc_create_signature(const char *private_key_alias,
  * @retval #CKMC_ERROR_DB_ERROR             Failed due to the error with unknown reason
  * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN     Alias does not exist
  * @retval #CKMC_ERROR_PERMISSION_DENIED    Failed to access key manager
+ * @retval #CKMC_ERROR_AUTHENTICATION_FAILED
+ *                                          Decryption failed because password is incorrect.
  *
  * @pre User is already logged in and the user key is already loaded into memory in plain text form.
  *
@@ -819,6 +827,8 @@ int ckmc_verify_signature(const char *public_key_alias,
  * @retval #CKMC_ERROR_DB_ERROR             Failed due to the error with unknown reason
  * @retval #CKMC_ERROR_INVALID_FORMAT       The format of certificate is not valid
  * @retval #CKMC_ERROR_PERMISSION_DENIED    Failed to access key manager
+ * @retval #CKMC_ERROR_AUTHENTICATION_FAILED
+ *                                          Decryption failed because password is incorrect.
  *
  * @pre User is already logged in and the user key is already loaded into memory in plain text form.
  *
@@ -861,6 +871,9 @@ int ckmc_get_cert_chain(const ckmc_cert_s *cert,
  * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN     Alias does not exist
  * @retval #CKMC_ERROR_INVALID_FORMAT       The format of certificate is not valid
  * @retval #CKMC_ERROR_PERMISSION_DENIED    Failed to access key manager
+ * @retval #CKMC_ERROR_AUTHENTICATION_FAILED
+ *                                          Some certificates were encrypted with password and could not
+ *                                          be used.
  *
  * @pre User is already logged in and the user key is already loaded into memory in plain text form.
  *
@@ -952,6 +965,9 @@ int ckmc_get_certificate_chain(const ckmc_cert_s *cert,
  * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN     Alias does not exist
  * @retval #CKMC_ERROR_INVALID_FORMAT       The format of certificate is not valid
  * @retval #CKMC_ERROR_PERMISSION_DENIED    Failed to access key manager
+ * @retval #CKMC_ERROR_AUTHENTICATION_FAILED
+ *                                          Some certificates were encrypted with password and could not
+ *                                          be used.
  *
  * @pre User is already logged in and the user key is already loaded into memory in plain text form.
  *
