@@ -322,22 +322,9 @@ int ckmc_save_pkcs12(const char *alias, const ckmc_pkcs12_s *ppkcs, const ckmc_p
         return CKMC_ERROR_INVALID_PARAMETER;
     }
     CKM::Alias ckmAlias(alias);
-
     private_key = _toCkmKey(ppkcs->priv_key);
     cert = _toCkmCertificate(ppkcs->cert);
-    ckmc_cert_list_s *current = NULL;
-    ckmc_cert_list_s *next = const_cast<ckmc_cert_list_s *>(ppkcs->ca_chain);
-    do {
-        current = next;
-        next = current->next;
-
-        if(current->cert == NULL){
-            continue;
-        }
-
-        CKM::CertificateShPtr tmpCkmCert = _toCkmCertificate(current->cert);
-        ca_cert_list.push_back(tmpCkmCert);
-    }while(next != NULL);
+    ca_cert_list = _toCkmCertificateVector(ppkcs->ca_chain);
 
     CKM::Policy keyPolicy(_tostring(key_policy.password), key_policy.extractable);
     CKM::Policy certPolicy(_tostring(cert_policy.password), cert_policy.extractable);
@@ -776,18 +763,7 @@ int ckmc_ocsp_check(const ckmc_cert_list_s *pcert_chain_list, ckmc_ocsp_status_e
     int ret = CKMC_ERROR_UNKNOWN;
     int tmpOcspStatus = -1;
     CKM::ManagerShPtr mgr = CKM::Manager::create();
-    CKM::CertificateShPtrVector ckmCertChain;
-    const ckmc_cert_list_s *current = NULL;
-    const ckmc_cert_list_s *next = pcert_chain_list;
-
-    do {
-        current = next;
-        next = current->next;
-        if (current->cert == NULL)
-            continue;
-
-        ckmCertChain.push_back(_toCkmCertificate(current->cert));
-    } while (next != NULL);
+    CKM::CertificateShPtrVector ckmCertChain = _toCkmCertificateVector(pcert_chain_list);
 
     ret = mgr->ocspCheck(ckmCertChain, tmpOcspStatus);
     *ocsp_status = to_ckmc_ocsp_status(tmpOcspStatus);
