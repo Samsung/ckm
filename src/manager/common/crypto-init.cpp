@@ -22,23 +22,52 @@
 #include "crypto-init.h"
 #include <mutex>
 #include <openssl/evp.h>
+#include <atomic>
 
 namespace CKM {
 
 namespace {
-bool isCryptoInitialized = false;
 std::mutex cryptoInitMutex;
-}
 
-void initCryptoLib() {
+void initOpenSSL();
+
+typedef void(*initFnPtr)();
+
+// has to be atomic as storing function pointer is not an atomic operation on armv7l
+std::atomic<initFnPtr> initFn (&initOpenSSL);
+
+void initEmpty() {}
+
+void initOpenSSL() {
+    // DCLP
     std::lock_guard<std::mutex> lock(cryptoInitMutex);
-    if(!isCryptoInitialized)
+    /*
+     * We don't care about memory ordering here. Current thread will order it correctly and for
+     * other threads only store matters. Also only one thread can be here at once because of lock.
+     */
+    if(initFn.load(std::memory_order_relaxed) != &initEmpty)
     {
-        isCryptoInitialized = true;
         OpenSSL_add_all_ciphers();
         OpenSSL_add_all_algorithms();
         OpenSSL_add_all_digests();
+
+        /*
+         * Synchronizes with load. Everything that happened before this store in this thread is
+         * visible to everything that happens after load in another thread. We switch to an empty
+         * function here.
+         */
+        initFn.store(&initEmpty, std::memory_order_release);
     }
+}
+
+} // namespace anonymous
+
+void initCryptoLib() {
+    /*
+     * Synchronizes with store. Everything that happened before store in another thread will be
+     * visible in this thread after load.
+     */
+    initFn.load(std::memory_order_acquire)();
 }
 
 } /* namespace CKM */
