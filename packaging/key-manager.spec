@@ -94,7 +94,7 @@ cp -a %{SOURCE1004} .
 %endif
 
 
-export LDFLAGS+="-Wl,--rpath=%{_libdir} "
+export LDFLAGS+="-Wl,--rpath=%{_libdir},-Bsymbolic-functions "
 
 %cmake . -DVERSION=%{version} \
         -DCMAKE_BUILD_TYPE=%{?build_type:%build_type}%{!?build_type:RELEASE} \
