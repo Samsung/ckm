@@ -105,7 +105,7 @@ typedef enum __ckmc_rsa_padding_algo {
 } ckmc_rsa_padding_algo_e;
 
 /**
- * @deprecated, use ckmc_permission_e instead
+ * @deprecated Deprecated since 2.4. [Use ckmc_permission_e() instead]
  * @brief Enumeration for database access rights.
  * @since_tizen 2.3
  */
@@ -116,7 +116,7 @@ typedef enum __ckmc_access_right{
 
 /**
  * @brief Enumeration for permissions to access/modify alias.
- * @since_tizen 3.0
+ * @since_tizen 2.4
  */
 typedef enum __ckmc_permission{
     CKMC_PERMISSION_NONE        = 0x00, /**< clear permissions */
@@ -185,7 +185,7 @@ typedef struct __ckmc_cert_list {
 
 /**
  * @brief Enumeration for OCSP status.
- * @since_tizen 3.0
+ * @since_tizen 2.4
  */
 typedef enum __ckmc_ocsp_status {
     CKMC_OCSP_STATUS_GOOD = 0,          /**< OCSP status is good */
@@ -201,7 +201,7 @@ typedef enum __ckmc_ocsp_status {
 
 /**
  * @brief The structure for PKCS12 used in key manager CAPI.
- * @since_tizen 2.3
+ * @since_tizen 2.4
  */
 typedef struct __ckmc_pkcs12 {
     ckmc_key_s  *priv_key;      /**< private key, may be null */
@@ -352,9 +352,10 @@ void ckmc_cert_free(ckmc_cert_s *cert);
 int ckmc_load_cert_from_file(const char *file_path, ckmc_cert_s **cert);
 
 /**
+ * @internal
  * @brief Creates a new @a ckmc_pkcs12_s handle and returns it.
  *
- * @since_tizen 2.3
+ * @since_tizen 2.4
  *
  * @remarks You must destroy the newly created @a ckmc_pkcs12_s by calling ckmc_pkcs12_free() if it
  *          is no longer needed.
@@ -375,7 +376,7 @@ int ckmc_load_cert_from_file(const char *file_path, ckmc_cert_s **cert);
  *
  * @see ckmc_pkcs12_free()
  * @see ckmc_load_from_pkcs12_file()
- * @see ckmc_load_from_pkcs12_file2()
+ * @see ckmc_pkcs12_load()
  * @see #ckmc_key_s
  * @see #ckmc_cert_s
  * @see #ckmc_cert_list_s
@@ -387,7 +388,7 @@ int ckmc_pkcs12_new(ckmc_key_s *private_key,
                     ckmc_pkcs12_s **pkcs12_bundle);
 
 /**
- * @deprecated, use @a ckmc_load_from_pkcs12_file2() instead
+ * @deprecated Deprecated since 2.4. [Use ckmc_pkcs12_load() instead]
  * @brief Creates a new @a ckmc_key_s(private key), @a ckmc_cert_s(certificate), and
  *        @a ckmc_cert_list_s(CA certificates) handle from a given PKCS#12 file and returns them.
  *
@@ -416,7 +417,7 @@ int ckmc_pkcs12_new(ckmc_key_s *private_key,
  * @retval #CKMC_ERROR_FILE_ACCESS_DENIED  Provided file does not exist or cannot be accessed
  *
  * @see ckmc_pkcs12_new()
- * @see ckmc_load_from_pkcs12_file2()
+ * @see ckmc_pkcs12_load()
  * @see ckmc_key_free()
  * @see ckmc_cert_free()
  * @see ckmc_cert_list_all_free()
@@ -432,7 +433,7 @@ int ckmc_load_from_pkcs12_file(const char *file_path,
 /**
  * @brief Creates a new @a ckmc_pkcs12_s handle from a given PKCS#12 file and returns it.
  *
- * @since_tizen 2.3
+ * @since_tizen 2.4
  *
  * @remarks You must destroy the newly created @a ckmc_pkcs12_s by calling ckmc_pkcs12_free() if
  *          they are no longer needed.
@@ -455,19 +456,19 @@ int ckmc_load_from_pkcs12_file(const char *file_path,
  * @see ckmc_pkcs12_free()
  * @see #ckmc_pkcs12_s
  */
-int ckmc_load_from_pkcs12_file2(const char *file_path,
+int ckmc_pkcs12_load(const char *file_path,
                                 const char *passphrase,
                                 ckmc_pkcs12_s **pkcs12_bundle);
 
 /**
  * @brief Destroys the @a ckmc_pkcs12_s handle and releases all its resources.
  *
- * @since_tizen 2.3
+ * @since_tizen 2.4
  *
  * @param[in] pkcs12 The @a ckmc_pkcs12_s handle to destroy
  *
  * @see ckmc_pkcs12_new()
- * @see ckmc_load_from_pkcs12_file2()
+ * @see ckmc_pkcs12_load()
  */
 void ckmc_pkcs12_free(ckmc_pkcs12_s *pkcs12);
 

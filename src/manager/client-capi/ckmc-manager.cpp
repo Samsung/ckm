@@ -344,7 +344,7 @@ int ckmc_remove_pkcs12(const char *alias)
 }
 
 KEY_MANAGER_CAPI
-int ckmc_get_pkcs12(const char *alias, const char *keyPassword, const char *certPassword, ckmc_pkcs12_s **pkcs12)
+int ckmc_get_pkcs12(const char *alias, const char *key_password, const char *cert_password, ckmc_pkcs12_s **pkcs12)
 {
     int ret;
     CKM::PKCS12ShPtr pkcs;
@@ -357,11 +357,11 @@ int ckmc_get_pkcs12(const char *alias, const char *keyPassword, const char *cert
         return CKMC_ERROR_INVALID_PARAMETER;
     }
 
-    if (keyPassword)
-        keyPass = keyPassword;
+    if (key_password)
+        keyPass = key_password;
 
-    if (certPassword)
-        certPass = certPassword;
+    if (cert_password)
+        certPass = cert_password;
 
     auto mgr = CKM::Manager::create();
 
@@ -689,11 +689,11 @@ int ckmc_get_cert_chain_with_alias(const ckmc_cert_s *cert, const ckmc_alias_lis
 }
 
 KEY_MANAGER_CAPI
-int ckmc_get_certificate_chain(const ckmc_cert_s* cert,
-                               const ckmc_cert_list_s* untrustedcerts,
-                               const ckmc_cert_list_s* trustedcerts,
-                               const bool sys_certs,
-                               ckmc_cert_list_s** ppcert_chain_list)
+int ckmc_get_cert_chain_with_trustedcert(const ckmc_cert_s* cert,
+                                         const ckmc_cert_list_s* untrustedcerts,
+                                         const ckmc_cert_list_s* trustedcerts,
+                                         const bool sys_certs,
+                                         ckmc_cert_list_s** ppcert_chain_list)
 {
     int ret;
     CKM::ManagerShPtr mgr = CKM::Manager::create();
@@ -722,11 +722,11 @@ int ckmc_get_certificate_chain(const ckmc_cert_s* cert,
 }
 
 KEY_MANAGER_CAPI
-int ckmc_get_certificate_chain_with_alias(const ckmc_cert_s* cert,
-                                          const ckmc_alias_list_s* untrustedcerts,
-                                          const ckmc_alias_list_s* trustedcerts,
-                                          const bool sys_certs,
-                                          ckmc_cert_list_s** ppcert_chain_list)
+int  ckmc_get_cert_chain_with_trustedcert_alias(const ckmc_cert_s* cert,
+                                                const ckmc_alias_list_s* untrustedcerts,
+                                                const ckmc_alias_list_s* trustedcerts,
+                                                const bool sys_certs,
+                                                ckmc_cert_list_s** ppcert_chain_list)
 {
     int ret;
     CKM::ManagerShPtr mgr = CKM::Manager::create();

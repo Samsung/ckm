@@ -392,7 +392,7 @@ int ckmc_load_from_pkcs12_file(const char *file_path, const char *passphrase, ck
 }
 
 KEY_MANAGER_CAPI
-int ckmc_load_from_pkcs12_file2(const char *file_path, const char *passphrase, ckmc_pkcs12_s **pkcs12_bundle)
+int ckmc_pkcs12_load(const char *file_path, const char *passphrase, ckmc_pkcs12_s **pkcs12_bundle)
 {
     int ec;
     ckmc_key_s *private_key = 0;

@@ -75,7 +75,7 @@ extern "C" {
  *
  * @pre User is already logged in and the user key is already loaded into memory in plain text form.
  *
- * @see ckmc_remove_key()
+ * @see ckmc_remove_alias()
  * @see ckmc_get_key()
  * @see ckmc_get_key_alias_list()
  * @see #ckmc_key_s
@@ -84,6 +84,7 @@ extern "C" {
 int ckmc_save_key(const char *alias, const ckmc_key_s key, const ckmc_policy_s policy);
 
 /**
+ * @deprecated Deprecated since 2.4. [Use ckmc_remove_alias() instead]
  * @brief Removes a key from key manager.
  *
  * @since_tizen 2.3
@@ -147,7 +148,7 @@ int ckmc_remove_key(const char *alias);
  * @pre User is already logged in and the user key is already loaded into memory in plain text form.
  *
  * @see ckmc_save_key()
- * @see ckmc_remove_key()
+ * @see ckmc_remove_alias()
  * @see ckmc_get_key_alias_list()
  */
 int ckmc_get_key(const char *alias, const char *password, ckmc_key_s **ppkey);
@@ -181,7 +182,7 @@ int ckmc_get_key(const char *alias, const char *password, ckmc_key_s **ppkey);
  * @pre User is already logged in and the user key is already loaded into memory in plain text form.
  *
  * @see ckmc_save_key()
- * @see ckmc_remove_key()
+ * @see ckmc_remove_alias()
  * @see ckmc_get_key()
  */
 int ckmc_get_key_alias_list(ckmc_alias_list_s** ppalias_list);
@@ -217,7 +218,7 @@ int ckmc_get_key_alias_list(ckmc_alias_list_s** ppalias_list);
  *
  * @pre User is already logged in and the user key is already loaded into memory in plain text form.
  *
- * @see ckmc_remove_cert()
+ * @see ckmc_remove_alias()
  * @see ckmc_get_cert()
  * @see ckmc_get_cert_alias_list()
  * @see #ckmc_cert_s
@@ -226,6 +227,7 @@ int ckmc_get_key_alias_list(ckmc_alias_list_s** ppalias_list);
 int ckmc_save_cert(const char *alias, const ckmc_cert_s cert, const ckmc_policy_s policy);
 
 /**
+ * @deprecated Deprecated since 2.4. [Use ckmc_remove_alias() instead]
  * @brief Removes a certificate from key manager.
  *
  * @since_tizen 2.3
@@ -290,7 +292,7 @@ int ckmc_remove_cert(const char *alias);
  * @pre User is already logged in and the user key is already loaded into memory in plain text form.
  *
  * @see ckmc_save_cert()
- * @see ckmc_remove_cert()
+ * @see ckmc_remove_alias()
  * @see ckmc_get_cert_alias_list()
  */
 int ckmc_get_cert(const char *alias, const char *password, ckmc_cert_s **ppcert);
@@ -324,7 +326,7 @@ int ckmc_get_cert(const char *alias, const char *password, ckmc_cert_s **ppcert)
  * @pre User is already logged in and the user key is already loaded into memory in plain text form.
  *
  * @see ckmc_save_cert()
- * @see ckmc_remove_cert()
+ * @see ckmc_remove_alias()
  * @see ckmc_get_cert()
  */
 int ckmc_get_cert_alias_list(ckmc_alias_list_s** ppalias_list);
@@ -336,7 +338,7 @@ int ckmc_get_cert_alias_list(ckmc_alias_list_s** ppalias_list);
  * @brief Stores PKCS12's contents inside key manager based on the provided policies.
  * All items from the PKCS12 will use the same alias.
  *
- * @since_tizen 2.3
+ * @since_tizen 2.4
  * @privlevel public
  * @privilege %http://tizen.org/privilege/keymanager
  *
@@ -358,10 +360,10 @@ int ckmc_get_cert_alias_list(ckmc_alias_list_s** ppalias_list);
  *
  * @pre User is already logged in and the user key is already loaded into memory in plain text form.
  *
- * @see ckmc_remove_pkcs12()
+ * @see ckmc_remove_alias()
  * @see ckmc_get_pkcs12()
  * @see ckmc_get_data_alias_list()
- * @see ckmc_load_from_pkcs12_file2()
+ * @see ckmc_pkcs12_load()
  * @see #ckmc_pkcs12_s
  * @see #ckmc_policy_s
  */
@@ -371,9 +373,10 @@ int ckmc_save_pkcs12(const char *alias,
                      const ckmc_policy_s cert_policy);
 
 /**
+ * @deprecated Deprecated since 2.4. [Use ckmc_remove_alias() instead]
  * @brief Removes all PKCS12 contents from key manager.
  *
- * @since_tizen 2.3
+ * @since_tizen 2.4
  * @privlevel public
  * @privilege %http://tizen.org/privilege/keymanager
  *
@@ -395,6 +398,7 @@ int ckmc_save_pkcs12(const char *alias,
  *
  * @pre User is already logged in and the user key is already loaded into memory in plain text form.
  *
+ * @see ckmc_remove_alias()
  * @see ckmc_save_pkcs12()
  * @see ckmc_get_pkcs12()
  */
@@ -403,7 +407,7 @@ int ckmc_remove_pkcs12(const char *alias);
 /**
  * @brief Gets a pkcs12 from key manager.
  *
- * @since_tizen 2.3
+ * @since_tizen 2.4
  * @privlevel public
  * @privilege %http://tizen.org/privilege/keymanager
  *
@@ -412,8 +416,8 @@ int ckmc_remove_pkcs12(const char *alias);
  *          longer needed.
  *
  * @param[in]  alias        The name of a data to retrieve
- * @param[in]  keyPassword  Password that was used to encrypt privateKey (may be NULL)
- * @param[in]  certPassword Password used to encrypt certificates (may be NULL)
+ * @param[in]  key_password  Password that was used to encrypt privateKey (may be NULL)
+ * @param[in]  cert_password Password used to encrypt certificates (may be NULL)
  * @param[out] pkcs12       The pointer to a newly created ckmc_pkcs12_s handle
  *
  * @return @c 0 on success,
@@ -432,9 +436,9 @@ int ckmc_remove_pkcs12(const char *alias);
  * @pre User is already logged in and the user key is already loaded into memory in plain text form.
  *
  * @see ckmc_save_pkcs12()
- * @see ckmc_remove_pkcs12()
+ * @see ckmc_remove_alias()
  */
-int ckmc_get_pkcs12(const char *alias, const char *keyPassword, const char *certPassword, ckmc_pkcs12_s **pkcs12);
+int ckmc_get_pkcs12(const char *alias, const char *key_password, const char *cert_password, ckmc_pkcs12_s **pkcs12);
 
 /**
  * @brief Stores a data inside key manager based on the provided policy.
@@ -460,7 +464,7 @@ int ckmc_get_pkcs12(const char *alias, const char *keyPassword, const char *cert
  *
  * @pre User is already logged in and the user key is already loaded into memory in plain text form.
  *
- * @see ckmc_remove_data()
+ * @see ckmc_remove_alias()
  * @see ckmc_get_data()
  * @see ckmc_get_data_alias_list()
  * @see #ckmc_raw_buffer_s
@@ -469,6 +473,7 @@ int ckmc_get_pkcs12(const char *alias, const char *keyPassword, const char *cert
 int ckmc_save_data(const char *alias, ckmc_raw_buffer_s data, const ckmc_policy_s policy);
 
 /**
+ * @deprecated Deprecated since 2.4. [Use ckmc_remove_alias() instead]
  * @brief Removes a data from key manager.
  *
  * @since_tizen 2.3
@@ -531,7 +536,7 @@ int ckmc_remove_data(const char *alias);
  * @pre User is already logged in and the user key is already loaded into memory in plain text form.
  *
  * @see ckmc_save_data()
- * @see ckmc_remove_data()
+ * @see ckmc_remove_alias()
  * @see ckmc_get_data_alias_list()
  */
 int ckmc_get_data(const char *alias, const char *password, ckmc_raw_buffer_s **ppdata);
@@ -565,7 +570,7 @@ int ckmc_get_data(const char *alias, const char *password, ckmc_raw_buffer_s **p
  * @pre User is already logged in and the user key is already loaded into memory in plain text form.
  *
  * @see ckmc_save_data()
- * @see ckmc_remove_data()
+ * @see ckmc_remove_alias()
  * @see ckmc_get_data()
  */
 int ckmc_get_data_alias_list(ckmc_alias_list_s** ppalias_list);
@@ -798,7 +803,6 @@ int ckmc_verify_signature(const char *public_key_alias,
                           const ckmc_rsa_padding_algo_e padding);
 
 /**
- * @deprecated, see ckmc_get_certificate_chain()
  * @brief Verifies a certificate chain and returns that chain.
  *
  * @since_tizen 2.3
@@ -840,7 +844,6 @@ int ckmc_get_cert_chain(const ckmc_cert_s *cert,
                         ckmc_cert_list_s **ppcert_chain_list);
 
 /**
- * @deprecated, see ckmc_get_certificate_chain_with_alias()
  * @brief Verifies a certificate chain using an alias list of untrusted certificates and return that
  *        chain.
  *
@@ -877,7 +880,7 @@ int ckmc_get_cert_chain(const ckmc_cert_s *cert,
  *
  * @pre User is already logged in and the user key is already loaded into memory in plain text form.
  *
- * @see ckmc_get_cert_chain())
+ * @see ckmc_get_cert_chain()
  * @see ckmc_cert_list_all_free()
  */
 int ckmc_get_cert_chain_with_alias(const ckmc_cert_s *cert,
@@ -888,7 +891,7 @@ int ckmc_get_cert_chain_with_alias(const ckmc_cert_s *cert,
  * @brief Verifies a certificate chain and returns that chain using user entered trusted and
  *        untrusted CA certificates
  *
- * @since_tizen 3.0
+ * @since_tizen 2.4
  * @privlevel public
  * @privilege %http://tizen.org/privilege/keymanager
  *
@@ -921,20 +924,20 @@ int ckmc_get_cert_chain_with_alias(const ckmc_cert_s *cert,
  *
  * @pre User is already logged in and the user key is already loaded into memory in plain text form.
  *
- * @see ckmc_get_cert_chain_with_alias())
+ * @see ckmc_get_cert_chain_with_trustedcert_alias()
  * @see ckmc_cert_list_all_free()
  */
-int ckmc_get_certificate_chain(const ckmc_cert_s *cert,
-                               const ckmc_cert_list_s *untrustedcerts,
-                               const ckmc_cert_list_s *trustedcerts,
-                               const bool use_trustedsystemcerts,
-                               ckmc_cert_list_s **ppcert_chain_list);
+int ckmc_get_cert_chain_with_trustedcert(const ckmc_cert_s *cert,
+                                         const ckmc_cert_list_s *untrustedcerts,
+                                         const ckmc_cert_list_s *trustedcerts,
+                                         const bool use_trustedsystemcerts,
+                                         ckmc_cert_list_s **ppcert_chain_list);
 
 /**
  * @brief Verifies a certificate chain and returns that chain using alias lists of untrusted and
  *        trusted certificates
  *
- * @since_tizen 3.0
+ * @since_tizen 2.4
  * @privlevel public
  * @privilege %http://tizen.org/privilege/keymanager
  *
@@ -971,19 +974,19 @@ int ckmc_get_certificate_chain(const ckmc_cert_s *cert,
  *
  * @pre User is already logged in and the user key is already loaded into memory in plain text form.
  *
- * @see ckmc_get_cert_chain())
+ * @see ckmc_get_cert_chain_with_trustedcert() 
  * @see ckmc_cert_list_all_free()
  */
-int ckmc_get_certificate_chain_with_alias(const ckmc_cert_s *cert,
-                                          const ckmc_alias_list_s *untrustedcerts,
-                                          const ckmc_alias_list_s *trustedcerts,
-                                          const bool use_trustedsystemcerts,
-                                          ckmc_cert_list_s **ppcert_chain_list);
+int ckmc_get_cert_chain_with_trustedcert_alias(const ckmc_cert_s *cert,
+                                               const ckmc_alias_list_s *untrustedcerts,
+                                               const ckmc_alias_list_s *trustedcerts,
+                                               const bool use_trustedsystemcerts,
+                                               ckmc_cert_list_s **ppcert_chain_list);
 
 /**
  * @brief Perform OCSP which checks certificate is whether revoked or not
  *
- * @since_tizen 3.0
+ * @since_tizen 2.4
  * @privlevel public
  * @privilege %http://tizen.org/privilege/keymanager
  *
@@ -1006,7 +1009,7 @@ int ckmc_get_certificate_chain_with_alias(const ckmc_cert_s *cert,
 int ckmc_ocsp_check(const ckmc_cert_list_s *pcert_chain_list, ckmc_ocsp_status_e *ocsp_status);
 
 /**
- * @deprecated, see ckmc_set_permission()
+ * @deprecated Deprecated since 2.4. [Use ckmc_set_permission() instead]
  * @brief Allows another application to access client's application data
  *
  * @since_tizen 2.3
@@ -1038,7 +1041,7 @@ int ckmc_allow_access(const char *alias, const char *accessor, ckmc_access_right
 /**
  * @brief Allows another application to access client's application data
  *
- * @since_tizen 3.0
+ * @since_tizen 2.4
  * @privlevel public
  * @privilege %http://tizen.org/privilege/keymanager
  *
@@ -1065,7 +1068,7 @@ int ckmc_allow_access(const char *alias, const char *accessor, ckmc_access_right
 int ckmc_set_permission(const char *alias, const char *accessor, int permissions);
 
 /**
- * @deprecated, see ckmc_set_permission()
+ * @deprecated Deprecated since 2.4. [Use ckmc_set_permission() instead]
  * @brief Revokes another application's access to client's application data
  *
  * @since_tizen 2.3
@@ -1099,7 +1102,7 @@ int ckmc_deny_access(const char *alias, const char *accessor);
 /**
  * @brief Removes a an entry (no matter of type) from the key manager.
  *
- * @since_tizen 3.0
+ * @since_tizen 2.4
  * @privlevel public
  * @privilege %http://tizen.org/privilege/keymanager
  *
