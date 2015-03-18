@@ -21,9 +21,7 @@
  */
 #pragma once
 
-#include <service-thread.h>
-#include <generic-socket-manager.h>
-#include <connection-info.h>
+#include <thread-service.h>
 #include <message-buffer.h>
 #include <dpl/exception.h>
 
@@ -31,9 +29,7 @@ namespace CKM {
 
 class CKMLogic;
 
-class CKMService
-  : public CKM::GenericSocketService
-  , public CKM::ServiceThread<CKMService>
+class CKMService : public CKM::ThreadService
 {
 public:
     CKMService();
@@ -45,15 +41,6 @@ public:
 
     ServiceDescriptionVector GetServiceDescription();
 
-    DECLARE_THREAD_EVENT(AcceptEvent, accept)
-    DECLARE_THREAD_EVENT(WriteEvent, write)
-    DECLARE_THREAD_EVENT(ReadEvent, process)
-    DECLARE_THREAD_EVENT(CloseEvent, close)
-
-    void accept(const AcceptEvent &event);
-    void write(const WriteEvent &event);
-    void process(const ReadEvent &event);
-    void close(const CloseEvent &event);
 private:
     class Exception {
     public:
@@ -61,18 +48,17 @@ private:
         DECLARE_EXCEPTION_TYPE(Base, BrokenProtocol)
     };
 
-    bool processOne(
+    bool ProcessOne(
         const ConnectionID &conn,
         ConnectionInfo &info);
 
-    RawBuffer processControl(
+    RawBuffer ProcessControl(
         MessageBuffer &buffer);
 
-    RawBuffer processStorage(
+    RawBuffer ProcessStorage(
         Credentials &cred,
         MessageBuffer &buffer);
 
-    ConnectionInfoMap m_connectionInfoMap;
     CKMLogic *m_logic;
 };
 

@@ -19,10 +19,7 @@
  * @version     1.0
  * @brief       CKM service implementation.
  */
-#include <service-thread.h>
-#include <generic-socket-manager.h>
-#include <connection-info.h>
-#include <message-buffer.h>
+
 #include <protocols.h>
 
 #include <dpl/serialization.h>
@@ -54,25 +51,7 @@ GenericSocketService::ServiceDescriptionVector CKMService::GetServiceDescription
     };
 }
 
-void CKMService::accept(const AcceptEvent &event) {
-    LogDebug("Accept event");
-    auto &info = m_connectionInfoMap[event.connectionID.counter];
-    info.interfaceID = event.interfaceID;
-    info.credentials = event.credentials;
-}
-
-void CKMService::write(const WriteEvent &event) {
-    LogDebug("Write event (" << event.size << " bytes)");
-}
-
-void CKMService::process(const ReadEvent &event) {
-    LogDebug("Read event");
-    auto &info = m_connectionInfoMap[event.connectionID.counter];
-    info.buffer.Push(event.rawBuffer);
-    while(processOne(event.connectionID, info));
-}
-
-bool CKMService::processOne(
+bool CKMService::ProcessOne(
     const ConnectionID &conn,
     ConnectionInfo &info)
 {
@@ -84,9 +63,9 @@ bool CKMService::processOne(
             return false;
 
         if (info.interfaceID == SOCKET_ID_CONTROL)
-            response = processControl(info.buffer);
+            response = ProcessControl(info.buffer);
         else
-            response = processStorage(info.credentials, info.buffer);
+            response = ProcessStorage(info.credentials, info.buffer);
 
         m_serviceManager->Write(conn, response);
 
@@ -109,7 +88,7 @@ bool CKMService::processOne(
     return false;
 }
 
-RawBuffer CKMService::processControl(MessageBuffer &buffer) {
+RawBuffer CKMService::ProcessControl(MessageBuffer &buffer) {
     int command = 0;
     uid_t user = 0;
     ControlCommand cc;
@@ -166,7 +145,7 @@ RawBuffer CKMService::processControl(MessageBuffer &buffer) {
     }
 }
 
-RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer)
+RawBuffer CKMService::ProcessStorage(Credentials &cred, MessageBuffer &buffer)
 {
     int command = 0;
     int msgID = 0;
@@ -381,12 +360,6 @@ RawBuffer CKMService::processStorage(Credentials &cred, MessageBuffer &buffer)
         default:
             Throw(Exception::BrokenProtocol);
     }
-}
-
-
-void CKMService::close(const CloseEvent &event) {
-    LogDebug("Close event");
-    m_connectionInfoMap.erase(event.connectionID.counter);
 }
 
 } // namespace CKM

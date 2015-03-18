@@ -21,18 +21,14 @@
  */
 #pragma once
 
-#include <service-thread.h>
-#include <generic-socket-manager.h>
-#include <connection-info.h>
+#include <thread-service.h>
 #include <message-buffer.h>
 
 namespace CKM {
 
 class OCSPLogic;
 
-class OCSPService
-  : public CKM::GenericSocketService
-  , public CKM::ServiceThread<OCSPService>
+class OCSPService : public CKM::ThreadService
 {
 public:
     OCSPService();
@@ -44,21 +40,11 @@ public:
 
     ServiceDescriptionVector GetServiceDescription();
 
-    DECLARE_THREAD_EVENT(AcceptEvent, accept)
-    DECLARE_THREAD_EVENT(WriteEvent, write)
-    DECLARE_THREAD_EVENT(ReadEvent, process)
-    DECLARE_THREAD_EVENT(CloseEvent, close)
-
-    void accept(const AcceptEvent &event);
-    void write(const WriteEvent &event);
-    void process(const ReadEvent &event);
-    void close(const CloseEvent &event);
 private:
-    bool processOne(
+    bool ProcessOne(
         const ConnectionID &conn,
         ConnectionInfo &info);
 
-    ConnectionInfoMap m_connectionInfoMap;
     OCSPLogic *m_logic;
 };
 

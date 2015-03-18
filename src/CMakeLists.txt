@@ -18,6 +18,7 @@ SET(KEY_MANAGER_SOURCES
     ${KEY_MANAGER_PATH}/main/socket-manager.cpp
     ${KEY_MANAGER_PATH}/main/key-manager-main.cpp
     ${KEY_MANAGER_PATH}/main/smack-check.cpp
+    ${KEY_MANAGER_PATH}/main/thread-service.cpp
     ${KEY_MANAGER_PATH}/service/certificate-store.cpp
     ${KEY_MANAGER_PATH}/service/certificate-config.cpp
     ${KEY_MANAGER_PATH}/service/digest.cpp

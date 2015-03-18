@@ -19,10 +19,7 @@
  * @version     1.0
  * @brief       OCSP service implementation.
  */
-#include <service-thread.h>
-#include <generic-socket-manager.h>
-#include <connection-info.h>
-#include <message-buffer.h>
+
 #include <protocols.h>
 
 #include <dpl/serialization.h>
@@ -52,25 +49,7 @@ GenericSocketService::ServiceDescriptionVector OCSPService::GetServiceDescriptio
     };
 }
 
-void OCSPService::accept(const AcceptEvent &event) {
-    LogDebug("Accept event");
-    auto &info = m_connectionInfoMap[event.connectionID.counter];
-    info.interfaceID = event.interfaceID;
-    info.credentials = event.credentials;
-}
-
-void OCSPService::write(const WriteEvent &event) {
-    LogDebug("Write event (" << event.size << " bytes )");
-}
-
-void OCSPService::process(const ReadEvent &event) {
-    LogDebug("Read event");
-    auto &info = m_connectionInfoMap[event.connectionID.counter];
-    info.buffer.Push(event.rawBuffer);
-    while(processOne(event.connectionID, info));
-}
-
-bool OCSPService::processOne(
+bool OCSPService::ProcessOne(
     const ConnectionID &conn,
     ConnectionInfo &info)
 {
@@ -100,11 +79,6 @@ bool OCSPService::processOne(
 
     m_serviceManager->Close(conn);
     return false;
-}
-
-void OCSPService::close(const CloseEvent &event) {
-    LogDebug("Close event");
-    m_connectionInfoMap.erase(event.connectionID.counter);
 }
 
 } // namespace CKM
