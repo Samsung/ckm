@@ -15,6 +15,7 @@ INCLUDE_DIRECTORIES(
     ${KEY_MANAGER_PATH}/dpl/log/include
     ${KEY_MANAGER_PATH}/sqlcipher
     ${KEY_MANAGER_PATH}/service
+    ${KEY_MANAGER_PATH}/main
     ${KEY_MANAGER_PATH}/common/
     ${KEY_MANAGER_PATH}/client-async/
     ${KEY_MANAGER_SRC_PATH}/include
@@ -31,6 +32,7 @@ SET(TEST_MERGED_SOURCES
     ${KEY_MANAGER_TEST_MERGED_SRC}/test-key-provider.cpp
     ${KEY_MANAGER_TEST_MERGED_SRC}/test_safe-buffer.cpp
     ${KEY_MANAGER_TEST_MERGED_SRC}/test_descriptor-set.cpp
+    ${KEY_MANAGER_TEST_MERGED_SRC}/test_comm-manager.cpp
     ${KEY_MANAGER_PATH}/service/db-crypto.cpp
     ${KEY_MANAGER_PATH}/service/key-provider.cpp
     ${KEY_MANAGER_PATH}/client-async/descriptor-set.cpp
