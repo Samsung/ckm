@@ -79,6 +79,19 @@ Requires:   key-manager = %{version}-%{release}
 %description -n key-manager-tests
 Internal test for key-manager implementation.
 
+%package -n key-manager-pam-plugin
+Summary:    CKM login/password module to PAM.
+Group:      Development/Libraries
+BuildRequires: pam-devel
+Requires:   key-manager = %{version}-%{release}
+Requires(post): /sbin/ldconfig
+Requires(postun): /sbin/ldconfig
+
+%description -n key-manager-pam-plugin
+CKM login/password module to PAM.
+It's used to monitor user login/logout and password change events from PAM.
+
+
 %prep
 %setup -q
 cp -a %{SOURCE1001} .
@@ -119,6 +132,8 @@ cp data/scripts/*.sql %{buildroot}/usr/share/ckm/scripts
 mkdir -p %{buildroot}/usr/share/ckm-db-test
 cp tests/testme_ver1.db %{buildroot}/usr/share/ckm-db-test/
 cp tests/testme_ver2.db %{buildroot}/usr/share/ckm-db-test/
+mkdir -p %{buildroot}/etc/gumd/userdel.d/
+cp data/gumd/10_key-manager.post %{buildroot}/etc/gumd/userdel.d/
 
 %make_install
 mkdir -p %{buildroot}%{_unitdir}/multi-user.target.wants
@@ -201,6 +216,9 @@ fi
 %{_datadir}/ckm/scripts/*.sql
 %attr(444, root, root) %{_datadir}/ckm/scripts/*.sql
 /etc/opt/upgrade/230.key-manager-migrate-dkek.patch.sh
+/etc/gumd/userdel.d/10_key-manager.post
+%attr(550, root, root) /etc/gumd/userdel.d/10_key-manager.post
+%{_bindir}/ckm_tool
 
 %files -n key-manager-listener
 %manifest key-manager-listener.manifest
@@ -246,3 +264,7 @@ fi
 %{_datadir}/ckm-db-test/testme_ver1.db
 %{_datadir}/ckm-db-test/testme_ver2.db
 %{_bindir}/ckm_so_loader
+
+%files -n key-manager-pam-plugin
+%defattr(-,root,root,-)
+%{_libdir}/security/pam_key_manager_plugin.so*

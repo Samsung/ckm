@@ -1,0 +1,7 @@
+#!/bin/bash
+
+# $1 - user name
+# $2 - uid
+# $3 - gid
+# call key-manager tool for locking the database and removing user entries
+ckm_tool -d $2

@@ -74,6 +74,7 @@ SET(TARGET_KEY_MANAGER_CLIENT "key-manager-client")
 SET(TARGET_KEY_MANAGER_CONTROL_CLIENT "key-manager-control-client")
 SET(TARGET_KEY_MANAGER_COMMON "key-manager-common")
 SET(TARGET_LISTENER "key-manager-listener")
+SET(TARGET_PAM_KEY_MANAGER_PLUGIN "pam_key_manager_plugin")
 
 SET(TARGET_TEST_MERGED "ckm-tests-internal")
 

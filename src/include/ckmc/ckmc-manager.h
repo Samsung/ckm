@@ -47,8 +47,8 @@ extern "C" {
  * @privlevel public
  * @privilege %http://tizen.org/privilege/keymanager
  *
- * @remarks Currently only six types of keys are supported for this API. These are RSA
- *          public/private key, DSA public/private key and ECDSA public/private key.
+ * @remarks Currently API supports seven types of keys. These are RSA public/private key,
+ *          DSA public/private key, ECDSA public/private key and AES symmetric key.
  * @remarks key_type in key may be set to #CKMC_KEY_NONE as an input. key_type is determined inside
  *          key manager during storing keys.
  * @remarks Some private key files are protected by a password. If raw_key in key read from those
