@@ -816,3 +816,25 @@ int ckmc_remove_alias(const char *alias)
     int ret =  mgr->removeAlias(alias);
     return to_ckmc_error(ret);
 }
+
+KEY_MANAGER_CAPI
+int ckmc_encrypt_data(const ckmc_param_list_s */*params*/,
+                      const char */*key_alias*/,
+                      const char */*password*/,
+                      const ckmc_raw_buffer_s /*decrypted*/,
+                      ckmc_raw_buffer_s **/*ppencrypted*/)
+{
+    // TODO implement it
+    return CKMC_ERROR_UNKNOWN;
+}
+
+KEY_MANAGER_CAPI
+int ckmc_decrypt_data(const ckmc_param_list_s */*params*/,
+                      const char */*key_alias*/,
+                      const char */*password*/,
+                      const ckmc_raw_buffer_s /* encrypted*/,
+                      ckmc_raw_buffer_s **/*ppdecrypted*/)
+{
+    // TODO implement it
+    return CKMC_ERROR_UNKNOWN;
+}

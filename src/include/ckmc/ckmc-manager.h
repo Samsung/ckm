@@ -1134,6 +1134,82 @@ int ckmc_deny_access(const char *alias, const char *accessor);
  */
 int ckmc_remove_alias(const char *alias);
 
+/**
+ * @brief Encrypts data using selected key and algorithm
+ *
+ * @since_tizen 3.0
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/keymanager
+ *
+ * @remarks Key identified by @a key_alias should exist
+ *
+ * @param[in] params            Algorithm parameters
+ * @param[in] key_alias         Alias of the key to be used for encryption
+ * @param[in] password          The password used in decrypting a key value. If password of policy
+ *                              is provided in ckmc_save_key(), the same password should be provided
+ * @param[in] decrypted         Data to be encrypted
+ * @param[out] ppencrypted      Encrypted data (some algorithms may return additional information
+ *                              embedded in encrypted data. AES GCM is an example). The caller is
+ *                              responsible for freeing ppencrypted with ckmc_buffer_free().
+ *
+ * @return @c 0 on success, otherwise a negative error value
+ *
+ * @retval #CKMC_ERROR_NONE                 Successful
+ * @retval #CKMC_ERROR_INVALID_PARAMETER    Input parameter is invalid
+ * @retval #CKMC_ERROR_DB_LOCKED            A user key is not loaded in memory (a user is not logged
+ *                                          in)
+ * @retval #CKMC_ERROR_DB_ERROR             Failed due to the error with unknown reason
+ * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN     Key with given alias does not exist
+ * @retval #CKMC_ERROR_PERMISSION_DENIED    Failed to access key manager
+ * @retval #CKMC_ERROR_AUTHENTICATION_FAILED
+ *                                          Key decryption failed because password is incorrect.
+ *
+ * @pre User is already logged in and the user key is already loaded into memory in plain text form.
+ */
+int ckmc_encrypt_data(const ckmc_param_list_s *params,
+                      const char *key_alias,
+                      const char *password,
+                      const ckmc_raw_buffer_s decrypted,
+                      ckmc_raw_buffer_s **ppencrypted);
+
+/**
+ * @brief Decrypts data using selected key and algorithm
+ *
+ * @since_tizen 3.0
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/keymanager
+ *
+ * @remarks Key identified by @a key_alias should exist
+ *
+ * @param[in] params            Algorithm parameters
+ * @param[in] key_alias         Alias of the key to be used for encryption
+ * @param[in] password          The password used in decrypting a key value. If password of policy
+ *                              is provided in ckmc_save_key(), the same password should be provided
+ * @param[in] encrypted         Data to be decrypted (some algorithms may require additional
+ *                              information embedded in encrypted data. AES GCM is an example).
+ * @param[out] ppdecrypted      Decrypted data. The caller is responsible for freeing ppdecrypted
+ *                              with ckmc_buffer_free().
+ *
+ * @return @c 0 on success, otherwise a negative error value
+ *
+ * @retval #CKMC_ERROR_NONE                 Successful
+ * @retval #CKMC_ERROR_INVALID_PARAMETER    Input parameter is invalid
+ * @retval #CKMC_ERROR_DB_LOCKED            A user key is not loaded in memory (a user is not logged
+ *                                          in)
+ * @retval #CKMC_ERROR_DB_ERROR             Failed due to the error with unknown reason
+ * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN     Key with given alias does not exist
+ * @retval #CKMC_ERROR_PERMISSION_DENIED    Failed to access key manager
+ * @retval #CKMC_ERROR_AUTHENTICATION_FAILED
+ *                                          Key decryption failed because password is incorrect.
+ *
+ * @pre User is already logged in and the user key is already loaded into memory in plain text form.
+ */
+int ckmc_decrypt_data(const ckmc_param_list_s *params,
+                      const char *key_alias,
+                      const char *password,
+                      const ckmc_raw_buffer_s encrypted,
+                      ckmc_raw_buffer_s **ppdecrypted);
+
 #ifdef __cplusplus
 }
 #endif

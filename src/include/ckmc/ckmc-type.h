@@ -23,6 +23,7 @@
 #define __TIZEN_CORE_CKMC_TYPE_H
 
 #include <stddef.h>
+#include <stdint.h>
 #include <ckmc/ckmc-error.h>
 
 #define KEY_MANAGER_CAPI __attribute__((visibility("default")))
@@ -218,6 +219,99 @@ typedef struct __ckmc_pkcs12 {
     ckmc_cert_list_s *ca_chain; /**< chain certificates list, may be null */
 } ckmc_pkcs12_s;
 
+/**
+ * @brief Enumeration for crypto algorithm parameters.
+ * @since_tizen 3.0
+ */
+typedef enum __ckmc_param_name {
+    CKMC_PARAM_ALGO_TYPE = 1,
+
+    // encryption & decryption
+    CKMC_PARAM_ED_IV = 101,         /**< 16B buffer (up to 2^64-1 bytes long in case of AES GCM) */
+    CKMC_PARAM_ED_CTR_LEN,          /**< integer */
+    CKMC_PARAM_ED_AAD,              /**< buffer */
+    CKMC_PARAM_ED_TAG_LEN,          /**< integer */
+    CKMC_PARAM_ED_LABEL,            /**< buffer */
+
+    // key generation
+    CKMC_PARAM_GEN_KEY_LEN = 201,   /**< integer */
+    CKMC_PARAM_GEN_EC,              /**< integer - elliptic curve (ckmc_ec_type_e) */
+
+    // sign & verify
+    CKMC_PARAM_SV_HASH_ALGO = 301,  /**< integer - hash algorithm (ckmc_hash_algo_e) */
+    CKMC_PARAM_SV_RSA_PADDING,      /**< integer - RSA padding (ckmc_rsa_padding_algo_e) */
+}ckmc_param_name_e;
+
+/**
+ * @brief Structure for algorithm parameter list.
+ * @since_tizen 3.0
+ */
+struct ckmc_param_list_s;
+
+/**
+ * @brief Enumeration for crypto algorithm types.
+ * @since_tizen 3.0
+ */
+typedef enum __ckmc_algo_type {
+    CKMC_ALGO_AES_CTR = 1,   /**< AES-CTR algorithm
+                                  Supported parameters:
+                                  - CKMC_PARAM_ALGO_TYPE,
+                                  - CKMC_PARAM_ED_IV
+                                  - CKMC_PARAM_ED_CTR_LEN (128 only) */
+
+    CKMC_ALGO_AES_CBC,       /**< AES-CBC algorithm
+                                  Supported parameters:
+                                  - CKMC_PARAM_ALGO_TYPE,
+                                  - CKMC_PARAM_ED_IV */
+
+    CKMC_ALGO_AES_GCM,       /**< AES-GCM algorithm
+                                  Supported parameters:
+                                  - CKMC_PARAM_ALGO_TYPE,
+                                  - CKMC_PARAM_ED_IV
+                                  - CKMC_PARAM_ED_TAG_LEN
+                                  - CKMC_PARAM_ED_AAD */
+
+    CKMC_ALGO_AES_CFB,       /**< AES-CFB algorithm
+                                  Supported parameters:
+                                  - CKMC_PARAM_ALGO_TYPE,
+                                  - CKMC_PARAM_ED_IV */
+
+    CKMC_ALGO_RSA_OAEP,      /**< RSA-OAEP algorithm
+                                  Supported parameters:
+                                  - CKMC_PARAM_ALGO_TYPE,
+                                  - CKMC_PARAM_ED_LABEL */
+
+    CKMC_ALGO_RSA_SV,        /**< RSA algorithm used for signing/verification
+                                  Supported parameters:
+                                  - CKMC_PARAM_ALGO_TYPE,
+                                  - CKMC_PARAM_SV_HASH_ALGO
+                                  - CKMC_PARAM_SV_RSA_PADDING */
+
+    CKMC_ALGO_DSA_SV,        /**< DSA algorithm used for signing/verification
+                                  Supported parameters:
+                                  - CKMC_PARAM_ALGO_TYPE,
+                                  - CKMC_PARAM_SV_HASH_ALGO */
+
+    CKMC_ALGO_ECDSA_SV,      /**< ECDA algorithm used for signing/verification
+                                  Supported parameters:
+                                  - CKMC_PARAM_ALGO_TYPE,
+                                  - CKMC_PARAM_SV_HASH_ALGO */
+
+    CKMC_ALGO_RSA_GEN,       /**< RSA algorithm used for key generation
+                                  Supported parameters:
+                                  - CKMC_PARAM_ALGO_TYPE,
+                                  - CKMC_PARAM_GEN_KEY_LEN */
+
+    CKMC_ALGO_DSA_GEN,       /**< DSA algorithm used for key generation
+                                  Supported parameters:
+                                  - CKMC_PARAM_ALGO_TYPE,
+                                  - CKMC_PARAM_GEN_KEY_LEN */
+
+    CKMC_ALGO_ECDSA_GEN,     /**< ECDA algorithm used for key generation
+                                  Supported parameters:
+                                  - CKMC_PARAM_ALGO_TYPE,
+                                  - CKMC_PARAM_GEN_EC */
+} ckmc_algo_type_e;
 
 /**
  * @internal
@@ -641,6 +735,137 @@ void ckmc_cert_list_free(ckmc_cert_list_s *first);
  * @see #ckmc_cert_list_s
  */
 void ckmc_cert_list_all_free(ckmc_cert_list_s *first);
+
+/**
+ * @brief Creates new parameter list
+ *
+ * @since_tizen 3.0
+ *
+ * @remarks Caller is responsible for freeing it with ckmc_param_list_free
+ *
+ * @param[in] ppparam_list  Double pointer to the list variable to which the newly created list will
+ *                          be assigned. Last element of the list has param = NULL;
+ *
+ * @return @c 0 on success, otherwise a negative error value
+ *
+ * @retval #CKMC_ERROR_NONE                 Successful
+ * @retval #CKMC_ERROR_INVALID_PARAMETER    Input parameter is invalid
+ *
+ * @see ckmc_param_list_add_integer
+ * @see ckmc_param_list_add_buffer
+ * @see ckmc_param_list_free
+ * @see ckmc_generate_params
+ * @see #ckmc_param_list_s
+ * @see #ckmc_param_name_e
+ */
+int ckmc_param_list_new(ckmc_param_list_s **ppparams);
+
+/**
+ * @brief Adds integer parameter to the list
+ *
+ * @since_tizen 3.0
+ *
+ * @remarks Caller is responsible for ckmc_param_list_s creation.
+ * @remarks Last element of the list has param = NULL;
+ *
+ * @param[in] previous  Any element of the param list.
+ * @param[in] name      Name of parameter to add. Each parameter name has an associated value type:
+ *                      integer or buffer. Passing a buffer parameter name will result in an error
+ * @param[in] value     Value of the parameter in form of a integer.
+ *
+ * @return @c 0 on success, otherwise a negative error value
+ *
+ * @retval #CKMC_ERROR_NONE                 Successful
+ * @retval #CKMC_ERROR_INVALID_PARAMETER    Input parameter is invalid
+ *
+ * @see ckmc_param_list_new
+ * @see ckmc_param_list_add_buffer
+ * @see ckmc_param_list_free
+ * @see ckmc_generate_params
+ * @see #ckmc_param_list_s
+ * @see #ckmc_param_name_e
+ */
+int ckmc_param_list_add_integer(ckmc_param_list_s *params,
+                                ckmc_param_name_e name,
+                                uint64_t value);
+
+/**
+ * @brief Adds buffer parameter to the list
+ *
+ * @since_tizen 3.0
+ *
+ * @remarks Caller is responsible for ckmc_param_list_s creation.
+ * @remarks Last element of the list has param = NULL;
+ *
+ * @param[in] previous  Any element of the param list.
+ * @param[in] name      Name of parameter to add. Each parameter name has an associated value type:
+ *                      integer or buffer. Passing an integer parameter name will result in an error
+ * @param[in] buffer    Value of the parameter in form of a buffer. Caller is responsible for
+ *                      creating and freeing the buffer.
+ *
+ * @return @c 0 on success, otherwise a negative error value
+ *
+ * @retval #CKMC_ERROR_NONE                 Successful
+ * @retval #CKMC_ERROR_INVALID_PARAMETER    Input parameter is invalid
+ *
+ * @see ckmc_param_list_new
+ * @see ckmc_param_list_add_integer
+ * @see ckmc_param_list_free
+ * @see ckmc_generate_params
+ * @see #ckmc_param_list_s
+ * @see #ckmc_param_name_e
+ */
+int ckmc_param_list_add_buffer(ckmc_param_list_s *params,
+                               ckmc_param_name_e name,
+                               const ckmc_raw_buffer_s *buffer);
+
+/**
+ * @brief Frees previously allocated list of algorithm params
+ *
+ * @since_tizen 3.0
+ *
+ * @param[in] first     First element of the list to be freed.
+ *
+ * @see ckmc_param_list_new
+ * @see ckmc_param_list_add_integer
+ * @see ckmc_param_list_add_buffer
+ * @see ckmc_generate_params
+ * @see #ckmc_param_list_s
+ * @see #ckmc_param_name_e
+ */
+void ckmc_param_list_free(ckmc_param_list_s *params);
+
+/**
+ * @brief Generates algorithm parameters for a given algorithm type and adds them to the list.
+ *
+ * @since_tizen 3.0
+ *
+ * @remarks Caller is responsible for ckmc_param_list_s creation and destruction.
+ * @remarks Algorithm parameters used for encryption could be then used for decryption but this
+ *          function should not be used for generating decryption parameters only.
+ * @remarks Algorithm parameters are set to default values. Optional fields are left empty.
+ *          Initialization vectors are randomly generated. Param list passed as ckmc_param_list_s
+ *          will be extended with new params. Caller is responsible for freeing the list
+ *          with ckmc_param_list_free.
+ * @remarks If the function returns error provided param list may contain some of default parameters
+ *
+ * @param[in] type      Type of the algorithm
+ * @param[out] params   List of params to be filled. List should be empty. Otherwise an error will
+ *                      be returned.
+ *
+ * @return @c 0 on success, otherwise a negative error value
+ *
+ * @retval #CKMC_ERROR_NONE                 Successful
+ * @retval #CKMC_ERROR_INVALID_PARAMETER    Input parameter is invalid
+ *
+ * @see ckmc_param_list_new
+ * @see ckmc_param_list_add_integer
+ * @see ckmc_param_list_add_buffer
+ * @see ckmc_param_list_free
+ * @see #ckmc_param_list_s
+ * @see #ckmc_param_name_e
+ */
+int ckmc_generate_params(ckmc_algo_type_e type, ckmc_param_list_s *params);
 
 /**
  * @}
