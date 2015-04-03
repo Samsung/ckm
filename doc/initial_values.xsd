@@ -2,59 +2,16 @@
 <xsd:schema elementFormDefault="qualified" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
 	<xsd:element name="InitialValues" type="InitialValuesType"></xsd:element>
 
-	<xsd:complexType name="ValueType">
-		<xsd:simpleContent>
-			<xsd:extension base="xsd:string">
-				<xsd:attribute name="name" use="required">
-					<xsd:simpleType>
-						<xsd:restriction base="xsd:string">
-							<xsd:minLength value="1"></xsd:minLength>
-						</xsd:restriction>
-					</xsd:simpleType>
-				</xsd:attribute>
-				<xsd:attribute name="owner" use="required">
-					<xsd:simpleType>
-						<xsd:restriction base="xsd:string">
-							<xsd:minLength value="1"></xsd:minLength>
-						</xsd:restriction>
-					</xsd:simpleType>
-				</xsd:attribute>
-				<xsd:attribute name="password" use="optional"
-					type="xsd:string">
-				</xsd:attribute>
-				<xsd:attribute name="extractable" use="optional"
-					default="false">
-					<xsd:simpleType>
-						<xsd:restriction base="xsd:boolean"></xsd:restriction>
-					</xsd:simpleType>
-				</xsd:attribute>
-
-			</xsd:extension>
-		</xsd:simpleContent>
-	</xsd:complexType>
-
 	<xsd:complexType name="InitialValuesType">
 		<xsd:sequence>
 			<xsd:choice maxOccurs="unbounded" minOccurs="1">
-				<xsd:element name="AesCtrKey" type="AesCtrKeyType"
-					maxOccurs="1" minOccurs="1">
-				</xsd:element>
-				<xsd:element name="AesCbcKey" type="AesCbcKeyType"
-					maxOccurs="1" minOccurs="1">
-				</xsd:element>
-				<xsd:element name="AesGcmKey" type="AesGcmKeyType"
-					maxOccurs="1" minOccurs="1">
-				</xsd:element>
-				<xsd:element name="AesCfbKey" type="AesCfbKeyType"
-					maxOccurs="1" minOccurs="1">
-				</xsd:element>
 				<xsd:element name="Data" type="DataType"
 					maxOccurs="1" minOccurs="1">
 				</xsd:element>
-				<xsd:element name="Key" type="KeyCertType"
+				<xsd:element name="Key" type="KeyType"
 					maxOccurs="1" minOccurs="1">
 				</xsd:element>
-				<xsd:element name="Cert" type="KeyCertType"
+				<xsd:element name="Cert" type="CertType"
 					maxOccurs="1" minOccurs="1">
 				</xsd:element>
 			</xsd:choice>
@@ -62,102 +19,110 @@
 		<xsd:attribute name="version" type="xsd:int" use="required"></xsd:attribute>
 	</xsd:complexType>
 
-	<xsd:complexType name="AesCtrKeyType">
-		<xsd:simpleContent>
-			<xsd:extension base="ValueType">
-				<xsd:attribute name="encoding" use="required">
-					<xsd:simpleType>
-						<xsd:restriction base="xsd:string">
-							<xsd:enumeration value="Base64"></xsd:enumeration>
-							<xsd:enumeration value="PEM"></xsd:enumeration>
-						</xsd:restriction>
-					</xsd:simpleType>
-				</xsd:attribute>
-			</xsd:extension>
-		</xsd:simpleContent>
+	<xsd:complexType name="ObjectType">
+		<xsd:attribute name="name" use="required">
+			<xsd:simpleType>
+				<xsd:restriction base="xsd:string">
+					<xsd:minLength value="1"></xsd:minLength>
+				</xsd:restriction>
+			</xsd:simpleType>
+		</xsd:attribute>
+		<xsd:attribute name="password" use="optional"
+			type="xsd:string">
+		</xsd:attribute>
+		<xsd:attribute name="exportable" use="optional"
+			default="false">
+			<xsd:simpleType>
+				<xsd:restriction base="xsd:boolean"></xsd:restriction>
+			</xsd:simpleType>
+		</xsd:attribute>
 	</xsd:complexType>
 
-	<xsd:complexType name="AesCbcKeyType">
-		<xsd:simpleContent>
-			<xsd:extension base="ValueType">
-				<xsd:attribute name="encoding" use="required">
+	<xsd:complexType name="KeyType">
+		<xsd:complexContent>
+			<xsd:extension base="ObjectType">
+				<xsd:sequence>
+					<xsd:choice maxOccurs="1" minOccurs="1">
+						<xsd:element name="PEM"
+							type="EncodingPemType" maxOccurs="1" minOccurs="1">
+						</xsd:element>
+						<xsd:element name="DER"
+							type="EncodingDerType" maxOccurs="1" minOccurs="1">
+						</xsd:element>
+						<xsd:element name="Base64"
+							type="EncodingRawType" maxOccurs="1" minOccurs="1">
+						</xsd:element>
+					</xsd:choice>
+					<xsd:element name="Permission" type="PermissionType" maxOccurs="unbounded" minOccurs="0"></xsd:element>
+				</xsd:sequence>
+				<xsd:attribute name="type">
 					<xsd:simpleType>
 						<xsd:restriction base="xsd:string">
-							<xsd:enumeration value="Base64"></xsd:enumeration>
-							<xsd:enumeration value="PEM"></xsd:enumeration>
+							<xsd:enumeration value="RSA_PRV"></xsd:enumeration>
+							<xsd:enumeration value="RSA_PUB"></xsd:enumeration>
+							<xsd:enumeration value="ECDSA_PRV"></xsd:enumeration>
+							<xsd:enumeration value="ECDSA_PUB"></xsd:enumeration>
+							<xsd:enumeration value="DSA_PRV"></xsd:enumeration>
+							<xsd:enumeration value="DSA_PUB"></xsd:enumeration>
+							<xsd:enumeration value="AES"></xsd:enumeration>
 						</xsd:restriction>
 					</xsd:simpleType>
 				</xsd:attribute>
-				<xsd:attribute name="iv" type="xsd:base64Binary" use="required"></xsd:attribute>
 			</xsd:extension>
-		</xsd:simpleContent>
+		</xsd:complexContent>
 	</xsd:complexType>
 
-	<xsd:complexType name="AesGcmKeyType">
-		<xsd:simpleContent>
-			<xsd:extension base="ValueType">
-				<xsd:attribute name="encoding" use="required">
-					<xsd:simpleType>
-						<xsd:restriction base="xsd:string">
-							<xsd:enumeration value="Base64"></xsd:enumeration>
-							<xsd:enumeration value="PEM"></xsd:enumeration>
-						</xsd:restriction>
-					</xsd:simpleType>
-				</xsd:attribute>
-				<xsd:attribute name="iv" type="xsd:base64Binary"
-					use="required">
-				</xsd:attribute>
-				<xsd:attribute name="additionalData"
-					type="xsd:string">
-				</xsd:attribute>
-				<xsd:attribute name="tagLength" type="xsd:int"></xsd:attribute>
+	<xsd:complexType name="CertType">
+		<xsd:complexContent>
+			<xsd:extension base="ObjectType">
+				<xsd:sequence>
+					<xsd:choice maxOccurs="1" minOccurs="1">
+						<xsd:element name="PEM" type="EncodingPemType"
+							maxOccurs="1" minOccurs="1">
+						</xsd:element>
+						<xsd:element name="DER"
+							type="EncodingDerType" maxOccurs="1" minOccurs="1">
+						</xsd:element>
+					</xsd:choice>
+					<xsd:element name="Permission" type="PermissionType" maxOccurs="unbounded" minOccurs="0"></xsd:element>
+				</xsd:sequence>
 			</xsd:extension>
-		</xsd:simpleContent>
-	</xsd:complexType>
-
-	<xsd:complexType name="AesCfbKeyType">
-		<xsd:simpleContent>
-			<xsd:extension base="ValueType">
-				<xsd:attribute name="encoding" use="required">
-					<xsd:simpleType>
-						<xsd:restriction base="xsd:string">
-							<xsd:enumeration value="Base64"></xsd:enumeration>
-							<xsd:enumeration value="PEM"></xsd:enumeration>
-						</xsd:restriction>
-					</xsd:simpleType>
-				</xsd:attribute>
-				<xsd:attribute name="iv" type="xsd:base64Binary" use="required"></xsd:attribute>
-			</xsd:extension>
-		</xsd:simpleContent>
-	</xsd:complexType>
-
-	<xsd:complexType name="KeyCertType">
-		<xsd:simpleContent>
-			<xsd:extension base="ValueType">
-				<xsd:attribute name="encoding">
-					<xsd:simpleType>
-						<xsd:restriction base="xsd:string">
-							<xsd:enumeration value="PEM"></xsd:enumeration>
-							<xsd:enumeration value="DER"></xsd:enumeration>
-						</xsd:restriction>
-					</xsd:simpleType>
-				</xsd:attribute>
-			</xsd:extension>
-		</xsd:simpleContent>
+		</xsd:complexContent>
 	</xsd:complexType>
 
 	<xsd:complexType name="DataType">
-		<xsd:simpleContent>
-			<xsd:extension base="ValueType">
-				<xsd:attribute name="encoding">
-					<xsd:simpleType>
-						<xsd:restriction base="xsd:string">
-							<xsd:enumeration value="ASCII"></xsd:enumeration>
-							<xsd:enumeration value="Base64"></xsd:enumeration>
-						</xsd:restriction>
-					</xsd:simpleType>
-				</xsd:attribute>
+		<xsd:complexContent>
+			<xsd:extension base="ObjectType">
+				<xsd:sequence>
+					<xsd:choice maxOccurs="1" minOccurs="1">
+						<xsd:element name="ASCII"
+							type="EncodingAsciiType" maxOccurs="1" minOccurs="1">
+						</xsd:element>
+						<xsd:element name="Base64"
+							type="EncodingRawType" maxOccurs="1" minOccurs="1">
+						</xsd:element>
+					</xsd:choice>
+					<xsd:element name="Permission" type="PermissionType" maxOccurs="unbounded" minOccurs="0"></xsd:element>
+				</xsd:sequence>
 			</xsd:extension>
-		</xsd:simpleContent>
+		</xsd:complexContent>
 	</xsd:complexType>
+
+	<xsd:simpleType name="EncodingAsciiType">
+		<xsd:restriction base="xsd:string"></xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="EncodingDerType">
+		<xsd:restriction base="xsd:string"></xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="EncodingPemType">
+		<xsd:restriction base="xsd:string"></xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="EncodingRawType">
+		<xsd:restriction base="xsd:string"></xsd:restriction>
+	</xsd:simpleType>
+
+	<xsd:complexType name="PermissionType">
+		<xsd:attribute name="accessor" type="xsd:string"></xsd:attribute>
+	</xsd:complexType>
+
 </xsd:schema>
