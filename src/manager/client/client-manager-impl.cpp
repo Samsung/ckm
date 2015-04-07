@@ -456,6 +456,15 @@ int ManagerImpl::createKeyPairECDSA(
     return this->createKeyPair(CKM::KeyType::KEY_ECDSA_PUBLIC, static_cast<int>(type), privateKeyAlias, publicKeyAlias, policyPrivateKey, policyPublicKey);
 }
 
+int ManagerImpl::createKeyAES(
+    const int /*size*/,
+    const Alias &/*keyAlias*/,
+    const Policy &/*policyKey*/)
+{
+    return 0;
+}
+
+
 int ManagerImpl::createKeyPair(
     const KeyType key_type,
     const int     additional_param,

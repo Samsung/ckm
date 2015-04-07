@@ -142,6 +142,11 @@ public:
             const Alias& publicKeyAlias,
             const Policy& policyPrivateKey = Policy(),
             const Policy& policyPublicKey = Policy());
+    void createKeyAES(
+            const ObserverPtr& observer,
+            int size,
+            const Alias &keyAlias,
+            const Policy &policyKey = Policy());
 
     void getCertificateChain(
             const ObserverPtr& observer,

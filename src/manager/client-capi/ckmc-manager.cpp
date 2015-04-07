@@ -602,6 +602,14 @@ int ckmc_create_key_pair_ecdsa(const ckmc_ec_type_e type,
 }
 
 KEY_MANAGER_CAPI
+int ckmc_create_key_aes(const size_t /*size*/,
+                        const char */*key_alias*/,
+                        const ckmc_policy_s /*key_policy*/)
+{
+    return 0;
+}
+
+KEY_MANAGER_CAPI
 int ckmc_create_signature(const char *private_key_alias,
                             const char *password,
                             const ckmc_raw_buffer_s message,

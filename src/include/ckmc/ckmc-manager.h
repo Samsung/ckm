@@ -705,6 +705,42 @@ int ckmc_create_key_pair_ecdsa(const ckmc_ec_type_e type,
                                const ckmc_policy_s policy_public_key);
 
 /**
+ * @brief Creates AES key and stores it inside key manager based on the policy.
+ *
+ * @since_tizen 3.0
+ * @privlevel public
+ * @privilege %http://tizen.org/privilege/keymanager
+ *
+ * @remarks If password in policy is provided, the key is additionally encrypted with the password
+ *          in policy.
+ *
+ * @param[in] size                The size of key strength to be created. \n
+ *                                @c 128, @c 192 and @c 256 are supported.
+ * @param[in] key_alias           The name of key to be stored
+ * @param[in] key_policy          The policy about how to store the key securely
+ *
+ * @return @c 0 on success,
+ *         otherwise a negative error value
+ *
+ * @retval #CKMC_ERROR_NONE               Successful
+ * @retval #CKMC_ERROR_INVALID_PARAMETER  Input parameter is invalid
+ * @retval #CKMC_ERROR_DB_LOCKED          A user key is not loaded in memory (a user is not logged
+ *                                        in)
+ * @retval #CKMC_ERROR_DB_ALIAS_EXISTS    Alias already exists
+ * @retval #CKMC_ERROR_DB_ERROR           Failed due to other DB transaction unexpectedly
+ * @retval #CKMC_ERROR_PERMISSION_DENIED  Failed to access key manager
+ *
+ * @pre User is already logged in and the user key is already loaded into memory in plain text form.
+ *
+ * @see ckmc_create_key_pair_rsa()
+ * @see ckmc_create_key_pair_dsa()
+ * @see ckmc_create_key_pair_ecdsa()
+ */
+int ckmc_create_key_aes(const size_t size,
+                        const char *key_alias,
+                        const ckmc_policy_s key_policy);
+
+/**
  * @brief Creates a signature on a given message using a private key and returns the signature.
  *
  * @since_tizen 2.3

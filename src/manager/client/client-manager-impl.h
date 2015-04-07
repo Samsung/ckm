@@ -76,6 +76,11 @@ public:
         const Policy &policyPrivateKey = Policy(),
         const Policy &policyPublicKey = Policy());
 
+    int createKeyAES(
+        const int size,              // size in bits [128, 192, 256]
+        const Alias &keyAlias,
+        const Policy &policyKey = Policy());
+
     int getCertificateChain(
         const CertificateShPtr &certificate,
         const CertificateShPtrVector &untrustedCertificates,

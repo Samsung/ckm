@@ -184,6 +184,13 @@ void ManagerAsync::createKeyPairECDSA(const ObserverPtr& observer,
                           policyPublicKey);
 }
 
+void ManagerAsync::createKeyAES(const ObserverPtr& /*observer*/,
+                                int /*size*/,
+                                const Alias &/*keyAlias*/,
+                                const Policy &/*policyKey*/)
+{
+}
+
 void ManagerAsync::getCertificateChain(const ObserverPtr& observer,
                                        const CertificateShPtr& certificate,
                                        const CertificateShPtrVector& untrustedCertificates,
