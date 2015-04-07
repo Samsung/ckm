@@ -46,13 +46,7 @@ public:
 
     // Domain Key Encryption Key
     RawBuffer getDKEK() const;
-    RawBuffer getDKEKBackup() const;
     void saveDKEK(const RawBuffer &buffer) const;
-
-    // Functions required in "password change transaction"
-    void createDKEKBackup() const;
-    void restoreDKEK() const; // delete DKEK and move DKEKBackup -> DKEK
-    void removeDKEKBackup() const;  // delete DKEKBackup
 
     // Database Data Encryption Key
     RawBuffer getDBDEK() const;
@@ -71,12 +65,10 @@ public:
     virtual ~FileSystem(){}
 protected:
     std::string getDKEKPath() const;
-    std::string getDKEKBackupPath() const;
     std::string getDBDEKPath() const;
     RawBuffer loadFile(const std::string &path) const;
     void saveFile(const std::string &path, const RawBuffer &buffer) const;
     std::string getRemovedAppsPath() const;
-    void moveFile(const std::string &from, const std::string &to) const;
 
     uid_t m_uid;
 };

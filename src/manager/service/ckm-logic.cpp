@@ -60,63 +60,29 @@ CKMLogic::CKMLogic()
 
 CKMLogic::~CKMLogic(){}
 
-void CKMLogic::loadDKEKFile(uid_t user, const Password &password, bool apiReq) {
+void CKMLogic::loadDKEKFile(uid_t user, const Password &password) {
     auto &handle = m_userDataMap[user];
 
     FileSystem fs(user);
 
-    auto wrappedDKEKMain = fs.getDKEK();
-    auto wrappedDKEKBackup = fs.getDKEKBackup();
+    auto wrappedDKEK = fs.getDKEK();
 
-    if (wrappedDKEKMain.empty()) {
-        wrappedDKEKMain = KeyProvider::generateDomainKEK(std::to_string(user), password);
-        fs.saveDKEK(wrappedDKEKMain);
+    if (wrappedDKEK.empty()) {
+        wrappedDKEK = KeyProvider::generateDomainKEK(std::to_string(user), password);
+        fs.saveDKEK(wrappedDKEK);
     }
 
-    chooseDKEKFile(handle, password, wrappedDKEKMain, wrappedDKEKBackup);
-
-    if (!password.empty() || apiReq) {
-        handle.isDKEKConfirmed = true;
-
-        if (true == handle.isMainDKEK)
-            fs.removeDKEKBackup();
-        else
-            fs.restoreDKEK();
-    }
-}
-
-void CKMLogic::chooseDKEKFile(
-    UserData &handle,
-    const Password &password,
-    const RawBuffer &first,
-    const RawBuffer &second)
-{
-    try {
-        handle.keyProvider = KeyProvider(first, password);
-        handle.isMainDKEK = true;
-    } catch (const KeyProvider::Exception::Base &e) {
-        // Second buffer is empty. Lets rethrow first error
-        if (second.empty())
-            throw;
-        handle.keyProvider = KeyProvider(second, password);
-        handle.isMainDKEK = false;
-    }
+    handle.keyProvider = KeyProvider(wrappedDKEK, password);
 }
 
 void CKMLogic::saveDKEKFile(uid_t user, const Password &password) {
     auto &handle = m_userDataMap[user];
 
     FileSystem fs(user);
-    if (handle.isMainDKEK)
-        fs.createDKEKBackup();
-
     fs.saveDKEK(handle.keyProvider.getWrappedDomainKEK(password));
-
-    handle.isMainDKEK = true;
-    handle.isDKEKConfirmed = false;
 }
 
-RawBuffer CKMLogic::unlockUserKey(uid_t user, const Password &password, bool apiRequest) {
+RawBuffer CKMLogic::unlockUserKey(uid_t user, const Password &password) {
     int retCode = CKM_API_SUCCESS;
 
     try {
@@ -124,7 +90,7 @@ RawBuffer CKMLogic::unlockUserKey(uid_t user, const Password &password, bool api
             auto &handle = m_userDataMap[user];
             FileSystem fs(user);
 
-            loadDKEKFile(user, password, apiRequest);
+            loadDKEKFile(user, password);
 
             auto wrappedDatabaseDEK = fs.getDBDEK();
 
@@ -142,9 +108,6 @@ RawBuffer CKMLogic::unlockUserKey(uid_t user, const Password &password, bool api
             for(auto& appSmackLabel : removedApps) {
                 handle.database.deleteKey(appSmackLabel);
             }
-        } else if (apiRequest == true && m_userDataMap[user].isDKEKConfirmed == false) {
-            // now we will try to choose the DKEK key and remove old one
-            loadDKEKFile(user, password, apiRequest);
         }
     } catch (const KeyProvider::Exception::PassWordError &e) {
         LogError("Incorrect Password " << e.GetMessage());
@@ -204,7 +167,7 @@ RawBuffer CKMLogic::changeUserPassword(
 {
     int retCode = CKM_API_SUCCESS;
     try {
-        loadDKEKFile(user, oldPassword, true);
+        loadDKEKFile(user, oldPassword);
         saveDKEKFile(user, newPassword);
     } catch (const KeyProvider::Exception::PassWordError &e) {
         LogError("Incorrect Password " << e.GetMessage());

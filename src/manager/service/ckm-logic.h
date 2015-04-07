@@ -38,16 +38,9 @@
 namespace CKM {
 
 struct UserData {
-    UserData()
-      : isMainDKEK(false)
-      , isDKEKConfirmed(false)
-    {}
-
     KeyProvider    keyProvider;
     DB::Crypto     database;
     CryptoLogic    crypto;
-    bool           isMainDKEK;
-    bool           isDKEKConfirmed;
 };
 
 class CKMLogic {
@@ -59,8 +52,7 @@ public:
     CKMLogic& operator=(CKMLogic &&) = delete;
     virtual ~CKMLogic();
 
-    RawBuffer unlockUserKey(uid_t user, const Password &password, bool apiRequest = true);
-
+    RawBuffer unlockUserKey(uid_t user, const Password &password);
     RawBuffer lockUserKey(uid_t user);
 
     RawBuffer removeUserData(uid_t user);
@@ -186,14 +178,7 @@ private:
 
     void loadDKEKFile(
         uid_t user,
-        const Password &password,
-        bool apiReq);
-
-    void chooseDKEKFile(
-        UserData &handle,
-        const Password &password,
-        const RawBuffer &first,
-        const RawBuffer &second);
+        const Password &password);
 
     void saveDKEKFile(
         uid_t user,

@@ -43,7 +43,6 @@ namespace {
 
 const std::string CKM_DATA_PATH = "/opt/data/ckm/";
 const std::string CKM_KEY_PREFIX = "key-";
-const std::string CKM_KEY_BACKUP_PREFIX = "key-backup-";
 const std::string CKM_DB_KEY_PREFIX = "db-key-";
 const std::string CKM_DB_PREFIX = "db-";
 const std::string CKM_REMOVED_APP_PREFIX = "removed-app-";
@@ -67,12 +66,6 @@ std::string FileSystem::getDBPath() const
 std::string FileSystem::getDKEKPath() const {
     std::stringstream ss;
     ss << CKM_DATA_PATH << CKM_KEY_PREFIX << m_uid;
-    return ss.str();
-}
-
-std::string FileSystem::getDKEKBackupPath() const {
-    std::stringstream ss;
-    ss << CKM_DATA_PATH << CKM_KEY_BACKUP_PREFIX << m_uid;
     return ss.str();
 }
 
@@ -114,11 +107,6 @@ RawBuffer FileSystem::getDKEK() const
     return loadFile(getDKEKPath());
 }
 
-RawBuffer FileSystem::getDKEKBackup() const
-{
-    return loadFile(getDKEKBackupPath());
-}
-
 RawBuffer FileSystem::getDBDEK() const
 {
     return loadFile(getDBDEKPath());
@@ -139,33 +127,6 @@ void FileSystem::saveFile(const std::string &path, const RawBuffer &buffer) cons
 
 void FileSystem::saveDKEK(const RawBuffer &buffer) const {
     saveFile(getDKEKPath(), buffer);
-}
-
-void FileSystem::moveFile(const std::string &from, const std::string &to) const {
-    if (0 == ::rename(from.c_str(), to.c_str())) {
-        return;
-    }
-    auto description = GetErrnoString(errno);
-    LogError("Error during rename file DKEKBackup to DKEK: " << description);
-    ThrowMsg(Exception::RenameFailed,
-             "Error during rename file DKEKBackup to DKEK: " << description);
-}
-
-void FileSystem::restoreDKEK() const {
-    moveFile(getDKEKBackupPath(), getDKEKPath());
-}
-
-void FileSystem::createDKEKBackup() const {
-    moveFile(getDKEKPath(), getDKEKBackupPath());
-}
-
-void FileSystem::removeDKEKBackup() const {
-    if (0 == unlink(getDKEKBackupPath().c_str())) {
-        return;
-    }
-    // Backup is accessible only during "change password transaction"
-    auto description = GetErrnoString(errno);
-    LogDebug("Error in unlink file DKEKBackup: " << description);
 }
 
 void FileSystem::saveDBDEK(const RawBuffer &buffer) const {
@@ -274,13 +235,6 @@ int FileSystem::removeUserData() const {
         retCode = -1;
         err = errno;
         LogError("Error in unlink user DKEK: " << getDKEKPath()
-            << "Errno: " << errno << " " << GetErrnoString(err));
-    }
-
-    if (unlink(getDKEKBackupPath().c_str())) {
-        retCode = -1;
-        err = errno;
-        LogDebug("Unlink user backup DKEK failed (file probably does not exists): " << getDKEKBackupPath()
             << "Errno: " << errno << " " << GetErrnoString(err));
     }
 
