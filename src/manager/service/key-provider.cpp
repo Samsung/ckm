@@ -645,7 +645,7 @@ char * KeyProvider::concat_password_user(const char *user, const char *password)
 
     memset(concat_user_pass, '\0', concat_user_pass_len);
     memcpy(concat_user_pass, password, strlen(password));
-    memcpy(&(concat_user_pass[strlen(password)]), user, strlen(user));
+    memcpy(&(concat_user_pass[strlen(password)]), resized_user, strlen(resized_user));
     concat_user_pass[strlen(resized_user) + strlen(password)] = '\0';
 
     delete[] resized_user;
