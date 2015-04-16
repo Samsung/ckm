@@ -52,7 +52,6 @@ namespace {
 const time_t SOCKET_TIMEOUT = 1000;
 
 int getCredentialsFromSocket(int sock, CKM::Credentials &cred) {
-    CKM::Credentials credentials;
     std::vector<char> result(1);
     socklen_t length = 1;
     ucred peerCred;
@@ -79,8 +78,7 @@ int getCredentialsFromSocket(int sock, CKM::Credentials &cred) {
     }
 
     result.push_back('\0');
-    cred.smackLabel = result.data();
-    cred.uid = peerCred.uid;
+    cred = CKM::Credentials(peerCred.uid, result.data());
     return 0;
 }
 

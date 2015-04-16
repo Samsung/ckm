@@ -37,6 +37,7 @@ namespace {
 const char* const MDPP_MODE_ENFORCING = "Enforcing";
 const char* const MDPP_MODE_ENABLED = "Enabled";
 const char* const MDPP_MODE_DISABLED = "Disabled";
+const uid_t       SYSTEM_SVC_MAX_UID = (5000 - 1);
 } // anonymous namespace
 
 namespace CKM {
@@ -83,26 +84,42 @@ bool AccessControl::isCCMode() const
     return m_ccMode;
 }
 
-int AccessControl::canSave(
-        const Label & ownerLabel,
-        const Label & accessorLabel) const
+bool AccessControl::isSystemService(const uid_t uid) const
 {
-    if(ownerLabel != accessorLabel)
+    return uid <= SYSTEM_SVC_MAX_UID;
+}
+
+bool AccessControl::isSystemService(const CKM::Credentials &cred) const
+{
+    return isSystemService(cred.clientUid);
+}
+
+
+int AccessControl::canSave(
+        const CKM::Credentials &accessorCred,
+        const Label & ownerLabel) const
+{
+    if(isSystemService(accessorCred))
+        return CKM_API_SUCCESS;
+    if(ownerLabel != accessorCred.smackLabel)
         return CKM_API_ERROR_ACCESS_DENIED;
 
     return CKM_API_SUCCESS;
 }
 
 int AccessControl::canModify(
-        const Label & ownerLabel,
-        const Label & accessorLabel) const
+        const CKM::Credentials &accessorCred,
+        const Label & ownerLabel) const
 {
-    return canSave(ownerLabel, accessorLabel);
+    return canSave(accessorCred, ownerLabel);
 }
 
 int AccessControl::canRead(
+        const CKM::Credentials &accessorCred,
         const PermissionForLabel & permissionLabel) const
 {
+    if(isSystemService(accessorCred))
+        return CKM_API_SUCCESS;
     if(permissionLabel & Permission::READ)
         return CKM_API_SUCCESS;
 
@@ -110,11 +127,12 @@ int AccessControl::canRead(
 }
 
 int AccessControl::canExport(
+        const CKM::Credentials &accessorCred,
         const DB::Row & row,
         const PermissionForLabel & permissionLabel) const
 {
     int ec;
-    if(CKM_API_SUCCESS != (ec = canRead(permissionLabel)))
+    if(CKM_API_SUCCESS != (ec = canRead(accessorCred, permissionLabel)))
         return ec;
 
     // check if can export
@@ -129,8 +147,11 @@ int AccessControl::canExport(
 }
 
 int AccessControl::canDelete(
+        const CKM::Credentials &accessorCred,
         const PermissionForLabel & permissionLabel) const
 {
+    if(isSystemService(accessorCred))
+        return CKM_API_SUCCESS;
     if(permissionLabel & Permission::REMOVE)
         return CKM_API_SUCCESS;
     if(permissionLabel & Permission::READ)

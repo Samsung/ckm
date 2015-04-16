@@ -45,7 +45,10 @@ namespace CKM {
 typedef int InterfaceID;
 
 struct Credentials {
-    uid_t uid;
+    Credentials() : clientUid(0) {}
+    Credentials(uid_t socketUid, const Label & socketLabel)
+        : clientUid(socketUid), smackLabel(socketLabel) {}
+    uid_t clientUid;
     Label smackLabel;
 };
 

@@ -35,7 +35,8 @@
 #include <openssl/pem.h>
 
 
-const char * const ckmc_label_name_separator = CKM::LABEL_NAME_SEPARATOR;
+const char * const ckmc_label_name_separator    = CKM::LABEL_NAME_SEPARATOR;
+const char * const ckmc_label_shared_owner      = CKM::LABEL_SYSTEM_DB;
 
 
 int _ckmc_load_cert_from_x509(X509 *xCert, ckmc_cert_s **cert);

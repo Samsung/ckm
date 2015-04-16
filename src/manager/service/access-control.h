@@ -27,6 +27,7 @@
 #include <protocols.h>
 #include <db-row.h>
 #include <permission.h>
+#include <generic-socket-manager.h>
 
 namespace CKM {
 
@@ -34,37 +35,46 @@ class AccessControl
 {
 public:
     /**
-     * check if given data can be saved under given label by accessorLabel
-     * @return CKM_API_SUCCESS if access is allowed, otherwise negative error code
+     * return true if client uid is from the system services uid space
      */
-    int canSave(const Label & ownerLabel,
-                const Label & accessorLabel) const;
+    bool isSystemService(const uid_t uid) const;
+    bool isSystemService(const CKM::Credentials &cred) const;
 
     /**
-     * check if given label can be modified by accessorLabel
+     * check if given data can be saved by current accessor
      * @return CKM_API_SUCCESS if access is allowed, otherwise negative error code
      */
-    int canModify(const Label & ownerLabel,
-                  const Label & accessorLabel) const;
+    int canSave(const CKM::Credentials &accessorCred,
+                const Label & ownerLabel) const;
+
+    /**
+     * check if given label can be modified by accessor
+     * @return CKM_API_SUCCESS if access is allowed, otherwise negative error code
+     */
+    int canModify(const CKM::Credentials &accessorCred,
+                  const Label & ownerLabel) const;
 
     /**
      * check if given row can be read (for internal use)
      * @return CKM_API_SUCCESS if access is allowed, otherwise negative error code
      */
-    int canRead(const PermissionForLabel & permissionLabel) const;
+    int canRead(const CKM::Credentials &accessorCred,
+                const PermissionForLabel & permissionLabel) const;
 
     /**
      * check if given row can be exported (data provided to the client)
      * @return CKM_API_SUCCESS if access is allowed, otherwise negative error code
      */
-    int canExport(const DB::Row & row,
-                const PermissionForLabel & permissionLabel) const;
+    int canExport(const CKM::Credentials &accessorCred,
+                  const DB::Row & row,
+                  const PermissionForLabel & permissionLabel) const;
 
     /**
      * check if given accessor can delete ownerLabel's items.
      * @return CKM_API_SUCCESS if access is allowed, otherwise negative error code
      */
-    int canDelete(const PermissionForLabel & permissionLabel) const;
+    int canDelete(const CKM::Credentials &accessorCred,
+                  const PermissionForLabel & permissionLabel) const;
 
     void updateCCMode();
     bool isCCMode() const;

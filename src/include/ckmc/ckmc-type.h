@@ -45,6 +45,15 @@ extern "C" {
 KEY_MANAGER_CAPI extern char const * const ckmc_label_name_separator;
 
 /**
+ * shared database label - user may be given permission to access shared
+ * database items. In such case, the alias should contain shared database
+ * label.
+ * @see ckmc_label_name_separator
+ * @see key-manager_doc.h
+ */
+KEY_MANAGER_CAPI extern char const * const ckmc_label_shared_owner;
+
+/**
  * @brief Enumeration for key types of key manager.
  * @since_tizen 2.3
  */

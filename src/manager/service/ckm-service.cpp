@@ -130,7 +130,8 @@ RawBuffer CKMService::ProcessControl(MessageBuffer &buffer) {
         PermissionMask permissionMask = 0;
 
         buffer.Deserialize(user, name, label, accessorLabel, permissionMask);
-        Credentials cred = { user, label };
+
+        Credentials cred(user, label);
         return m_logic->setPermission(
             cred,
             command,
