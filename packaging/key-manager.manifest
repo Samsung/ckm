@@ -1,17 +1,5 @@
 <manifest>
-	<define>
-		<domain name="key-manager"/>
-		<request>
-			<smack request="system::use_internet" type="w"/>
-		</request>
-		<permit>
-			<smack permit="system::use_internet" type="w"/>
-		</permit>
-	</define>
 	<request>
-		<domain name="key-manager" />
+		<domain name="_" />
 	</request>
-	<assign>
-		<filesystem path="/etc/opt/upgrade/230.key-manager-migrate-dkek.patch.sh" label="_" exec_label="_"/>
-	</assign>
 </manifest>
