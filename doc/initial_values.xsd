@@ -3,8 +3,8 @@
 	<xsd:element name="InitialValues" type="InitialValuesType"></xsd:element>
 
 	<xsd:complexType name="InitialValuesType">
-		<xsd:sequence>
-			<xsd:choice maxOccurs="unbounded" minOccurs="1">
+		<xsd:sequence maxOccurs="unbounded" minOccurs="1">
+			<xsd:choice maxOccurs="1" minOccurs="1">
 				<xsd:element name="Data" type="DataType"
 					maxOccurs="1" minOccurs="1">
 				</xsd:element>

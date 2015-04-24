@@ -24,9 +24,7 @@
     </DER>
   </Cert>
   <Data name="data1">
-    <ASCII>
-      My secret data
-    </ASCII>
+    <ASCII>My secret data</ASCII>
   </Data>
   <Key name="aes1" type="AES">
     <Base64>
