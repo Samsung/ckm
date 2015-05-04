@@ -21,7 +21,7 @@
 #include <ckm/ckm-error.h>
 #include <ckm/ckm-type.h>
 #include <key-impl.h>
-#include <CryptoService.h>
+#include <sw-backend/crypto-service.h>
 #include <assert.h>
 #include <dpl/log/log.h>
 
@@ -29,6 +29,8 @@
 #define OPENSSL_FAIL    0       // DO NOTCHANGE THIS VALUE
 
 namespace CKM {
+namespace Crypto {
+namespace SW {
 
 CryptoService::CryptoService(){
 }
@@ -721,4 +723,7 @@ int CryptoService::digestVerifyMessage(EVP_PKEY *pubKey,
 
     return ret;
 }
-}
+
+} // namespace SW
+} // namespace Crypto
+} // namespace CKM

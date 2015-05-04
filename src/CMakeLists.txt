@@ -29,7 +29,6 @@ SET(KEY_MANAGER_SOURCES
     ${KEY_MANAGER_PATH}/service/key-provider.cpp
     ${KEY_MANAGER_PATH}/service/ocsp.cpp
     ${KEY_MANAGER_PATH}/service/crypto-logic.cpp
-    ${KEY_MANAGER_PATH}/service/CryptoService.cpp
     ${KEY_MANAGER_PATH}/service/file-system.cpp
     ${KEY_MANAGER_PATH}/service/db-crypto.cpp
     ${KEY_MANAGER_PATH}/service/ocsp-service.cpp
@@ -38,6 +37,10 @@ SET(KEY_MANAGER_SOURCES
     ${KEY_MANAGER_PATH}/dpl/db/src/sql_connection.cpp
     ${KEY_MANAGER_PATH}/dpl/db/src/naive_synchronization_object.cpp
     ${KEY_MANAGER_PATH}/sqlcipher/sqlcipher.c
+    ${KEY_MANAGER_PATH}/crypto/sw-backend/key.cpp
+    ${KEY_MANAGER_PATH}/crypto/sw-backend/store.cpp
+    ${KEY_MANAGER_PATH}/crypto/sw-backend/crypto-service.cpp
+    ${KEY_MANAGER_PATH}/crypto/platform/decider.cpp
     )
 
 # -fPIE and -pie flag is added for ASLR
@@ -59,6 +62,7 @@ INCLUDE_DIRECTORIES(
     ${KEY_MANAGER_PATH}/dpl/core/include
     ${KEY_MANAGER_PATH}/dpl/log/include
     ${KEY_MANAGER_PATH}/dpl/db/include
+    ${KEY_MANAGER_PATH}/crypto
     )
 
 ADD_EXECUTABLE(${TARGET_KEY_MANAGER} ${KEY_MANAGER_SOURCES})

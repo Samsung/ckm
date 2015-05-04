@@ -34,8 +34,9 @@
 
 #include <base64.h>
 #include <digest.h>
-#include <crypto.h>
 #include <crypto-logic.h>
+
+#include <sw-backend/crypto.h>
 
 #define AES_CBC_KEY_SIZE 32
 
@@ -80,7 +81,7 @@ RawBuffer CryptoLogic::encryptDataAesCbc(
     const RawBuffer &key,
     const RawBuffer &iv) const
 {
-    Crypto::Cipher::AesCbcEncryption enc(key, iv);
+    Crypto::SW::Cipher::AesCbcEncryption enc(key, iv);
     RawBuffer result = enc.Append(data);
     RawBuffer tmp = enc.Finalize();
     std::copy(tmp.begin(), tmp.end(), std::back_inserter(result));
@@ -92,7 +93,7 @@ RawBuffer CryptoLogic::decryptDataAesCbc(
     const RawBuffer &key,
     const RawBuffer &iv) const
 {
-    Crypto::Cipher::AesCbcDecryption dec(key, iv);
+    Crypto::SW::Cipher::AesCbcDecryption dec(key, iv);
     RawBuffer result = dec.Append(data);
     RawBuffer tmp = dec.Finalize();
     std::copy(tmp.begin(), tmp.end(), std::back_inserter(result));
@@ -105,7 +106,7 @@ std::pair<RawBuffer,RawBuffer> CryptoLogic::encryptDataAesGcm(
     const RawBuffer &iv) const
 {
     RawBuffer tag(AES_GCM_TAG_SIZE);
-    Crypto::Cipher::AesGcmEncryption enc(key, iv);
+    Crypto::SW::Cipher::AesGcmEncryption enc(key, iv);
     RawBuffer result = enc.Append(data);
     RawBuffer tmp = enc.Finalize();
     std::copy(tmp.begin(), tmp.end(), std::back_inserter(result));
@@ -122,7 +123,7 @@ RawBuffer CryptoLogic::decryptDataAesGcm(
     const RawBuffer &iv,
     const RawBuffer &tag) const
 {
-    Crypto::Cipher::AesGcmDecryption dec(key, iv);
+    Crypto::SW::Cipher::AesGcmDecryption dec(key, iv);
     if (tag.size() < AES_GCM_TAG_SIZE) {
         LogError("Error in decryptDataAesGcm. Tag is too short.");
         ThrowMsg(Exception::DecryptDBRowError, "Error in decryptDataAesGcm. Tag is too short");

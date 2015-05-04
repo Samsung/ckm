@@ -25,11 +25,12 @@
 #include <ckm/ckm-type.h>
 #include <key-provider.h>
 #include <file-system.h>
-#include <CryptoService.h>
 #include <ckm-logic.h>
 #include <key-impl.h>
 #include <certificate-config.h>
 #include <certificate-store.h>
+
+#include <sw-backend/crypto-service.h>
 
 namespace {
 const char * const CERT_SYSTEM_DIR = "/etc/ssl/certs";
@@ -976,17 +977,17 @@ int CKMLogic::createKeyPairHelper(
     {
         case KeyType::KEY_RSA_PUBLIC:
         case KeyType::KEY_RSA_PRIVATE:
-            retCode = CryptoService::createKeyPairRSA(additional_param, prv, pub);
+            retCode = Crypto::SW::CryptoService::createKeyPairRSA(additional_param, prv, pub);
             break;
 
         case KeyType::KEY_DSA_PUBLIC:
         case KeyType::KEY_DSA_PRIVATE:
-            retCode = CryptoService::createKeyPairDSA(additional_param, prv, pub);
+            retCode = Crypto::SW::CryptoService::createKeyPairDSA(additional_param, prv, pub);
             break;
 
         case KeyType::KEY_ECDSA_PUBLIC:
         case KeyType::KEY_ECDSA_PRIVATE:
-            retCode = CryptoService::createKeyPairECDSA(static_cast<ElipticCurve>(additional_param), prv, pub);
+            retCode = Crypto::SW::CryptoService::createKeyPairECDSA(static_cast<ElipticCurve>(additional_param), prv, pub);
             break;
 
         default:
@@ -1268,7 +1269,7 @@ RawBuffer CKMLogic::createSignature(
         const RSAPaddingAlgorithm padding)
 {
     DB::Row row;
-    CryptoService cs;
+    Crypto::SW::CryptoService cs;
     RawBuffer signature;
 
     int retCode = CKM_API_SUCCESS;
@@ -1322,7 +1323,7 @@ RawBuffer CKMLogic::verifySignature(
 
     try {
         do {
-            CryptoService cs;
+            Crypto::SW::CryptoService cs;
             DB::Row row;
             KeyImpl key;
 
@@ -1349,10 +1350,10 @@ RawBuffer CKMLogic::verifySignature(
 
             retCode = cs.verifySignature(key, message, signature, hash, padding);
         } while(0);
-    } catch (const CryptoService::Exception::Crypto_internal &e) {
+    } catch (const Crypto::SW::CryptoService::Exception::Crypto_internal &e) {
         LogError("KeyProvider failed with message: " << e.GetMessage());
         retCode = CKM_API_ERROR_SERVER_ERROR;
-    } catch (const CryptoService::Exception::opensslError &e) {
+    } catch (const Crypto::SW::CryptoService::Exception::opensslError &e) {
         LogError("KeyProvider failed with message: " << e.GetMessage());
         retCode = CKM_API_ERROR_SERVER_ERROR;
     } catch (const KeyProvider::Exception::Base &e) {

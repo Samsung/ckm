@@ -29,6 +29,8 @@
 #define NOT_DEFINED -1
 
 namespace CKM {
+namespace Crypto {
+namespace SW {
 
  // typedef std::vector<unsigned char> RawData; this must be defined in common header.
  // This is internal api so all functions should throw exception on errors.
@@ -99,6 +101,8 @@ private:
             const EVP_MD *md_algo,
             const int rsa_padding);
 };
-}
 
+} // namespace SW
+} // namespace Crypto
+} // namespace CKM
 

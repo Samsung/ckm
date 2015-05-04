@@ -20,28 +20,21 @@
  */
 #pragma once
 
-#include <dpl/log/log.h>
+#include <vector>
 
 #include <openssl/evp.h>
 
-#include <vector>
-#include <dpl/exception.h>
+#include <dpl/log/log.h>
 #include <dpl/raw-buffer.h>
+
+#include <generic-backend/exception.h>
 
 // TODO move it to static const int
 #define AES_GCM_TAG_SIZE 16
 
 namespace CKM {
-
 namespace Crypto {
-
-class Exception
-{
-public:
-    DECLARE_EXCEPTION_TYPE(CKM::Exception, Base)
-    DECLARE_EXCEPTION_TYPE(Base, InternalError)
-};
-
+namespace SW {
 namespace Cipher {
 
 template<class T>
@@ -140,6 +133,7 @@ DEFINE_CIPHER(AesGcmDecryption, RawBuffer, EVP_aes_256_gcm(), false);
 #undef DEFINE_CIPHER
 
 } // namespace Cipher
+} // namespace SW
 } // namespace Crypto
 } // namespace CKM
 
