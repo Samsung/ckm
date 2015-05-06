@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<StructureTest version="0">
+<Add>1</Add>
+<Add powerFactor="4">2</Add>
+<Add>3</Add>
+<Add>5</Add>
+<Add dummyAttr="123">7</Add>
+<Add>11</Add>
+<Add>13</Add>
+<Multiply>
+    -10
+</Multiply>
+<Add>17</Add>
+<Add>19</Add>
+<Div>
+    
+    
+    -2</Div>
+<ExpectedSum>
+                        262
+</ExpectedSum>
+</StructureTest>

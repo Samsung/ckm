@@ -6,6 +6,7 @@ PKG_CHECK_MODULES(KEY_MANAGER_DEP
     libsystemd-daemon
     capi-base-common
     vconf
+    libxml-2.0
     REQUIRED
     )
 FIND_PACKAGE(Threads REQUIRED)
@@ -33,6 +34,7 @@ SET(KEY_MANAGER_SOURCES
     ${KEY_MANAGER_PATH}/service/db-crypto.cpp
     ${KEY_MANAGER_PATH}/service/ocsp-service.cpp
     ${KEY_MANAGER_PATH}/service/ocsp-logic.cpp
+    ${KEY_MANAGER_PATH}/initial-values/parser.cpp
     ${KEY_MANAGER_PATH}/dpl/core/src/assert.cpp
     ${KEY_MANAGER_PATH}/dpl/db/src/sql_connection.cpp
     ${KEY_MANAGER_PATH}/dpl/db/src/naive_synchronization_object.cpp
@@ -59,6 +61,7 @@ INCLUDE_DIRECTORIES(
     ${KEY_MANAGER_PATH}/main
     ${KEY_MANAGER_PATH}/common
     ${KEY_MANAGER_PATH}/service
+    ${KEY_MANAGER_PATH}/initial-values
     ${KEY_MANAGER_PATH}/sqlcipher
     ${KEY_MANAGER_PATH}/dpl/core/include
     ${KEY_MANAGER_PATH}/dpl/log/include
