@@ -21,8 +21,12 @@
  */
 #pragma once
 
+#include <stdint.h>
+
 #include <string>
 #include <vector>
+#include <map>
+#include <memory>
 
 #include <ckm/ckm-raw-buffer.h>
 #include <ckm/ckm-password.h>
@@ -104,6 +108,74 @@ enum Permission: int {
 };
 
 const char * ErrorToString(int error);
+
+// algorithm parameters
+enum class ParamName : int {
+    // encryption & decryption
+    ED_IV = 1,
+    ED_CTR,
+    ED_CTR_LEN,
+    ED_AAD,
+    ED_TAG_LEN,
+    ED_LABEL,
+
+    // key generation
+    GEN_KEY_LEN = 101,
+    GEN_EC,             // elliptic curve (ElipticCurve)
+
+    // sign & verify
+    SV_HASH_ALGO = 201, // hash algorithm (HashAlgorithm)
+    SV_RSA_PADDING,     // RSA padding (RSAPaddingAlgorithm)
+};
+
+// algorithm types
+enum class AlgoType : int {
+    AES_CTR = 1,
+    AES_CBC,
+    AES_GCM,
+    AES_CFB,
+    RSA_OAEP,
+    RSA,
+    DSA,
+    ECDSA,
+};
+
+class KEY_MANAGER_API BaseParam {
+public:
+    virtual int getBuffer(RawBuffer&) const;
+    virtual int getInt(uint64_t&) const;
+    virtual ~BaseParam() {}
+
+protected:
+    BaseParam() {}
+};
+typedef std::unique_ptr<BaseParam> BaseParamPtr;
+
+class KEY_MANAGER_API BufferParam : public BaseParam {
+public:
+    int getBuffer(RawBuffer& buffer) const;
+    static BaseParamPtr create(const RawBuffer& buffer);
+private:
+    explicit BufferParam(const RawBuffer& value) : m_buffer(value) {}
+
+    RawBuffer m_buffer;
+};
+
+class KEY_MANAGER_API IntParam : public BaseParam {
+public:
+    static BaseParamPtr create(uint64_t value);
+    int getInt(uint64_t& value) const;
+private:
+    explicit IntParam(uint64_t value) : m_int(value) {}
+
+    uint64_t m_int;
+};
+
+// cryptographic algorithm description
+struct CryptoAlgorithm {
+    AlgoType m_type;
+    std::map<ParamName, BaseParamPtr> m_params;
+};
 
 } // namespace CKM
 

@@ -13,6 +13,7 @@ SET(KEY_MANAGER_COMMON_VERSION ${KEY_MANAGER_COMMON_VERSION_MAJOR}.0.1)
 SET(COMMON_PATH ${PROJECT_SOURCE_DIR}/src/manager)
 
 SET(COMMON_SOURCES
+    ${COMMON_PATH}/common/algo-param.cpp
     ${COMMON_PATH}/common/base64.cpp
     ${COMMON_PATH}/common/crypto-init.cpp
     ${COMMON_PATH}/common/protocols.cpp
