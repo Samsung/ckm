@@ -28,6 +28,7 @@
 
 #include <generic-backend/exception.h>
 #include <sw-backend/key.h>
+#include <sw-backend/internals.h>
 
 #define EVP_SUCCESS 1	// DO NOTCHANGE THIS VALUE
 #define EVP_FAIL    0	// DO NOTCHANGE THIS VALUE
@@ -42,20 +43,11 @@ RawBuffer AKey::sign(
     const CryptoAlgorithm &alg,
     const RawBuffer &message)
 {
-    (void) alg;
-    (void) message;
-
-    auto key = getEvpShPtr();
-    return RawBuffer();
+    return Internals::sign(getEvpShPtr().get(), alg, message);
 }
 
 bool AKey::verify(const CryptoAlgorithm &alg, const RawBuffer &message, const RawBuffer &sign) {
-    (void) alg;
-    (void) message;
-    (void) sign;
-
-    auto key = getEvpShPtr();
-    return false;
+    return Internals::verify(getEvpShPtr().get(), alg, message, sign);
 }
 
 EvpShPtr AKey::getEvpShPtr() {
