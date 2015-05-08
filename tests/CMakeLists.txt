@@ -33,6 +33,7 @@ SET(TEST_MERGED_SOURCES
     ${KEY_MANAGER_TEST_MERGED_SRC}/test_safe-buffer.cpp
     ${KEY_MANAGER_TEST_MERGED_SRC}/test_descriptor-set.cpp
     ${KEY_MANAGER_TEST_MERGED_SRC}/test_comm-manager.cpp
+    ${KEY_MANAGER_TEST_MERGED_SRC}/test_serialization.cpp
     ${KEY_MANAGER_PATH}/service/db-crypto.cpp
     ${KEY_MANAGER_PATH}/service/key-provider.cpp
     ${KEY_MANAGER_PATH}/client-async/descriptor-set.cpp

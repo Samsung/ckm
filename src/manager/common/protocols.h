@@ -269,5 +269,16 @@ struct COMMON_API PKCS12Serializable : public PKCS12Impl, ISerializable {
     void Serialize(IStream &) const;
 };
 
+struct COMMON_API CryptoAlgorithmSerializable : public CryptoAlgorithm, ISerializable {
+    DECLARE_EXCEPTION_TYPE(Exception, Base);
+    DECLARE_EXCEPTION_TYPE(Exception, UnsupportedParam);
+
+    CryptoAlgorithmSerializable();
+    explicit CryptoAlgorithmSerializable(CryptoAlgorithm &&);
+    explicit CryptoAlgorithmSerializable(IStream &);
+
+    void Serialize(IStream &) const;
+};
+
 } // namespace CKM
 

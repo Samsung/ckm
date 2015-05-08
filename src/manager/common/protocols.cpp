@@ -25,6 +25,7 @@
 #include <protocols.h>
 
 #include <dpl/serialization.h>
+#include <ckm/ckm-type.h>
 
 namespace CKM {
 
@@ -106,6 +107,69 @@ void PKCS12Serializable::Serialize(IStream &stream) const
     for(auto it : getCaCertificateShPtrVector())
         Serialization::Serialize(stream, it->getDER());
 };
+
+
+CryptoAlgorithmSerializable::CryptoAlgorithmSerializable() {}
+CryptoAlgorithmSerializable::CryptoAlgorithmSerializable(CryptoAlgorithm &&algo) :
+        CryptoAlgorithm(std::move(algo))
+{
+}
+
+CryptoAlgorithmSerializable::CryptoAlgorithmSerializable(IStream &stream)
+{
+    size_t plen = 0;
+    int type;
+    Deserializer<int,size_t>::Deserialize(stream, type, plen);
+    m_type = static_cast<AlgoType>(type);
+    while(plen) {
+        ParamName name;
+        uint64_t integer;
+        RawBuffer buffer;
+        int tmpName;
+        Deserializer<int>::Deserialize(stream, tmpName);
+        name = static_cast<ParamName>(tmpName);
+        switch (name) {
+        case ParamName::ED_IV:
+        case ParamName::ED_CTR:
+        case ParamName::ED_AAD:
+        case ParamName::ED_LABEL:
+            Deserializer<RawBuffer>::Deserialize(stream, buffer);
+            m_params.emplace(name, BufferParam::create(buffer));
+            break;
+
+        case ParamName::ED_CTR_LEN:
+        case ParamName::ED_TAG_LEN:
+        case ParamName::GEN_KEY_LEN:
+        case ParamName::GEN_EC:
+        case ParamName::SV_HASH_ALGO:
+        case ParamName::SV_RSA_PADDING:
+            Deserializer<uint64_t>::Deserialize(stream, integer);
+            m_params.emplace(name, IntParam::create(integer));
+            break;
+
+        default:
+            ThrowMsg(UnsupportedParam, "Unsupported param name");
+        }
+        plen--;
+    }
+}
+
+void CryptoAlgorithmSerializable::Serialize(IStream &stream) const
+{
+    Serializer<int,size_t>::Serialize(stream, static_cast<int>(m_type), m_params.size());
+    for(const auto& it : m_params) {
+        Serializer<int>::Serialize(stream, static_cast<int>(it.first));
+        uint64_t integer;
+        RawBuffer buffer;
+        if (CKM_API_SUCCESS == it.second->getInt(integer))
+            Serializer<uint64_t>::Serialize(stream, integer);
+        else if (CKM_API_SUCCESS == it.second->getBuffer(buffer))
+            Serializer<RawBuffer>::Serialize(stream, buffer);
+        else
+            ThrowMsg(UnsupportedParam, "Unsupported param type");
+    }
+
+}
 
 } // namespace CKM
 
