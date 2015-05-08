@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<StructureTest version="0">
+<StructureTest version="1">
 <Add>1</Add>
 <Add powerFactor="4">2</Add>
 <Add>3</Add>

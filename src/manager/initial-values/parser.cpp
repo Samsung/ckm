@@ -28,35 +28,16 @@
 #include <libxml/valid.h>
 #include <libxml/xmlschemas.h>
 #include <parser.h>
+#include <xml-utils.h>
 #include <dpl/log/log.h>
 
-using namespace XML;
+namespace CKM {
+namespace XML {
 
-namespace
-{
-const char * const WHITESPACE = " \n\r\t";
-std::string trim_left(const std::string& s)
-{
-    size_t startpos = s.find_first_not_of(WHITESPACE);
-    return (startpos == std::string::npos) ? "" : s.substr(startpos);
-}
-
-std::string trim_right(const std::string& s)
-{
-    size_t endpos = s.find_last_not_of(WHITESPACE);
-    return (endpos == std::string::npos) ? "" : s.substr(0, endpos+1);
-}
-std::string trim(const std::string& s)
-{
-    return trim_right(trim_left(s));
-}
-}
-
-Parser::Parser(const char *XML_filename)
+Parser::Parser(const std::string &XML_filename)
     : m_errorCb(0)
 {
-    if(XML_filename)
-        m_XMLfile = XML_filename;
+    m_XMLfile = XML_filename;
     memset(&m_saxHandler, 0, sizeof(m_saxHandler));
     m_saxHandler.startElement = &Parser::StartElement;
     m_saxHandler.endElement = &Parser::EndElement;
@@ -69,16 +50,16 @@ Parser::~Parser()
     xmlCleanupParser();
 }
 
-int Parser::Validate(const char *XSD_schema)
+int Parser::Validate(const std::string &XSD_schema)
 {
-    if(!XSD_schema) {
+    if(XSD_schema.empty()) {
         LogError("no XSD file path given");
         return ERROR_INVALID_ARGUMENT;
     }
 
     int retCode;
     std::unique_ptr<xmlSchemaParserCtxt, void(*)(xmlSchemaParserCtxtPtr)>
-            parserCtxt(xmlSchemaNewParserCtxt(XSD_schema),
+            parserCtxt(xmlSchemaNewParserCtxt(XSD_schema.c_str()),
                        [](xmlSchemaParserCtxtPtr ctx){ xmlSchemaFreeParserCtxt(ctx); });
     if(!parserCtxt) {
         LogError("XSD file path is invalid");
@@ -113,7 +94,7 @@ int Parser::Validate(const char *XSD_schema)
         retCode = ERROR_XML_VALIDATION_FAILED;
     }
     else
-        retCode = SUCCESS;
+        retCode = PARSE_SUCCESS;
 
     return retCode;
 }
@@ -134,7 +115,7 @@ int Parser::Parse()
         LogError("Critical error detected while parsing.");
         return ERROR_INTERNAL;
     }
-    return SUCCESS;
+    return PARSE_SUCCESS;
 }
 
 int Parser::RegisterErrorCb(const ErrorCb newCb)
@@ -144,7 +125,7 @@ int Parser::RegisterErrorCb(const ErrorCb newCb)
         return ERROR_CALLBACK_PRESENT;
     }
     m_errorCb = newCb;
-    return SUCCESS;
+    return PARSE_SUCCESS;
 }
 
 int Parser::RegisterElementCb(const char * elementName,
@@ -162,7 +143,7 @@ int Parser::RegisterElementCb(const char * elementName,
     }
 
     m_elementListenerMap[key] = {startCb, endCb};
-    return SUCCESS;
+    return PARSE_SUCCESS;
 }
 
 void Parser::StartElement(const xmlChar *name,
@@ -212,7 +193,7 @@ void Parser::EndElement(const xmlChar *name)
 
     ElementHandlerPtr &currentHandler = m_elementHandlerStack.top();
     if(currentHandler)
-        currentHandler.get()->End();
+        currentHandler->End();
 
     const ElementListener & current = m_elementListenerMap[key];
     if(current.endCb)
@@ -231,7 +212,7 @@ void Parser::Characters(const xmlChar *ch, size_t chLen)
     {
         ElementHandlerPtr &currentHandler = m_elementHandlerStack.top();
         if(currentHandler)
-            currentHandler.get()->Characters(chars);
+            currentHandler->Characters(chars);
     }
 }
 
@@ -336,3 +317,5 @@ void Parser::Warning(void *userData,
 //
 // -------------------------- end of static wrappers --------------------------
 //
+}
+}

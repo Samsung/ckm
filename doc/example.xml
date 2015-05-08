@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<InitialValues version="0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="initial_values.xsd ">
-  <Key name="key1" type="RSA_PRV" password="123">
+<InitialValues version="1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="initial_values.xsd ">
+  <Key name="key1" type="RSA_PUB" password="123">
     <PEM>
       -----BEGIN PUBLIC KEY-----
       MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA2b1bXDa+S8/MGWnMkru4
@@ -12,15 +12,53 @@
       zQIDAQAB
       -----END PUBLIC KEY-----
     </PEM>
+    <Permission accessor="web_app1"/>
+    <Permission accessor="web_app2"/>
+  </Key>
+  <Key name="key2" type="RSA_PRV" exportable="true">
+    <DER>
+      MIIEpAIBAAKCAQEAyJjUHY2pJJUBRBCrlerrgcS7aBiWlY3594dufu3m4qy48b9hsw1R/AHSNUPU
+      11vzQ+kUcXkEZOby5SHRHBAXIJ1dLbTPtRwsVwgf1nmc/ZGGV/XOrOaKi7nSKgYHaglPgc9dLPuu
+      osRHs/EdIWh3o59MdY6rA6y+QTJrQm3axRKdT7unX3kFS3SsId02GWBkLtrw+yQVtvhCYlY/n2/T
+      uZBJpZN7vT2it0rJS4fQkfjcjAi8f/isZLrfUgDqxIDSWVbVyjlQOphIO+K3ABjev3ZbJMWl+w10
+      pV0nbmF8lviEYft9mhERS9kUdQwzy3KIgyjyt+ewQG6hjyMJ/5y5KwIDAQABAoIBAQC3S06nIoZn
+      su/RLhpbhqljjkxgNfeC+JRsJghFW0UZ4xGrdGDlp0o+p7tYiH63uoFykEvp09a8DHvt+xSEO/+m
+      AaTe2tTgfLnXXMkaxU06Nfs37JfJTW9TdZwgYhnsPk20I7LUI7XTbN7IAY3ItRh9HlZTJOYHGZVP
+      Ja70qES6xUOTaVOvKIbB2W9XeiMX6cNoHTLM9rl1I8bA13Er0M0acKRtF4Rfw4z43nJKzORCYKm3
+      mA3zqtQja7z+zdQBib34RHZiKgvuJDqg89p7FTLT9z+lbXONH+K/3MldaYG1O8mtgt4zv6onH199
+      QBOrww158Z6keH3tBz+xsrClfIpBAoGBAPkar4ugZYLRgyuythby3uHrlMBNajmJf2gFwngvfUgO
+      JS45fLN2AIDrA5VYUiT8cFjVFfzEiu1xa33Juy8rfHlQuY8yOIVDnbdGJvOBYsrvlyYWY+9jEydd
+      cLctQKquACLb3jNYbrC9m8cBBcSZelRAVSF4O1k8HdlcdV7IIVyjAoGBAM4mY5PNLr3I/pyyNizw
+      7cUmHdblU+sScwFdC/KDwfG5WOI3WorTLutD4EiEA3yQIDStuVJLiray4Pu+bqhUPAJumpRrpQJ4
+      PCPxr/M98FhXvMmDWzGu/xK/6hLP5g1Ngp6qvVygnYNBkyqMzfM0rUAxQLS3qmocWk2xBKDEnjHZ
+      AoGBAJkWgVO52yiuQYKVbbpkv/zvnpcf/GwnyBjRkVXzOXcS2l6yDaTsnBqeU7FweespCJJPQhf5
+      YbfSwFCprVOr0e9sYN1T69BaYY7EmiOEHIbC/4z0ra3soVTL4/1u3hMGpCbIIKJFcqFDpXyDcFwG
+      RluIvci37yFEBMQUQj1hmL8pAoGAJBHtfG/7TLO9cRdxiT2CrOs1b2Ni4o+w1b09GOra5XujxLkg
+      u4el/v46YRXQMlxZdj4rXe3f0IXN/d5dKFDMyzQlEfEfxyXYiAWC3tGomxyG6M92BmRzNwmjYDVG
+      MG+ueiqvxWRJCy1PHbPTWUmPQtsbUkOMqtJZLpzZjXO5pkkCgYA9uyQ8os9yfjALc1VDZ4HtGxaC
+      Uq8zy0jJEJxchRn1JUNHop/skaRA65x613lWDygfNCuakozjP5x+GA5WEIuxIE8V7JPac1zpEZW4
+      5nwmxoR1l3HUDT8kRYkLzMIo55PpLG9arNLwH9mSRh/taG8020aGg3nFSNCJNDs12x/9RA==
+    </DER>
   </Key>
   <Cert exportable="true" name="cert1">
     <DER>
-      MIIEgDCCA2igAwIBAgIIcjtBYJGQtOAwDQYJKoZIhvcNAQEFBQAwSTELMAkGA1UE
-      BhMCVVMxEzARBgNVBAoTCkdvb2dsZSBJbmMxJTAjBgNVBAMTHEdvb2dsZSBJbnRl
-      cm5ldCBBdXRob3JpdHkgRzIwHhcNMTQwNTIyMTEyOTQyWhcNMTQwODIwMDAwMDAw
-      WjBtMQswCQYDVQQGEwJVUzETMBEGA1UECAwKQ2FsaWZvcm5pYTEWMBQGA1UEBwwN
-      TW91bnRhaW4gVmlldzETMBEGA1UECgwKR29vZ2xlIEluYzEcMBoGA1UEAwwTYWNj
-      rHva8A==
+      MIIDnzCCAoegAwIBAgIJAMH/ADkC5YSTMA0GCSqGSIb3DQEBBQUAMGYxCzAJBgNVBAYTAkFVMRMw
+      EQYDVQQIDApTb21lLVN0YXRlMQ0wCwYDVQQKDARBQ01FMRAwDgYDVQQLDAdUZXN0aW5nMSEwHwYD
+      VQQDDBhUZXN0IHJvb3QgY2EgY2VydGlmaWNhdGUwHhcNMTQxMjMwMTcyMTUyWhcNMjQxMjI3MTcy
+      MTUyWjBmMQswCQYDVQQGEwJBVTETMBEGA1UECAwKU29tZS1TdGF0ZTENMAsGA1UECgwEQUNNRTEQ
+      MA4GA1UECwwHVGVzdGluZzEhMB8GA1UEAwwYVGVzdCByb290IGNhIGNlcnRpZmljYXRlMIIBIjAN
+      BgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0EJRdUtd2th0vTVF7QxvDKzyFCF3w9vC9IDE/Yr1
+      2w+a9jd0s7/eG96qTHIYffS3B7x2MB+d4n+SR3W0qmYh7xk8qfEgH3daeDoV59IZ9r543KM+g8jm
+      6KffYGX1bIJVVY5OhBRbO9nY6byYpd5kbCIUB6dCf7/WrQl1aIdLGFIegAzPGFPXDcU6F192686x
+      54bxt/itMX4agHJ9ZC/rrTBIZghVsjJo5/AH5WZpasv8sfrGiiohAxtieoYoJkv5MOYP4/2lPlOY
+      +Cgw1Yoz+HHv31AllgFsBquBb/kJVmCCNsAOcnvQzTZUsW/TXz9G2nwRdqI1nSy2JvVjZGsqGQID
+      AQABo1AwTjAdBgNVHQ4EFgQUt6pkzFt1PZlfYRL/HGnufF4frdwwHwYDVR0jBBgwFoAUt6pkzFt1
+      PZlfYRL/HGnufF4frdwwDAYDVR0TBAUwAwEB/zANBgkqhkiG9w0BAQUFAAOCAQEAld7Qwq0cdzDQ
+      51w1RVLwTR8Oy25PB3rzwEHcSGJmdqlMi3xOdaz80S1R1BBXldvGBG5Tn0vT7xSuhmSgI2/HnBpy
+      9ocHVOmhtNB4473NieEpfTYrnGXrFxu46Wus9m/ZnugcQ2G6C54A/NFtvgLmaC8uH8M7gKdS6uYU
+      wJFQEofkjmd4UpOYSqmcRXhSJzd5FYFWkJhKJYp3nlENSOD8CUFFVGekm05nFN2gRVc/qaqQkEX7
+      7+XYvhodLRsVqMn7nf7taidDKLO2T4bhujztnTYOhhaXKgPy7AtZ28N2wvX96VyAPB/vrchGmyBK
+      kOg11TpPdNDkhb1J4ZCh2gupDg==
     </DER>
   </Cert>
   <Data name="data1">

@@ -35,6 +35,14 @@ SET(KEY_MANAGER_SOURCES
     ${KEY_MANAGER_PATH}/service/ocsp-service.cpp
     ${KEY_MANAGER_PATH}/service/ocsp-logic.cpp
     ${KEY_MANAGER_PATH}/initial-values/parser.cpp
+    ${KEY_MANAGER_PATH}/initial-values/BufferHandler.cpp
+    ${KEY_MANAGER_PATH}/initial-values/CertHandler.cpp
+    ${KEY_MANAGER_PATH}/initial-values/DataHandler.cpp
+    ${KEY_MANAGER_PATH}/initial-values/KeyHandler.cpp
+    ${KEY_MANAGER_PATH}/initial-values/PermissionHandler.cpp
+    ${KEY_MANAGER_PATH}/initial-values/InitialValueHandler.cpp
+    ${KEY_MANAGER_PATH}/initial-values/InitialValuesFile.cpp
+    ${KEY_MANAGER_PATH}/initial-values/xml-utils.cpp
     ${KEY_MANAGER_PATH}/dpl/core/src/assert.cpp
     ${KEY_MANAGER_PATH}/dpl/db/src/sql_connection.cpp
     ${KEY_MANAGER_PATH}/dpl/db/src/naive_synchronization_object.cpp

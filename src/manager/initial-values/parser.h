@@ -32,28 +32,29 @@
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 
-namespace XML
-{
+namespace CKM {
+namespace XML {
 
 class Parser
 {
 public:
     enum ErrorCode {
-        SUCCESS                        =   0,
+        PARSE_SUCCESS                  =   0,
         ERROR_UNKNOWN                  =   -1000,
         ERROR_XML_VALIDATION_FAILED    =   -1001,
         ERROR_XSD_PARSE_FAILED         =   -1002,
         ERROR_XML_PARSE_FAILED         =   -1003,
         ERROR_INVALID_ARGUMENT         =   -1004,
         ERROR_CALLBACK_PRESENT         =   -1005,
-        ERROR_INTERNAL                 =   -1006,
-        ERROR_NO_MEMORY                =   -1007
+        ERROR_INVALID_VERSION          =   -1006,
+        ERROR_INTERNAL                 =   -1007,
+        ERROR_NO_MEMORY                =   -1008
     };
 
-    explicit Parser(const char *XML_filename);
+    explicit Parser(const std::string &XML_filename);
     virtual ~Parser();
 
-    int Validate(const char *XSD_schema);
+    int Validate(const std::string &XSD_schema);
     int Parse();
 
     enum ErrorType {
@@ -127,5 +128,6 @@ private:
     void CallbackHelper(std::function<void (void)> func);
 };
 
+}
 }
 #endif /* XML_PARSER_H_ */

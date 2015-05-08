@@ -45,6 +45,7 @@ SET(TEST_MERGED_SOURCES
     ${KEY_MANAGER_PATH}/service/db-crypto.cpp
     ${KEY_MANAGER_PATH}/service/key-provider.cpp
     ${KEY_MANAGER_PATH}/initial-values/parser.cpp
+    ${KEY_MANAGER_PATH}/initial-values/xml-utils.cpp
     ${KEY_MANAGER_PATH}/client-async/descriptor-set.cpp
     ${KEY_MANAGER_PATH}/dpl/core/src/assert.cpp
     ${KEY_MANAGER_PATH}/dpl/core/src/colors.cpp

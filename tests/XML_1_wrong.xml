@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<InitialValues version="0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="initial_values.xsd ">
+<InitialValues version="1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="initial_values.xsd ">
   <Key name="key1" type="RSA_PRV" password="123">
     <PEM>
       -----BEGIN PUBLIC KEY-----
