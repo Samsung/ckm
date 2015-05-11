@@ -20,7 +20,6 @@
  */
 
 #include <ocsp-receiver.h>
-#include <protocols.h>
 #include <dpl/log/log.h>
 
 namespace CKM {

@@ -24,7 +24,6 @@
 #include <string>
 #include <ckm/ckm-type.h>
 #include <ckm/ckm-raw-buffer.h>
-#include <protocols.h>
 #include <db-row.h>
 #include <permission.h>
 #include <generic-socket-manager.h>

@@ -389,8 +389,7 @@ DB::Row CKMLogic::createEncryptedRow(
     const RawBuffer &data,
     const Policy &policy) const
 {
-    DB::Row row = { name, label, policy.extractable, dataType, DBCMAlgType::NONE,
-                  0, RawBuffer(), static_cast<int>(data.size()), data, RawBuffer() };
+    DB::Row row(name, label, static_cast<int>(policy.extractable), dataType, data, static_cast<int>(data.size()));
 
     // do not encrypt data with password during cc_mode on
     if(m_accessControl.isCCMode()) {

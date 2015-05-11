@@ -22,7 +22,6 @@
 
 #include <generic-backend/gkey.h>
 #include <generic-backend/gstore.h>
-#include <generic-backend/id.h>
 
 namespace CKM {
 namespace Crypto {
@@ -30,9 +29,10 @@ namespace SW {
 
 class Store : public GStore {
 public:
-    virtual Id getBackendId() const;
+    explicit Store(CryptoBackend backendId) : GStore(backendId) {}
+
     virtual GKeyShPtr getKey(const Token &token);
-    virtual Token import(KeyType keyType, const RawBuffer &buffer);
+    virtual Token import(DataType dataType, const RawBuffer &buffer);
     virtual void destroy(const Token &){}
 };
 

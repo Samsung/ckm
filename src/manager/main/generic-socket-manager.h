@@ -32,9 +32,9 @@
 #include <sys/types.h>
 
 #include <dpl/exception.h>
-#include <protocols.h>
 #include <generic-event.h>
 #include <dpl/raw-buffer.h>
+#include <ckm/ckm-type.h>
 
 extern "C" {
 struct msghdr;

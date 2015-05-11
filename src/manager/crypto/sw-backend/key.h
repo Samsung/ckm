@@ -24,6 +24,7 @@
 #include <openssl/evp.h>
 
 #include <generic-backend/gkey.h>
+#include <data-type.h>
 
 namespace CKM {
 namespace Crypto {
@@ -34,20 +35,20 @@ typedef std::shared_ptr<EVP_PKEY> EvpShPtr;
 
 class SKey : public GKey {
 public:
-    SKey(RawBuffer buffer, KeyType keyType)
+    SKey(RawBuffer buffer, DataType keyType)
       : m_key(std::move(buffer))
       , m_type(keyType)
     {}
 protected:
     RawBuffer m_key;
-    KeyType m_type;
+    DataType m_type;
 };
 
 class AKey : public GKey {
 public:
-    AKey(RawBuffer buffer, KeyType keyType)
+    AKey(RawBuffer buffer, DataType dataType = DataType::KEY_AES)
       : m_key(std::move(buffer))
-      , m_type(keyType)
+      , m_type(dataType)
     {}
     virtual RawBuffer sign(const CryptoAlgorithm &alg, const RawBuffer &message);
     virtual bool verify(const CryptoAlgorithm &alg, const RawBuffer &message, const RawBuffer &sign);
@@ -57,7 +58,7 @@ protected:
 
     EvpShPtr m_evp;
     RawBuffer m_key;
-    KeyType m_type;
+    DataType m_type;
 };
 
 } // namespace SW

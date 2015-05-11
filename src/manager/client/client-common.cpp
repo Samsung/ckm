@@ -38,7 +38,6 @@
 
 #include <ckm/ckm-error.h>
 #include <ckmc/ckmc-type.h>
-#include <protocols.h>
 #include <client-common.h>
 
 namespace {

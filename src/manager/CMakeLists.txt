@@ -16,6 +16,7 @@ SET(COMMON_SOURCES
     ${COMMON_PATH}/common/algo-param.cpp
     ${COMMON_PATH}/common/base64.cpp
     ${COMMON_PATH}/common/crypto-init.cpp
+    ${COMMON_PATH}/common/data-type.cpp
     ${COMMON_PATH}/common/protocols.cpp
     ${COMMON_PATH}/common/message-buffer.cpp
     ${COMMON_PATH}/common/certificate-impl.cpp

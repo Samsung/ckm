@@ -3,7 +3,7 @@
 #include <memory>
 
 #include <generic-backend/gstore.h>
-#include <generic-backend/token.h>
+#include <token.h>
 
 namespace CKM {
 namespace Crypto {

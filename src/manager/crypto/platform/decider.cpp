@@ -6,7 +6,7 @@ namespace CKM {
 namespace Crypto {
 
 Decider::Decider()
-  : m_store(new SW::Store)
+  : m_store(new SW::Store(CryptoBackend::OpenSSL))
 {}
 
 GStoreShPtr Decider::getStore(const Token &) {

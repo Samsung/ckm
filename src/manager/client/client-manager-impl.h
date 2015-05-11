@@ -20,7 +20,7 @@
  */
 #pragma once
 
-#include <protocols.h>
+#include <data-type.h>
 #include <client-common.h>
 #include <ckm/ckm-type.h>
 #include <ckm/ckm-key.h>

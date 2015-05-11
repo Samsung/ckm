@@ -14,20 +14,19 @@
  *  limitations under the License
  */
 /*
- * @file       id.h
+ * @file       crypto-backend.h
  * @author     Bartłomiej Grzelewski (b.grzelewski@samsung.com)
  * @version    1.0
  */
 #pragma once
 
 namespace CKM {
-namespace Crypto {
 
-enum class Id {
-    OpenSSL = 0,
-    TrustZone = 1
+enum class CryptoBackend {
+    None = 0,
+    OpenSSL = 1,
+    TrustZone = 2
 };
 
-} // namespace Crypto
 } // namespace CKM
 

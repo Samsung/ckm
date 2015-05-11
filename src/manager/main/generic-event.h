@@ -16,7 +16,7 @@
  *  limitations under the License
  */
 /*
- * @file        protocols.h
+ * @file        generic-event.h
  * @author      Bartlomiej Grzelewski (b.grzelewski@samsung.com)
  * @author      Zofia Abramowska (z.abramowska@samsung.com)
  * @version     1.0
