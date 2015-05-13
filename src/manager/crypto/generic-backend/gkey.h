@@ -49,7 +49,7 @@ public:
         Throw(Exception::OperationNotSupported);
     }
 
-    virtual bool verify(const CryptoAlgorithm &, const RawBuffer &, const RawBuffer &) {
+    virtual int verify(const CryptoAlgorithm &, const RawBuffer &, const RawBuffer &) {
         Throw(Exception::OperationNotSupported);
     }
 

@@ -32,7 +32,7 @@ namespace SW {
 
 GKeyShPtr Store::getKey(const Token &token) {
     if (token.backendId != m_backendId) {
-        LogDebug("Decider choose wrong backend!");
+        LogError("Decider choose wrong backend!");
         ThrowMsg(Exception::WrongBackend, "Decider choose wrong backend!");
     }
 
@@ -42,6 +42,10 @@ GKeyShPtr Store::getKey(const Token &token) {
 
     if (token.dataType == DataType(DataType::KEY_AES)) {
          return std::make_shared<SKey>(token.data, token.dataType);
+    }
+
+    if (token.dataType.isCertificate()) {
+        return std::make_shared<Cert>(token.data, token.dataType);
     }
 
     LogDebug(

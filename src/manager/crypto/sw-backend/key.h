@@ -46,12 +46,12 @@ protected:
 
 class AKey : public GKey {
 public:
-    AKey(RawBuffer buffer, DataType dataType = DataType::KEY_AES)
+    AKey(RawBuffer buffer, DataType dataType)
       : m_key(std::move(buffer))
       , m_type(dataType)
     {}
     virtual RawBuffer sign(const CryptoAlgorithm &alg, const RawBuffer &message);
-    virtual bool verify(const CryptoAlgorithm &alg, const RawBuffer &message, const RawBuffer &sign);
+    virtual int verify(const CryptoAlgorithm &alg, const RawBuffer &message, const RawBuffer &sign);
     virtual ~AKey(){}
 protected:
     virtual EvpShPtr getEvpShPtr();
@@ -59,6 +59,16 @@ protected:
     EvpShPtr m_evp;
     RawBuffer m_key;
     DataType m_type;
+};
+
+class Cert : public AKey {
+public:
+    Cert(RawBuffer buffer, DataType dataType)
+      : AKey(std::move(buffer), dataType)
+    {}
+    virtual ~Cert(){}
+protected:
+    virtual EvpShPtr getEvpShPtr();
 };
 
 } // namespace SW

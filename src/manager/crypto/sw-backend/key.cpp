@@ -46,7 +46,7 @@ RawBuffer AKey::sign(
     return Internals::sign(getEvpShPtr().get(), alg, message);
 }
 
-bool AKey::verify(const CryptoAlgorithm &alg, const RawBuffer &message, const RawBuffer &sign) {
+int AKey::verify(const CryptoAlgorithm &alg, const RawBuffer &message, const RawBuffer &sign) {
     return Internals::verify(getEvpShPtr().get(), alg, message, sign);
 }
 
@@ -79,6 +79,25 @@ EvpShPtr AKey::getEvpShPtr() {
     }
 
     m_evp.reset(pkey, EVP_PKEY_free);
+    return m_evp;
+}
+
+EvpShPtr Cert::getEvpShPtr() {
+    if (m_evp)
+        return m_evp;
+
+    int size = static_cast<int>(m_key.size());
+    const unsigned char *ptr = reinterpret_cast<const unsigned char *>(m_key.data());
+
+    X509 *x509 = d2i_X509(NULL, &ptr, size);
+
+    if (!x509) {
+        LogError("Failed to parse certificate.");
+        ThrowMsg(Exception::InternalError, "Failed to parse certificate.");
+    }
+
+    m_evp.reset(X509_get_pubkey(x509), EVP_PKEY_free);
+    X509_free(x509);
     return m_evp;
 }
 

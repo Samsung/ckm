@@ -64,42 +64,8 @@ public:
                         KeyImpl &createdPrivateKey,  // returned value
                         KeyImpl &createdPublicKey);  // returned value
 
-    int createSignature(const KeyImpl &privateKey,
-                        const RawBuffer &message,
-                        const HashAlgorithm hashAlgo,
-                        const RSAPaddingAlgorithm padAlgo,
-                        RawBuffer &signature);
-
-    int verifySignature(const KeyImpl &publicKey,
-                        const RawBuffer &message,
-                        const RawBuffer &signature,
-                        const HashAlgorithm hashAlgo,
-                        const RSAPaddingAlgorithm padAlgo);
-
 private:
 
-    const EVP_MD *getMdAlgo(const HashAlgorithm hashAlgo);
-    int getRsaPadding(const RSAPaddingAlgorithm padAlgo);
-
-    int signMessage(EVP_PKEY *privKey,
-            const RawBuffer &message,
-            const int rsa_padding,
-            RawBuffer &signature);
-    int digestSignMessage(EVP_PKEY *privKey,
-            const RawBuffer &message,
-            const EVP_MD *md_algo,
-            const int rsa_padding,
-            RawBuffer &signature);
-
-    int verifyMessage(EVP_PKEY *pubKey,
-            const RawBuffer &message,
-            const RawBuffer &signature,
-            const int rsa_padding);
-    int digestVerifyMessage(EVP_PKEY *pubKey,
-            const RawBuffer &message,
-            const RawBuffer &signature,
-            const EVP_MD *md_algo,
-            const int rsa_padding);
 };
 
 } // namespace SW

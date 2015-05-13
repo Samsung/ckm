@@ -22,6 +22,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <cassert>
 
 #include <string>
 #include <vector>
@@ -188,7 +189,32 @@ protected:
     std::map<ParamName, BaseParamPtr> m_params;
 };
 
+template <typename T>
+bool CryptoAlgorithm::getParam(ParamName name, T& value) const {
+    auto param = m_params.find(name);
+    if (param == m_params.end())
+        return false;
 
+    assert(param->second);
+
+    uint64_t valueTmp;
+    if (param->second->getInt(valueTmp)) {
+        value = static_cast<T>(valueTmp);
+        return true;
+    }
+    return false;
+}
+
+template <>
+bool CryptoAlgorithm::getParam(ParamName name, RawBuffer& value) const;
+
+template <typename T>
+bool CryptoAlgorithm::addParam(ParamName name, const T& value) {
+    return m_params.emplace(name, IntParam::create(static_cast<uint64_t>(value))).second;
+}
+
+template <>
+bool CryptoAlgorithm::addParam(ParamName name, const RawBuffer& value);
 
 } // namespace CKM
 

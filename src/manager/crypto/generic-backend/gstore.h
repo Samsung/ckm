@@ -46,8 +46,6 @@ protected:
     CryptoBackend m_backendId;
 };
 
-typedef std::shared_ptr<GStore> GStoreShPtr;
-
 } // namespace Crypto
 } // namespace CKM
 

@@ -48,18 +48,7 @@ CryptoAlgorithm::BaseParamPtr CryptoAlgorithm::IntParam::create(uint64_t value)
 }
 
 template <>
-bool CryptoAlgorithm::getParam<uint64_t>(ParamName name, uint64_t& value) const
-{
-    auto param = m_params.find(name);
-    if (param == m_params.end())
-        return false;
-
-    assert(param->second);
-    return param->second->getInt(value);
-}
-
-template <>
-bool CryptoAlgorithm::getParam<RawBuffer>(ParamName name, RawBuffer& value) const
+bool CryptoAlgorithm::getParam(ParamName name, RawBuffer& value) const
 {
     auto param = m_params.find(name);
     if (param == m_params.end())
@@ -70,19 +59,7 @@ bool CryptoAlgorithm::getParam<RawBuffer>(ParamName name, RawBuffer& value) cons
 }
 
 template <>
-bool CryptoAlgorithm::addParam<uint64_t>(ParamName name, const uint64_t& value)
-{
-    return m_params.emplace(name, IntParam::create(value)).second;
-}
-
-template <>
-bool CryptoAlgorithm::addParam<int>(ParamName name, const int& value)
-{
-    return m_params.emplace(name, IntParam::create(value)).second;
-}
-
-template <>
-bool CryptoAlgorithm::addParam<RawBuffer>(ParamName name, const RawBuffer& value)
+bool CryptoAlgorithm::addParam(ParamName name, const RawBuffer& value)
 {
     return m_params.emplace(name, BufferParam::create(value)).second;
 }
