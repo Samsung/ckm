@@ -76,6 +76,11 @@ void CryptoLogic::pushKey(const Label &smackLabel,
     m_keyMap[smackLabel] = applicationKey;
 }
 
+void CryptoLogic::removeKey(const Label &smackLabel)
+{
+    m_keyMap.erase(smackLabel);
+}
+
 RawBuffer CryptoLogic::encryptDataAesCbc(
     const RawBuffer &data,
     const RawBuffer &key,

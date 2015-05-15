@@ -113,6 +113,7 @@ int CKMLogic::unlockDatabase(uid_t user, const Password & password)
             // remove data of removed apps during locked state
             AppLabelVector removedApps = fs.clearRemovedsApps();
             for(auto& appSmackLabel : removedApps) {
+                handle.crypto.removeKey(appSmackLabel);
                 handle.database.deleteKey(appSmackLabel);
             }
         }
@@ -314,6 +315,7 @@ RawBuffer CKMLogic::removeApplicationData(const Label &smackLabel) {
                     fs.addRemovedApp(smackLabel);
                 } else {
                     auto &handle = m_userDataMap[userId];
+                    handle.crypto.removeKey(smackLabel);
                     handle.database.deleteKey(smackLabel);
                 }
             }

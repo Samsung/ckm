@@ -54,6 +54,7 @@ public:
     bool haveKey(const Label &smackLabel);
     void pushKey(const Label &smackLabel,
                  const RawBuffer &applicationKey);
+    void removeKey(const Label &smackLabel);
 
 private:
 	static const int ENCR_BASE64 =   1 << 0;
