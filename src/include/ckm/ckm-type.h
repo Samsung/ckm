@@ -111,8 +111,11 @@ const char * ErrorToString(int error);
 
 // algorithm parameters
 enum class ParamName : int {
+    ALGO_TYPE = 1,      // If there's no such param, the service will try to deduce the algorithm
+                        // type from the key.
+
     // encryption & decryption
-    ED_IV = 1,
+    ED_IV = 101,
     ED_CTR,
     ED_CTR_LEN,
     ED_AAD,
@@ -120,15 +123,15 @@ enum class ParamName : int {
     ED_LABEL,
 
     // key generation
-    GEN_KEY_LEN = 101,
+    GEN_KEY_LEN = 201,
     GEN_EC,             // elliptic curve (ElipticCurve)
 
     // sign & verify
-    SV_HASH_ALGO = 201, // hash algorithm (HashAlgorithm)
+    SV_HASH_ALGO = 301, // hash algorithm (HashAlgorithm)
     SV_RSA_PADDING,     // RSA padding (RSAPaddingAlgorithm)
 };
 
-// algorithm types
+// algorithm types (ALGO_TYPE param)
 enum class AlgoType : int {
     AES_CTR = 1,
     AES_CBC,
@@ -140,42 +143,52 @@ enum class AlgoType : int {
     ECDSA,
 };
 
-class KEY_MANAGER_API BaseParam {
+// cryptographic algorithm description
+class KEY_MANAGER_API CryptoAlgorithm {
 public:
-    virtual int getBuffer(RawBuffer&) const;
-    virtual int getInt(uint64_t&) const;
-    virtual ~BaseParam() {}
+    template <typename T>
+    bool getParam(ParamName name, T& value) const;
+
+    // returns false if param 'name' already exists
+    template <typename T>
+    bool addParam(ParamName name, const T& value);
 
 protected:
-    BaseParam() {}
-};
-typedef std::unique_ptr<BaseParam> BaseParamPtr;
+    class BaseParam {
+    public:
+        virtual bool getBuffer(RawBuffer&) const { return false; }
+        virtual bool getInt(uint64_t&) const { return false; }
+        virtual ~BaseParam() {}
 
-class KEY_MANAGER_API BufferParam : public BaseParam {
-public:
-    int getBuffer(RawBuffer& buffer) const;
-    static BaseParamPtr create(const RawBuffer& buffer);
-private:
-    explicit BufferParam(const RawBuffer& value) : m_buffer(value) {}
+    protected:
+        BaseParam() {}
+    };
+    typedef std::unique_ptr<BaseParam> BaseParamPtr;
 
-    RawBuffer m_buffer;
-};
+    class BufferParam : public BaseParam {
+    public:
+        bool getBuffer(RawBuffer& buffer) const;
+        static BaseParamPtr create(const RawBuffer& buffer);
+    private:
+        explicit BufferParam(const RawBuffer& value) : m_buffer(value) {}
 
-class KEY_MANAGER_API IntParam : public BaseParam {
-public:
-    static BaseParamPtr create(uint64_t value);
-    int getInt(uint64_t& value) const;
-private:
-    explicit IntParam(uint64_t value) : m_int(value) {}
+        RawBuffer m_buffer;
+    };
 
-    uint64_t m_int;
-};
+    class IntParam : public BaseParam {
+    public:
+        static BaseParamPtr create(uint64_t value);
+        bool getInt(uint64_t& value) const;
+    private:
+        explicit IntParam(uint64_t value) : m_int(value) {}
 
-// cryptographic algorithm description
-struct CryptoAlgorithm {
-    AlgoType m_type;
+        uint64_t m_int;
+    };
+
     std::map<ParamName, BaseParamPtr> m_params;
 };
+
+
 
 } // namespace CKM
 

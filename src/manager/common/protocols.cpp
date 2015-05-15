@@ -119,9 +119,7 @@ CryptoAlgorithmSerializable::CryptoAlgorithmSerializable(CryptoAlgorithm &&algo)
 CryptoAlgorithmSerializable::CryptoAlgorithmSerializable(IStream &stream)
 {
     size_t plen = 0;
-    int type;
-    Deserializer<int,size_t>::Deserialize(stream, type, plen);
-    m_type = static_cast<AlgoType>(type);
+    Deserializer<size_t>::Deserialize(stream, plen);
     while(plen) {
         ParamName name;
         uint64_t integer;
@@ -135,9 +133,10 @@ CryptoAlgorithmSerializable::CryptoAlgorithmSerializable(IStream &stream)
         case ParamName::ED_AAD:
         case ParamName::ED_LABEL:
             Deserializer<RawBuffer>::Deserialize(stream, buffer);
-            m_params.emplace(name, BufferParam::create(buffer));
+            addParam(name, buffer);
             break;
 
+        case ParamName::ALGO_TYPE:
         case ParamName::ED_CTR_LEN:
         case ParamName::ED_TAG_LEN:
         case ParamName::GEN_KEY_LEN:
@@ -145,7 +144,7 @@ CryptoAlgorithmSerializable::CryptoAlgorithmSerializable(IStream &stream)
         case ParamName::SV_HASH_ALGO:
         case ParamName::SV_RSA_PADDING:
             Deserializer<uint64_t>::Deserialize(stream, integer);
-            m_params.emplace(name, IntParam::create(integer));
+            addParam(name, integer);
             break;
 
         default:
@@ -157,14 +156,14 @@ CryptoAlgorithmSerializable::CryptoAlgorithmSerializable(IStream &stream)
 
 void CryptoAlgorithmSerializable::Serialize(IStream &stream) const
 {
-    Serializer<int,size_t>::Serialize(stream, static_cast<int>(m_type), m_params.size());
+    Serializer<size_t>::Serialize(stream, m_params.size());
     for(const auto& it : m_params) {
         Serializer<int>::Serialize(stream, static_cast<int>(it.first));
         uint64_t integer;
         RawBuffer buffer;
-        if (CKM_API_SUCCESS == it.second->getInt(integer))
+        if (it.second->getInt(integer))
             Serializer<uint64_t>::Serialize(stream, integer);
-        else if (CKM_API_SUCCESS == it.second->getBuffer(buffer))
+        else if (it.second->getBuffer(buffer))
             Serializer<RawBuffer>::Serialize(stream, buffer);
         else
             ThrowMsg(UnsupportedParam, "Unsupported param type");

@@ -36,20 +36,60 @@ std::string AAD_STR("sdfdsgsghrtkghwiuho3irhfoewituhre");
 RawBuffer IV(IV_STR.begin(), IV_STR.end());
 RawBuffer AAD(AAD_STR.begin(), AAD_STR.end());
 
-struct BrokenParam : public BaseParam {
-    static BaseParamPtr create() { return BaseParamPtr(new BrokenParam()); }
-};
+void checkIntParam(const CryptoAlgorithm& algo, ParamName name, uint64_t expected)
+{
+    uint64_t integer;
+    BOOST_REQUIRE_MESSAGE(algo.getParam(name, integer),
+                          "Failed to get parameter " << static_cast<int>(name));
+    BOOST_REQUIRE_MESSAGE(
+            integer == expected,
+            "Parameter " << static_cast<int>(name) <<
+            " expected value: " << expected <<
+            " got: " << integer);
+}
+
+void checkIntParamNegative(const CryptoAlgorithm& algo, ParamName name)
+{
+    uint64_t integer;
+    BOOST_REQUIRE_MESSAGE(!algo.getParam(name, integer),
+                          "Getting int parameter " << static_cast<int>(name) << " should fail");
+}
+
+void checkBufferParam(const CryptoAlgorithm& algo, ParamName name, RawBuffer expected)
+{
+    RawBuffer buffer;
+    BOOST_REQUIRE_MESSAGE(algo.getParam(name, buffer),
+                          "Failed to get buffer parameter " << static_cast<int>(name));
+    BOOST_REQUIRE_MESSAGE(buffer == expected,
+                          "Parameter " << static_cast<int>(name) << " different than expected");
+}
+
+void checkBufferParamNegative(const CryptoAlgorithm& algo, ParamName name)
+{
+    RawBuffer buffer;
+    BOOST_REQUIRE_MESSAGE(!algo.getParam(name, buffer),
+                          "Getting buffer parameter " << static_cast<int>(name) << " should fail");
+}
+
+template <typename T>
+void addParam(CryptoAlgorithm& algo, ParamName name, const T& value, bool success)
+{
+    BOOST_REQUIRE_MESSAGE(success == algo.addParam(name, value),
+                          "Adding param " << static_cast<int>(name) <<
+                          " should " << (success ? "succeed":"fail"));
+}
 
 } // namespace anonymous
 
 BOOST_AUTO_TEST_SUITE(SERIALIZATION_TEST)
 
-BOOST_AUTO_TEST_CASE(Serialization_CryptoAlgorithm_positive) {
+BOOST_AUTO_TEST_CASE(Serialization_CryptoAlgorithm) {
     CryptoAlgorithm ca;
-    ca.m_type = AlgoType::AES_GCM;
-    ca.m_params.emplace(ParamName::ED_IV, BufferParam::create(IV));
-    ca.m_params.emplace(ParamName::ED_TAG_LEN, IntParam::create(128));
-    ca.m_params.emplace(ParamName::ED_AAD, BufferParam::create(AAD));
+    addParam(ca,ParamName::ALGO_TYPE, static_cast<uint64_t>(AlgoType::AES_GCM), true);
+    addParam(ca,ParamName::ED_IV, IV, true);
+    addParam(ca,ParamName::ED_IV, AAD, false); // try to overwrite
+    addParam(ca,ParamName::ED_TAG_LEN, 128, true);
+    addParam(ca,ParamName::ED_AAD, AAD, true);
 
     CryptoAlgorithmSerializable input(std::move(ca));
     CryptoAlgorithmSerializable output;
@@ -59,53 +99,31 @@ BOOST_AUTO_TEST_CASE(Serialization_CryptoAlgorithm_positive) {
     resp.Push(buffer);
     resp.Deserialize(output);
 
-    BOOST_REQUIRE_MESSAGE(input.m_type == output.m_type,
-                          "Algorithm types don't match: " << static_cast<int>(input.m_type) << "!="
-                          << static_cast<int>(output.m_type));
+    checkIntParam(output, ParamName::ALGO_TYPE, static_cast<uint64_t>(AlgoType::AES_GCM));
+    checkBufferParam(output, ParamName::ED_IV, IV);
+    checkIntParam(output, ParamName::ED_TAG_LEN, 128);
+    checkBufferParam(output, ParamName::ED_AAD, AAD);
 
-    // compare params
-    auto iit = input.m_params.cbegin();
-    auto oit = output.m_params.cbegin();
-    for(;iit != input.m_params.cend() && oit != output.m_params.cend(); iit++, oit++ )
-    {
-        BOOST_REQUIRE_MESSAGE(iit->first == oit->first,
-                              "Param names do not match :" << static_cast<int>(iit->first) << "!="
-                              << static_cast<int>(oit->first));
-        uint64_t integer[2];
-        RawBuffer buffer[2];
-        if(CKM_API_SUCCESS == iit->second->getInt(integer[0]))
-        {
-            BOOST_REQUIRE_MESSAGE(CKM_API_SUCCESS == oit->second->getInt(integer[1]),
-                                  "Param types do not match");
-            BOOST_REQUIRE_MESSAGE(integer[0] == integer[1], "Integer params do not match");
-        }
-        else if(CKM_API_SUCCESS == iit->second->getBuffer(buffer[0]))
-        {
-            BOOST_REQUIRE_MESSAGE(CKM_API_SUCCESS == oit->second->getBuffer(buffer[1]),
-                                  "Param types do not match");
-            BOOST_REQUIRE_MESSAGE(buffer[0] == buffer[1], "Integer params do not match");
-        }
-        else
-            BOOST_FAIL("Wrong param type");
-    }
-}
+    // wrong type
+    checkBufferParamNegative(output, ParamName::ALGO_TYPE);
+    checkIntParamNegative(output, ParamName::ED_IV);
 
-BOOST_AUTO_TEST_CASE(Serialization_CryptoAlgorithm_broken_param) {
-    CryptoAlgorithm ca;
-    ca.m_type = AlgoType::AES_GCM;
-    // unuspported param type
-    ca.m_params.emplace(ParamName::ED_IV, BrokenParam::create());
+    // non-existing
+    checkBufferParamNegative(output, ParamName::ED_CTR);
+    checkIntParamNegative(output, ParamName::ED_CTR_LEN);
+    checkBufferParamNegative(output, ParamName::ED_LABEL);
+    checkIntParamNegative(output, ParamName::GEN_KEY_LEN);
+    checkIntParamNegative(output, ParamName::GEN_EC);
+    checkIntParamNegative(output, ParamName::SV_HASH_ALGO);
+    checkIntParamNegative(output, ParamName::SV_RSA_PADDING);
 
-    CryptoAlgorithmSerializable input(std::move(ca));
-    BOOST_REQUIRE_THROW(auto buffer = MessageBuffer::Serialize(input),
-                        CryptoAlgorithmSerializable::UnsupportedParam);
+    checkIntParamNegative(output, static_cast<ParamName>(666));
 }
 
 BOOST_AUTO_TEST_CASE(Serialization_CryptoAlgorithm_wrong_name) {
     CryptoAlgorithm ca;
-    ca.m_type = AlgoType::AES_GCM;
     // unuspported param name
-    ca.m_params.emplace(static_cast<ParamName>(666), IntParam::create(666));
+    addParam(ca, static_cast<ParamName>(666), 666, true);
 
     CryptoAlgorithmSerializable input(std::move(ca));
     CryptoAlgorithmSerializable output;

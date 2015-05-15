@@ -20,41 +20,71 @@
  */
 
 #include <ckm/ckm-type.h>
-#include <ckm/ckm-error.h>
+#include <cassert>
 
 namespace CKM
 {
 
-int BaseParam::getBuffer(RawBuffer&) const
-{
-    return CKM_API_ERROR_INVALID_FORMAT;
-}
-
-int BaseParam::getInt(uint64_t&) const
-{
-    return CKM_API_ERROR_INVALID_FORMAT;
-}
-
-int BufferParam::getBuffer(RawBuffer& buffer) const
+bool CryptoAlgorithm::BufferParam::getBuffer(RawBuffer& buffer) const
 {
     buffer = m_buffer;
-    return CKM_API_SUCCESS;
+    return true;
 }
 
-BaseParamPtr BufferParam::create(const RawBuffer& buffer)
+CryptoAlgorithm::BaseParamPtr CryptoAlgorithm::BufferParam::create(const RawBuffer& buffer)
 {
-    return BaseParamPtr(new BufferParam(buffer));
+    return BaseParamPtr(new CryptoAlgorithm::BufferParam(buffer));
 }
 
-int IntParam::getInt(uint64_t& value) const
+bool CryptoAlgorithm::IntParam::getInt(uint64_t& value) const
 {
     value = m_int;
-    return CKM_API_SUCCESS;
+    return true;
 }
 
-BaseParamPtr IntParam::create(uint64_t value)
+CryptoAlgorithm::BaseParamPtr CryptoAlgorithm::IntParam::create(uint64_t value)
 {
-    return BaseParamPtr(new IntParam(value));
+    return BaseParamPtr(new CryptoAlgorithm::IntParam(value));
+}
+
+template <>
+bool CryptoAlgorithm::getParam<uint64_t>(ParamName name, uint64_t& value) const
+{
+    auto param = m_params.find(name);
+    if (param == m_params.end())
+        return false;
+
+    assert(param->second);
+    return param->second->getInt(value);
+}
+
+template <>
+bool CryptoAlgorithm::getParam<RawBuffer>(ParamName name, RawBuffer& value) const
+{
+    auto param = m_params.find(name);
+    if (param == m_params.end())
+        return false;
+
+    assert(param->second);
+    return param->second->getBuffer(value);
+}
+
+template <>
+bool CryptoAlgorithm::addParam<uint64_t>(ParamName name, const uint64_t& value)
+{
+    return m_params.emplace(name, IntParam::create(value)).second;
+}
+
+template <>
+bool CryptoAlgorithm::addParam<int>(ParamName name, const int& value)
+{
+    return m_params.emplace(name, IntParam::create(value)).second;
+}
+
+template <>
+bool CryptoAlgorithm::addParam<RawBuffer>(ParamName name, const RawBuffer& value)
+{
+    return m_params.emplace(name, BufferParam::create(value)).second;
 }
 
 } // namespace CKM
