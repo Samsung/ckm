@@ -26,6 +26,7 @@
 #include <boost/test/results_reporter.hpp>
 #include <colour_log_formatter.h>
 #include <dpl/log/log.h>
+#include <log-setup.h>
 
 struct TestConfig {
     TestConfig() {
@@ -59,6 +60,7 @@ struct KeyProviderLib {
 
 struct LogSetup {
     LogSetup() {
+        CKM::SetupClientLogSystem();
         CKM::Singleton<CKM::Log::LogSystem>::Instance().SetTag("CKM_INTERNAL_TESTS");
     }
     ~LogSetup() {}

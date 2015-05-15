@@ -131,6 +131,7 @@ DB::Row DBFixture::create_default_row(const Name &name,
     row.iv = createDefaultPass();
     row.encryptionScheme = 0;
     row.dataSize = 0;
+    row.backendId = CryptoBackend::OpenSSL;
 
     return row;
 }
@@ -156,6 +157,10 @@ void DBFixture::compare_row(const DB::Row &lhs, const DB::Row &rhs)
     BOOST_CHECK_MESSAGE(lhs.data == rhs.data,
             "data didn't match! Got: " << rhs.data.size()
                 << " , expected : " << lhs.data.size());
+
+    BOOST_CHECK_MESSAGE(lhs.backendId == rhs.backendId,
+            "backendId didn't match! Got: " << static_cast<int>(rhs.backendId)
+                << " , expected : " << static_cast<int>(lhs.backendId));
 }
 
 void DBFixture::check_DB_integrity(const DB::Row &rowPattern)

@@ -39,6 +39,7 @@ CREATE TABLE IF NOT EXISTS OBJECTS(exportable INTEGER NOT NULL,
                                    data BLOB NOT NULL,
                                    tag BLOB NOT NULL,
                                    idx INTEGER NOT NULL,
+                                   backendId INTEGER NOT NULL DEFAULT 1,
                                    FOREIGN KEY(idx) REFERENCES NAMES(idx) ON DELETE CASCADE,
                                    PRIMARY KEY(idx, dataType));
 

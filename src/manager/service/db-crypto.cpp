@@ -44,7 +44,7 @@ namespace {
          * increment and update DB_VERSION_CURRENT,
          * then provide migration mechanism!
          */
-        DB_VERSION_CURRENT             = 3
+        DB_VERSION_CURRENT             = 4
     };
 
     const char *SCRIPT_CREATE_SCHEMA                = "create_schema";
@@ -87,10 +87,11 @@ namespace {
             "INSERT INTO OBJECTS("
             "   exportable, dataType,"
             "   algorithmType, encryptionScheme,"
-            "   iv, dataSize, data, tag, idx) "
+            "   iv, dataSize, data, tag, idx, backendId) "
             "   VALUES(?001, ?002, ?003, ?004, ?005, "
             "          ?006, ?007, ?008,"
-            "          (SELECT idx FROM NAMES WHERE name=?101 and label=?102)"
+            "          (SELECT idx FROM NAMES WHERE name=?101 and label=?102),"
+            "          ?009"
             "         );";
 
     const char *DB_CMD_OBJECT_SELECT_BY_NAME_AND_LABEL =
@@ -422,6 +423,7 @@ namespace DB {
         row.dataSize = selectCommand->GetColumnInteger(7);
         row.data = selectCommand->GetColumnBlob(8);
         row.tag = selectCommand->GetColumnBlob(9);
+        row.backendId = static_cast<CryptoBackend>(selectCommand->GetColumnInteger(11));
         return row;
     }
 
@@ -816,6 +818,7 @@ namespace DB {
         insertObjectCommand->BindInteger(6, row.dataSize);
         insertObjectCommand->BindBlob   (7, row.data);
         insertObjectCommand->BindBlob   (8, row.tag);
+        insertObjectCommand->BindInteger(9, static_cast<int>(row.backendId));
 
         // name table reference
         insertObjectCommand->BindString (101, row.name.c_str());

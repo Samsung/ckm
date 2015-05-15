@@ -132,6 +132,7 @@ cp data/scripts/*.sql %{buildroot}/usr/share/ckm/scripts
 mkdir -p %{buildroot}/usr/share/ckm-db-test
 cp tests/testme_ver1.db %{buildroot}/usr/share/ckm-db-test/
 cp tests/testme_ver2.db %{buildroot}/usr/share/ckm-db-test/
+cp tests/testme_ver3.db %{buildroot}/usr/share/ckm-db-test/
 mkdir -p %{buildroot}/etc/gumd/userdel.d/
 cp data/gumd/10_key-manager.post %{buildroot}/etc/gumd/userdel.d/
 
@@ -263,6 +264,7 @@ fi
 %{_bindir}/ckm-tests-internal
 %{_datadir}/ckm-db-test/testme_ver1.db
 %{_datadir}/ckm-db-test/testme_ver2.db
+%{_datadir}/ckm-db-test/testme_ver3.db
 %{_bindir}/ckm_so_loader
 
 %files -n key-manager-pam-plugin

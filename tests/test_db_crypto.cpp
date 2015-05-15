@@ -19,6 +19,7 @@ const unsigned int c_test_retries = 1000;
 const unsigned int c_num_names = 500;
 const unsigned int c_num_names_add_test = 5000;
 const unsigned int c_names_per_label = 15;
+
 } // namespace anonymous
 
 BOOST_FIXTURE_TEST_SUITE(DBCRYPTO_TEST, DBFixture)
@@ -63,6 +64,22 @@ BOOST_AUTO_TEST_CASE(DBtestTransaction) {
     BOOST_REQUIRE_NO_THROW(row_optional = m_db.getRow(m_default_name, m_default_label,
                                                       DataType::BINARY_DATA));
     BOOST_CHECK_MESSAGE(!row_optional, "Row still present after rollback");
+}
+
+BOOST_AUTO_TEST_CASE(DBtestBackend) {
+    DB::Row rowPattern = create_default_row();
+    rowPattern.data = RawBuffer(32, 1);
+    rowPattern.dataSize = rowPattern.data.size();
+    rowPattern.tag = RawBuffer(AES_GCM_TAG_SIZE, 1);
+
+    rowPattern.backendId =  CryptoBackend::OpenSSL;
+    check_DB_integrity(rowPattern);
+
+    rowPattern.backendId =  CryptoBackend::TrustZone;
+    check_DB_integrity(rowPattern);
+
+    rowPattern.backendId =  CryptoBackend::None;
+    check_DB_integrity(rowPattern);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
@@ -247,6 +264,7 @@ void verifyDBisValid(DBFixture & fixture)
         ret_list.clear();
     }
 }
+
 struct DBVer1Migration : public DBFixture
 {
     DBVer1Migration() : DBFixture("/usr/share/ckm-db-test/testme_ver1.db")
@@ -256,6 +274,12 @@ struct DBVer1Migration : public DBFixture
 struct DBVer2Migration : public DBFixture
 {
     DBVer2Migration() : DBFixture("/usr/share/ckm-db-test/testme_ver2.db")
+    {}
+};
+
+struct DBVer3Migration : public DBFixture
+{
+    DBVer3Migration() : DBFixture("/usr/share/ckm-db-test/testme_ver3.db")
     {}
 };
 }
@@ -270,6 +294,12 @@ BOOST_AUTO_TEST_CASE(DBMigrationDBVer2)
 {
     DBVer2Migration DBver2;
     verifyDBisValid(DBver2);
+}
+
+BOOST_AUTO_TEST_CASE(DBMigrationDBVer3)
+{
+    DBVer3Migration DBver3;
+    verifyDBisValid(DBver3);
 }
 
 BOOST_AUTO_TEST_CASE(DBMigrationDBCurrent)
