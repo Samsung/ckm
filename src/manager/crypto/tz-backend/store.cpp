@@ -14,38 +14,35 @@
  *  limitations under the License
  */
 /*
- * @file       decider.h
+ * @file       store.cpp
  * @author     Bartłomiej Grzelewski (b.grzelewski@samsung.com)
  * @version    1.0
  */
-#pragma once
+#include <dpl/log/log.h>
 
-#include <memory>
-
-#include <ckm/ckm-type.h>
-
-#include <crypto-backend.h>
-
-#include <generic-backend/gstore.h>
-#include <token.h>
+#include <generic-backend/exception.h>
+#include <tz-backend/key.h>
+#include <tz-backend/store.h>
 
 namespace CKM {
 namespace Crypto {
+namespace TZ {
 
-class Decider {
-public:
-    Decider();
-    GStore& getStore(const Token &token);
-    CryptoBackend chooseCryptoBackend(DataType data, const Policy &policy) const;
+Store::Store(CryptoBackend backendId)
+  : GStore(backendId)
+{}
 
-    virtual ~Decider(){}
-protected:
-    GStore& getStore(CryptoBackend id);
+GKeyShPtr Store::getKey(const Token &) {
+    LogError("Trust zone backend is not implemented!");
+    ThrowMsg(Exception::Base, "Trust zone backend is not implemented!");
+}
 
-    std::unique_ptr<GStore> m_swStore;
-    std::unique_ptr<GStore> m_tzStore;
-};
+Token Store::import(DataType, const RawBuffer &) {
+    LogError("Trust zone backend is not implemented!");
+    ThrowMsg(Exception::Base, "Trust zone backend is not implemented!");
+}
 
-} // Crypto
-} // CKM
+} // namespace TZ
+} // namespace Crypto
+} // namespace CKM
 

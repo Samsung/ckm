@@ -14,38 +14,29 @@
  *  limitations under the License
  */
 /*
- * @file       decider.h
+ * @file       store.h
  * @author     Bartłomiej Grzelewski (b.grzelewski@samsung.com)
  * @version    1.0
  */
 #pragma once
 
-#include <memory>
-
-#include <ckm/ckm-type.h>
-
-#include <crypto-backend.h>
-
+#include <generic-backend/gkey.h>
 #include <generic-backend/gstore.h>
-#include <token.h>
 
 namespace CKM {
 namespace Crypto {
+namespace TZ {
 
-class Decider {
+class Store : public GStore {
 public:
-    Decider();
-    GStore& getStore(const Token &token);
-    CryptoBackend chooseCryptoBackend(DataType data, const Policy &policy) const;
+    explicit Store(CryptoBackend backendId);
 
-    virtual ~Decider(){}
-protected:
-    GStore& getStore(CryptoBackend id);
-
-    std::unique_ptr<GStore> m_swStore;
-    std::unique_ptr<GStore> m_tzStore;
+    virtual GKeyShPtr getKey(const Token &token);
+    virtual Token import(DataType dataType, const RawBuffer &buffer);
+    virtual void destroy(const Token &){}
 };
 
-} // Crypto
-} // CKM
+} // namespace TZ
+} // namespace Crypto
+} // namespace CKM
 

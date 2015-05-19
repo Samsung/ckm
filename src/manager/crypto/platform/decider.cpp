@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2000 - 2015 Samsung Electronics Co., Ltd All Rights Reserved
+ *  Copyright (c) 2015 Samsung Electronics Co., Ltd All Rights Reserved
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -25,24 +25,53 @@
 #include <platform/decider.h>
 
 #include <sw-backend/store.h>
+#include <tz-backend/store.h>
 
 namespace CKM {
 namespace Crypto {
 
 Decider::Decider()
   : m_swStore(new SW::Store(CryptoBackend::OpenSSL))
+  , m_tzStore(new TZ::Store(CryptoBackend::TrustZone))
 {}
 
-GStore& Decider::getStore(const Token &) {
-    // This the place where we should choose backend bases on token information.
-    if (!m_swStore) {
-        LogError("No backend available.");
-        ThrowMsg(CKM::Crypto::Exception::Base, "No backend available.");
-    }
-    return *m_swStore;
+GStore& Decider::getStore(const Token &token) {
+    return getStore(token.backendId);
 };
 
-CryptoBackend Decider::chooseCryptoBackend(DataType, const Policy &) const {
+GStore& Decider::getStore(CryptoBackend cryptoBackend) {
+    GStore *gStore = NULL;
+    if (cryptoBackend == CryptoBackend::OpenSSL)
+        gStore = m_swStore.get();
+    if (cryptoBackend == CryptoBackend::TrustZone)
+        gStore = m_tzStore.get();
+
+    if (gStore)
+        return *gStore;
+
+    LogError("Backend not available. BackendId: " << (int)cryptoBackend);
+    ThrowMsg(CKM::Crypto::Exception::Base,
+             "Backend not available. BackendId: " << (int)cryptoBackend);
+}
+
+CryptoBackend Decider::chooseCryptoBackend(DataType dataType, const Policy &policy) const {
+// The list of items that MUST be support by OpenSSL
+    if (dataType.isCertificate())
+        return CryptoBackend::OpenSSL;
+
+    if (dataType.isBinaryData())
+        return CryptoBackend::OpenSSL;
+
+    if (policy.extractable)
+        return CryptoBackend::OpenSSL;
+
+//  This is the place where we can use trust zone backend
+//  Examples:
+//
+//  if (dataType.isKeyPrivate())
+//      return CryptoBackend::TrustZone;
+
+// This item does not met Trust Zone requirements. Let's use software backend
     return CryptoBackend::OpenSSL;
 }
 
