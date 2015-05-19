@@ -161,13 +161,12 @@ void DBFixture::compare_row(const DB::Row &lhs, const DB::Row &rhs)
 void DBFixture::check_DB_integrity(const DB::Row &rowPattern)
 {
     BOOST_REQUIRE_NO_THROW(m_db.saveRow(rowPattern));
-    DB::Row selectRow = rowPattern;
 
     DB::Crypto::RowOptional optional_row;
     BOOST_REQUIRE_NO_THROW(optional_row = m_db.getRow("name", "label", DataType::BINARY_DATA));
     BOOST_REQUIRE_MESSAGE(optional_row, "Select didn't return any row");
 
-    compare_row(selectRow, rowPattern);
+    compare_row(*optional_row, rowPattern);
     DB::Row name_duplicate = rowPattern;
     name_duplicate.data = createDefaultPass();
     name_duplicate.dataSize = name_duplicate.data.size();
