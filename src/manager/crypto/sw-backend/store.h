@@ -29,7 +29,7 @@ namespace SW {
 
 class Store : public GStore {
 public:
-    explicit Store(CryptoBackend backendId) : GStore(backendId) {}
+    explicit Store(CryptoBackend backendId);
 
     virtual GKeyShPtr getKey(const Token &token);
     virtual Token import(DataType dataType, const RawBuffer &buffer);

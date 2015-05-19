@@ -46,12 +46,6 @@ public:
             DECLARE_EXCEPTION_TYPE(Base, opensslError);
     };
 
-    // During initialization, FIPS_MODE and the antropy source are set.
-    // And system certificates are loaded in the memory during initialization.
-    //    FIPS_MODE - ON, OFF(Default)
-    //    antropy source - /dev/random,/dev/urandom(Default)
-    static int initialize();
-
     static int createKeyPairRSA(const int size,      // size in bits [1024, 2048, 4096]
                         KeyImpl &createdPrivateKey,  // returned value ==> Key &createdPrivateKey,
                         KeyImpl &createdPublicKey);  // returned value ==> Key &createdPublicKey

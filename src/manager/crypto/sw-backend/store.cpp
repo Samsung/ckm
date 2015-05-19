@@ -25,10 +25,18 @@
 #include <generic-backend/exception.h>
 #include <sw-backend/key.h>
 #include <sw-backend/store.h>
+#include <sw-backend/internals.h>
 
 namespace CKM {
 namespace Crypto {
 namespace SW {
+
+Store::Store(CryptoBackend backendId)
+  : GStore(backendId)
+{
+    // initialize openssl internals
+    Internals::initialize();
+}
 
 GKeyShPtr Store::getKey(const Token &token) {
     if (token.backendId != m_backendId) {

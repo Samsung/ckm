@@ -38,9 +38,6 @@
 #include <key-provider.h>
 #include <file-system.h>
 
-/* TODO remove this include */
-#include <sw-backend/crypto-service.h>
-
 #define REGISTER_SOCKET_SERVICE(manager, service) \
     registerSocketService<service>(manager, #service)
 
@@ -96,9 +93,6 @@ int main(void) {
         OPENSSL_config(NULL);
 
         CKM::KeyProvider::initializeLibrary();
-
-        /* ToDO remove it */
-        CKM::Crypto::SW::CryptoService::initialize();
 
         {
             LogInfo("Start!");

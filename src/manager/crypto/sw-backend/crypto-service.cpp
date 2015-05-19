@@ -38,32 +38,6 @@ CryptoService::CryptoService(){
 CryptoService::~CryptoService(){
 }
 
-int CryptoService::initialize() {
-    int hw_rand_ret = 0;
-    int u_rand_ret = 0;
-
-    // try to initialize using ERR_load_crypto_strings and OpenSSL_add_all_algorithms
-    ERR_load_crypto_strings();
-    OpenSSL_add_all_algorithms();
-
-    // initialize entropy
-    std::ifstream ifile(DEV_HW_RANDOM_FILE);
-    if(ifile.is_open()) {
-        u_rand_ret= RAND_load_file(DEV_HW_RANDOM_FILE, 32);
-    }
-    if(u_rand_ret != 32 ){
-        LogError("Error in HW_RAND file load");
-        hw_rand_ret = RAND_load_file(DEV_URANDOM_FILE, 32);
-
-        if(hw_rand_ret != 32) {
-            LogError("Error in U_RAND_file_load");
-            ThrowMsg(CryptoService::Exception::Crypto_internal, "Error in U_RAND_file_load");
-        }
-    }
-
-    return CKM_CRYPTO_INIT_SUCCESS;
-}
-
 int CryptoService::createKeyPairRSA(const int size, // size in bits [1024, 2048, 4096]
         KeyImpl &createdPrivateKey,  // returned value
         KeyImpl &createdPublicKey)  // returned value
