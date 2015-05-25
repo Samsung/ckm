@@ -39,7 +39,7 @@
 namespace {
 const char * const CERT_SYSTEM_DIR          = "/etc/ssl/certs";
 const char * const INIT_VALUES_DIR          = "/opt/data/ckm/initial_values/";
-const char * const INIT_VALUES_XSD          = "/opt/data/ckm/initial_values/initial_values.xsd";
+const char * const INIT_VALUES_XSD          = "/usr/share/ckm/initial_values.xsd";
 const char * const INIT_VALUES_FILE_SUFFIX  = ".xml";
 const char * const SYSTEM_DB_PASSWD         = "cAtRugU7";
 
