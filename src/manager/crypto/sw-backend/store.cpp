@@ -62,9 +62,40 @@ GKeyShPtr Store::getKey(const Token &token) {
         "This type of data is not supported by openssl backend: " << (int)token.dataType);
 }
 
+TokenPair Store::generateAKey(const CryptoAlgorithm &algorithm)
+{
+    AlgoType keyType = AlgoType::RSA;
+    algorithm.getParam(ParamName::ALGO_TYPE, keyType);
+
+    if(keyType == AlgoType::RSA || keyType == AlgoType::DSA)
+    {
+        int keyLength = 0;
+        if(!algorithm.getParam(ParamName::GEN_KEY_LEN, keyLength))
+            ThrowMsg(Crypto::Exception::InputParam, "Error, parameter GEN_KEY_LEN not found.");
+
+        if(keyType == AlgoType::RSA)
+            return Internals::createKeyPairRSA(m_backendId, keyLength);
+        else
+            return Internals::createKeyPairDSA(m_backendId, keyLength);
+    }
+    else if(keyType == AlgoType::ECDSA)
+    {
+        int ecType = 0;
+        if(!algorithm.getParam(ParamName::GEN_EC, ecType))
+            ThrowMsg(Crypto::Exception::InputParam, "Error, parameter GEN_EC not found.");
+
+        return Internals::createKeyPairECDSA(m_backendId, static_cast<ElipticCurve>(ecType));
+    }
+    ThrowMsg(Crypto::Exception::InputParam, "wrong key type");
+}
+
 Token Store::import(DataType dataType, const RawBuffer &buffer) {
     return Token(m_backendId, dataType, buffer);
 }
+
+
+
+
 
 } // namespace SW
 } // namespace Crypto

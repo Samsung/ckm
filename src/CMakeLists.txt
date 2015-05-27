@@ -50,7 +50,6 @@ SET(KEY_MANAGER_SOURCES
     ${KEY_MANAGER_PATH}/crypto/sw-backend/key.cpp
     ${KEY_MANAGER_PATH}/crypto/sw-backend/internals.cpp
     ${KEY_MANAGER_PATH}/crypto/sw-backend/store.cpp
-    ${KEY_MANAGER_PATH}/crypto/sw-backend/crypto-service.cpp
     ${KEY_MANAGER_PATH}/crypto/platform/decider.cpp
     ${KEY_MANAGER_PATH}/crypto/tz-backend/key.cpp
     ${KEY_MANAGER_PATH}/crypto/tz-backend/store.cpp

@@ -37,6 +37,11 @@ GKeyShPtr Store::getKey(const Token &) {
     ThrowMsg(Exception::Base, "Trust zone backend is not implemented!");
 }
 
+TokenPair Store::generateAKey(const CryptoAlgorithm &) {
+    LogError("Trust zone backend is not implemented!");
+    ThrowMsg(Exception::Base, "Trust zone backend is not implemented!");
+}
+
 Token Store::import(DataType, const RawBuffer &) {
     LogError("Trust zone backend is not implemented!");
     ThrowMsg(Exception::Base, "Trust zone backend is not implemented!");

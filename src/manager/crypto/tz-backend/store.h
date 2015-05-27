@@ -32,6 +32,7 @@ public:
     explicit Store(CryptoBackend backendId);
 
     virtual GKeyShPtr getKey(const Token &token);
+    virtual TokenPair generateAKey(const CryptoAlgorithm &);
     virtual Token import(DataType dataType, const RawBuffer &buffer);
     virtual void destroy(const Token &){}
 };

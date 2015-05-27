@@ -24,6 +24,7 @@
 #include <certificate-impl.h>
 #include <ckm/ckm-type.h>
 #include <openssl/evp.h>
+#include <token.h>
 
 #define EVP_SUCCESS 1	// DO NOTCHANGE THIS VALUE
 #define EVP_FAIL    0	// DO NOTCHANGE THIS VALUE
@@ -44,17 +45,9 @@ namespace Internals {
 //    entropy source - /dev/random,/dev/urandom(Default)
 int initialize();
 
-void createKeyPairRSA(const int size,
-    KeyImpl &createdPrivateKey,
-    KeyImpl &createdPublicKey);
-
-void createKeyPairDSA(const int size,
-    KeyImpl &createdPrivateKey,
-    KeyImpl &createdPublicKey);
-
-void createKeyPairECDSA(ElipticCurve type1,
-    KeyImpl &createdPrivateKey,
-    KeyImpl &createdPublicKey);
+TokenPair createKeyPairRSA(CryptoBackend backendId, const int size);
+TokenPair createKeyPairDSA(CryptoBackend backendId, const int size);
+TokenPair createKeyPairECDSA(CryptoBackend backendId, ElipticCurve type1);
 
 RawBuffer sign(EVP_PKEY *pkey,
     const CryptoAlgorithm &alg,

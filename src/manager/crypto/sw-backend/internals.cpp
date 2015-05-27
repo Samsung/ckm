@@ -20,13 +20,12 @@
  */
 #include <exception>
 #include <fstream>
+#include <utility>
 
-#include <openssl/x509_vfy.h>
 #include <openssl/evp.h>
 #include <openssl/obj_mac.h>
 #include <openssl/ec.h>
 #include <openssl/dsa.h>
-#include <openssl/dh.h>
 #include <openssl/rsa.h>
 #include <openssl/bio.h>
 #include <openssl/rand.h>
@@ -36,8 +35,6 @@
 #include <openssl/obj_mac.h>
 
 #include <ckm/ckm-error.h>
-#include <ckm/ckm-type.h>
-#include <key-impl.h>
 #include <assert.h>
 #include <dpl/log/log.h>
 
@@ -52,6 +49,40 @@
 namespace {
 typedef std::unique_ptr<EVP_MD_CTX, std::function<void(EVP_MD_CTX*)>> EvpMdCtxUPtr;
 typedef std::unique_ptr<EVP_PKEY_CTX, std::function<void(EVP_PKEY_CTX*)>> EvpPkeyCtxUPtr;
+typedef std::unique_ptr<EVP_PKEY, std::function<void(EVP_PKEY*)>> EvpPkeyUPtr;
+
+typedef std::unique_ptr<BIO, std::function<void(BIO*)>> BioUniquePtr;
+typedef int(*I2D_CONV)(BIO*, EVP_PKEY*);
+CKM::RawBuffer i2d(I2D_CONV fun, EVP_PKEY* pkey) {
+    BioUniquePtr bio(BIO_new(BIO_s_mem()), BIO_free_all);
+
+    if (NULL == pkey) {
+        LogDebug("attempt to parse an empty key!");
+        ThrowMsg(CKM::Crypto::Exception::InternalError, "attempt to parse an empty key!");
+    }
+
+    if (NULL == bio.get()) {
+        LogError("Error in memory allocation! Function: BIO_new.");
+        ThrowMsg(CKM::Crypto::Exception::InternalError, "Error in memory allocation! Function: BIO_new.");
+    }
+
+    if (1 != fun(bio.get(), pkey)) {
+        LogError("Error in conversion EVP_PKEY to DER");
+        ThrowMsg(CKM::Crypto::Exception::InternalError, "Error in conversion EVP_PKEY to DER");
+    }
+
+    CKM::RawBuffer output(8196);
+
+    int size = BIO_read(bio.get(), output.data(), output.size());
+
+    if (size <= 0) {
+        LogError("Error in BIO_read: " << size);
+        ThrowMsg(CKM::Crypto::Exception::InternalError, "Error in BIO_read: " << size);
+    }
+
+    output.resize(size);
+    return output;
+}
 } // anonymous namespace
 
 namespace CKM {
@@ -129,198 +160,109 @@ int getRsaPadding(const RSAPaddingAlgorithm padAlgo) {
     return rsa_padding;
 }
 
-void createKeyPairRSA(const int size, // size in bits [1024, 2048, 4096]
-        KeyImpl &createdPrivateKey,  // returned value
-        KeyImpl &createdPublicKey)  // returned value
+TokenPair createKeyPairRSA(CryptoBackend backendId, const int size)
 {
-    EVP_PKEY_CTX *ctx = NULL;
-    EVP_PKEY *pkey = NULL;
-    EVP_PKEY *pparam = NULL;
+    EvpPkeyUPtr pkey;
 
     // check the parameters of functions
-    if(size != 1024 && size !=2048 && size != 4096) {
+    if(size!=1024 && size!=2048 && size!=4096) {
         LogError("Error in RSA input size");
-        ThrowMsg(Crypto::Exception::InternalError, "Error in RSA input size");
+        ThrowMsg(Crypto::Exception::InputParam, "Error in RSA input size");
     }
 
-    // check the parameters of functions
-    if(&createdPrivateKey == NULL) {
-        LogError("Error in createdPrivateKey value");
-        ThrowMsg(Crypto::Exception::InternalError, "Error in createdPrivateKey value");
+    EvpPkeyCtxUPtr ctx(EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL), EVP_PKEY_CTX_free);
+    if(!ctx) {
+        LogError("Error in EVP_PKEY_CTX_new_id function !!");
+        ThrowMsg(Crypto::Exception::InternalError, "Error in EVP_PKEY_CTX_new_id function !!");
     }
 
-    // check the parameters of functions
-    if(&createdPublicKey == NULL) {
-        LogError("Error in createdPrivateKey value");
-        ThrowMsg(Crypto::Exception::InternalError, "Error in createdPublicKey value");
+    if(EVP_PKEY_keygen_init(ctx.get()) <= 0) {
+        LogError("Error in EVP_PKEY_keygen_init function !!");
+        ThrowMsg(Crypto::Exception::InternalError, "Error in EVP_PKEY_keygen_init function !!");
     }
 
-    Try {
-        if(!(ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL))) {
-            LogError("Error in EVP_PKEY_CTX_new_id function !!");
-            ThrowMsg(Crypto::Exception::InternalError, "Error in EVP_PKEY_CTX_new_id function !!");
-        }
-
-        if(EVP_PKEY_keygen_init(ctx) <= 0) {
-            LogError("Error in EVP_PKEY_keygen_init function !!");
-            ThrowMsg(Crypto::Exception::InternalError, "Error in EVP_PKEY_keygen_init function !!");
-        }
-
-        if(EVP_PKEY_CTX_set_rsa_keygen_bits(ctx,size) <= 0) {
-            LogError("Error in EVP_PKEY_CTX_set_rsa_keygen_bits function !!");
-            ThrowMsg(Crypto::Exception::InternalError, "Error in EVP_PKEY_CTX_set_rsa_keygen_bits function !!");
-        }
-
-        if(!EVP_PKEY_keygen(ctx, &pkey)) {
-            LogError("Error in EVP_PKEY_keygen function !!");
-            ThrowMsg(Crypto::Exception::InternalError, "Error in EVP_PKEY_keygen function !!");
-        }
-    } Catch(Crypto::Exception::InternalError) {
-        if(pkey) {
-            EVP_PKEY_free(pkey);
-        }
-
-        if(pparam) {
-            EVP_PKEY_free(pparam);
-        }
-
-        if(ctx) {
-            EVP_PKEY_CTX_free(ctx);
-        }
-
-        ReThrowMsg(Crypto::Exception::InternalError,"Error in opensslError function !!");
+    if(EVP_PKEY_CTX_set_rsa_keygen_bits(ctx.get(), size) <= 0) {
+        LogError("Error in EVP_PKEY_CTX_set_rsa_keygen_bits function !!");
+        ThrowMsg(Crypto::Exception::InternalError, "Error in EVP_PKEY_CTX_set_rsa_keygen_bits function !!");
     }
 
-    KeyImpl::EvpShPtr ptr(pkey, EVP_PKEY_free); // shared ptr will free pkey
-
-    createdPrivateKey = KeyImpl(ptr, KeyType::KEY_RSA_PRIVATE);
-    createdPublicKey = KeyImpl(ptr, KeyType::KEY_RSA_PUBLIC);
-
-    if(pparam) {
-        EVP_PKEY_free(pparam);
+    EVP_PKEY *pkeyTmp = NULL;
+    if(!EVP_PKEY_keygen(ctx.get(), &pkeyTmp)) {
+        LogError("Error in EVP_PKEY_keygen function !!");
+        ThrowMsg(Crypto::Exception::InternalError, "Error in EVP_PKEY_keygen function !!");
     }
+    pkey = EvpPkeyUPtr(pkeyTmp, EVP_PKEY_free);
 
-    if(ctx) {
-        EVP_PKEY_CTX_free(ctx);
-    }
+    return std::make_pair<Token, Token>(Token(backendId, DataType(KeyType::KEY_RSA_PRIVATE), i2d(i2d_PrivateKey_bio, pkey.get())),
+                                        Token(backendId, DataType(KeyType::KEY_RSA_PUBLIC), i2d(i2d_PUBKEY_bio, pkey.get())));
 }
 
 
-void createKeyPairDSA(const int size, // size in bits [1024, 2048, 3072, 4096]
-        KeyImpl &createdPrivateKey,  // returned value
-        KeyImpl &createdPublicKey)  // returned value
+TokenPair createKeyPairDSA(CryptoBackend backendId, const int size)
 {
-	EVP_PKEY_CTX *pctx = NULL;
-	EVP_PKEY_CTX *kctx = NULL;
-	EVP_PKEY *pkey = NULL;
-	EVP_PKEY *pparam = NULL;
+    EvpPkeyUPtr pkey;
+    EvpPkeyUPtr pparam;
 
-	// check the parameters of functions
-	if(size != 1024 && size !=2048 && size !=3072 && size != 4096) {
-		LogError("Error in DSA input size");
-		ThrowMsg(Exception::InternalError, "Error in DSA input size");
-	}
+    // check the parameters of functions
+    if(size!=1024 && size!=2048 && size!=3072 && size!=4096) {
+        LogError("Error in DSA input size");
+        ThrowMsg(Exception::InputParam, "Error in DSA input size");
+    }
 
-	// check the parameters of functions
-	if(&createdPrivateKey == NULL) {
-		LogError("Error in createdPrivateKey value");
-		ThrowMsg(Exception::InternalError, "Error in createdPrivateKey value");
-	}
+    /* Create the context for generating the parameters */
+    EvpPkeyCtxUPtr pctx(EVP_PKEY_CTX_new_id(EVP_PKEY_DSA, NULL), EVP_PKEY_CTX_free);
+    if(!pctx) {
+        LogError("Error in EVP_PKEY_CTX_new_id function");
+        ThrowMsg(Crypto::Exception::InternalError, "Error in EVP_PKEY_CTX_new_id function");
+    }
 
-	// check the parameters of functions
-	if(&createdPublicKey == NULL) {
-		LogError("Error in createdPrivateKey value");
-		ThrowMsg(Exception::InternalError, "Error in createdPublicKey value");
-	}
+    if(EVP_SUCCESS != EVP_PKEY_paramgen_init(pctx.get())) {
+        LogError("Error in EVP_PKEY_paramgen_init function");
+        ThrowMsg(Crypto::Exception::InternalError, "Error in EVP_PKEY_paramgen_init function");
+    }
 
-	Try {
-		/* Create the context for generating the parameters */
-		if(!(pctx = EVP_PKEY_CTX_new_id(EVP_PKEY_DSA, NULL))) {
-			LogError("Error in EVP_PKEY_CTX_new_id function");
-			ThrowMsg(Crypto::Exception::InternalError, "Error in EVP_PKEY_CTX_new_id function");
-		}
+    if(EVP_SUCCESS != EVP_PKEY_CTX_set_dsa_paramgen_bits(pctx.get(), size)) {
+        LogError("Error in EVP_PKEY_CTX_set_dsa_paramgen_bits(" << size << ") function");
+        ThrowMsg(Crypto::Exception::InternalError, "Error in EVP_PKEY_CTX_set_dsa_paramgen_bits(" << size << ") function");
+    }
 
-		if(EVP_SUCCESS != EVP_PKEY_paramgen_init(pctx)) {
-			LogError("Error in EVP_PKEY_paramgen_init function");
-			ThrowMsg(Crypto::Exception::InternalError, "Error in EVP_PKEY_paramgen_init function");
-		}
+    /* Generate parameters */
+    EVP_PKEY *pparamTmp = NULL;
+    if(EVP_SUCCESS != EVP_PKEY_paramgen(pctx.get(), &pparamTmp)) {
+        LogError("Error in EVP_PKEY_paramgen function");
+        ThrowMsg(Crypto::Exception::InternalError, "Error in EVP_PKEY_paramgen function");
+    }
+    pparam = EvpPkeyUPtr(pparamTmp, EVP_PKEY_free);
 
-		if(EVP_SUCCESS != EVP_PKEY_CTX_set_dsa_paramgen_bits(pctx, size)) {
-			LogError("Error in EVP_PKEY_CTX_set_dsa_paramgen_bits(" << size << ") function");
-			ThrowMsg(Crypto::Exception::InternalError, "Error in EVP_PKEY_CTX_set_dsa_paramgen_bits(" << size << ") function");
-		}
+    // Start to generate key
+    EvpPkeyCtxUPtr kctx(EVP_PKEY_CTX_new(pparam.get(), NULL), EVP_PKEY_CTX_free);
+    if(!kctx) {
+        LogError("Error in EVP_PKEY_CTX_new function");
+        ThrowMsg(Crypto::Exception::InternalError, "Error in EVP_PKEY_CTX_new function");
+    }
 
-		/* Generate parameters */
-		if(EVP_SUCCESS != EVP_PKEY_paramgen(pctx, &pparam)) {
-			LogError("Error in EVP_PKEY_paramgen function");
-			ThrowMsg(Crypto::Exception::InternalError, "Error in EVP_PKEY_paramgen function");
-		}
+    if(EVP_SUCCESS != EVP_PKEY_keygen_init(kctx.get())) {
+        LogError("Error in EVP_PKEY_keygen_init function");
+        ThrowMsg(Crypto::Exception::InternalError, "Error in EVP_PKEY_keygen_init function");
+    }
 
-		// Start to generate key
-		if(!(kctx = EVP_PKEY_CTX_new(pparam, NULL))) {
-			LogError("Error in EVP_PKEY_CTX_new function");
-			ThrowMsg(Crypto::Exception::InternalError, "Error in EVP_PKEY_CTX_new function");
-		}
+    /* Generate the key */
+    EVP_PKEY *pkeyTmp = NULL;
+    if(!EVP_PKEY_keygen(kctx.get(), &pkeyTmp)) {
+        LogError("Error in EVP_PKEY_keygen function !!");
+        ThrowMsg(Crypto::Exception::InternalError, "Error in EVP_PKEY_keygen function !!");
+    }
+    pkey = EvpPkeyUPtr(pkeyTmp, EVP_PKEY_free);
 
-		if(EVP_SUCCESS != EVP_PKEY_keygen_init(kctx)) {
-			LogError("Error in EVP_PKEY_keygen_init function");
-			ThrowMsg(Crypto::Exception::InternalError, "Error in EVP_PKEY_keygen_init function");
-		}
-
-		/* Generate the key */
-		if(EVP_SUCCESS != EVP_PKEY_keygen(kctx, &pkey)) {
-			LogError("Error in EVP_PKEY_keygen function");
-			ThrowMsg(Crypto::Exception::InternalError, "Error in EVP_PKEY_keygen function");
-		}
-	}
-	Catch(Crypto::Exception::InternalError)
-	{
-		if(pkey) {
-			EVP_PKEY_free(pkey);
-		}
-
-		if(pparam) {
-			EVP_PKEY_free(pparam);
-		}
-
-		if(pctx) {
-			EVP_PKEY_CTX_free(pctx);
-		}
-
-		if(kctx) {
-			EVP_PKEY_CTX_free(kctx);
-		}
-
-		ReThrowMsg(Crypto::Exception::InternalError,"Error in openssl function !!");
-	}
-
-	KeyImpl::EvpShPtr ptr(pkey, EVP_PKEY_free); // shared ptr will free pkey
-
-	createdPrivateKey = KeyImpl(ptr, KeyType::KEY_DSA_PRIVATE);
-	createdPublicKey = KeyImpl(ptr, KeyType::KEY_DSA_PUBLIC);
-
-	if(pparam) {
-		EVP_PKEY_free(pparam);
-	}
-
-	if(pctx) {
-		EVP_PKEY_CTX_free(pctx);
-	}
-
-	if(kctx) {
-		EVP_PKEY_CTX_free(kctx);
-	}
+    return std::make_pair<Token, Token>(Token(backendId, DataType(KeyType::KEY_DSA_PRIVATE), i2d(i2d_PrivateKey_bio, pkey.get())),
+                                        Token(backendId, DataType(KeyType::KEY_DSA_PUBLIC), i2d(i2d_PUBKEY_bio, pkey.get())));
 }
 
-void createKeyPairECDSA(ElipticCurve type,
-        KeyImpl &createdPrivateKey,  // returned value
-        KeyImpl &createdPublicKey)  // returned value
+TokenPair createKeyPairECDSA(CryptoBackend backendId, ElipticCurve type)
 {
     int ecCurve = NOT_DEFINED;
-    EVP_PKEY_CTX *pctx = NULL;
-    EVP_PKEY_CTX *kctx = NULL;
-    EVP_PKEY *pkey = NULL;
-    EVP_PKEY *pparam = NULL;
+    EvpPkeyUPtr pkey;
+    EvpPkeyUPtr pparam;
 
     switch(type) {
     case ElipticCurve::prime192v1:
@@ -334,96 +276,56 @@ void createKeyPairECDSA(ElipticCurve type,
         break;
     default:
         LogError("Error in EC type");
-        ThrowMsg(Exception::InternalError, "Error in EC type");
+        ThrowMsg(Exception::InputParam, "Error in EC type");
     }
 
-    // check the parameters of functions
-    if(&createdPrivateKey == NULL) {
-        LogError("Error in createdPrivateKey value");
-        ThrowMsg(Exception::InternalError, "Error in createdPrivateKey value");
+    /* Create the context for generating the parameters */
+    EvpPkeyCtxUPtr pctx(EVP_PKEY_CTX_new_id(EVP_PKEY_EC, NULL), EVP_PKEY_CTX_free);
+    if(!pctx) {
+        LogError("Error in EVP_PKEY_CTX_new_id function");
+        ThrowMsg(Crypto::Exception::InternalError, "Error in EVP_PKEY_CTX_new_id function");
     }
 
-    // check the parameters of functions
-    if(&createdPublicKey == NULL) {
-        LogError("Error in createdPrivateKey value");
-        ThrowMsg(Exception::InternalError, "Error in createdPublicKey value");
+    if(EVP_SUCCESS != EVP_PKEY_paramgen_init(pctx.get())) {
+        LogError("Error in EVP_PKEY_paramgen_init function");
+        ThrowMsg(Crypto::Exception::InternalError, "Error in EVP_PKEY_paramgen_init function");
     }
 
-    Try {
-        /* Create the context for generating the parameters */
-        if(!(pctx = EVP_PKEY_CTX_new_id(EVP_PKEY_EC, NULL))) {
-            LogError("Error in EVP_PKEY_CTX_new_id function");
-            ThrowMsg(Crypto::Exception::InternalError, "Error in EVP_PKEY_CTX_new_id function");
-        }
-
-        if(EVP_SUCCESS != EVP_PKEY_paramgen_init(pctx)) {
-            LogError("Error in EVP_PKEY_paramgen_init function");
-            ThrowMsg(Crypto::Exception::InternalError, "Error in EVP_PKEY_paramgen_init function");
-        }
-
-        if(EVP_SUCCESS != EVP_PKEY_CTX_set_ec_paramgen_curve_nid(pctx, ecCurve)) {
-            LogError("Error in EVP_PKEY_CTX_set_ec_paramgen_curve_nid function");
-            ThrowMsg(Crypto::Exception::InternalError, "Error in EVP_PKEY_CTX_set_ec_paramgen_curve_nid function");
-        }
-
-        /* Generate parameters */
-        if(EVP_SUCCESS != EVP_PKEY_paramgen(pctx, &pparam)) {
-            LogError("Error in EVP_PKEY_paramgen function");
-            ThrowMsg(Crypto::Exception::InternalError, "Error in EVP_PKEY_paramgen function");
-        }
-
-        // Start to generate key
-        if(!(kctx = EVP_PKEY_CTX_new(pparam, NULL))) {
-            LogError("Error in EVP_PKEY_CTX_new function");
-            ThrowMsg(Crypto::Exception::InternalError, "Error in EVP_PKEY_CTX_new function");
-        }
-
-        if(EVP_SUCCESS != EVP_PKEY_keygen_init(kctx)) {
-            LogError("Error in EVP_PKEY_keygen_init function");
-            ThrowMsg(Crypto::Exception::InternalError, "Error in EVP_PKEY_keygen_init function");
-        }
-
-        /* Generate the key */
-        if(EVP_SUCCESS != EVP_PKEY_keygen(kctx, &pkey)) {
-            LogError("Error in EVP_PKEY_keygen function");
-            ThrowMsg(Crypto::Exception::InternalError, "Error in EVP_PKEY_keygen function");
-        }
-    } Catch(Crypto::Exception::InternalError) {
-        if(pkey) {
-            EVP_PKEY_free(pkey);
-        }
-
-        if(pparam) {
-            EVP_PKEY_free(pparam);
-        }
-
-        if(pctx) {
-            EVP_PKEY_CTX_free(pctx);
-        }
-
-        if(kctx) {
-            EVP_PKEY_CTX_free(kctx);
-        }
-
-        ReThrowMsg(Crypto::Exception::InternalError,"Error in openssl function !!");
+    if(EVP_SUCCESS != EVP_PKEY_CTX_set_ec_paramgen_curve_nid(pctx.get(), ecCurve)) {
+        LogError("Error in EVP_PKEY_CTX_set_ec_paramgen_curve_nid function");
+        ThrowMsg(Crypto::Exception::InternalError, "Error in EVP_PKEY_CTX_set_ec_paramgen_curve_nid function");
     }
 
-    KeyImpl::EvpShPtr ptr(pkey, EVP_PKEY_free); // shared ptr will free pkey
+    /* Generate parameters */
+    EVP_PKEY *pparamTmp = NULL;
+    if(EVP_SUCCESS != EVP_PKEY_paramgen(pctx.get(), &pparamTmp)) {
+        LogError("Error in EVP_PKEY_paramgen function");
+        ThrowMsg(Crypto::Exception::InternalError, "Error in EVP_PKEY_paramgen function");
+    }
+    pparam = EvpPkeyUPtr(pparamTmp, EVP_PKEY_free);
 
-    createdPrivateKey = KeyImpl(ptr, KeyType::KEY_ECDSA_PRIVATE);
-    createdPublicKey = KeyImpl(ptr, KeyType::KEY_ECDSA_PUBLIC);
-
-    if(pparam) {
-        EVP_PKEY_free(pparam);
+    // Start to generate key
+    EvpPkeyCtxUPtr kctx(EVP_PKEY_CTX_new(pparam.get(), NULL), EVP_PKEY_CTX_free);
+    if(!kctx) {
+        LogError("Error in EVP_PKEY_CTX_new function");
+        ThrowMsg(Crypto::Exception::InternalError, "Error in EVP_PKEY_CTX_new function");
     }
 
-    if(pctx) {
-        EVP_PKEY_CTX_free(pctx);
+    if(EVP_SUCCESS != EVP_PKEY_keygen_init(kctx.get())) {
+        LogError("Error in EVP_PKEY_keygen_init function");
+        ThrowMsg(Crypto::Exception::InternalError, "Error in EVP_PKEY_keygen_init function");
     }
 
-    if(kctx) {
-        EVP_PKEY_CTX_free(kctx);
-    }
+    /* Generate the key */
+    EVP_PKEY *pkeyTmp = NULL;
+    if(!EVP_PKEY_keygen(kctx.get(), &pkeyTmp)) {
+        LogError("Error in EVP_PKEY_keygen function !!");
+        ThrowMsg(Crypto::Exception::InternalError, "Error in EVP_PKEY_keygen function !!");
+        }
+        pkey = EvpPkeyUPtr(pkeyTmp, EVP_PKEY_free);
+
+    return std::make_pair<Token, Token>(Token(backendId, DataType(KeyType::KEY_ECDSA_PRIVATE), i2d(i2d_PrivateKey_bio, pkey.get())),
+                                        Token(backendId, DataType(KeyType::KEY_ECDSA_PUBLIC), i2d(i2d_PUBKEY_bio, pkey.get())));
 }
 
 RawBuffer sign(EVP_PKEY *pkey,

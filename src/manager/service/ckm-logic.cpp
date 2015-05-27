@@ -34,7 +34,6 @@
 #include <InitialValuesFile.h>
 
 #include <generic-backend/exception.h>
-#include <sw-backend/crypto-service.h>
 
 namespace {
 const char * const CERT_SYSTEM_DIR          = "/etc/ssl/certs";
@@ -437,7 +436,7 @@ DB::Row CKMLogic::createEncryptedRow(
     const Policy &policy) const
 {
     DB::Row row(name, label, static_cast<int>(policy.extractable), dataType, data, static_cast<int>(data.size()));
-    row.backendId = m_decider.chooseCryptoBackend(dataType, policy);
+    row.backendId = m_decider.chooseCryptoBackend(dataType, policy.extractable);
 
     // do not encrypt data with password during cc_mode on
     if(m_accessControl.isCCMode()) {
@@ -1174,49 +1173,48 @@ int CKMLogic::createKeyPairHelper(
     const PolicySerializable &policyPrivate,
     const PolicySerializable &policyPublic)
 {
-    auto &handlerPriv = selectDatabase(cred, labelPrivate);
-    auto &handlerPub = selectDatabase(cred, labelPublic);
-
-
-    int retCode;
-    KeyImpl prv, pub;
+    CryptoAlgorithm keyGenAlgorithm;
     switch(key_type)
     {
         case KeyType::KEY_RSA_PUBLIC:
         case KeyType::KEY_RSA_PRIVATE:
-            retCode = Crypto::SW::CryptoService::createKeyPairRSA(additional_param, prv, pub);
+            keyGenAlgorithm.addParam(ParamName::ALGO_TYPE, AlgoType::RSA);
+            keyGenAlgorithm.addParam(ParamName::GEN_KEY_LEN, additional_param);
             break;
 
         case KeyType::KEY_DSA_PUBLIC:
         case KeyType::KEY_DSA_PRIVATE:
-            retCode = Crypto::SW::CryptoService::createKeyPairDSA(additional_param, prv, pub);
+            keyGenAlgorithm.addParam(ParamName::ALGO_TYPE, AlgoType::DSA);
+            keyGenAlgorithm.addParam(ParamName::GEN_KEY_LEN, additional_param);
             break;
 
         case KeyType::KEY_ECDSA_PUBLIC:
         case KeyType::KEY_ECDSA_PRIVATE:
-            retCode = Crypto::SW::CryptoService::createKeyPairECDSA(static_cast<ElipticCurve>(additional_param), prv, pub);
+            keyGenAlgorithm.addParam(ParamName::ALGO_TYPE, AlgoType::ECDSA);
+            keyGenAlgorithm.addParam(ParamName::GEN_EC, additional_param);
             break;
 
         default:
+            LogError("Invalid key_type for asymetric key generation: " << (int)key_type);
             return CKM_API_ERROR_INPUT_PARAM;
     }
 
-    if (CKM_CRYPTO_CREATEKEY_SUCCESS != retCode)
-    {
-        LogDebug("CryptoService error with code: " << retCode);
-        return CKM_API_ERROR_SERVER_ERROR; // TODO error code
-    }
+    auto &handlerPriv = selectDatabase(cred, labelPrivate);
+    auto &handlerPub = selectDatabase(cred, labelPublic);
+
+    bool exportable = policyPrivate.extractable || policyPublic.extractable;
+    TokenPair keys = m_decider.getStore(DataType(key_type), exportable).generateAKey(keyGenAlgorithm);
 
     DB::Crypto::Transaction transactionPriv(&handlerPriv.database);
     // in case the same database is used for private and public - the second
     // transaction will not be executed
     DB::Crypto::Transaction transactionPub(&handlerPub.database);
 
-    retCode = saveDataHelper(cred,
+    int retCode = saveDataHelper(cred,
                              namePrivate,
                              labelPrivate,
-                             DataType(prv.getType()),
-                             prv.getDER(),
+                             keys.first.dataType,
+                             keys.first.data,
                              policyPrivate);
     if (CKM_API_SUCCESS != retCode)
         return retCode;
@@ -1224,16 +1222,15 @@ int CKMLogic::createKeyPairHelper(
     retCode = saveDataHelper(cred,
                              namePublic,
                              labelPublic,
-                             DataType(pub.getType()),
-                             pub.getDER(),
+                             keys.second.dataType,
+                             keys.second.data,
                              policyPublic);
     if (CKM_API_SUCCESS != retCode)
         return retCode;
 
     transactionPub.commit();
     transactionPriv.commit();
-
-    return retCode;
+    return CKM_API_SUCCESS;
 }
 
 RawBuffer CKMLogic::createKeyPair(
@@ -1277,6 +1274,15 @@ RawBuffer CKMLogic::createKeyPair(
                         labelPublic,
                         policyPrivate,
                         policyPublic);
+    } catch (const Crypto::Exception::OperationNotSupported &e) {
+        LogDebug("GStore error: operation not supported: " << e.GetMessage());
+        retCode = CKM_API_ERROR_SERVER_ERROR;
+    } catch (const Crypto::Exception::InternalError & e) {
+        LogDebug("GStore key generation failed: " << e.GetMessage());
+        retCode = CKM_API_ERROR_SERVER_ERROR;
+    } catch( const Crypto::Exception::InputParam & e) {
+        LogDebug("Missing or wrong input parameters: " << e.GetMessage());
+        retCode = CKM_API_ERROR_INPUT_PARAM;
     } catch (DB::Crypto::Exception::TransactionError &e) {
         LogDebug("DB::Crypto error: transaction error: " << e.GetMessage());
         retCode = CKM_API_ERROR_DB_ERROR;
@@ -1545,7 +1551,6 @@ RawBuffer CKMLogic::verifySignature(
 
     try {
         DB::Row row;
-        KeyImpl key;
 
         CryptoAlgorithm params;
         params.addParam(ParamName::SV_HASH_ALGO, hash);
@@ -1562,11 +1567,8 @@ RawBuffer CKMLogic::verifySignature(
         if (retCode == CKM_API_SUCCESS) {
             retCode = m_decider.getStore(row).getKey(row)->verify(params, message, signature);
         }
-    } catch (const Crypto::SW::CryptoService::Exception::Crypto_internal &e) {
-        LogError("KeyProvider failed with message: " << e.GetMessage());
-        retCode = CKM_API_ERROR_SERVER_ERROR;
-    } catch (const Crypto::SW::CryptoService::Exception::opensslError &e) {
-        LogError("KeyProvider failed with message: " << e.GetMessage());
+    } catch (const Crypto::Exception::Base &e) {
+        LogError("GStore failed with error: " << e.GetMessage());
         retCode = CKM_API_ERROR_SERVER_ERROR;
     } catch (const KeyProvider::Exception::Base &e) {
         LogError("KeyProvider failed with error: " << e.GetMessage());

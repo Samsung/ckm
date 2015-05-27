@@ -54,7 +54,11 @@ GStore& Decider::getStore(CryptoBackend cryptoBackend) {
              "Backend not available. BackendId: " << (int)cryptoBackend);
 }
 
-CryptoBackend Decider::chooseCryptoBackend(DataType dataType, const Policy &policy) const {
+GStore& Decider::getStore(DataType data, bool exportable) {
+    return getStore(chooseCryptoBackend(data, exportable));
+}
+
+CryptoBackend Decider::chooseCryptoBackend(DataType dataType, bool exportable) const {
 // The list of items that MUST be support by OpenSSL
     if (dataType.isCertificate())
         return CryptoBackend::OpenSSL;
@@ -62,7 +66,7 @@ CryptoBackend Decider::chooseCryptoBackend(DataType dataType, const Policy &poli
     if (dataType.isBinaryData())
         return CryptoBackend::OpenSSL;
 
-    if (policy.extractable)
+    if (exportable)
         return CryptoBackend::OpenSSL;
 
 //  This is the place where we can use trust zone backend
