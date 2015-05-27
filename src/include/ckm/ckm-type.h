@@ -117,7 +117,6 @@ enum class ParamName : int {
 
     // encryption & decryption
     ED_IV = 101,
-    ED_CTR,
     ED_CTR_LEN,
     ED_AAD,
     ED_TAG_LEN,
@@ -139,9 +138,12 @@ enum class AlgoType : int {
     AES_GCM,
     AES_CFB,
     RSA_OAEP,
-    RSA,
-    DSA,
-    ECDSA,
+    RSA_SV,
+    DSA_SV,
+    ECDSA_SV,
+    RSA_GEN,
+    DSA_GEN,
+    ECDSA_GEN,
 };
 
 // cryptographic algorithm description

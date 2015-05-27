@@ -64,21 +64,21 @@ GKeyShPtr Store::getKey(const Token &token) {
 
 TokenPair Store::generateAKey(const CryptoAlgorithm &algorithm)
 {
-    AlgoType keyType = AlgoType::RSA;
+    AlgoType keyType = AlgoType::RSA_GEN;
     algorithm.getParam(ParamName::ALGO_TYPE, keyType);
 
-    if(keyType == AlgoType::RSA || keyType == AlgoType::DSA)
+    if(keyType == AlgoType::RSA_GEN || keyType == AlgoType::DSA_GEN)
     {
         int keyLength = 0;
         if(!algorithm.getParam(ParamName::GEN_KEY_LEN, keyLength))
             ThrowMsg(Crypto::Exception::InputParam, "Error, parameter GEN_KEY_LEN not found.");
 
-        if(keyType == AlgoType::RSA)
+        if(keyType == AlgoType::RSA_GEN)
             return Internals::createKeyPairRSA(m_backendId, keyLength);
         else
             return Internals::createKeyPairDSA(m_backendId, keyLength);
     }
-    else if(keyType == AlgoType::ECDSA)
+    else if(keyType == AlgoType::ECDSA_GEN)
     {
         int ecType = 0;
         if(!algorithm.getParam(ParamName::GEN_EC, ecType))

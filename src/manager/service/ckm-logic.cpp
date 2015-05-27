@@ -1178,19 +1178,19 @@ int CKMLogic::createKeyPairHelper(
     {
         case KeyType::KEY_RSA_PUBLIC:
         case KeyType::KEY_RSA_PRIVATE:
-            keyGenAlgorithm.addParam(ParamName::ALGO_TYPE, AlgoType::RSA);
+            keyGenAlgorithm.addParam(ParamName::ALGO_TYPE, AlgoType::RSA_GEN);
             keyGenAlgorithm.addParam(ParamName::GEN_KEY_LEN, additional_param);
             break;
 
         case KeyType::KEY_DSA_PUBLIC:
         case KeyType::KEY_DSA_PRIVATE:
-            keyGenAlgorithm.addParam(ParamName::ALGO_TYPE, AlgoType::DSA);
+            keyGenAlgorithm.addParam(ParamName::ALGO_TYPE, AlgoType::DSA_GEN);
             keyGenAlgorithm.addParam(ParamName::GEN_KEY_LEN, additional_param);
             break;
 
         case KeyType::KEY_ECDSA_PUBLIC:
         case KeyType::KEY_ECDSA_PRIVATE:
-            keyGenAlgorithm.addParam(ParamName::ALGO_TYPE, AlgoType::ECDSA);
+            keyGenAlgorithm.addParam(ParamName::ALGO_TYPE, AlgoType::ECDSA_GEN);
             keyGenAlgorithm.addParam(ParamName::GEN_EC, additional_param);
             break;
 

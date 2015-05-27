@@ -129,7 +129,6 @@ CryptoAlgorithmSerializable::CryptoAlgorithmSerializable(IStream &stream)
         name = static_cast<ParamName>(tmpName);
         switch (name) {
         case ParamName::ED_IV:
-        case ParamName::ED_CTR:
         case ParamName::ED_AAD:
         case ParamName::ED_LABEL:
             Deserializer<RawBuffer>::Deserialize(stream, buffer);

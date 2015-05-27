@@ -109,7 +109,6 @@ BOOST_AUTO_TEST_CASE(Serialization_CryptoAlgorithm) {
     checkIntParamNegative(output, ParamName::ED_IV);
 
     // non-existing
-    checkBufferParamNegative(output, ParamName::ED_CTR);
     checkIntParamNegative(output, ParamName::ED_CTR_LEN);
     checkBufferParamNegative(output, ParamName::ED_LABEL);
     checkIntParamNegative(output, ParamName::GEN_KEY_LEN);
