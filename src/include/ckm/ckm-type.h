@@ -164,7 +164,7 @@ protected:
     protected:
         BaseParam() {}
     };
-    typedef std::unique_ptr<BaseParam> BaseParamPtr;
+    typedef std::shared_ptr<BaseParam> BaseParamPtr;
 
     class BufferParam : public BaseParam {
     public:

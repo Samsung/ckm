@@ -107,7 +107,7 @@ struct COMMON_API CryptoAlgorithmSerializable : public CryptoAlgorithm, ISeriali
     DECLARE_EXCEPTION_TYPE(Exception, UnsupportedParam);
 
     CryptoAlgorithmSerializable();
-    explicit CryptoAlgorithmSerializable(CryptoAlgorithm &&);
+    explicit CryptoAlgorithmSerializable(const CryptoAlgorithm &);
     explicit CryptoAlgorithmSerializable(IStream &);
 
     void Serialize(IStream &) const;

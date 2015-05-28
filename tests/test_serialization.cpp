@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE(Serialization_CryptoAlgorithm) {
     addParam(ca,ParamName::ED_TAG_LEN, 128, true);
     addParam(ca,ParamName::ED_AAD, AAD, true);
 
-    CryptoAlgorithmSerializable input(std::move(ca));
+    CryptoAlgorithmSerializable input(ca);
     CryptoAlgorithmSerializable output;
     auto msg = MessageBuffer::Serialize(input);
     RawBuffer buffer = msg.Pop();
@@ -125,7 +125,7 @@ BOOST_AUTO_TEST_CASE(Serialization_CryptoAlgorithm_wrong_name) {
     // unuspported param name
     addParam(ca, static_cast<ParamName>(666), 666, true);
 
-    CryptoAlgorithmSerializable input(std::move(ca));
+    CryptoAlgorithmSerializable input(ca);
     CryptoAlgorithmSerializable output;
     auto msg = MessageBuffer::Serialize(input);
     RawBuffer buffer = msg.Pop();

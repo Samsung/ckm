@@ -111,8 +111,8 @@ void PKCS12Serializable::Serialize(IStream &stream) const
 
 
 CryptoAlgorithmSerializable::CryptoAlgorithmSerializable() {}
-CryptoAlgorithmSerializable::CryptoAlgorithmSerializable(CryptoAlgorithm &&algo) :
-        CryptoAlgorithm(std::move(algo))
+CryptoAlgorithmSerializable::CryptoAlgorithmSerializable(const CryptoAlgorithm &algo) :
+        CryptoAlgorithm(algo)
 {
 }
 
