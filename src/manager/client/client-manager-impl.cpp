@@ -86,7 +86,10 @@ int getCertChain(
 } // namespace anonymous
 
 ManagerImpl::ManagerImpl()
-  : m_counter(0), m_storageConnection(SERVICE_SOCKET_CKM_STORAGE), m_ocspConnection(SERVICE_SOCKET_OCSP)
+  : m_counter(0),
+    m_storageConnection(SERVICE_SOCKET_CKM_STORAGE),
+    m_ocspConnection(SERVICE_SOCKET_OCSP),
+    m_encryptionConnection(SERVICE_SOCKET_ENCRYPTION)
 {
     initCryptoLib();
 }
@@ -708,6 +711,78 @@ int ManagerImpl::setPermission(const Alias &alias,
         int command;
         int counter;
         recv.Deserialize(command, counter, retCode);
+
+        if (my_counter != counter) {
+            return CKM_API_ERROR_UNKNOWN;
+        }
+
+        return retCode;
+    });
+}
+
+int ManagerImpl::encrypt(const CryptoAlgorithm &algo,
+                         const Alias &keyAlias,
+                         const Password &password,
+                         const RawBuffer& plain,
+                         RawBuffer& encrypted)
+{
+    int my_counter = ++m_counter;
+
+    return try_catch([&] {
+        MessageBuffer recv;
+        AliasSupport helper(keyAlias);
+        CryptoAlgorithmSerializable cas(algo);
+        auto send = MessageBuffer::Serialize(static_cast<int>(EncryptionCommand::ENCRYPT),
+                                             my_counter,
+                                             cas,
+                                             helper.getName(),
+                                             helper.getLabel(),
+                                             password,
+                                             plain);
+
+        int retCode = m_encryptionConnection.processRequest(send.Pop(), recv);
+        if (CKM_API_SUCCESS != retCode)
+            return retCode;
+
+        int command;
+        int counter;
+        recv.Deserialize(command, counter, encrypted);
+
+        if (my_counter != counter) {
+            return CKM_API_ERROR_UNKNOWN;
+        }
+
+        return retCode;
+    });
+}
+
+int ManagerImpl::decrypt(const CryptoAlgorithm &algo,
+                         const Alias &keyAlias,
+                         const Password &password,
+                         const RawBuffer& encrypted,
+                         RawBuffer& decrypted)
+{
+    int my_counter = ++m_counter;
+
+    return try_catch([&] {
+        MessageBuffer recv;
+        AliasSupport helper(keyAlias);
+        CryptoAlgorithmSerializable cas(algo);
+        auto send = MessageBuffer::Serialize(static_cast<int>(EncryptionCommand::DECRYPT),
+                                             my_counter,
+                                             cas,
+                                             helper.getName(),
+                                             helper.getLabel(),
+                                             password,
+                                             encrypted);
+
+        int retCode = m_encryptionConnection.processRequest(send.Pop(), recv);
+        if (CKM_API_SUCCESS != retCode)
+            return retCode;
+
+        int command;
+        int counter;
+        recv.Deserialize(command, counter, decrypted);
 
         if (my_counter != counter) {
             return CKM_API_ERROR_UNKNOWN;

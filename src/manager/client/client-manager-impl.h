@@ -110,6 +110,18 @@ public:
 
     int setPermission(const Alias &alias, const Label &accessor, PermissionMask permissionMask);
 
+    int encrypt(const CryptoAlgorithm &algo,
+                const Alias &keyAlias,
+                const Password &password,
+                const RawBuffer& plain,
+                RawBuffer& encrypted);
+
+    int decrypt(const CryptoAlgorithm &algo,
+                const Alias &keyAlias,
+                const Password &password,
+                const RawBuffer& encrypted,
+                RawBuffer& decrypted);
+
 protected:
     int saveBinaryData(
         const Alias &alias,
@@ -139,6 +151,7 @@ protected:
     int m_counter;
     CKM::ServiceConnection m_storageConnection;
     CKM::ServiceConnection m_ocspConnection;
+    CKM::ServiceConnection m_encryptionConnection;
 };
 
 } // namespace CKM

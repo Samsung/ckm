@@ -132,6 +132,17 @@ public:
 
     virtual int setPermission(const Alias &alias, const Label &accessor, PermissionMask permissionMask) = 0;
 
+    virtual int encrypt(const CryptoAlgorithm &algo,
+                        const Alias &keyAlias,
+                        const Password &password,
+                        const RawBuffer& plain,
+                        RawBuffer& encrypted) = 0;
+
+    virtual int decrypt(const CryptoAlgorithm &algo,
+                        const Alias &keyAlias,
+                        const Password &password,
+                        const RawBuffer& encrypted,
+                        RawBuffer& decrypted) = 0;
 
     static ManagerShPtr create();
 //    static ManagerShPtr getManager(int uid); // TODO
