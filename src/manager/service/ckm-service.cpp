@@ -235,18 +235,16 @@ RawBuffer CKMService::ProcessStorage(Credentials &cred, MessageBuffer &buffer)
                 msgID,
                 DataType(tmpDataType));
         }
-        case LogicCommand::CREATE_KEY_PAIR_RSA:
-        case LogicCommand::CREATE_KEY_PAIR_DSA:
-        case LogicCommand::CREATE_KEY_PAIR_ECDSA:
+        case LogicCommand::CREATE_KEY_PAIR:
         {
-            int additional_param = 0;
+            CryptoAlgorithmSerializable keyGenAlgorithm;
             Name privateKeyName;
             Label privateKeyLabel;
             Name publicKeyName;
             Label publicKeyLabel;
             PolicySerializable policyPrivateKey;
             PolicySerializable policyPublicKey;
-            buffer.Deserialize(additional_param,
+            buffer.Deserialize(keyGenAlgorithm,
                                policyPrivateKey,
                                policyPublicKey,
                                privateKeyName,
@@ -255,9 +253,8 @@ RawBuffer CKMService::ProcessStorage(Credentials &cred, MessageBuffer &buffer)
                                publicKeyLabel);
             return m_logic->createKeyPair(
                 cred,
-                static_cast<LogicCommand>(command),
                 msgID,
-                additional_param,
+                keyGenAlgorithm,
                 privateKeyName,
                 privateKeyLabel,
                 publicKeyName,

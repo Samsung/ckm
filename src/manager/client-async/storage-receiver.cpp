@@ -71,11 +71,8 @@ void StorageReceiver::parseResponse()
     case LogicCommand::REMOVE:
         parseRemoveCommand();
         break;
-    case LogicCommand::CREATE_KEY_PAIR_RSA:
-        parseRetCode(&ManagerAsync::Observer::ReceivedCreateKeyPairRSA);
-        break;
-    case LogicCommand::CREATE_KEY_PAIR_ECDSA:
-        parseRetCode(&ManagerAsync::Observer::ReceivedCreateKeyPairECDSA);
+    case LogicCommand::CREATE_KEY_PAIR:
+        parseRetCode(&ManagerAsync::Observer::ReceivedCreateKeyPair);
         break;
     case LogicCommand::GET_CHAIN_CERT:
     case LogicCommand::GET_CHAIN_ALIAS:
@@ -86,9 +83,6 @@ void StorageReceiver::parseResponse()
         break;
     case LogicCommand::VERIFY_SIGNATURE:
         parseRetCode(&ManagerAsync::Observer::ReceivedVerifySignature);
-        break;
-    case LogicCommand::CREATE_KEY_PAIR_DSA:
-        parseRetCode(&ManagerAsync::Observer::ReceivedCreateKeyPairDSA);
         break;
     case LogicCommand::SET_PERMISSION:
         parseRetCode(&ManagerAsync::Observer::ReceivedSetPermission);

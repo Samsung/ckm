@@ -76,6 +76,7 @@ public:
     DataType(Type data);
     explicit DataType(int data);
     explicit DataType(KeyType key);
+    explicit DataType(AlgoType algorithmType);
     DataType(const DataType &) = default;
     DataType& operator=(const DataType &) = default;
 

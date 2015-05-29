@@ -1164,8 +1164,7 @@ int CKMLogic::saveDataHelper(
 
 int CKMLogic::createKeyPairHelper(
     const Credentials &cred,
-    const KeyType key_type,
-    const int additional_param,
+    const CryptoAlgorithmSerializable & keyGenParams,
     const Name &namePrivate,
     const Label &labelPrivate,
     const Name &namePublic,
@@ -1173,37 +1172,18 @@ int CKMLogic::createKeyPairHelper(
     const PolicySerializable &policyPrivate,
     const PolicySerializable &policyPublic)
 {
-    CryptoAlgorithm keyGenAlgorithm;
-    switch(key_type)
-    {
-        case KeyType::KEY_RSA_PUBLIC:
-        case KeyType::KEY_RSA_PRIVATE:
-            keyGenAlgorithm.addParam(ParamName::ALGO_TYPE, AlgoType::RSA_GEN);
-            keyGenAlgorithm.addParam(ParamName::GEN_KEY_LEN, additional_param);
-            break;
-
-        case KeyType::KEY_DSA_PUBLIC:
-        case KeyType::KEY_DSA_PRIVATE:
-            keyGenAlgorithm.addParam(ParamName::ALGO_TYPE, AlgoType::DSA_GEN);
-            keyGenAlgorithm.addParam(ParamName::GEN_KEY_LEN, additional_param);
-            break;
-
-        case KeyType::KEY_ECDSA_PUBLIC:
-        case KeyType::KEY_ECDSA_PRIVATE:
-            keyGenAlgorithm.addParam(ParamName::ALGO_TYPE, AlgoType::ECDSA_GEN);
-            keyGenAlgorithm.addParam(ParamName::GEN_EC, additional_param);
-            break;
-
-        default:
-            LogError("Invalid key_type for asymetric key generation: " << (int)key_type);
-            return CKM_API_ERROR_INPUT_PARAM;
-    }
-
     auto &handlerPriv = selectDatabase(cred, labelPrivate);
     auto &handlerPub = selectDatabase(cred, labelPublic);
 
+    AlgoType keyType = AlgoType::RSA_GEN;
+    if(!keyGenParams.getParam(ParamName::ALGO_TYPE, keyType))
+        ThrowMsg(Crypto::Exception::InputParam, "Error, parameter ALGO_TYPE not found.");
+    DataType dt(keyType);
+    if(!dt.isKey())
+        ThrowMsg(Crypto::Exception::InputParam, "Error, parameter ALGO_TYPE with wrong value.");
+
     bool exportable = policyPrivate.extractable || policyPublic.extractable;
-    TokenPair keys = m_decider.getStore(DataType(key_type), exportable).generateAKey(keyGenAlgorithm);
+    TokenPair keys = m_decider.getStore(dt, exportable).generateAKey(keyGenParams);
 
     DB::Crypto::Transaction transactionPriv(&handlerPriv.database);
     // in case the same database is used for private and public - the second
@@ -1235,9 +1215,8 @@ int CKMLogic::createKeyPairHelper(
 
 RawBuffer CKMLogic::createKeyPair(
     const Credentials &cred,
-    LogicCommand protocol_cmd,
     int commandId,
-    const int additional_param,
+    const CryptoAlgorithmSerializable & keyGenParams,
     const Name &namePrivate,
     const Label &labelPrivate,
     const Name &namePublic,
@@ -1247,27 +1226,10 @@ RawBuffer CKMLogic::createKeyPair(
 {
     int retCode = CKM_API_SUCCESS;
 
-    KeyType key_type = KeyType::KEY_NONE;
-    switch(protocol_cmd)
-    {
-        case LogicCommand::CREATE_KEY_PAIR_RSA:
-            key_type = KeyType::KEY_RSA_PUBLIC;
-            break;
-        case LogicCommand::CREATE_KEY_PAIR_DSA:
-            key_type = KeyType::KEY_DSA_PUBLIC;
-            break;
-        case LogicCommand::CREATE_KEY_PAIR_ECDSA:
-            key_type = KeyType::KEY_ECDSA_PUBLIC;
-            break;
-        default:
-            break;
-    }
-
     try {
         retCode = createKeyPairHelper(
                         cred,
-                        key_type,
-                        additional_param,
+                        keyGenParams,
                         namePrivate,
                         labelPrivate,
                         namePublic,
@@ -1300,7 +1262,8 @@ RawBuffer CKMLogic::createKeyPair(
         retCode = CKM_API_ERROR_SERVER_ERROR;
     }
 
-    return MessageBuffer::Serialize(static_cast<int>(protocol_cmd), commandId, retCode).Pop();
+    return MessageBuffer::Serialize(static_cast<int>(LogicCommand::CREATE_KEY_PAIR),
+                                    commandId, retCode).Pop();
 }
 
 int CKMLogic::readCertificateHelper(

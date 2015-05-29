@@ -64,9 +64,7 @@ public:
         virtual void ReceivedCertificateAliasVector(AliasVector &&) {}
         virtual void ReceivedDataAliasVector(AliasVector &&) {}
 
-        virtual void ReceivedCreateKeyPairRSA() {}
-        virtual void ReceivedCreateKeyPairDSA() {}
-        virtual void ReceivedCreateKeyPairECDSA() {}
+        virtual void ReceivedCreateKeyPair() {}
 
         virtual void ReceivedGetCertificateChain(CertificateShPtrVector &&) {}
 

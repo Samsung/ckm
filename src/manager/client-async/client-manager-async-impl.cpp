@@ -309,22 +309,25 @@ void ManagerAsync::Impl::createKeyPair(const ManagerAsync::ObserverPtr& observer
         return;
     }
     // input type check
-    LogicCommand cmd_type;
+    CryptoAlgorithm keyGenAlgorithm;
     switch(key_type)
     {
         case KeyType::KEY_RSA_PUBLIC:
         case KeyType::KEY_RSA_PRIVATE:
-            cmd_type = LogicCommand::CREATE_KEY_PAIR_RSA;
+            keyGenAlgorithm.addParam(ParamName::ALGO_TYPE, AlgoType::RSA_GEN);
+            keyGenAlgorithm.addParam(ParamName::GEN_KEY_LEN, additional_param);
             break;
 
         case KeyType::KEY_DSA_PUBLIC:
         case KeyType::KEY_DSA_PRIVATE:
-            cmd_type = LogicCommand::CREATE_KEY_PAIR_DSA;
+            keyGenAlgorithm.addParam(ParamName::ALGO_TYPE, AlgoType::DSA_GEN);
+            keyGenAlgorithm.addParam(ParamName::GEN_KEY_LEN, additional_param);
             break;
 
         case KeyType::KEY_ECDSA_PUBLIC:
         case KeyType::KEY_ECDSA_PRIVATE:
-            cmd_type = LogicCommand::CREATE_KEY_PAIR_ECDSA;
+            keyGenAlgorithm.addParam(ParamName::ALGO_TYPE, AlgoType::ECDSA_GEN);
+            keyGenAlgorithm.addParam(ParamName::GEN_EC, additional_param);
             break;
 
         default:
@@ -336,9 +339,9 @@ void ManagerAsync::Impl::createKeyPair(const ManagerAsync::ObserverPtr& observer
         AliasSupport prvHelper(privateKeyAlias);
         AliasSupport pubHelper(publicKeyAlias);
         sendToStorage(observer,
-                      static_cast<int>(cmd_type),
+                      static_cast<int>(LogicCommand::CREATE_KEY_PAIR),
                       m_counter,
-                      static_cast<int>(additional_param),
+                      CryptoAlgorithmSerializable(keyGenAlgorithm),
                       PolicySerializable(policyPrivateKey),
                       PolicySerializable(policyPublicKey),
                       prvHelper.getName(),

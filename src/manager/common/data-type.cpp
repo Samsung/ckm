@@ -49,6 +49,20 @@ DataType::DataType(KeyType key) {
     }
 }
 
+DataType::DataType(AlgoType algorithmType) {
+    switch(algorithmType) {
+    case AlgoType::AES_CTR:
+    case AlgoType::AES_CBC:
+    case AlgoType::AES_GCM:
+    case AlgoType::AES_CFB:         m_dataType = DataType::KEY_AES;             break;
+    case AlgoType::RSA_GEN:         m_dataType = DataType::KEY_RSA_PUBLIC;      break;
+    case AlgoType::DSA_GEN:         m_dataType = DataType::KEY_DSA_PUBLIC;      break;
+    case AlgoType::ECDSA_GEN:       m_dataType = DataType::KEY_ECDSA_PUBLIC;    break;
+    default:
+        ThrowMsg(Exception::OutOfRange, "Invalid conversion from AlgoType to DBDataType");
+    }
+}
+
 DataType::DataType(int data)
   : m_dataType(static_cast<Type>(data))
 {

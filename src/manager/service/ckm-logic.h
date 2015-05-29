@@ -127,9 +127,8 @@ public:
 
     RawBuffer createKeyPair(
         const Credentials &cred,
-        LogicCommand protocol_cmd,
         int commandId,
-        const int additional_param,
+        const CryptoAlgorithmSerializable & keyGenParams,
         const Name &namePrivate,
         const Label &labelPrivate,
         const Name &namePublic,
@@ -324,8 +323,7 @@ private:
 
     int createKeyPairHelper(
         const Credentials &cred,
-        const KeyType key_type,
-        const int additional_param,
+        const CryptoAlgorithmSerializable & keyGenParams,
         const Name &namePrivate,
         const Label &labelPrivate,
         const Name &namePublic,

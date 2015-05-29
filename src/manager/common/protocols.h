@@ -50,7 +50,6 @@ enum class ControlCommand : int {
     REMOVE_APP_DATA,
     UPDATE_CC_MODE,
     SET_PERMISSION
-    // for backward compatibility append new at the end
 };
 
 enum class LogicCommand : int {
@@ -58,17 +57,14 @@ enum class LogicCommand : int {
     GET_LIST,
     SAVE,
     REMOVE,
-    CREATE_KEY_PAIR_RSA,
-    CREATE_KEY_PAIR_ECDSA,
+    CREATE_KEY_PAIR,
     GET_CHAIN_CERT,
     GET_CHAIN_ALIAS,
     CREATE_SIGNATURE,
     VERIFY_SIGNATURE,
-    CREATE_KEY_PAIR_DSA,
     SET_PERMISSION,
     SAVE_PKCS12,
     GET_PKCS12
-    // for backward compatibility append new at the end
 };
 
 enum class EncryptionCommand : int {
