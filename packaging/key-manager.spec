@@ -153,6 +153,7 @@ ln -s ../central-key-manager-listener.service %{buildroot}%{_unitdir}/multi-user
 ln -s ../central-key-manager-api-control.socket %{buildroot}%{_unitdir}/sockets.target.wants/central-key-manager-api-control.socket
 ln -s ../central-key-manager-api-storage.socket %{buildroot}%{_unitdir}/sockets.target.wants/central-key-manager-api-storage.socket
 ln -s ../central-key-manager-api-ocsp.socket %{buildroot}%{_unitdir}/sockets.target.wants/central-key-manager-api-ocsp.socket
+ln -s ../central-key-manager-api-encryption.socket %{buildroot}%{_unitdir}/sockets.target.wants/central-key-manager-api-encryption.socket
 
 %clean
 rm -rf %{buildroot}
@@ -222,6 +223,8 @@ fi
 %{_unitdir}/central-key-manager-api-storage.socket
 %{_unitdir}/sockets.target.wants/central-key-manager-api-ocsp.socket
 %{_unitdir}/central-key-manager-api-ocsp.socket
+%{_unitdir}/sockets.target.wants/central-key-manager-api-encryption.socket
+%{_unitdir}/central-key-manager-api-encryption.socket
 %{_datadir}/license/%{name}
 %{_datadir}/ckm/scripts/*.sql
 %{_datadir}/

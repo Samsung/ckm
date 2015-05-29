@@ -34,6 +34,8 @@ SET(KEY_MANAGER_SOURCES
     ${KEY_MANAGER_PATH}/service/db-crypto.cpp
     ${KEY_MANAGER_PATH}/service/ocsp-service.cpp
     ${KEY_MANAGER_PATH}/service/ocsp-logic.cpp
+    ${KEY_MANAGER_PATH}/service/encryption-service.cpp
+    ${KEY_MANAGER_PATH}/service/encryption-logic.cpp
     ${KEY_MANAGER_PATH}/initial-values/parser.cpp
     ${KEY_MANAGER_PATH}/initial-values/BufferHandler.cpp
     ${KEY_MANAGER_PATH}/initial-values/CertHandler.cpp

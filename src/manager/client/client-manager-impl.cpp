@@ -763,11 +763,12 @@ int ManagerImpl::setPermission(const Alias &alias,
     });
 }
 
-int ManagerImpl::encrypt(const CryptoAlgorithm &algo,
-                         const Alias &keyAlias,
-                         const Password &password,
-                         const RawBuffer& plain,
-                         RawBuffer& encrypted)
+int ManagerImpl::crypt(EncryptionCommand command,
+          const CryptoAlgorithm &algo,
+          const Alias &keyAlias,
+          const Password &password,
+          const RawBuffer& input,
+          RawBuffer& output)
 {
     int my_counter = ++m_counter;
 
@@ -775,13 +776,13 @@ int ManagerImpl::encrypt(const CryptoAlgorithm &algo,
         MessageBuffer recv;
         AliasSupport helper(keyAlias);
         CryptoAlgorithmSerializable cas(algo);
-        auto send = MessageBuffer::Serialize(static_cast<int>(EncryptionCommand::ENCRYPT),
+        auto send = MessageBuffer::Serialize(static_cast<int>(command),
                                              my_counter,
                                              cas,
                                              helper.getName(),
                                              helper.getLabel(),
                                              password,
-                                             plain);
+                                             input);
 
         int retCode = m_encryptionConnection.processRequest(send.Pop(), recv);
         if (CKM_API_SUCCESS != retCode)
@@ -789,7 +790,7 @@ int ManagerImpl::encrypt(const CryptoAlgorithm &algo,
 
         int command;
         int counter;
-        recv.Deserialize(command, counter, encrypted);
+        recv.Deserialize(command, counter, retCode, output);
 
         if (my_counter != counter) {
             return CKM_API_ERROR_UNKNOWN;
@@ -799,40 +800,22 @@ int ManagerImpl::encrypt(const CryptoAlgorithm &algo,
     });
 }
 
+int ManagerImpl::encrypt(const CryptoAlgorithm &algo,
+            const Alias &keyAlias,
+            const Password &password,
+            const RawBuffer& plain,
+            RawBuffer& encrypted)
+{
+    return crypt(EncryptionCommand::ENCRYPT, algo, keyAlias, password, plain, encrypted);
+}
+
 int ManagerImpl::decrypt(const CryptoAlgorithm &algo,
                          const Alias &keyAlias,
                          const Password &password,
                          const RawBuffer& encrypted,
                          RawBuffer& decrypted)
 {
-    int my_counter = ++m_counter;
-
-    return try_catch([&] {
-        MessageBuffer recv;
-        AliasSupport helper(keyAlias);
-        CryptoAlgorithmSerializable cas(algo);
-        auto send = MessageBuffer::Serialize(static_cast<int>(EncryptionCommand::DECRYPT),
-                                             my_counter,
-                                             cas,
-                                             helper.getName(),
-                                             helper.getLabel(),
-                                             password,
-                                             encrypted);
-
-        int retCode = m_encryptionConnection.processRequest(send.Pop(), recv);
-        if (CKM_API_SUCCESS != retCode)
-            return retCode;
-
-        int command;
-        int counter;
-        recv.Deserialize(command, counter, decrypted);
-
-        if (my_counter != counter) {
-            return CKM_API_ERROR_UNKNOWN;
-        }
-
-        return retCode;
-    });
+    return crypt(EncryptionCommand::DECRYPT, algo, keyAlias, password, encrypted, decrypted);
 }
 
 ManagerShPtr Manager::create() {
