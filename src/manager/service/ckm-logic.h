@@ -136,6 +136,14 @@ public:
         const PolicySerializable &policyPrivate,
         const PolicySerializable &policyPublic);
 
+    RawBuffer createKeyAES(
+        const Credentials &cred,
+        int commandId,
+        const int size,
+        const Name &name,
+        const Label &label,
+        const PolicySerializable &policy);
+
     RawBuffer getCertificateChain(
         const Credentials &cred,
         int commandId,
@@ -320,6 +328,13 @@ private:
         const Label &label,
         const Password &password,
         DB::RowVector &rows);
+
+    int createKeyAESHelper(
+        const Credentials &cred,
+        const int size,
+        const Name &name,
+        const Label &label,
+        const PolicySerializable &policy);
 
     int createKeyPairHelper(
         const Credentials &cred,

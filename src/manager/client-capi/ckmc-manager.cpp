@@ -168,11 +168,19 @@ int ckmc_save_key(const char *alias, const ckmc_key_s key, const ckmc_policy_s p
     CKM::Alias ckmAlias(alias);
 
     if(key.raw_key == NULL || key.key_size <= 0) {
-            return CKMC_ERROR_INVALID_PARAMETER;
+        return CKMC_ERROR_INVALID_PARAMETER;
     }
     CKM::RawBuffer buffer(key.raw_key, key.raw_key + key.key_size);
-    CKM::KeyShPtr ckmKey = CKM::Key::create(buffer, _tostring(key.password));
 
+    CKM::KeyShPtr ckmKey;
+    if(key.key_type == CKMC_KEY_AES)
+    {
+        if(key.password)
+            return CKMC_ERROR_INVALID_PARAMETER;
+        ckmKey = CKM::Key::createAES(buffer);
+    }
+    else
+        ckmKey = CKM::Key::create(buffer, _tostring(key.password));
     if(ckmKey.get() == NULL) {
         return CKMC_ERROR_INVALID_FORMAT;
     }
@@ -602,11 +610,20 @@ int ckmc_create_key_pair_ecdsa(const ckmc_ec_type_e type,
 }
 
 KEY_MANAGER_CAPI
-int ckmc_create_key_aes(const size_t /*size*/,
-                        const char */*key_alias*/,
-                        const ckmc_policy_s /*key_policy*/)
+int ckmc_create_key_aes(const size_t size,
+                        const char *key_alias,
+                        const ckmc_policy_s key_policy)
 {
-    return 0;
+    CKM::ManagerShPtr mgr = CKM::Manager::create();
+
+    if(key_alias == NULL)
+        return CKMC_ERROR_INVALID_PARAMETER;
+
+    CKM::Alias ckmKeyAlias(key_alias);
+    CKM::Policy ckmKeyPolicy(_tostring(key_policy.password), key_policy.extractable);
+
+    int ret = mgr->createKeyAES(size, ckmKeyAlias, ckmKeyPolicy);
+    return to_ckmc_error(ret);
 }
 
 KEY_MANAGER_CAPI

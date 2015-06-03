@@ -98,6 +98,10 @@ bool DataType::isKey() const {
     return false;
 }
 
+bool DataType::isSKey() const {
+    return (KEY_AES == m_dataType);
+}
+
 bool DataType::isChainCert() const {
     if (DB_CHAIN_FIRST <= m_dataType && DB_CHAIN_LAST >= m_dataType)
         return true;

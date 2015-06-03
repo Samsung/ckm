@@ -27,12 +27,13 @@
 #include <file-system.h>
 #include <ckm-logic.h>
 #include <key-impl.h>
+#include <key-aes-impl.h>
 #include <certificate-config.h>
 #include <certificate-store.h>
 #include <dirent.h>
 #include <algorithm>
 #include <InitialValuesFile.h>
-
+#include <sw-backend/store.h>
 #include <generic-backend/exception.h>
 
 namespace {
@@ -460,7 +461,11 @@ int CKMLogic::toBinaryData(DataType dataType,
     // verify the data integrity
     if (dataType.isKey())
     {
-        KeyShPtr output_key = CKM::Key::create(input_data);
+        KeyShPtr output_key;
+        if(dataType.isSKey())
+            output_key = CKM::Key::createAES(input_data);
+        else
+            output_key = CKM::Key::create(input_data);
         if(output_key.get() == NULL)
         {
             LogError("provided binary data is not valid key data");
@@ -1162,6 +1167,26 @@ int CKMLogic::saveDataHelper(
 }
 
 
+int CKMLogic::createKeyAESHelper(
+    const Credentials &cred,
+    const int size,
+    const Name &name,
+    const Label &label,
+    const PolicySerializable &policy)
+{
+    CryptoAlgorithm keyGenAlgorithm;
+    keyGenAlgorithm.addParam(ParamName::GEN_KEY_LEN, size);
+    Token key = m_decider.getStore(DataType::KEY_AES, policy.extractable).generateSKey(keyGenAlgorithm);
+
+    return saveDataHelper(cred,
+                          name,
+                          label,
+                          DataType::KEY_AES,
+                          key.data,
+                          policy);
+}
+
+
 int CKMLogic::createKeyPairHelper(
     const Credentials &cred,
     const CryptoAlgorithmSerializable & keyGenParams,
@@ -1263,6 +1288,51 @@ RawBuffer CKMLogic::createKeyPair(
     }
 
     return MessageBuffer::Serialize(static_cast<int>(LogicCommand::CREATE_KEY_PAIR),
+                                    commandId, retCode).Pop();
+}
+
+RawBuffer CKMLogic::createKeyAES(
+    const Credentials &cred,
+    int commandId,
+    const int size,
+    const Name &name,
+    const Label &label,
+    const PolicySerializable &policy)
+{
+    int retCode = CKM_API_SUCCESS;
+
+    try {
+        retCode = createKeyAESHelper(cred, size, name, label, policy);
+    } catch (const Crypto::Exception::OperationNotSupported &e) {
+        LogDebug("GStore error: operation not supported: " << e.GetMessage());
+        retCode = CKM_API_ERROR_SERVER_ERROR;
+    } catch (const Crypto::Exception::InternalError & e) {
+        LogDebug("GStore key generation failed: " << e.GetMessage());
+        retCode = CKM_API_ERROR_SERVER_ERROR;
+    } catch( const Crypto::Exception::InputParam & e) {
+        LogDebug("Missing or wrong input parameters: " << e.GetMessage());
+        retCode = CKM_API_ERROR_INPUT_PARAM;
+    } catch (std::invalid_argument &e) {
+        LogDebug("invalid argument error: " << e.what());
+        retCode = CKM_API_ERROR_INPUT_PARAM;
+    } catch (DB::Crypto::Exception::TransactionError &e) {
+        LogDebug("DB::Crypto error: transaction error: " << e.GetMessage());
+        retCode = CKM_API_ERROR_DB_ERROR;
+    } catch (CKM::CryptoLogic::Exception::Base &e) {
+        LogDebug("CryptoLogic error: " << e.GetMessage());
+        retCode = CKM_API_ERROR_SERVER_ERROR;
+    } catch (DB::Crypto::Exception::InternalError &e) {
+        LogDebug("DB::Crypto internal error: " << e.GetMessage());
+        retCode = CKM_API_ERROR_DB_ERROR;
+    } catch (const CKMLogic::Exception::DatabaseLocked &e) {
+        LogError("Error " << e.GetMessage());
+        retCode = CKM_API_ERROR_DB_LOCKED;
+    } catch (const CKM::Exception &e) {
+        LogError("CKM::Exception: " << e.GetMessage());
+        retCode = CKM_API_ERROR_SERVER_ERROR;
+    }
+
+    return MessageBuffer::Serialize(static_cast<int>(LogicCommand::CREATE_KEY_AES),
                                     commandId, retCode).Pop();
 }
 

@@ -21,6 +21,7 @@ SET(COMMON_SOURCES
     ${COMMON_PATH}/common/message-buffer.cpp
     ${COMMON_PATH}/common/certificate-impl.cpp
     ${COMMON_PATH}/common/key-impl.cpp
+    ${COMMON_PATH}/common/key-aes-impl.cpp
     ${COMMON_PATH}/common/pkcs12-impl.cpp
     ${COMMON_PATH}/common/log-setup.cpp
     ${COMMON_PATH}/dpl/log/src/abstract_log_provider.cpp

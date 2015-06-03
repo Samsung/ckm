@@ -64,6 +64,7 @@ public:
         virtual void ReceivedCertificateAliasVector(AliasVector &&) {}
         virtual void ReceivedDataAliasVector(AliasVector &&) {}
 
+        virtual void ReceivedCreateKeyAES() {}
         virtual void ReceivedCreateKeyPair() {}
 
         virtual void ReceivedGetCertificateChain(CertificateShPtrVector &&) {}
@@ -144,7 +145,7 @@ public:
             const Policy& policyPublicKey = Policy());
     void createKeyAES(
             const ObserverPtr& observer,
-            int size,
+            int sizeBits,
             const Alias &keyAlias,
             const Policy &policyKey = Policy());
 

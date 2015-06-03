@@ -71,6 +71,9 @@ void StorageReceiver::parseResponse()
     case LogicCommand::REMOVE:
         parseRemoveCommand();
         break;
+    case LogicCommand::CREATE_KEY_AES:
+        parseRetCode(&ManagerAsync::Observer::ReceivedCreateKeyAES);
+        break;
     case LogicCommand::CREATE_KEY_PAIR:
         parseRetCode(&ManagerAsync::Observer::ReceivedCreateKeyPair);
         break;

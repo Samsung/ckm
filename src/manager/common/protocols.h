@@ -57,6 +57,7 @@ enum class LogicCommand : int {
     GET_LIST,
     SAVE,
     REMOVE,
+    CREATE_KEY_AES,
     CREATE_KEY_PAIR,
     GET_CHAIN_CERT,
     GET_CHAIN_ALIAS,

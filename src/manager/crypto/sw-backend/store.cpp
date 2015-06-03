@@ -89,6 +89,15 @@ TokenPair Store::generateAKey(const CryptoAlgorithm &algorithm)
     ThrowMsg(Crypto::Exception::InputParam, "wrong key type");
 }
 
+Token Store::generateSKey(const CryptoAlgorithm &algorithm)
+{
+    int keyLength = 0;
+    if(!algorithm.getParam(ParamName::GEN_KEY_LEN, keyLength))
+        ThrowMsg(Crypto::Exception::InputParam, "Error, parameter GEN_KEY_LEN not found.");
+
+    return Internals::createKeyAES(m_backendId, keyLength);
+}
+
 Token Store::import(DataType dataType, const RawBuffer &buffer) {
     return Token(m_backendId, dataType, buffer);
 }

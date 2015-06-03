@@ -1,5 +1,4 @@
-/*
- *  Copyright (c) 2014 Samsung Electronics Co.
+/* Copyright (c) 2015 Samsung Electronics Co., Ltd All Rights Reserved
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -14,35 +13,30 @@
  *  limitations under the License
  *
  *
- * @file        ckm-key.h
- * @author      Bartlomiej Grzelewski (b.grzelewski@samsung.com)
+ * @file        key-aes-impl.h
+ * @author      Maciej Karpiuk (m.karpiuk2@samsung.com)
  * @version     1.0
- * @brief       Main header file for client library.
+ * @brief       AES key.
  */
 #pragma once
 
 #include <ckm/ckm-type.h>
+#include <ckm/ckm-key.h>
+#include <symbol-visibility.h>
 
 namespace CKM {
 
-class Key;
-typedef std::shared_ptr<Key> KeyShPtr;
-
-class KEY_MANAGER_API Key {
+class COMMON_API KeyAESImpl : public Key {
 public:
-    virtual bool empty() const = 0;
-    virtual KeyType getType() const = 0;
-    virtual int getSize() const = 0;
-    virtual RawBuffer getDER() const = 0;
-    virtual ~Key(){}
+    explicit KeyAESImpl(const RawBuffer& buffer);
 
-    static KeyShPtr create(
-        const RawBuffer &rawBuffer,
-        const Password &password = Password());
+    virtual KeyType getType() const;
+    virtual RawBuffer getDER() const;
+    virtual int getSize() const;
+    virtual bool empty() const;
 
-    static KeyShPtr createAES(
-        const RawBuffer &rawBuffer);
+protected:
+    CKM::RawBuffer m_key;
 };
 
 } // namespace CKM
-

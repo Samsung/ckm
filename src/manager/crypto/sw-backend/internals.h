@@ -48,6 +48,7 @@ int initialize();
 TokenPair createKeyPairRSA(CryptoBackend backendId, const int size);
 TokenPair createKeyPairDSA(CryptoBackend backendId, const int size);
 TokenPair createKeyPairECDSA(CryptoBackend backendId, ElipticCurve type1);
+Token     createKeyAES(CryptoBackend backendId, const int sizeBits);
 
 RawBuffer sign(EVP_PKEY *pkey,
     const CryptoAlgorithm &alg,

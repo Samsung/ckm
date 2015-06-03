@@ -29,6 +29,7 @@
 #include <message-buffer.h>
 #include <protocols.h>
 #include <key-impl.h>
+#include <key-aes-impl.h>
 #include <certificate-impl.h>
 
 namespace CKM {
@@ -322,7 +323,11 @@ int ManagerImpl::getKey(const Alias &alias, const Password &password, KeyShPtr &
     if (retCode != CKM_API_SUCCESS)
         return retCode;
 
-    KeyShPtr keyParsed(new KeyImpl(rawData));
+    KeyShPtr keyParsed;
+    if(DataType::KEY_AES == recvDataType)
+        keyParsed = KeyShPtr(new KeyAESImpl(rawData));
+    else
+        keyParsed = KeyShPtr(new KeyImpl(rawData));
 
     if (keyParsed->empty()) {
         LogDebug("Key empty - failed to parse!");
@@ -457,11 +462,37 @@ int ManagerImpl::createKeyPairECDSA(
 }
 
 int ManagerImpl::createKeyAES(
-    const int /*size*/,
-    const Alias &/*keyAlias*/,
-    const Policy &/*policyKey*/)
+    const int size,
+    const Alias &keyAlias,
+    const Policy &policyKey)
 {
-    return 0;
+    // proceed with sending request
+    int my_counter = ++m_counter;
+
+    return try_catch([&] {
+
+        MessageBuffer recv;
+        AliasSupport aliasHelper(keyAlias);
+        auto send = MessageBuffer::Serialize(static_cast<int>(LogicCommand::CREATE_KEY_AES),
+                                             my_counter,
+                                             static_cast<int>(size),
+                                             PolicySerializable(policyKey),
+                                             aliasHelper.getName(),
+                                             aliasHelper.getLabel());
+
+        int retCode = m_storageConnection.processRequest(send.Pop(), recv);
+        if (CKM_API_SUCCESS != retCode)
+            return retCode;
+
+        int command;
+        int counter;
+        recv.Deserialize(command, counter, retCode);
+        if (counter != my_counter) {
+            return CKM_API_ERROR_UNKNOWN;
+        }
+
+        return retCode;
+    });
 }
 
 

@@ -123,6 +123,12 @@ public:
             const Policy &policyPrivateKey,
             const Policy &policyPublicKey);
 
+    void createKeyAES(
+            const ManagerAsync::ObserverPtr& observer,
+            const size_t  size,
+            const Alias  &keyAlias,
+            const Policy &policyKey);
+
     template <typename T>
     void getCertChain(
             const ManagerAsync::ObserverPtr& observer,

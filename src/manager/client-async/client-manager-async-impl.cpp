@@ -351,6 +351,29 @@ void ManagerAsync::Impl::createKeyPair(const ManagerAsync::ObserverPtr& observer
     }, [&observer](int error){ observer->ReceivedError(error); } );
 }
 
+void ManagerAsync::Impl::createKeyAES(const ManagerAsync::ObserverPtr& observer,
+                                      const size_t  size,
+                                      const Alias  &keyAlias,
+                                      const Policy &policyKey)
+{
+    observerCheck(observer);
+    if (keyAlias.empty()) {
+        observer->ReceivedError(CKM_API_ERROR_INPUT_PARAM);
+        return;
+    }
+
+    try_catch_async([&] {
+        AliasSupport aliasHelper(keyAlias);
+        sendToStorage(observer,
+                      static_cast<int>(LogicCommand::CREATE_KEY_AES),
+                      m_counter,
+                      static_cast<int>(size),
+                      PolicySerializable(policyKey),
+                      aliasHelper.getName(),
+                      aliasHelper.getLabel());
+    }, [&observer](int error){ observer->ReceivedError(error); } );
+}
+
 void ManagerAsync::Impl::observerCheck(const ManagerAsync::ObserverPtr& observer)
 {
     if(!observer)
