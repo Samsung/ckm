@@ -59,9 +59,12 @@ bool CryptoAlgorithm::getParam(ParamName name, RawBuffer& value) const
 }
 
 template <>
-bool CryptoAlgorithm::addParam(ParamName name, const RawBuffer& value)
+bool CryptoAlgorithm::setParam(ParamName name, const RawBuffer& value)
 {
-    return m_params.emplace(name, BufferParam::create(value)).second;
+    if (name < ParamName::FIRST || name > ParamName::LAST)
+        return false;
+    m_params[name] = BufferParam::create(value);
+    return true;
 }
 
 } // namespace CKM

@@ -129,6 +129,10 @@ enum class ParamName : int {
     // sign & verify
     SV_HASH_ALGO = 301, // hash algorithm (HashAlgorithm)
     SV_RSA_PADDING,     // RSA padding (RSAPaddingAlgorithm)
+
+    // special values marking valid values range
+    FIRST = ALGO_TYPE,
+    LAST = SV_RSA_PADDING
 };
 
 // algorithm types (ALGO_TYPE param)
@@ -152,9 +156,9 @@ public:
     template <typename T>
     bool getParam(ParamName name, T& value) const;
 
-    // returns false if param 'name' already exists
+    // returns false if param 'name' is invalid
     template <typename T>
-    bool addParam(ParamName name, const T& value);
+    bool setParam(ParamName name, const T& value);
 
 protected:
     class BaseParam {
@@ -211,12 +215,15 @@ template <>
 bool CryptoAlgorithm::getParam(ParamName name, RawBuffer& value) const;
 
 template <typename T>
-bool CryptoAlgorithm::addParam(ParamName name, const T& value) {
-    return m_params.emplace(name, IntParam::create(static_cast<uint64_t>(value))).second;
+bool CryptoAlgorithm::setParam(ParamName name, const T& value) {
+    if (name < ParamName::FIRST || name > ParamName::LAST)
+        return false;
+    m_params[name] = IntParam::create(static_cast<uint64_t>(value));
+    return true;
 }
 
 template <>
-bool CryptoAlgorithm::addParam(ParamName name, const RawBuffer& value);
+bool CryptoAlgorithm::setParam(ParamName name, const RawBuffer& value);
 
 } // namespace CKM
 

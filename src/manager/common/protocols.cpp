@@ -133,7 +133,7 @@ CryptoAlgorithmSerializable::CryptoAlgorithmSerializable(IStream &stream)
         case ParamName::ED_AAD:
         case ParamName::ED_LABEL:
             Deserializer<RawBuffer>::Deserialize(stream, buffer);
-            addParam(name, buffer);
+            setParam(name, buffer);
             break;
 
         case ParamName::ALGO_TYPE:
@@ -144,7 +144,7 @@ CryptoAlgorithmSerializable::CryptoAlgorithmSerializable(IStream &stream)
         case ParamName::SV_HASH_ALGO:
         case ParamName::SV_RSA_PADDING:
             Deserializer<uint64_t>::Deserialize(stream, integer);
-            addParam(name, integer);
+            setParam(name, integer);
             break;
 
         default:

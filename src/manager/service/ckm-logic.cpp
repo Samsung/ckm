@@ -1175,7 +1175,7 @@ int CKMLogic::createKeyAESHelper(
     const PolicySerializable &policy)
 {
     CryptoAlgorithm keyGenAlgorithm;
-    keyGenAlgorithm.addParam(ParamName::GEN_KEY_LEN, size);
+    keyGenAlgorithm.setParam(ParamName::GEN_KEY_LEN, size);
     Token key = m_decider.getStore(DataType::KEY_AES, policy.extractable).generateSKey(keyGenAlgorithm);
 
     return saveDataHelper(cred,
@@ -1526,8 +1526,8 @@ RawBuffer CKMLogic::createSignature(
     DB::Row row;
     RawBuffer signature;
     CryptoAlgorithm cryptoAlg;
-    cryptoAlg.addParam(ParamName::SV_HASH_ALGO, hash);
-    cryptoAlg.addParam(ParamName::SV_RSA_PADDING, padding);
+    cryptoAlg.setParam(ParamName::SV_HASH_ALGO, hash);
+    cryptoAlg.setParam(ParamName::SV_RSA_PADDING, padding);
 
     int retCode = CKM_API_SUCCESS;
 
@@ -1586,8 +1586,8 @@ RawBuffer CKMLogic::verifySignature(
         DB::Row row;
 
         CryptoAlgorithm params;
-        params.addParam(ParamName::SV_HASH_ALGO, hash);
-        params.addParam(ParamName::SV_RSA_PADDING, padding);
+        params.setParam(ParamName::SV_HASH_ALGO, hash);
+        params.setParam(ParamName::SV_RSA_PADDING, padding);
 
         // try certificate first - looking for a public key.
         // in case of PKCS, pub key from certificate will be found first

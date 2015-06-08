@@ -41,30 +41,6 @@ const size_t DEFAULT_IV_LEN = 16;
 const size_t DEFAULT_IV_LEN_BITS = 8*DEFAULT_IV_LEN;
 const size_t DEFAULT_KEY_LEN_BITS = 4096;
 
-int _ckmc_random_buffer(ckmc_raw_buffer_s **buffer, size_t len)
-{
-    if(!buffer)
-        return CKMC_ERROR_INVALID_PARAMETER;
-
-    char* data = static_cast<char*>(malloc(len*sizeof(char)));
-    if(!data)
-        return CKMC_ERROR_OUT_OF_MEMORY;
-
-    std::ifstream is("/dev/urandom", std::ifstream::binary);
-    if(!is) {
-        free(data);
-        return CKMC_ERROR_FILE_SYSTEM;
-    }
-
-    is.read(data, len);
-    if (static_cast<std::streamsize>(len) != is.gcount()) {
-        free(data);
-        return CKMC_ERROR_FILE_SYSTEM;
-    }
-
-    return ckmc_buffer_new(reinterpret_cast<unsigned char*>(data), len, buffer);
-}
-
 int _ckmc_load_cert_from_x509(X509 *xCert, ckmc_cert_s **cert)
 {
     if(xCert == NULL) {
@@ -613,7 +589,7 @@ int ckmc_param_list_add_integer(ckmc_param_list_s *params,
         return CKMC_ERROR_INVALID_PARAMETER;
 
     CKM::CryptoAlgorithm* algo = reinterpret_cast<CKM::CryptoAlgorithm*>(params);
-    bool ret = algo->addParam(static_cast<CKM::ParamName>(name), value);
+    bool ret = algo->setParam(static_cast<CKM::ParamName>(name), value);
     return (ret ? CKMC_ERROR_NONE : CKMC_ERROR_INVALID_PARAMETER);
 }
 
@@ -627,8 +603,39 @@ int ckmc_param_list_add_buffer(ckmc_param_list_s *params,
 
     CKM::CryptoAlgorithm* algo = reinterpret_cast<CKM::CryptoAlgorithm*>(params);
     CKM::RawBuffer b(buffer->data, buffer->data + buffer->size);
-    bool ret =  algo->addParam(static_cast<CKM::ParamName>(name), b);
+    bool ret =  algo->setParam(static_cast<CKM::ParamName>(name), b);
     return (ret ? CKMC_ERROR_NONE : CKMC_ERROR_INVALID_PARAMETER);
+}
+
+KEY_MANAGER_CAPI
+int ckmc_param_list_get_integer(const ckmc_param_list_s *params,
+                                ckmc_param_name_e name,
+                                uint64_t* value)
+{
+    if (!params || !value)
+        return CKMC_ERROR_INVALID_PARAMETER;
+
+    const CKM::CryptoAlgorithm* algo = reinterpret_cast<const CKM::CryptoAlgorithm*>(params);
+    if (!algo->getParam(static_cast<CKM::ParamName>(name),*value))
+        return CKMC_ERROR_INVALID_PARAMETER;
+
+    return CKMC_ERROR_NONE;
+}
+
+KEY_MANAGER_CAPI
+int ckmc_param_list_get_buffer(const ckmc_param_list_s *params,
+                               ckmc_param_name_e name,
+                               ckmc_raw_buffer_s **buffer)
+{
+    if (!params || !buffer)
+        return CKMC_ERROR_INVALID_PARAMETER;
+
+    const CKM::CryptoAlgorithm* algo = reinterpret_cast<const CKM::CryptoAlgorithm*>(params);
+    CKM::RawBuffer value;
+    if (!algo->getParam(static_cast<CKM::ParamName>(name),value))
+        return CKMC_ERROR_INVALID_PARAMETER;
+
+    return ckmc_buffer_new(value.data(), value.size(), buffer);
 }
 
 KEY_MANAGER_CAPI
@@ -645,24 +652,17 @@ int ckmc_generate_params(ckmc_algo_type_e type, ckmc_param_list_s *params)
     if(params == NULL)
         return CKMC_ERROR_INVALID_PARAMETER;
 
-    ckmc_raw_buffer_s* buffer = NULL;
     int ret = CKMC_ERROR_NONE;
     switch(type)
     {
     case CKMC_ALGO_AES_CTR:
         ret = ckmc_param_list_add_integer(params, CKMC_PARAM_ED_CTR_LEN, DEFAULT_IV_LEN_BITS);
-        // no break on purpose
+        break;
     case CKMC_ALGO_AES_CBC:
     case CKMC_ALGO_AES_GCM:
     case CKMC_ALGO_AES_CFB:
-        if (ret == CKMC_ERROR_NONE)
-            ret = _ckmc_random_buffer(&buffer, DEFAULT_IV_LEN);
-        if (ret == CKMC_ERROR_NONE)
-            ret = ckmc_param_list_add_buffer(params, CKMC_PARAM_ED_IV, buffer);
-        else
-            ckmc_buffer_free(buffer);
-        break;
     case CKMC_ALGO_RSA_OAEP:
+        // no iv by default
         break;
     case CKMC_ALGO_RSA_SV:
     case CKMC_ALGO_DSA_SV:

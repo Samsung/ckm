@@ -744,7 +744,7 @@ void ckmc_cert_list_all_free(ckmc_cert_list_s *first);
  * @remarks Caller is responsible for freeing it with ckmc_param_list_free
  *
  * @param[in] ppparam_list  Double pointer to the list variable to which the newly created list will
- *                          be assigned. Last element of the list has param = NULL;
+ *                          be assigned.
  *
  * @return @c 0 on success, otherwise a negative error value
  *
@@ -766,11 +766,10 @@ int ckmc_param_list_new(ckmc_param_list_s **ppparams);
  * @since_tizen 3.0
  *
  * @remarks Caller is responsible for ckmc_param_list_s creation.
- * @remarks Last element of the list has param = NULL;
  *
- * @param[in] previous  Any element of the param list.
- * @param[in] name      Name of parameter to add. Each parameter name has an associated value type:
- *                      integer or buffer. Passing a buffer parameter name will result in an error
+ * @param[in] params    List of params created with ckcm_param_list_new.
+ * @param[in] name      Name of parameter to add. Existing parameter will be overwritten. Passing
+ *                      invalid parameter name will result in an error.
  * @param[in] value     Value of the parameter in form of a integer.
  *
  * @return @c 0 on success, otherwise a negative error value
@@ -780,6 +779,8 @@ int ckmc_param_list_new(ckmc_param_list_s **ppparams);
  *
  * @see ckmc_param_list_new
  * @see ckmc_param_list_add_buffer
+ * @see ckmc_param_list_get_integer
+ * @see ckmc_param_list_get_buffer
  * @see ckmc_param_list_free
  * @see ckmc_generate_params
  * @see #ckmc_param_list_s
@@ -795,11 +796,10 @@ int ckmc_param_list_add_integer(ckmc_param_list_s *params,
  * @since_tizen 3.0
  *
  * @remarks Caller is responsible for ckmc_param_list_s creation.
- * @remarks Last element of the list has param = NULL;
  *
- * @param[in] previous  Any element of the param list.
- * @param[in] name      Name of parameter to add. Each parameter name has an associated value type:
- *                      integer or buffer. Passing an integer parameter name will result in an error
+ * @param[in] params    List of params created with ckcm_param_list_new.
+ * @param[in] name      Name of parameter to add. Existing parameter will be overwritten. Passing
+ *                      invalid parameter name will result in an error
  * @param[in] buffer    Value of the parameter in form of a buffer. Caller is responsible for
  *                      creating and freeing the buffer.
  *
@@ -810,6 +810,8 @@ int ckmc_param_list_add_integer(ckmc_param_list_s *params,
  *
  * @see ckmc_param_list_new
  * @see ckmc_param_list_add_integer
+ * @see ckmc_param_list_get_integer
+ * @see ckmc_param_list_get_buffer
  * @see ckmc_param_list_free
  * @see ckmc_generate_params
  * @see #ckmc_param_list_s
@@ -818,6 +820,66 @@ int ckmc_param_list_add_integer(ckmc_param_list_s *params,
 int ckmc_param_list_add_buffer(ckmc_param_list_s *params,
                                ckmc_param_name_e name,
                                const ckmc_raw_buffer_s *buffer);
+
+/**
+ * @brief Gets integer parameter from the list.
+ *
+ * @since_tizen 3.0
+ *
+ * @remarks Caller is responsible for ckmc_param_list_s creation.
+ *
+ * @param[in] params    List of params created with ckcm_param_list_new.
+ * @param[in] name      Name of parameter to get.
+ * @param[out] value    Value of the parameter in form of a integer.
+ *
+ * @return @c 0 on success, otherwise a negative error value
+ *
+ * @retval #CKMC_ERROR_NONE                 Successful
+ * @retval #CKMC_ERROR_INVALID_PARAMETER    Input parameter is invalid
+ *
+ * @see ckmc_param_list_new
+ * @see ckmc_param_list_add_integer
+ * @see ckmc_param_list_add_buffer
+ * @see ckmc_param_list_get_buffer
+ * @see ckmc_param_list_free
+ * @see ckmc_generate_params
+ * @see #ckmc_param_list_s
+ * @see #ckmc_param_name_e
+ */
+
+int ckmc_param_list_get_integer(const ckmc_param_list_s *params,
+                                ckmc_param_name_e name,
+                                uint64_t* value);
+
+/**
+ * @brief Gets buffer parameter from the list.
+ *
+ * @since_tizen 3.0
+ *
+ * @remarks Caller is responsible for ckmc_param_list_s creation.
+ *
+ * @param[in] params    List of params created with ckcm_param_list_new.
+ * @param[in] name      Name of parameter to get.
+ * @param[out] buffer   Value of the parameter in form of a buffer. Caller is responsible for
+ *                      creating and freeing the buffer.
+ *
+ * @return @c 0 on success, otherwise a negative error value
+ *
+ * @retval #CKMC_ERROR_NONE                 Successful
+ * @retval #CKMC_ERROR_INVALID_PARAMETER    Input parameter is invalid
+ *
+ * @see ckmc_param_list_new
+ * @see ckmc_param_list_add_integer
+ * @see ckmc_param_list_add_buffer
+ * @see ckmc_param_list_get_integer
+ * @see ckmc_param_list_free
+ * @see ckmc_generate_params
+ * @see #ckmc_param_list_s
+ * @see #ckmc_param_name_e
+ */
+int ckmc_param_list_get_buffer(const ckmc_param_list_s *params,
+                               ckmc_param_name_e name,
+                               ckmc_raw_buffer_s **buffer);
 
 /**
  * @brief Frees previously allocated list of algorithm params
@@ -829,10 +891,13 @@ int ckmc_param_list_add_buffer(ckmc_param_list_s *params,
  * @see ckmc_param_list_new
  * @see ckmc_param_list_add_integer
  * @see ckmc_param_list_add_buffer
+ * @see ckmc_param_list_get_integer
+ * @see ckmc_param_list_get_buffer
  * @see ckmc_generate_params
  * @see #ckmc_param_list_s
  * @see #ckmc_param_name_e
  */
+
 void ckmc_param_list_free(ckmc_param_list_s *params);
 
 /**
@@ -841,12 +906,10 @@ void ckmc_param_list_free(ckmc_param_list_s *params);
  * @since_tizen 3.0
  *
  * @remarks Caller is responsible for ckmc_param_list_s creation and destruction.
- * @remarks Algorithm parameters used for encryption could be then used for decryption but this
- *          function should not be used for generating decryption parameters only.
  * @remarks Algorithm parameters are set to default values. Optional fields are left empty.
- *          Initialization vectors are randomly generated. Param list passed as ckmc_param_list_s
- *          will be extended with new params. Caller is responsible for freeing the list
- *          with ckmc_param_list_free.
+ *          Initialization vectors are left empty (they have to be added manually). Existing params
+ *          will be overwritten with default values. Caller is responsible for freeing the list with
+ *          ckmc_param_list_free.
  * @remarks If the function returns error provided param list may contain some of default parameters
  *
  * @param[in] type      Type of the algorithm
@@ -861,6 +924,8 @@ void ckmc_param_list_free(ckmc_param_list_s *params);
  * @see ckmc_param_list_new
  * @see ckmc_param_list_add_integer
  * @see ckmc_param_list_add_buffer
+ * @see ckmc_param_list_get_integer
+ * @see ckmc_param_list_get_buffer
  * @see ckmc_param_list_free
  * @see #ckmc_param_list_s
  * @see #ckmc_param_name_e

@@ -72,9 +72,9 @@ void checkBufferParamNegative(const CryptoAlgorithm& algo, ParamName name)
 }
 
 template <typename T>
-void addParam(CryptoAlgorithm& algo, ParamName name, const T& value, bool success)
+void setParam(CryptoAlgorithm& algo, ParamName name, const T& value, bool success)
 {
-    BOOST_REQUIRE_MESSAGE(success == algo.addParam(name, value),
+    BOOST_REQUIRE_MESSAGE(success == algo.setParam(name, value),
                           "Adding param " << static_cast<int>(name) <<
                           " should " << (success ? "succeed":"fail"));
 }
@@ -85,11 +85,11 @@ BOOST_AUTO_TEST_SUITE(SERIALIZATION_TEST)
 
 BOOST_AUTO_TEST_CASE(Serialization_CryptoAlgorithm) {
     CryptoAlgorithm ca;
-    addParam(ca,ParamName::ALGO_TYPE, static_cast<uint64_t>(AlgoType::AES_GCM), true);
-    addParam(ca,ParamName::ED_IV, IV, true);
-    addParam(ca,ParamName::ED_IV, AAD, false); // try to overwrite
-    addParam(ca,ParamName::ED_TAG_LEN, 128, true);
-    addParam(ca,ParamName::ED_AAD, AAD, true);
+    setParam(ca,ParamName::ALGO_TYPE, static_cast<uint64_t>(AlgoType::AES_GCM), true);
+    setParam(ca,ParamName::ED_IV, AAD, true);
+    setParam(ca,ParamName::ED_IV, IV, true); // try to overwrite
+    setParam(ca,ParamName::ED_TAG_LEN, 128, true);
+    setParam(ca,ParamName::ED_AAD, AAD, true);
 
     CryptoAlgorithmSerializable input(ca);
     CryptoAlgorithmSerializable output;
@@ -121,8 +121,10 @@ BOOST_AUTO_TEST_CASE(Serialization_CryptoAlgorithm) {
 
 BOOST_AUTO_TEST_CASE(Serialization_CryptoAlgorithm_wrong_name) {
     CryptoAlgorithm ca;
-    // unuspported param name
-    addParam(ca, static_cast<ParamName>(666), 666, true);
+    // param name out of range
+    setParam(ca, static_cast<ParamName>(666), 666, false);
+    // param name not supported by serializer
+    setParam(ca, static_cast<ParamName>(10), 666, true);
 
     CryptoAlgorithmSerializable input(ca);
     CryptoAlgorithmSerializable output;
