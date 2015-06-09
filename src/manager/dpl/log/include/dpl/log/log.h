@@ -148,9 +148,27 @@ do                                                                              
     }                                                                           \
 } while (0)
 
+#define DPL_MACRO_FOR_LOGGING_POSITION(message, level, file, line, function)    \
+do                                                                              \
+{                                                                               \
+    if (level > CKM::Log::AbstractLogProvider::LogLevel::None &&                \
+        CKM::Log::LogSystemSingleton::Instance().GetLogLevel() >= level)        \
+    {                                                                           \
+        std::ostringstream platformLog;                                         \
+        platformLog << message;                                                 \
+        CKM::Log::LogSystemSingleton::Instance().Log(level,                     \
+                                                     platformLog.str().c_str(), \
+                                                     file,                      \
+                                                     line,                      \
+                                                     function);                 \
+    }                                                                           \
+} while (0)
+
 /* Errors must be always logged. */
 #define  LogError(message)          \
     DPL_MACRO_FOR_LOGGING(message, CKM::Log::AbstractLogProvider::LogLevel::Error)
+#define  LogErrorPosition(message, file, line, function)          \
+    DPL_MACRO_FOR_LOGGING_POSITION(message, CKM::Log::AbstractLogProvider::LogLevel::Error, file, line, function)
 
 #ifdef BUILD_TYPE_DEBUG
     #define LogDebug(message)       \
@@ -161,6 +179,8 @@ do                                                                              
         DPL_MACRO_FOR_LOGGING(message, CKM::Log::AbstractLogProvider::LogLevel::Warning)
     #define LogPedantic(message)    \
         DPL_MACRO_FOR_LOGGING(message, CKM::Log::AbstractLogProvider::LogLevel::Pedantic)
+    #define LogDebugPosition(message, file, line, function) \
+        DPL_MACRO_FOR_LOGGING_POSITION(message, CKM::Log::AbstractLogProvider::LogLevel::Debug, file, line, function)
 #else
     #define LogDebug(message)       \
         DPL_MACRO_DUMMY_LOGGING(message, CKM::Log::AbstractLogProvider::LogLevel::Debug)
@@ -170,6 +190,11 @@ do                                                                              
         DPL_MACRO_DUMMY_LOGGING(message, CKM::Log::AbstractLogProvider::LogLevel::Warning)
     #define LogPedantic(message)    \
         DPL_MACRO_DUMMY_LOGGING(message, CKM::Log::AbstractLogProvider::LogLevel::Pedantic)
+    #define LogDebugPosition(message, file, line, function)                                    \
+        do {                                                                                   \
+            (void) file; (void) line; (void) function;                                         \
+            DPL_MACRO_DUMMY_LOGGING(message, CKM::Log::AbstractLogProvider::LogLevel::Debug);  \
+        } while(0)
 #endif // BUILD_TYPE_DEBUG
 
 #endif // CENT_KEY_LOG_H

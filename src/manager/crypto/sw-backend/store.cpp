@@ -20,8 +20,6 @@
  */
 #include <memory>
 
-#include <dpl/log/log.h>
-
 #include <generic-backend/exception.h>
 #include <sw-backend/key.h>
 #include <sw-backend/store.h>
@@ -40,8 +38,7 @@ Store::Store(CryptoBackend backendId)
 
 GKeyShPtr Store::getKey(const Token &token) {
     if (token.backendId != m_backendId) {
-        LogError("Decider choose wrong backend!");
-        ThrowMsg(Exception::WrongBackend, "Decider choose wrong backend!");
+        ThrowErr(Exc::Crypto::WrongBackend, "Decider choose wrong backend!");
     }
 
     if (token.dataType.isKeyPrivate() || token.dataType.isKeyPublic()) {
@@ -56,10 +53,8 @@ GKeyShPtr Store::getKey(const Token &token) {
         return std::make_shared<Cert>(token.data, token.dataType);
     }
 
-    LogDebug(
-        "This type of data is not supported by openssl backend: " << (int)token.dataType);
-    ThrowMsg(Exception::KeyNotSupported,
-        "This type of data is not supported by openssl backend: " << (int)token.dataType);
+    ThrowErr(Exc::Crypto::KeyNotSupported,
+        "This type of data is not supported by openssl backend: ", (int)token.dataType);
 }
 
 TokenPair Store::generateAKey(const CryptoAlgorithm &algorithm)
@@ -71,7 +66,7 @@ TokenPair Store::generateAKey(const CryptoAlgorithm &algorithm)
     {
         int keyLength = 0;
         if(!algorithm.getParam(ParamName::GEN_KEY_LEN, keyLength))
-            ThrowMsg(Crypto::Exception::InputParam, "Error, parameter GEN_KEY_LEN not found.");
+            ThrowErr(Exc::Crypto::InputParam, "Error, parameter GEN_KEY_LEN not found.");
 
         if(keyType == AlgoType::RSA_GEN)
             return Internals::createKeyPairRSA(m_backendId, keyLength);
@@ -82,18 +77,18 @@ TokenPair Store::generateAKey(const CryptoAlgorithm &algorithm)
     {
         int ecType = 0;
         if(!algorithm.getParam(ParamName::GEN_EC, ecType))
-            ThrowMsg(Crypto::Exception::InputParam, "Error, parameter GEN_EC not found.");
+            ThrowErr(Exc::Crypto::InputParam, "Error, parameter GEN_EC not found.");
 
         return Internals::createKeyPairECDSA(m_backendId, static_cast<ElipticCurve>(ecType));
     }
-    ThrowMsg(Crypto::Exception::InputParam, "wrong key type");
+    ThrowErr(Exc::Crypto::InputParam, "wrong key type");
 }
 
 Token Store::generateSKey(const CryptoAlgorithm &algorithm)
 {
     int keyLength = 0;
     if(!algorithm.getParam(ParamName::GEN_KEY_LEN, keyLength))
-        ThrowMsg(Crypto::Exception::InputParam, "Error, parameter GEN_KEY_LEN not found.");
+        ThrowErr(Exc::Crypto::InputParam, "Error, parameter GEN_KEY_LEN not found.");
 
     return Internals::createKeyAES(m_backendId, keyLength);
 }
@@ -101,10 +96,6 @@ Token Store::generateSKey(const CryptoAlgorithm &algorithm)
 Token Store::import(DataType dataType, const RawBuffer &buffer) {
     return Token(m_backendId, dataType, buffer);
 }
-
-
-
-
 
 } // namespace SW
 } // namespace Crypto

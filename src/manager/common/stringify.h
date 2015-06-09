@@ -16,9 +16,9 @@
 /*
  * @file       stringify.h
  * @author     Krzysztof Jackiewicz (k.jackiewicz@samsung.com)
+ * @author     Bartlomiej Grzelewski (b.grzelewski@samsung.com)
  * @version    1.0
  */
-
 #pragma once
 
 #include <sstream>
@@ -26,35 +26,56 @@
 
 namespace CKM {
 
-/*
- * Helper functions for easy argument concatenation. Can be used in logs and exceptions.
- * Ex)
- * template <typename... Args>
- * std::runtime_error my_exception(const Args&... args)
- * {
- *     return std::runtime_error(stringify(args...));
- * };
- *
- * throw my_exception("Function foo has failed. Status: ", status, " error code: ", error);
- */
+template <bool Mode>
+class StringifyBasic;
 
-std::string stringify() {
-    return std::string();
-}
+template <>
+class StringifyBasic<false> {
+public:
+    std::string operator()() {
+        return std::string();
+    }
 
-void concatenate(std::ostringstream&) {}
+    template <typename... Args>
+    std::string operator()(const Args&... args){
+        return std::string();
+    }
+};
 
-template <typename T, typename... Args>
-void concatenate(std::ostringstream& stream, const T& arg1, const Args&... args) {
-    stream << arg1;
-    concatenate(stream, args...);
-}
+template <>
+class StringifyBasic<true> {
+    void concatenate(std::ostringstream&) {}
 
-template <typename T, typename... Args>
-std::string stringify(const T& arg1, const Args&... args){
-    std::ostringstream stream;
-    concatenate(stream, arg1, args...);
-    return stream.str();
-}
+    template <typename t, typename... Args>
+    void concatenate(std::ostringstream& stream, const t& arg1, const Args&... args) {
+        stream << arg1;
+        concatenate(stream, args...);
+    }
+public:
+    std::string operator()() {
+        return std::string();
+    }
+
+    template <typename T, typename... Args>
+    std::string operator()(const T& arg1, const Args&... args){
+        std::ostringstream stream;
+        concatenate(stream, arg1, args...);
+        return stream.str();
+    }
+};
+
+#ifdef DEBUG
+#define DEBUG_STATUS true
+#else
+#define DEBUG_STATUS false
+#endif
+
+typedef StringifyBasic<true>  Stringify;
+typedef StringifyBasic<false> StringifyAvoid;
+typedef StringifyBasic<true>  StringifyError;
+typedef StringifyBasic<DEBUG_STATUS> StringifyDebug;
+
+#undef DEBUG_STATUS
 
 } // namespace CKM
+

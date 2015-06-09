@@ -64,14 +64,14 @@ void CryptoLogic::pushKey(const Label &smackLabel,
                             const RawBuffer &applicationKey)
 {
     if (smackLabel.length() == 0) {
-        ThrowMsg(Exception::InternalError, "Empty smack label.");
+        ThrowErr(Exc::InternalError, "Empty smack label.");
     }
     if (applicationKey.size() == 0) {
-        ThrowMsg(Exception::InternalError, "Empty application key.");
+        ThrowErr(Exc::InternalError, "Empty application key.");
     }
     if (haveKey(smackLabel)) {
-        ThrowMsg(Exception::InternalError, "Application key for " << smackLabel
-                 << "label already exists.");
+        ThrowErr(Exc::InternalError, "Application key for ", smackLabel,
+            "label already exists.");
     }
     m_keyMap[smackLabel] = applicationKey;
 }
@@ -116,8 +116,7 @@ std::pair<RawBuffer,RawBuffer> CryptoLogic::encryptDataAesGcm(
     RawBuffer tmp = enc.Finalize();
     std::copy(tmp.begin(), tmp.end(), std::back_inserter(result));
     if (0 == enc.Control(EVP_CTRL_GCM_GET_TAG, AES_GCM_TAG_SIZE, tag.data())) {
-        LogError("Error in aes control function. Get tag failed.");
-        ThrowMsg(Exception::EncryptDBRowError, "Error in aes control function. Get tag failed.");
+        ThrowErr(Exc::InternalError, "Error in aes control function. Get tag failed.");
     }
     return std::make_pair(result, tag);
 }
@@ -130,13 +129,11 @@ RawBuffer CryptoLogic::decryptDataAesGcm(
 {
     Crypto::SW::Cipher::AesGcmDecryption dec(key, iv);
     if (tag.size() < AES_GCM_TAG_SIZE) {
-        LogError("Error in decryptDataAesGcm. Tag is too short.");
-        ThrowMsg(Exception::DecryptDBRowError, "Error in decryptDataAesGcm. Tag is too short");
+        ThrowErr(Exc::AuthenticationFailed, "Error in decryptDataAesGcm. Tag is too short");
     }
     void *ptr = (void*)tag.data();
     if (0 == dec.Control(EVP_CTRL_GCM_SET_TAG, AES_GCM_TAG_SIZE, ptr)) {
-        LogError("Error in aes control function. Set tag failed.");
-        ThrowMsg(Exception::DecryptDBRowError, "Error in aes control function. Set tag failed.");
+        ThrowErr(Exc::AuthenticationFailed, "Error in aes control function. Set tag failed.");
     }
     RawBuffer result = dec.Append(data);
     RawBuffer tmp = dec.Finalize();
@@ -160,7 +157,7 @@ RawBuffer CryptoLogic::passwordToKey(
                 result.size(),
                 result.data()))
     {
-        ThrowMsg(Exception::InternalError, "PCKS5_PKKDF_HMAC_SHA1 failed.");
+        ThrowErr(Exc::InternalError, "PCKS5_PKKDF_HMAC_SHA1 failed.");
     }
     return result;
 }
@@ -169,8 +166,7 @@ RawBuffer CryptoLogic::generateRandIV() const {
     RawBuffer civ(EVP_MAX_IV_LENGTH);
 
     if (1 != RAND_bytes(civ.data(), civ.size())) {
-        ThrowMsg(Exception::InternalError,
-          "RAND_bytes failed to generate IV.");
+        ThrowErr(Exc::InternalError, "RAND_bytes failed to generate IV.");
     }
 
     return civ;
@@ -188,12 +184,12 @@ void CryptoLogic::encryptRow(const Password &password, DB::Row &row)
         crow.dataSize = crow.data.size();
 
         if (crow.dataSize <= 0) {
-            ThrowMsg(Exception::EncryptDBRowError, "Invalid dataSize.");
+            ThrowErr(Exc::InternalError, "Invalid dataSize.");
         }
 
         if (!haveKey(row.ownerLabel)) {
-            ThrowMsg(Exception::EncryptDBRowError, "Missing application key for " <<
-              row.ownerLabel << " label.");
+            ThrowErr(Exc::InternalError, "Missing application key for ",
+              row.ownerLabel, " label.");
         }
 
         if (crow.iv.empty()) {
@@ -219,14 +215,9 @@ void CryptoLogic::encryptRow(const Password &password, DB::Row &row)
 
         row = crow;
     } catch(const CKM::Base64Encoder::Exception::Base &e) {
-        LogDebug("Base64Encoder error: " << e.GetMessage());
-        ThrowMsg(Exception::Base64EncoderError, e.GetMessage());
+        ThrowErr(Exc::InternalError, e.GetMessage());
     } catch(const CKM::Base64Decoder::Exception::Base &e) {
-        LogDebug("Base64Encoder error: " << e.GetMessage());
-        ThrowMsg(Exception::Base64DecoderError, e.GetMessage());
-    } catch(const CKM::Crypto::Exception::Base &e) {
-        LogDebug("Crypto error: " << e.GetMessage());
-        ThrowMsg(Exception::EncryptDBRowError, e.GetMessage());
+        ThrowErr(Exc::InternalError, e.GetMessage());
     }
 }
 
@@ -238,18 +229,18 @@ void CryptoLogic::decryptRow(const Password &password, DB::Row &row)
         RawBuffer digest, dataDigest;
 
         if (row.algorithmType != DBCMAlgType::AES_GCM_256) {
-            ThrowMsg(Exception::DecryptDBRowError, "Invalid algorithm type.");
+            ThrowErr(Exc::AuthenticationFailed, "Invalid algorithm type.");
         }
 
         if ((row.encryptionScheme & ENCR_PASSWORD) && password.empty()) {
-            ThrowMsg(Exception::DecryptDBRowError,
+            ThrowErr(Exc::AuthenticationFailed,
               "DB row is password protected, but given password is "
               "empty.");
         }
 
         if ((row.encryptionScheme & ENCR_APPKEY) && !haveKey(row.ownerLabel)) {
-            ThrowMsg(Exception::DecryptDBRowError, "Missing application key for " <<
-              row.ownerLabel << " label.");
+            ThrowErr(Exc::AuthenticationFailed, "Missing application key for ",
+              row.ownerLabel, " label.");
         }
 
         decBase64(crow.iv);
@@ -268,9 +259,7 @@ void CryptoLogic::decryptRow(const Password &password, DB::Row &row)
         }
 
         if (static_cast<int>(crow.data.size()) < crow.dataSize) {
-            ThrowMsg(Exception::DecryptDBRowError,
-                "Decrypted row size mismatch");
-            LogError("Decryption row size mismatch");
+            ThrowErr(Exc::AuthenticationFailed, "Decrypted row size mismatch");
         }
 
         if (static_cast<int>(crow.data.size()) > crow.dataSize) {
@@ -279,14 +268,11 @@ void CryptoLogic::decryptRow(const Password &password, DB::Row &row)
 
         row = crow;
     } catch(const CKM::Base64Encoder::Exception::Base &e) {
-        LogDebug("Base64Encoder error: " << e.GetMessage());
-        ThrowMsg(Exception::Base64EncoderError, e.GetMessage());
+        ThrowErr(Exc::InternalError, e.GetMessage());
     } catch(const CKM::Base64Decoder::Exception::Base &e) {
-        LogDebug("Base64Encoder error: " << e.GetMessage());
-        ThrowMsg(Exception::Base64DecoderError, e.GetMessage());
-    } catch(const CKM::Crypto::Exception::Base &e) {
-        LogDebug("Crypto error: " << e.GetMessage());
-        ThrowMsg(Exception::DecryptDBRowError, e.GetMessage());
+        ThrowErr(Exc::InternalError, e.GetMessage());
+    } catch(const Exc::Exception &e) {
+        ThrowErr(Exc::AuthenticationFailed, e.message());
     }
 }
 
@@ -300,7 +286,7 @@ void CryptoLogic::encBase64(RawBuffer &data)
     encdata = benc.get();
 
     if (encdata.size() == 0) {
-        ThrowMsg(Exception::Base64EncoderError, "Base64Encoder returned empty data.");
+        ThrowErr(Exc::InternalError, "Base64Encoder returned empty data.");
     }
 
     data = std::move(encdata);
@@ -313,15 +299,14 @@ void CryptoLogic::decBase64(RawBuffer &data)
 
     bdec.reset();
     bdec.append(data);
-    if (not bdec.finalize()) {
-        ThrowMsg(Exception::Base64DecoderError,
-          "Failed in Base64Decoder.finalize.");
+    if (!bdec.finalize()) {
+        ThrowErr(Exc::InternalError, "Failed in Base64Decoder.finalize.");
     }
 
     decdata = bdec.get();
 
     if (decdata.size() == 0) {
-        ThrowMsg(Exception::Base64DecoderError, "Base64Decoder returned empty data.");
+        ThrowErr(Exc::InternalError, "Base64Decoder returned empty data.");
     }
 
     data = std::move(decdata);

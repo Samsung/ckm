@@ -74,8 +74,7 @@ EvpShPtr AKey::getEvpShPtr() {
     }
 
     if (!pkey) {
-        LogError("Failed to parse key");
-        ThrowMsg(Exception::InternalError, "Failed to parse key");
+        ThrowErr(Exc::Crypto::InternalError, "Failed to parse key");
     }
 
     m_evp.reset(pkey, EVP_PKEY_free);
@@ -92,8 +91,7 @@ EvpShPtr Cert::getEvpShPtr() {
     X509 *x509 = d2i_X509(NULL, &ptr, size);
 
     if (!x509) {
-        LogError("Failed to parse certificate.");
-        ThrowMsg(Exception::InternalError, "Failed to parse certificate.");
+        ThrowErr(Exc::Crypto::InternalError, "Failed to parse certificate.");
     }
 
     m_evp.reset(X509_get_pubkey(x509), EVP_PKEY_free);

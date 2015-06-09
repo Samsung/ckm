@@ -57,18 +57,15 @@ CKM::RawBuffer i2d(I2D_CONV fun, EVP_PKEY* pkey) {
     BioUniquePtr bio(BIO_new(BIO_s_mem()), BIO_free_all);
 
     if (NULL == pkey) {
-        LogDebug("attempt to parse an empty key!");
-        ThrowMsg(CKM::Crypto::Exception::InternalError, "attempt to parse an empty key!");
+        ThrowErr(CKM::Exc::Crypto::InternalError, "attempt to parse an empty key!");
     }
 
     if (NULL == bio.get()) {
-        LogError("Error in memory allocation! Function: BIO_new.");
-        ThrowMsg(CKM::Crypto::Exception::InternalError, "Error in memory allocation! Function: BIO_new.");
+        ThrowErr(CKM::Exc::Crypto::InternalError, "Error in memory allocation! Function: BIO_new.");
     }
 
     if (1 != fun(bio.get(), pkey)) {
-        LogError("Error in conversion EVP_PKEY to DER");
-        ThrowMsg(CKM::Crypto::Exception::InternalError, "Error in conversion EVP_PKEY to DER");
+        ThrowErr(CKM::Exc::Crypto::InternalError, "Error in conversion EVP_PKEY to DER");
     }
 
     CKM::RawBuffer output(8196);
@@ -76,8 +73,7 @@ CKM::RawBuffer i2d(I2D_CONV fun, EVP_PKEY* pkey) {
     int size = BIO_read(bio.get(), output.data(), output.size());
 
     if (size <= 0) {
-        LogError("Error in BIO_read: " << size);
-        ThrowMsg(CKM::Crypto::Exception::InternalError, "Error in BIO_read: " << size);
+        ThrowErr(CKM::Exc::Crypto::InternalError, "Error in BIO_read: ", size);
     }
 
     output.resize(size);
@@ -108,8 +104,7 @@ int initialize() {
         hw_rand_ret = RAND_load_file(DEV_URANDOM_FILE, 32);
 
         if(hw_rand_ret != 32) {
-            LogError("Error in U_RAND_file_load");
-            ThrowMsg(Crypto::Exception::InternalError, "Error in U_RAND_file_load");
+            ThrowErr(Exc::Crypto::InternalError, "Error in U_RAND_file_load");
         }
     }
 
@@ -135,8 +130,7 @@ const EVP_MD *getMdAlgo(const HashAlgorithm hashAlgo) {
          md_algo = EVP_sha512();
          break;
     default:
-        LogError("Error in hashAlgorithm value");
-        ThrowMsg(Crypto::Exception::InternalError, "Error in hashAlgorithm value");
+        ThrowErr(Exc::Crypto::InternalError, "Error in hashAlgorithm value");
     }
     return md_algo;
 }
@@ -154,8 +148,7 @@ int getRsaPadding(const RSAPaddingAlgorithm padAlgo) {
         rsa_padding = RSA_X931_PADDING;
         break;
     default:
-        LogError("Error in RSAPaddingAlgorithm value");
-        ThrowMsg(Crypto::Exception::InternalError, "Error in RSAPaddingAlgorithm value");
+        ThrowErr(Exc::Crypto::InternalError, "Error in RSAPaddingAlgorithm value");
     }
     return rsa_padding;
 }
@@ -166,30 +159,25 @@ TokenPair createKeyPairRSA(CryptoBackend backendId, const int size)
 
     // check the parameters of functions
     if(size!=1024 && size!=2048 && size!=4096) {
-        LogError("Error in RSA input size");
-        ThrowMsg(Crypto::Exception::InputParam, "Error in RSA input size");
+        ThrowErr(Exc::Crypto::InputParam, "Error in RSA input size");
     }
 
     EvpPkeyCtxUPtr ctx(EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL), EVP_PKEY_CTX_free);
     if(!ctx) {
-        LogError("Error in EVP_PKEY_CTX_new_id function !!");
-        ThrowMsg(Crypto::Exception::InternalError, "Error in EVP_PKEY_CTX_new_id function !!");
+        ThrowErr(Exc::Crypto::InternalError, "Error in EVP_PKEY_CTX_new_id function !!");
     }
 
     if(EVP_PKEY_keygen_init(ctx.get()) <= 0) {
-        LogError("Error in EVP_PKEY_keygen_init function !!");
-        ThrowMsg(Crypto::Exception::InternalError, "Error in EVP_PKEY_keygen_init function !!");
+        ThrowErr(Exc::Crypto::InternalError, "Error in EVP_PKEY_keygen_init function !!");
     }
 
     if(EVP_PKEY_CTX_set_rsa_keygen_bits(ctx.get(), size) <= 0) {
-        LogError("Error in EVP_PKEY_CTX_set_rsa_keygen_bits function !!");
-        ThrowMsg(Crypto::Exception::InternalError, "Error in EVP_PKEY_CTX_set_rsa_keygen_bits function !!");
+        ThrowErr(Exc::Crypto::InternalError, "Error in EVP_PKEY_CTX_set_rsa_keygen_bits function !!");
     }
 
     EVP_PKEY *pkeyTmp = NULL;
     if(!EVP_PKEY_keygen(ctx.get(), &pkeyTmp)) {
-        LogError("Error in EVP_PKEY_keygen function !!");
-        ThrowMsg(Crypto::Exception::InternalError, "Error in EVP_PKEY_keygen function !!");
+        ThrowErr(Exc::Crypto::InternalError, "Error in EVP_PKEY_keygen function !!");
     }
     pkey = EvpPkeyUPtr(pkeyTmp, EVP_PKEY_free);
 
@@ -205,52 +193,44 @@ TokenPair createKeyPairDSA(CryptoBackend backendId, const int size)
 
     // check the parameters of functions
     if(size!=1024 && size!=2048 && size!=3072 && size!=4096) {
-        LogError("Error in DSA input size");
-        ThrowMsg(Crypto::Exception::InputParam, "Error in DSA input size");
+        ThrowErr(Exc::Crypto::InputParam, "Error in DSA input size");
     }
 
     /* Create the context for generating the parameters */
     EvpPkeyCtxUPtr pctx(EVP_PKEY_CTX_new_id(EVP_PKEY_DSA, NULL), EVP_PKEY_CTX_free);
     if(!pctx) {
-        LogError("Error in EVP_PKEY_CTX_new_id function");
-        ThrowMsg(Crypto::Exception::InternalError, "Error in EVP_PKEY_CTX_new_id function");
+        ThrowErr(Exc::Crypto::InternalError, "Error in EVP_PKEY_CTX_new_id function");
     }
 
     if(EVP_SUCCESS != EVP_PKEY_paramgen_init(pctx.get())) {
-        LogError("Error in EVP_PKEY_paramgen_init function");
-        ThrowMsg(Crypto::Exception::InternalError, "Error in EVP_PKEY_paramgen_init function");
+        ThrowErr(Exc::Crypto::InternalError, "Error in EVP_PKEY_paramgen_init function");
     }
 
     if(EVP_SUCCESS != EVP_PKEY_CTX_set_dsa_paramgen_bits(pctx.get(), size)) {
-        LogError("Error in EVP_PKEY_CTX_set_dsa_paramgen_bits(" << size << ") function");
-        ThrowMsg(Crypto::Exception::InternalError, "Error in EVP_PKEY_CTX_set_dsa_paramgen_bits(" << size << ") function");
+        ThrowErr(Exc::Crypto::InternalError, "Error in EVP_PKEY_CTX_set_dsa_paramgen_bits(", size, ") function");
     }
 
     /* Generate parameters */
     EVP_PKEY *pparamTmp = NULL;
     if(EVP_SUCCESS != EVP_PKEY_paramgen(pctx.get(), &pparamTmp)) {
-        LogError("Error in EVP_PKEY_paramgen function");
-        ThrowMsg(Crypto::Exception::InternalError, "Error in EVP_PKEY_paramgen function");
+        ThrowErr(Exc::Crypto::InternalError, "Error in EVP_PKEY_paramgen function");
     }
     pparam = EvpPkeyUPtr(pparamTmp, EVP_PKEY_free);
 
     // Start to generate key
     EvpPkeyCtxUPtr kctx(EVP_PKEY_CTX_new(pparam.get(), NULL), EVP_PKEY_CTX_free);
     if(!kctx) {
-        LogError("Error in EVP_PKEY_CTX_new function");
-        ThrowMsg(Crypto::Exception::InternalError, "Error in EVP_PKEY_CTX_new function");
+        ThrowErr(Exc::Crypto::InternalError, "Error in EVP_PKEY_CTX_new function");
     }
 
     if(EVP_SUCCESS != EVP_PKEY_keygen_init(kctx.get())) {
-        LogError("Error in EVP_PKEY_keygen_init function");
-        ThrowMsg(Crypto::Exception::InternalError, "Error in EVP_PKEY_keygen_init function");
+        ThrowErr(Exc::Crypto::InternalError, "Error in EVP_PKEY_keygen_init function");
     }
 
     /* Generate the key */
     EVP_PKEY *pkeyTmp = NULL;
     if(!EVP_PKEY_keygen(kctx.get(), &pkeyTmp)) {
-        LogError("Error in EVP_PKEY_keygen function !!");
-        ThrowMsg(Crypto::Exception::InternalError, "Error in EVP_PKEY_keygen function !!");
+        ThrowErr(Exc::Crypto::InternalError, "Error in EVP_PKEY_keygen function !!");
     }
     pkey = EvpPkeyUPtr(pkeyTmp, EVP_PKEY_free);
 
@@ -275,54 +255,46 @@ TokenPair createKeyPairECDSA(CryptoBackend backendId, ElipticCurve type)
         ecCurve = NID_secp384r1;
         break;
     default:
-        LogError("Error in EC type");
-        ThrowMsg(Crypto::Exception::InputParam, "Error in EC type");
+        ThrowErr(Exc::Crypto::InputParam, "Error in EC type");
     }
 
     /* Create the context for generating the parameters */
     EvpPkeyCtxUPtr pctx(EVP_PKEY_CTX_new_id(EVP_PKEY_EC, NULL), EVP_PKEY_CTX_free);
     if(!pctx) {
-        LogError("Error in EVP_PKEY_CTX_new_id function");
-        ThrowMsg(Crypto::Exception::InternalError, "Error in EVP_PKEY_CTX_new_id function");
+        ThrowErr(Exc::Crypto::InternalError, "Error in EVP_PKEY_CTX_new_id function");
     }
 
     if(EVP_SUCCESS != EVP_PKEY_paramgen_init(pctx.get())) {
-        LogError("Error in EVP_PKEY_paramgen_init function");
-        ThrowMsg(Crypto::Exception::InternalError, "Error in EVP_PKEY_paramgen_init function");
+        ThrowErr(Exc::Crypto::InternalError, "Error in EVP_PKEY_paramgen_init function");
     }
 
     if(EVP_SUCCESS != EVP_PKEY_CTX_set_ec_paramgen_curve_nid(pctx.get(), ecCurve)) {
-        LogError("Error in EVP_PKEY_CTX_set_ec_paramgen_curve_nid function");
-        ThrowMsg(Crypto::Exception::InternalError, "Error in EVP_PKEY_CTX_set_ec_paramgen_curve_nid function");
+        ThrowErr(Exc::Crypto::InternalError, "Error in EVP_PKEY_CTX_set_ec_paramgen_curve_nid function");
     }
 
     /* Generate parameters */
     EVP_PKEY *pparamTmp = NULL;
     if(EVP_SUCCESS != EVP_PKEY_paramgen(pctx.get(), &pparamTmp)) {
-        LogError("Error in EVP_PKEY_paramgen function");
-        ThrowMsg(Crypto::Exception::InternalError, "Error in EVP_PKEY_paramgen function");
+        ThrowErr(Exc::Crypto::InternalError, "Error in EVP_PKEY_paramgen function");
     }
     pparam = EvpPkeyUPtr(pparamTmp, EVP_PKEY_free);
 
     // Start to generate key
     EvpPkeyCtxUPtr kctx(EVP_PKEY_CTX_new(pparam.get(), NULL), EVP_PKEY_CTX_free);
     if(!kctx) {
-        LogError("Error in EVP_PKEY_CTX_new function");
-        ThrowMsg(Crypto::Exception::InternalError, "Error in EVP_PKEY_CTX_new function");
+        ThrowErr(Exc::Crypto::InternalError, "Error in EVP_PKEY_CTX_new function");
     }
 
     if(EVP_SUCCESS != EVP_PKEY_keygen_init(kctx.get())) {
-        LogError("Error in EVP_PKEY_keygen_init function");
-        ThrowMsg(Crypto::Exception::InternalError, "Error in EVP_PKEY_keygen_init function");
+        ThrowErr(Exc::Crypto::InternalError, "Error in EVP_PKEY_keygen_init function");
     }
 
     /* Generate the key */
     EVP_PKEY *pkeyTmp = NULL;
     if(!EVP_PKEY_keygen(kctx.get(), &pkeyTmp)) {
-        LogError("Error in EVP_PKEY_keygen function !!");
-        ThrowMsg(Crypto::Exception::InternalError, "Error in EVP_PKEY_keygen function !!");
-        }
-        pkey = EvpPkeyUPtr(pkeyTmp, EVP_PKEY_free);
+        ThrowErr(Exc::Crypto::InternalError, "Error in EVP_PKEY_keygen function !!");
+    }
+    pkey = EvpPkeyUPtr(pkeyTmp, EVP_PKEY_free);
 
     return std::make_pair<Token, Token>(Token(backendId, DataType(KeyType::KEY_ECDSA_PRIVATE), i2d(i2d_PrivateKey_bio, pkey.get())),
                                         Token(backendId, DataType(KeyType::KEY_ECDSA_PUBLIC), i2d(i2d_PUBKEY_bio, pkey.get())));
@@ -333,14 +305,14 @@ Token createKeyAES(CryptoBackend backendId, const int sizeBits)
     // check the parameters of functions
     if(sizeBits!=128 && sizeBits!=192 && sizeBits!=256) {
         LogError("Error in AES input size");
-        ThrowMsg(Crypto::Exception::InputParam, "Error in AES input size");
+        ThrowMsg(Exc::Crypto::InputParam, "Error in AES input size");
     }
 
     uint8_t key[32];
     int sizeBytes = sizeBits/8;
     if (!RAND_bytes(key, sizeBytes)) {
         LogError("Error in AES key generation");
-        ThrowMsg(Crypto::Exception::InternalError, "Error in AES key generation");
+        ThrowMsg(Exc::Crypto::InternalError, "Error in AES key generation");
     }
 
     return Token(backendId, DataType(KeyType::KEY_AES), CKM::RawBuffer(key, key+sizeBytes));
@@ -367,7 +339,7 @@ RawBuffer sign(EVP_PKEY *pkey,
 //       (privateKey.getType() != KeyType::KEY_ECDSA_PRIVATE))
 //    {
 //        LogError("Error in private key type");
-//        ThrowMsg(CryptoService::Exception::Crypto_internal, "Error in private key type");
+//        ThrowErr(CryptoService::Exception::Crypto_internal, "Error in private key type");
 //    }
 //
 //    if(privateKey.getType()==KeyType::KEY_RSA_PRIVATE) {
@@ -375,8 +347,7 @@ RawBuffer sign(EVP_PKEY *pkey,
 //    }
 
     if (NULL == pkey) {
-        LogError("Error in EVP_PKEY_keygen function");
-        ThrowMsg(Crypto::Exception::InternalError, "Error in EVP_PKEY_keygen function");
+        ThrowErr(Exc::Crypto::InternalError, "Error in EVP_PKEY_keygen function");
     }
 
     if(md_algo == NULL) {
@@ -393,20 +364,17 @@ RawBuffer signMessage(EVP_PKEY *privKey,
     EvpPkeyCtxUPtr pctx(EVP_PKEY_CTX_new(privKey, NULL), EVP_PKEY_CTX_free);
  
     if(!pctx.get()) {
-        LogError("Error in EVP_PKEY_CTX_new function");
-        ThrowMsg(Crypto::Exception::InternalError, "Error in EVP_PKEY_CTX_new function");
+        ThrowErr(Exc::Crypto::InternalError, "Error in EVP_PKEY_CTX_new function");
     }
 
     if(EVP_PKEY_sign_init(pctx.get()) != EVP_SUCCESS) {
-        LogError("Error in EVP_PKEY_sign_init function");
-        ThrowMsg(Crypto::Exception::InternalError, "Error in EVP_PKEY_sign_init function");
+        ThrowErr(Exc::Crypto::InternalError, "Error in EVP_PKEY_sign_init function");
     }
 
     /* Set padding algorithm */
     if(EVP_PKEY_type(privKey->type) == EVP_PKEY_RSA) {
         if(EVP_SUCCESS != EVP_PKEY_CTX_set_rsa_padding(pctx.get(), rsa_padding)) {
-            LogError("Error in EVP_PKEY_CTX_set_rsa_padding function");
-            ThrowMsg(Crypto::Exception::InternalError,
+            ThrowErr(Exc::Crypto::InternalError,
                      "Error in EVP_PKEY_CTX_set_rsa_padding function");
         }
     }
@@ -416,8 +384,7 @@ RawBuffer signMessage(EVP_PKEY *privKey,
      * signature. Length is returned in slen */
     size_t slen;
     if(EVP_SUCCESS != EVP_PKEY_sign(pctx.get(), NULL, &slen, message.data(), message.size())) {
-        LogError("Error in EVP_PKEY_sign function");
-        ThrowMsg(Crypto::Exception::InternalError, "Error in EVP_PKEY_sign function");
+        ThrowErr(Exc::Crypto::InternalError, "Error in EVP_PKEY_sign function");
     }
 
     /* Allocate memory for the signature based on size in slen */
@@ -434,8 +401,7 @@ RawBuffer signMessage(EVP_PKEY *privKey,
         return sig;
     }
 
-    LogError("Error in EVP_PKEY_sign function. Input param error.");
-    ThrowMsg(Crypto::Exception::InputParam, "Error in EVP_PKEY_sign function. Input param error.");
+    ThrowErr(Exc::Crypto::InputParam, "Error in EVP_PKEY_sign function. Input param error.");
 }
 
 RawBuffer digestSignMessage(EVP_PKEY *privKey,
@@ -449,27 +415,23 @@ RawBuffer digestSignMessage(EVP_PKEY *privKey,
 
     // Create the Message Digest Context
     if(!mdctx.get()) {
-        LogError("Error in EVP_MD_CTX_create function");
-        ThrowMsg(Crypto::Exception::InternalError, "Error in EVP_MD_CTX_create function");
+        ThrowErr(Exc::Crypto::InternalError, "Error in EVP_MD_CTX_create function");
     }
 
     if(EVP_SUCCESS != EVP_DigestSignInit(mdctx.get(), &pctx, md_algo, NULL, privKey)) {
-        LogError("Error in EVP_DigestSignInit function");
-        ThrowMsg(Crypto::Exception::InternalError, "Error in EVP_DigestSignInit function");
+        ThrowErr(Exc::Crypto::InternalError, "Error in EVP_DigestSignInit function");
     }
 
     /* Set padding algorithm */
     if(EVP_PKEY_type(privKey->type) == EVP_PKEY_RSA) {
         if(EVP_SUCCESS != EVP_PKEY_CTX_set_rsa_padding(pctx, rsa_padding)) {
-            LogError("Error in EVP_PKEY_CTX_set_rsa_padding function");
-            ThrowMsg(Crypto::Exception::InternalError, "Error in EVP_PKEY_CTX_set_rsa_padding function");
+            ThrowErr(Exc::Crypto::InternalError, "Error in EVP_PKEY_CTX_set_rsa_padding function");
         }
     }
 
     /* Call update with the message */
     if(EVP_SUCCESS != EVP_DigestSignUpdate(mdctx.get(), message.data(), message.size())) {
-        LogError("Error in EVP_DigestSignUpdate function");
-        ThrowMsg(Crypto::Exception::InternalError, "Error in EVP_DigestSignUpdate function");
+        ThrowErr(Exc::Crypto::InternalError, "Error in EVP_DigestSignUpdate function");
     }
 
     /* Finalize the DigestSign operation */
@@ -477,8 +439,7 @@ RawBuffer digestSignMessage(EVP_PKEY *privKey,
      * signature. Length is returned in slen */
     size_t slen;
     if(EVP_SUCCESS != EVP_DigestSignFinal(mdctx.get(), NULL, &slen)) {
-        LogError("Error in EVP_DigestSignFinal function");
-        ThrowMsg(Crypto::Exception::InternalError, "Error in EVP_DigestSignFinal function");
+        ThrowErr(Exc::Crypto::InternalError, "Error in EVP_DigestSignFinal function");
     }
 
     /* Allocate memory for the signature based on size in slen */
@@ -486,8 +447,7 @@ RawBuffer digestSignMessage(EVP_PKEY *privKey,
 
     /* Obtain the signature */
     if(EVP_SUCCESS != EVP_DigestSignFinal(mdctx.get(), sig.data(), &slen)) {
-        LogError("Error in EVP_DigestSignFinal function");
-        ThrowMsg(Crypto::Exception::InternalError, "Error in EVP_DigestSignFinal function");
+        ThrowErr(Exc::Crypto::InternalError, "Error in EVP_DigestSignFinal function");
     }
 
     // Set value to return RawData
@@ -517,7 +477,7 @@ int verify(EVP_PKEY *pkey,
 //       (publicKey.getType() != KeyType::KEY_ECDSA_PUBLIC))
 //    {
 //        LogError("Error in private key type");
-//        ThrowMsg(CryptoService::Exception::Crypto_internal, "Error in private key type");
+//        ThrowErr(CryptoService::Exception::Crypto_internal, "Error in private key type");
 //    }
 //
 //    if(publicKey.getType()==KeyType::KEY_RSA_PUBLIC) {
@@ -526,8 +486,7 @@ int verify(EVP_PKEY *pkey,
 
 //    auto shrPKey = publicKey.getEvpShPtr();
     if (NULL == pkey) {
-        LogError("Error in getEvpShPtr function");
-        ThrowMsg(Crypto::Exception::InternalError, "Error in getEvpShPtr function");
+        ThrowErr(Exc::Crypto::InternalError, "Error in getEvpShPtr function");
     }
 
     if (md_algo == NULL) {
@@ -545,20 +504,17 @@ int verifyMessage(EVP_PKEY *pubKey,
     EvpPkeyCtxUPtr pctx(EVP_PKEY_CTX_new(pubKey, NULL), EVP_PKEY_CTX_free);
 
     if(!pctx.get()) {
-        LogError("Error in EVP_PKEY_CTX_new function");
-        ThrowMsg(Crypto::Exception::InternalError, "Error in EVP_PKEY_CTX_new function");
+        ThrowErr(Exc::Crypto::InternalError, "Error in EVP_PKEY_CTX_new function");
     }
 
     if(EVP_PKEY_verify_init(pctx.get()) != EVP_SUCCESS) {
-        LogError("Error in EVP_PKEY_verify_init function");
-        ThrowMsg(Crypto::Exception::InternalError, "Error in EVP_PKEY_verify_init function");
+        ThrowErr(Exc::Crypto::InternalError, "Error in EVP_PKEY_verify_init function");
     }
 
     /* Set padding algorithm  */
     if(EVP_PKEY_type(pubKey->type) == EVP_PKEY_RSA) {
         if(EVP_SUCCESS != EVP_PKEY_CTX_set_rsa_padding(pctx.get(), rsa_padding)) {
-            LogError("Error in EVP_PKEY_CTX_set_rsa_padding function");
-            ThrowMsg(Crypto::Exception::InternalError, "Error in EVP_PKEY_CTX_set_rsa_padding function");
+            ThrowErr(Exc::Crypto::InternalError, "Error in EVP_PKEY_CTX_set_rsa_padding function");
         }
     }
 
@@ -581,25 +537,21 @@ int digestVerifyMessage(EVP_PKEY *pubKey,
 
     /* Create the Message Digest Context */
     if(!mdctx.get()) {
-        LogError("Error in EVP_MD_CTX_create function");
-        ThrowMsg(Crypto::Exception::InternalError, "Error in EVP_MD_CTX_create function");
+        ThrowErr(Exc::Crypto::InternalError, "Error in EVP_MD_CTX_create function");
     }
 
     if(EVP_SUCCESS != EVP_DigestVerifyInit(mdctx.get(), &pctx, md_algo, NULL, pubKey)) {
-        LogError("Error in EVP_DigestVerifyInit function");
-        ThrowMsg(Crypto::Exception::InternalError, "Error in EVP_DigestVerifyInit function");
+        ThrowErr(Exc::Crypto::InternalError, "Error in EVP_DigestVerifyInit function");
     }
 
     if(EVP_PKEY_type(pubKey->type) == EVP_PKEY_RSA) {
         if(EVP_SUCCESS != EVP_PKEY_CTX_set_rsa_padding(pctx, rsa_padding)) {
-            LogError("Error in EVP_PKEY_CTX_set_rsa_padding function");
-            ThrowMsg(Crypto::Exception::InternalError, "Error in EVP_PKEY_CTX_set_rsa_padding function");
+            ThrowErr(Exc::Crypto::InternalError, "Error in EVP_PKEY_CTX_set_rsa_padding function");
         }
     }
 
     if(EVP_SUCCESS != EVP_DigestVerifyUpdate(mdctx.get(), message.data(), message.size()) ) {
-        LogError("Error in EVP_DigestVerifyUpdate function");
-        ThrowMsg(Crypto::Exception::InternalError, "Error in EVP_DigestVerifyUpdate function");
+        ThrowErr(Exc::Crypto::InternalError, "Error in EVP_DigestVerifyUpdate function");
     }
 
     if(EVP_SUCCESS == EVP_DigestVerifyFinal(mdctx.get(), const_cast<unsigned char*>(signature.data()), signature.size()) ) {

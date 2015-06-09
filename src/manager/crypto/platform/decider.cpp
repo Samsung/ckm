@@ -24,6 +24,7 @@
 
 #include <platform/decider.h>
 
+#include <generic-backend/exception.h>
 #include <sw-backend/store.h>
 #include <tz-backend/store.h>
 
@@ -49,9 +50,8 @@ GStore& Decider::getStore(CryptoBackend cryptoBackend) {
     if (gStore)
         return *gStore;
 
-    LogError("Backend not available. BackendId: " << (int)cryptoBackend);
-    ThrowMsg(CKM::Crypto::Exception::Base,
-             "Backend not available. BackendId: " << (int)cryptoBackend);
+    ThrowErr(Exc::Crypto::InternalError,
+             "Backend not available. BackendId: ", (int)cryptoBackend);
 }
 
 GStore& Decider::getStore(DataType data, bool exportable) {

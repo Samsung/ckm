@@ -32,14 +32,6 @@ typedef std::vector<uid_t> UidVector;
 
 class FileSystem {
 public:
-    class Exception {
-    public:
-        DECLARE_EXCEPTION_TYPE(CKM::Exception, Base)
-        DECLARE_EXCEPTION_TYPE(Base, OpenFailed)
-        DECLARE_EXCEPTION_TYPE(Base, SaveFailed)
-        DECLARE_EXCEPTION_TYPE(Base, RenameFailed)
-    };
-
     FileSystem(uid_t uid);
 
     std::string getDBPath() const;

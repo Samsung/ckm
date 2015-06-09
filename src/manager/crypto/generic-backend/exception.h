@@ -20,20 +20,19 @@
  */
 #pragma once
 
-#include <dpl/exception.h>
+#include <exception.h>
 
 namespace CKM {
+namespace Exc {
 namespace Crypto {
-namespace Exception {
 
-DECLARE_EXCEPTION_TYPE(CKM::Exception, Base)
-DECLARE_EXCEPTION_TYPE(Base, InternalError)
-DECLARE_EXCEPTION_TYPE(Base, KeyNotSupported)
-DECLARE_EXCEPTION_TYPE(Base, OperationNotSupported)
-DECLARE_EXCEPTION_TYPE(Base, WrongBackend)
-DECLARE_EXCEPTION_TYPE(Base, InputParam)
+typedef CKM::Exc::InputParam InputParam;
+typedef CKM::Exc::InternalError InternalError;
+typedef CKM::Exc::InternalError KeyNotSupported;
+typedef CKM::Exc::InternalError OperationNotSupported;
+typedef CKM::Exc::InternalError WrongBackend;
 
-} // namespace Exception
+} // namespace Exc
 } // namespace Crypto
 } // namespace CKM
 

@@ -72,22 +72,15 @@ public:
     EvpCipherWrapper(const EVP_CIPHER *type, const T &key, const T &iv, bool encryption)
     {
         if (static_cast<int>(key.size()) != EVP_CIPHER_key_length(type)) {
-            LogError("Wrong key size! Expected: "
-                << EVP_CIPHER_key_length(type) << " Get: " << key.size());
-            ThrowMsg(CKM::Crypto::Exception::InternalError, "Wrong key size! Expected: "
-                << EVP_CIPHER_key_length(type) << " Get: " << key.size());
+            ThrowErr(Exc::Crypto::InternalError, "Wrong key size! Expected: ", EVP_CIPHER_key_length(type) ," Get: ", key.size());
         }
 
         if (static_cast<int>(iv.size()) < EVP_CIPHER_iv_length(type)) {
-            LogError("Wrong iv size! Expected: "
-                << EVP_CIPHER_iv_length(type) << " Get: " << iv.size());
-            ThrowMsg(CKM::Crypto::Exception::InternalError, "Wrong iv size! Expected: "
-                << EVP_CIPHER_iv_length(type) << " Get: " << iv.size());
+            ThrowErr(Exc::Crypto::InternalError, "Wrong iv size! Expected: ", EVP_CIPHER_iv_length(type) , " Get: ", iv.size());
         }
 
         if (1 != EVP_CipherInit_ex(m_ctx, type, NULL, key.data(), iv.data(), encryption ? 1 : 0)) {
-            LogError("Failed in EVP_CipherInit");
-            ThrowMsg(CKM::Crypto::Exception::InternalError, "Failed in EVP_CipherInit");
+            ThrowErr(Exc::Crypto::InternalError, "Failed in EVP_CipherInit");
         }
 
         EVP_CIPHER_CTX_set_padding(m_ctx, 1);
@@ -98,8 +91,7 @@ public:
         int bytesLen = static_cast<int>(data.size() + EVP_CIPHER_CTX_block_size(m_ctx));
         T output(bytesLen);
         if (1 != EVP_CipherUpdate(m_ctx, output.data(), &bytesLen, data.data(), data.size())) {
-            LogError("Failed in EVP_CipherUpdate");
-            ThrowMsg(CKM::Crypto::Exception::InternalError, "Failed in EVP_CipherUpdate");
+            ThrowErr(Exc::Crypto::InternalError, "Failed in EVP_CipherUpdate");
         }
         output.resize(bytesLen);
         return output;
@@ -109,8 +101,7 @@ public:
         int bytesLen = EVP_CIPHER_CTX_block_size(m_ctx);
         T output(bytesLen);
         if (1 != EVP_CipherFinal_ex(m_ctx, output.data(), &bytesLen)) {
-            LogError("Failed in EVP_CipherFinal");
-            ThrowMsg(CKM::Crypto::Exception::InternalError, "Failed in EVP_CipherFinal");
+            ThrowErr(Exc::Crypto::InternalError, "Failed in EVP_CipherFinal");
         }
         output.resize(bytesLen);
         return output;

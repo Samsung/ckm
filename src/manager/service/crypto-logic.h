@@ -24,22 +24,11 @@
 #include <map>
 #include <ckm/ckm-type.h>
 #include <db-crypto.h>
-#include <dpl/exception.h>
 
 namespace CKM {
 
 class CryptoLogic {
 public:
-    class Exception
-    {
-        public:
-            DECLARE_EXCEPTION_TYPE(CKM::Exception, Base)
-            DECLARE_EXCEPTION_TYPE(Base, InternalError)
-            DECLARE_EXCEPTION_TYPE(Base, Base64EncoderError)
-            DECLARE_EXCEPTION_TYPE(Base, Base64DecoderError)
-            DECLARE_EXCEPTION_TYPE(Base, EncryptDBRowError)
-            DECLARE_EXCEPTION_TYPE(Base, DecryptDBRowError)
-    };
     CryptoLogic();
     CryptoLogic(const CryptoLogic &second) = delete;
     CryptoLogic(CryptoLogic &&second);

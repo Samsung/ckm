@@ -49,12 +49,6 @@ struct UserData {
 class CKMLogic {
 public:
     static const uid_t SYSTEM_DB_UID;
-    class Exception
-    {
-    public:
-        DECLARE_EXCEPTION_TYPE(CKM::Exception, Base)
-        DECLARE_EXCEPTION_TYPE(Base, DatabaseLocked)
-    };
 
     CKMLogic();
     CKMLogic(const CKMLogic &) = delete;

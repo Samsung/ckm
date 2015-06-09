@@ -41,7 +41,7 @@ namespace {
 template <typename... Args>
 std::runtime_error io_exception(const Args&... args)
 {
-    return std::runtime_error(stringify(args...));
+    return std::runtime_error(Stringify()(args...));
 };
 
 } // namespace anonymous

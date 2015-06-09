@@ -18,8 +18,6 @@
  * @author     Bartłomiej Grzelewski (b.grzelewski@samsung.com)
  * @version    1.0
  */
-#include <dpl/log/log.h>
-
 #include <generic-backend/exception.h>
 #include <tz-backend/key.h>
 #include <tz-backend/store.h>
@@ -33,18 +31,15 @@ Store::Store(CryptoBackend backendId)
 {}
 
 GKeyShPtr Store::getKey(const Token &) {
-    LogError("Trust zone backend is not implemented!");
-    ThrowMsg(Exception::Base, "Trust zone backend is not implemented!");
+    ThrowErr(Exc::Crypto::OperationNotSupported, "Trust zone backend is not implemented!");
 }
 
 TokenPair Store::generateAKey(const CryptoAlgorithm &) {
-    LogError("Trust zone backend is not implemented!");
-    ThrowMsg(Exception::Base, "Trust zone backend is not implemented!");
+    ThrowErr(Exc::Crypto::OperationNotSupported, "Trust zone backend is not implemented!");
 }
 
 Token Store::import(DataType, const RawBuffer &) {
-    LogError("Trust zone backend is not implemented!");
-    ThrowMsg(Exception::Base, "Trust zone backend is not implemented!");
+    ThrowErr(Exc::Crypto::OperationNotSupported, "Trust zone backend is not implemented!");
 }
 
 } // namespace TZ
