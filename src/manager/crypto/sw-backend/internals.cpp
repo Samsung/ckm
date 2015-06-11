@@ -40,6 +40,7 @@
 
 #include <generic-backend/exception.h>
 #include <sw-backend/internals.h>
+#include <sw-backend/crypto.h>
 
 #define OPENSSL_SUCCESS 1       // DO NOTCHANGE THIS VALUE
 #define OPENSSL_FAIL    0       // DO NOTCHANGE THIS VALUE
@@ -79,6 +80,19 @@ CKM::RawBuffer i2d(I2D_CONV fun, EVP_PKEY* pkey) {
     output.resize(size);
     return output;
 }
+
+template<typename T>
+T unpack(
+    const CKM::CryptoAlgorithm &alg,
+    CKM::ParamName paramName)
+{
+    T result;
+    if (!alg.getParam(paramName, result)) {
+        ThrowErr(CKM::Exc::Crypto::InputParam, "Wrong input param");
+    }
+    return result;
+}
+
 } // anonymous namespace
 
 namespace CKM {
@@ -316,6 +330,132 @@ Token createKeyAES(CryptoBackend backendId, const int sizeBits)
     }
 
     return Token(backendId, DataType(KeyType::KEY_AES), CKM::RawBuffer(key, key+sizeBytes));
+}
+
+RawBuffer encryptDataAesCbc(
+    const RawBuffer &key,
+    const RawBuffer &data,
+    const RawBuffer &iv)
+{
+    Crypto::SW::Cipher::AesCbcEncryption enc(key, iv);
+    RawBuffer result = enc.Append(data);
+    RawBuffer tmp = enc.Finalize();
+    std::copy(tmp.begin(), tmp.end(), std::back_inserter(result));
+    return result;
+}
+
+std::pair<RawBuffer, RawBuffer> encryptDataAesGcm(
+    const RawBuffer &key,
+    const RawBuffer &data,
+    const RawBuffer &iv,
+    int tagSize)
+{
+    RawBuffer tag(tagSize);
+    Crypto::SW::Cipher::AesGcmEncryption enc(key, iv);
+    RawBuffer result = enc.Append(data);
+    RawBuffer tmp = enc.Finalize();
+    std::copy(tmp.begin(), tmp.end(), std::back_inserter(result));
+    if (0 == enc.Control(EVP_CTRL_GCM_GET_TAG, tagSize, tag.data())) {
+        ThrowErr(Exc::Crypto::InternalError, "Error in AES control function. Get tag failed.");
+    }
+    return std::make_pair(result, tag);
+}
+
+RawBuffer encryptDataAesGcmPacked(
+    const RawBuffer &key,
+    const RawBuffer &data,
+    const RawBuffer &iv,
+    int tagSize)
+{
+    auto pair = encryptDataAesGcm(key, data, iv, tagSize);
+    std::copy(pair.second.begin(), pair.second.end(), std::back_inserter(pair.first));
+    return pair.first;
+}
+
+RawBuffer decryptDataAesCbc(
+    const RawBuffer &key,
+    const RawBuffer &data,
+    const RawBuffer &iv)
+{
+    Crypto::SW::Cipher::AesCbcDecryption dec(key, iv);
+    RawBuffer result = dec.Append(data);
+    RawBuffer tmp = dec.Finalize();
+    std::copy(tmp.begin(), tmp.end(), std::back_inserter(result));
+    return result;
+}
+
+RawBuffer decryptDataAesGcm(
+    const RawBuffer &key,
+    const RawBuffer &data,
+    const RawBuffer &iv,
+    const RawBuffer &tag)
+{
+    Crypto::SW::Cipher::AesGcmDecryption dec(key, iv);
+    void *ptr = (void*)tag.data();
+    if (0 == dec.Control(EVP_CTRL_GCM_SET_TAG, tag.size(), ptr)) {
+        ThrowErr(Exc::Crypto::InternalError,
+            "Error in AES control function. Set tag failed.");
+    }
+    RawBuffer result = dec.Append(data);
+    RawBuffer tmp = dec.Finalize();
+    std::copy(tmp.begin(), tmp.end(), std::back_inserter(result));
+    return result;
+}
+
+RawBuffer decryptDataAesGcmPacked(
+    const RawBuffer &key,
+    const RawBuffer &data,
+    const RawBuffer &iv,
+    int tagSize)
+{
+    if (tagSize > static_cast<int>(data.size()))
+        ThrowErr(Exc::Crypto::InputParam, "Wrong size of tag");
+
+    auto tagPos = data.data() + data.size() - tagSize;
+    return decryptDataAesGcm(
+        key,
+        RawBuffer(data.data(), tagPos),
+        iv,
+        RawBuffer(tagPos, data.data() + data.size()));
+}
+
+RawBuffer symmetricEncrypt(const RawBuffer &key,
+                           const CryptoAlgorithm &alg,
+                           const RawBuffer &data)
+{
+    AlgoType keyType = unpack<AlgoType>(alg, ParamName::ALGO_TYPE);
+
+    switch(keyType)
+    {
+        case AlgoType::AES_CBC:
+            return encryptDataAesCbc(key, data, unpack<RawBuffer>(alg, ParamName::ED_IV));
+        case AlgoType::AES_GCM:
+            return encryptDataAesGcmPacked(key, data, unpack<RawBuffer>(alg, ParamName::ED_IV),
+              unpack<int>(alg, ParamName::ED_TAG_LEN));
+        default:
+            break;
+    }
+    ThrowErr(Exc::Crypto::OperationNotSupported,
+        "symmetric enc error: algorithm not recognized");
+}
+
+RawBuffer symmetricDecrypt(const RawBuffer &key,
+                           const CryptoAlgorithm &alg,
+                           const RawBuffer &data)
+{
+    AlgoType keyType = unpack<AlgoType>(alg, ParamName::ALGO_TYPE);
+
+    switch(keyType)
+    {
+        case AlgoType::AES_CBC:
+            return decryptDataAesCbc(key, data, unpack<RawBuffer>(alg, ParamName::ED_IV));
+        case AlgoType::AES_GCM:
+            return decryptDataAesGcmPacked(key, data, unpack<RawBuffer>(alg, ParamName::ED_IV),
+                unpack<int>(alg, ParamName::ED_TAG_LEN));
+        default:
+            break;
+    }
+    ThrowErr(Exc::Crypto::InputParam, "symmetric dec error: algorithm not recognized");
 }
 
 RawBuffer sign(EVP_PKEY *pkey,

@@ -36,11 +36,11 @@ Decider::Decider()
   , m_tzStore(new TZ::Store(CryptoBackend::TrustZone))
 {}
 
-GStore& Decider::getStore(const Token &token) {
+GStore& Decider::getStore(const Token &token) const {
     return getStore(token.backendId);
 };
 
-GStore& Decider::getStore(CryptoBackend cryptoBackend) {
+GStore& Decider::getStore(CryptoBackend cryptoBackend) const {
     GStore *gStore = NULL;
     if (cryptoBackend == CryptoBackend::OpenSSL)
         gStore = m_swStore.get();
@@ -54,7 +54,7 @@ GStore& Decider::getStore(CryptoBackend cryptoBackend) {
              "Backend not available. BackendId: ", (int)cryptoBackend);
 }
 
-GStore& Decider::getStore(DataType data, bool exportable) {
+GStore& Decider::getStore(DataType data, bool exportable) const {
     return getStore(chooseCryptoBackend(data, exportable));
 }
 

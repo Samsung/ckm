@@ -35,13 +35,13 @@ namespace Crypto {
 class Decider {
 public:
     Decider();
-    GStore& getStore(const Token &token);
-    GStore& getStore(DataType data, bool exportable);
+    GStore& getStore(const Token &token) const;
+    GStore& getStore(DataType data, bool exportable) const;
     CryptoBackend chooseCryptoBackend(DataType data, bool exportable) const;
 
     virtual ~Decider(){}
 protected:
-    GStore& getStore(CryptoBackend id);
+    GStore& getStore(CryptoBackend id) const;
 
     std::unique_ptr<GStore> m_swStore;
     std::unique_ptr<GStore> m_tzStore;

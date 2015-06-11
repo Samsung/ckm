@@ -46,37 +46,16 @@ public:
     void removeKey(const Label &smackLabel);
 
 private:
-	static const int ENCR_BASE64 =   1 << 0;
-	static const int ENCR_APPKEY =   1 << 1;
-	static const int ENCR_PASSWORD = 1 << 2;
+    static const int ENCR_BASE64 =   1 << 0;
+    static const int ENCR_APPKEY =   1 << 1;
+    static const int ENCR_PASSWORD = 1 << 2;
 
-	std::map<Label, RawBuffer> m_keyMap;
+    std::map<Label, RawBuffer> m_keyMap;
 
     RawBuffer generateRandIV() const;
     RawBuffer passwordToKey(const Password &password,
                             const RawBuffer &salt,
                             size_t keySize) const;
-
-    RawBuffer encryptDataAesCbc(
-        const RawBuffer &data,
-        const RawBuffer &key,
-        const RawBuffer &iv) const;
-
-    RawBuffer decryptDataAesCbc(
-        const RawBuffer &data,
-        const RawBuffer &key,
-        const RawBuffer &iv) const;
-
-    std::pair<RawBuffer, RawBuffer> encryptDataAesGcm(
-        const RawBuffer &data,
-        const RawBuffer &key,
-        const RawBuffer &iv) const;
-
-    RawBuffer decryptDataAesGcm(
-        const RawBuffer &data,
-        const RawBuffer &key,
-        const RawBuffer &iv,
-        const RawBuffer &tag) const;
 
     void decBase64(RawBuffer &data);
     void encBase64(RawBuffer &data);

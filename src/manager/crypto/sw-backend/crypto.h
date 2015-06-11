@@ -29,9 +29,6 @@
 
 #include <generic-backend/exception.h>
 
-// TODO move it to static const int
-#define AES_GCM_TAG_SIZE 16
-
 namespace CKM {
 namespace Crypto {
 namespace SW {

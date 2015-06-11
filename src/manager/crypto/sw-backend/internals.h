@@ -50,6 +50,31 @@ TokenPair createKeyPairDSA(CryptoBackend backendId, const int size);
 TokenPair createKeyPairECDSA(CryptoBackend backendId, ElipticCurve type1);
 Token     createKeyAES(CryptoBackend backendId, const int sizeBits);
 
+RawBuffer symmetricEncrypt(const RawBuffer &key,
+                           const CryptoAlgorithm &alg,
+                           const RawBuffer &data);
+RawBuffer symmetricDecrypt(const RawBuffer &key,
+                           const CryptoAlgorithm &alg,
+                           const RawBuffer &cipher);
+
+std::pair<RawBuffer, RawBuffer> encryptDataAesGcm(const RawBuffer &key,
+    const RawBuffer &data,
+    const RawBuffer &iv,
+    int tagSize);
+
+RawBuffer decryptDataAesGcm(const RawBuffer &key,
+    const RawBuffer &data,
+    const RawBuffer &iv,
+    const RawBuffer &tag);
+
+RawBuffer encryptDataAesCbc(const RawBuffer &key,
+    const RawBuffer &data,
+    const RawBuffer &iv);
+
+RawBuffer decryptDataAesCbc(const RawBuffer &key,
+    const RawBuffer &data,
+    const RawBuffer &iv);
+
 RawBuffer sign(EVP_PKEY *pkey,
     const CryptoAlgorithm &alg,
     const RawBuffer &message);

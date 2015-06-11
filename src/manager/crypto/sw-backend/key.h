@@ -39,6 +39,10 @@ public:
       : m_key(std::move(buffer))
       , m_type(keyType)
     {}
+
+    virtual RawBuffer getBinary() const;
+    virtual RawBuffer encrypt(const CryptoAlgorithm &, const RawBuffer &);
+    virtual RawBuffer decrypt(const CryptoAlgorithm &, const RawBuffer &);
 protected:
     RawBuffer m_key;
     DataType m_type;
@@ -52,6 +56,7 @@ public:
     {}
     virtual RawBuffer sign(const CryptoAlgorithm &alg, const RawBuffer &message);
     virtual int verify(const CryptoAlgorithm &alg, const RawBuffer &message, const RawBuffer &sign);
+    virtual RawBuffer getBinary() const;
     virtual ~AKey(){}
 protected:
     virtual EvpShPtr getEvpShPtr();

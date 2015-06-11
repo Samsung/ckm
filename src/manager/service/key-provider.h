@@ -32,7 +32,8 @@
 
 #define AES256_KEY_LEN_BITS   256
 #define AES256_KEY_LEN_BYTSE  (AES256_KEY_LEN_BITS / 8)
-#define AES_GCM_TAG_SIZE      32
+// Unused
+//#define AES_GCM_TAG_SIZE      32
 
 #define PBKDF2_SALT_LEN       16
 #define PBKDF2_ITERATIONS     4096
