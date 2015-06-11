@@ -37,6 +37,10 @@ public:
     CKMService(CKMService &&) = delete;
     CKMService& operator=(const CKMService &) = delete;
     CKMService& operator=(CKMService &&) = delete;
+
+    virtual void Start(void);
+    virtual void Stop(void);
+
     virtual ~CKMService();
 
     ServiceDescriptionVector GetServiceDescription();

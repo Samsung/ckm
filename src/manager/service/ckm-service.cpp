@@ -43,6 +43,14 @@ CKMService::~CKMService() {
     delete m_logic;
 }
 
+void CKMService::Start() {
+    Create();
+}
+
+void CKMService::Stop() {
+    Join();
+}
+
 GenericSocketService::ServiceDescriptionVector CKMService::GetServiceDescription()
 {
     return ServiceDescriptionVector {

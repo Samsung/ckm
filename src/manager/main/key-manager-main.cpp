@@ -47,7 +47,7 @@ void registerSocketService(CKM::SocketManager &manager, const std::string& servi
     T *service = NULL;
     try {
         service = new T();
-        service->Create();
+        service->Start();
         manager.RegisterSocketService(service);
         service = NULL;
     } catch (const CKM::Exception &exception) {

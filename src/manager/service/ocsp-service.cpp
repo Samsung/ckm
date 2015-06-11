@@ -42,6 +42,14 @@ OCSPService::~OCSPService() {
     delete m_logic;
 }
 
+void OCSPService::Start() {
+    Create();
+}
+
+void OCSPService::Stop() {
+    Join();
+}
+
 GenericSocketService::ServiceDescriptionVector OCSPService::GetServiceDescription()
 {
     return ServiceDescriptionVector {

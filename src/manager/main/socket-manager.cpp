@@ -90,6 +90,10 @@ struct DummyService : public GenericSocketService {
     ServiceDescriptionVector GetServiceDescription() {
         return ServiceDescriptionVector();
     }
+
+    void Start() {}
+    void Stop() {}
+
     void Event(const AcceptEvent &event) { (void)event; }
     void Event(const WriteEvent &event) { (void)event; }
     void Event(const ReadEvent &event) { (void)event; }
@@ -110,6 +114,9 @@ struct SignalService : public GenericSocketService {
     ServiceDescriptionVector GetServiceDescription() {
         return ServiceDescriptionVector();
     }
+
+    void Start() {}
+    void Stop() {}
 
     void Event(const AcceptEvent &event) { (void)event; } // not supported
     void Event(const WriteEvent &event) { (void)event; }  // not supported
@@ -212,9 +219,10 @@ SocketManager::~SocketManager() {
             serviceMap.insert(m_socketDescriptionVector[i].service);
 
     // Time to destroy all services.
-    for(auto it = serviceMap.begin(); it != serviceMap.end(); ++it) {
-        LogDebug("delete " << (void*)(*it));
-        delete *it;
+    for (auto service : serviceMap) {
+        LogDebug("delete " << (void*)(service));
+        service->Stop();
+        delete service;
     }
 
     for (size_t i = 0; i < m_socketDescriptionVector.size(); ++i)

@@ -36,6 +36,10 @@ public:
     OCSPService(OCSPService &&) = delete;
     OCSPService& operator=(const OCSPService &) = delete;
     OCSPService& operator=(OCSPService &&) = delete;
+
+    virtual void Start();
+    virtual void Stop();
+
     virtual ~OCSPService();
 
     ServiceDescriptionVector GetServiceDescription();

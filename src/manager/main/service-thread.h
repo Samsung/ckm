@@ -74,8 +74,7 @@ public:
 
     virtual ~ServiceThread()
     {
-        if (m_state != State::NoThread)
-            Join();
+        assert((m_state == State::NoThread) && "Thread was not stopped before ServiceThread destruction!");
     }
 
 protected:
