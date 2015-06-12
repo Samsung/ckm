@@ -162,12 +162,6 @@ int CKMLogic::unlockDatabase(uid_t user, const Password & password)
                 handle.database.deleteKey(appSmackLabel);
             }
         }
-    } catch (const KeyProvider::Exception::PassWordError &e) {
-        LogError("Incorrect Password " << e.GetMessage());
-        retCode = CKM_API_ERROR_AUTHENTICATION_FAILED;
-    } catch (const KeyProvider::Exception::Base &e) {
-        LogError("Error in KeyProvider " << e.GetMessage());
-        retCode = CKM_API_ERROR_SERVER_ERROR;
     } catch (const Exc::Exception &e) {
         retCode = e.error();
     } catch (const CKM::Exception &e) {
@@ -283,12 +277,6 @@ RawBuffer CKMLogic::changeUserPassword(
     try
     {
         retCode = changeUserPasswordHelper(user, oldPassword, newPassword);
-    } catch (const KeyProvider::Exception::PassWordError &e) {
-        LogError("Incorrect Password " << e.GetMessage());
-        retCode = CKM_API_ERROR_AUTHENTICATION_FAILED;
-    } catch (const KeyProvider::Exception::Base &e) {
-        LogError("Error in KeyProvider " << e.GetMessage());
-        retCode = CKM_API_ERROR_SERVER_ERROR;
     } catch (const Exc::Exception &e) {
         retCode = e.error();
     } catch (const CKM::Exception &e) {
@@ -500,9 +488,6 @@ int CKMLogic::verifyAndSaveDataHelper(
         {
             retCode = saveDataHelper(cred, name, label, dataType, binaryData, policy);
         }
-    } catch (const KeyProvider::Exception::Base &e) {
-        LogError("KeyProvider failed with message: " << e.GetMessage());
-        retCode = CKM_API_ERROR_SERVER_ERROR;
     } catch (const DB::Crypto::Exception::InternalError &e) {
         LogError("DB::Crypto failed with message: " << e.GetMessage());
         retCode = CKM_API_ERROR_DB_ERROR;
@@ -592,9 +577,8 @@ RawBuffer CKMLogic::savePKCS12(
     int retCode = CKM_API_ERROR_UNKNOWN;
     try {
         retCode = saveDataHelper(cred, name, label, pkcs, keyPolicy, certPolicy);
-    } catch (const KeyProvider::Exception::Base &e) {
-        LogError("KeyProvider failed with message: " << e.GetMessage());
-        retCode = CKM_API_ERROR_SERVER_ERROR;
+    } catch (const Exc::Exception &e) {
+        retCode = e.error();
     } catch (const DB::Crypto::Exception::InternalError &e) {
         LogError("DB::Crypto failed with message: " << e.GetMessage());
         retCode = CKM_API_ERROR_DB_ERROR;
@@ -876,9 +860,6 @@ RawBuffer CKMLogic::getData(
 
     try {
         retCode = readDataHelper(true, cred, dataType, name, label, password, row);
-    } catch (const KeyProvider::Exception::Base &e) {
-        LogError("KeyProvider failed with error: " << e.GetMessage());
-        retCode = CKM_API_ERROR_SERVER_ERROR;
     } catch (const DB::Crypto::Exception::Base &e) {
         LogError("DB::Crypto failed with message: " << e.GetMessage());
         retCode = CKM_API_ERROR_DB_ERROR;
@@ -964,10 +945,6 @@ RawBuffer CKMLogic::getPKCS12(
         // prepare response
         if(retCode == CKM_API_SUCCESS)
             output = PKCS12Serializable(privKey, cert, caChain);
-
-    } catch (const KeyProvider::Exception::Base &e) {
-        LogError("KeyProvider failed with error: " << e.GetMessage());
-        retCode = CKM_API_ERROR_SERVER_ERROR;
     } catch (const DB::Crypto::Exception::Base &e) {
         LogError("DB::Crypto failed with message: " << e.GetMessage());
         retCode = CKM_API_ERROR_DB_ERROR;
@@ -1470,9 +1447,6 @@ RawBuffer CKMLogic::createSignature(
         if(retCode == CKM_API_SUCCESS) {
             signature = m_decider.getStore(row).getKey(row)->sign(cryptoAlg, message);
         }
-    } catch (const KeyProvider::Exception::Base &e) {
-        LogError("KeyProvider failed with message: " << e.GetMessage());
-        retCode = CKM_API_ERROR_SERVER_ERROR;
     } catch (const DB::Crypto::Exception::Base &e) {
         LogError("DB::Crypto failed with message: " << e.GetMessage());
         retCode = CKM_API_ERROR_DB_ERROR;
@@ -1523,9 +1497,6 @@ RawBuffer CKMLogic::verifySignature(
         }
     } catch (const Exc::Exception &e) {
         retCode = e.error();
-    } catch (const KeyProvider::Exception::Base &e) {
-        LogError("KeyProvider failed with error: " << e.GetMessage());
-        retCode = CKM_API_ERROR_SERVER_ERROR;
     } catch (const DB::Crypto::Exception::Base &e) {
         LogError("DB::Crypto failed with message: " << e.GetMessage());
         retCode = CKM_API_ERROR_DB_ERROR;

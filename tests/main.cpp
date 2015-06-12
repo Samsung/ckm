@@ -28,6 +28,8 @@
 #include <dpl/log/log.h>
 #include <log-setup.h>
 
+#include <exception.h>
+
 struct TestConfig {
     TestConfig() {
         boost::unit_test::unit_test_log.set_threshold_level( boost::unit_test::log_test_units);
@@ -42,17 +44,17 @@ bool isLibInitialized = false;
 
 struct KeyProviderLib {
     KeyProviderLib() {
-        Try {
+        try {
             CKM::KeyProvider::initializeLibrary();
             isLibInitialized = true;
-        }
-        Catch (CKM::Exception) {
+        } catch (const CKM::Exc::Exception &) {
             std::cout << "Library initialization failed!" << std::endl;
         }
     }
     ~KeyProviderLib() {
-        Try { CKM::KeyProvider::closeLibrary(); }
-        Catch (CKM::Exception) {
+        try {
+            CKM::KeyProvider::closeLibrary();
+        } catch (const CKM::Exc::Exception &) {
             std::cout << "Library deinitialization failed!" << std::endl;
         }
     }

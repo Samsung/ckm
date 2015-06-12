@@ -1,3 +1,4 @@
+#include <exception.h>
 #include <key-provider.h>
 #include <dpl/log/log.h>
 
@@ -100,14 +101,11 @@ KeyAndInfoContainer::~KeyAndInfoContainer()
 {
     // overwrite key
     char *ptr = reinterpret_cast<char*>(keyAndInfo);
-    for (size_t size = 0; size < sizeof(KeyAndInfo); ++size)
-        ptr[size] = 0;
+    memset(ptr, 0, sizeof(KeyAndInfo));
     // verification
     for (size_t size = 0; size < sizeof(KeyAndInfo); ++size) {
-        if (0 != ptr[size]) {
-            delete keyAndInfo;
-            ThrowMsg(Exception::Base, "KeyAndInfo in KeyAndInfoContainer "
-                "was not destroyed!");
+        if (ptr[size]) {
+            LogError("Write momory error! Memory used by key was not owerwritten.");
         }
     }
     delete keyAndInfo;
@@ -127,12 +125,12 @@ KeyProvider::KeyProvider(
     , m_isInitialized(true)
 {
     if (!m_isInitialized) {
-        ThrowMsg(Exception::InitFailed, "Object not initialized!. Should not happened");
+        ThrowErr(Exc::InternalError, "Object not initialized!. Should not happened");
     }
     if (domainKEKInWrapForm.size() != sizeof(WrappedKeyAndInfo)) {
         LogError("input size:" << domainKEKInWrapForm.size()
             << " Expected: " << sizeof(WrappedKeyAndInfo));
-        ThrowMsg(Exception::InputParamError, "buffer doesn't have proper size to store WrappedKeyAndInfo in KeyProvider Constructor");
+        ThrowErr(Exc::InternalError, "buffer doesn't have proper size to store WrappedKeyAndInfo in KeyProvider Constructor");
     }
 
     WrappedKeyAndInfoContainer wkmcDKEK = WrappedKeyAndInfoContainer(domainKEKInWrapForm.data());
@@ -154,7 +152,7 @@ KeyProvider::KeyProvider(
         PKEK1)) {
 
         delete[] concat_user_pass;
-        ThrowMsg(Exception::OpensslEngineError, "OPENSSL_ENGINE_ERROR");
+        ThrowErr(Exc::InternalError, "OPENSSL_ENGINE_ERROR");
     }
 
     delete[] concat_user_pass;
@@ -169,7 +167,7 @@ KeyProvider::KeyProvider(
         wkmcDKEK.getWrappedKeyAndInfo().keyInfo.iv,
         m_kmcDKEK->getKeyAndInfo().key))) {
 
-        ThrowMsg(Exception::PassWordError, "VerifyDomainKEK failed in KeyProvider Constructor");
+        ThrowErr(Exc::AuthenticationFailed, "VerifyDomainKEK failed in KeyProvider Constructor");
     }
 
     m_kmcDKEK->setKeyInfo(&(wkmcDKEK.getWrappedKeyAndInfo().keyInfo));
@@ -205,7 +203,7 @@ bool KeyProvider::isInitialized()
 RawBuffer KeyProvider::getPureDomainKEK()
 {
     if (!m_isInitialized) {
-        ThrowMsg(Exception::InitFailed, "Object not initialized!");
+        ThrowErr(Exc::InternalError, "Object not initialized!");
     }
 
     // TODO secure
@@ -215,7 +213,7 @@ RawBuffer KeyProvider::getPureDomainKEK()
 RawBuffer KeyProvider::getWrappedDomainKEK(const Password &password)
 {
     if (!m_isInitialized) {
-        ThrowMsg(Exception::InitFailed, "Object not initialized!");
+        ThrowErr(Exc::InternalError, "Object not initialized!");
     }
 
     WrappedKeyAndInfoContainer wkmcDKEK = WrappedKeyAndInfoContainer();
@@ -237,7 +235,7 @@ RawBuffer KeyProvider::getWrappedDomainKEK(const Password &password)
         PKEK1)) {
 
         delete[] concat_user_pass;
-        ThrowMsg(Exception::OpensslEngineError, "OPENSSL_ENGINE_ERROR");
+        ThrowErr(Exc::InternalError, "OPENSSL_ENGINE_ERROR");
     }
 
     delete[] concat_user_pass;
@@ -254,7 +252,7 @@ RawBuffer KeyProvider::getWrappedDomainKEK(const Password &password)
         wkmcDKEK.getWrappedKeyAndInfo().wrappedKey,
         wkmcDKEK.getWrappedKeyAndInfo().keyInfo.tag))) {
 
-        ThrowMsg(Exception::InitFailed, "WrapDKEK Failed in KeyProvider::getDomainKEK");
+        ThrowErr(Exc::InternalError, "WrapDKEK Failed in KeyProvider::getDomainKEK");
     }
 
     wkmcDKEK.setKeyInfoKeyLength((unsigned int)wrappedKeyLength);
@@ -267,13 +265,13 @@ RawBuffer KeyProvider::getWrappedDomainKEK(const Password &password)
 RawBuffer KeyProvider::getPureDEK(const RawBuffer &DEKInWrapForm)
 {
     if (!m_isInitialized) {
-        ThrowMsg(Exception::InitFailed, "Object not initialized!");
+        ThrowErr(Exc::InternalError, "Object not initialized!");
     }
 
     if (DEKInWrapForm.size() != sizeof(WrappedKeyAndInfo)){
         LogError("input size:" << DEKInWrapForm.size()
                   << " Expected: " << sizeof(WrappedKeyAndInfo));
-        ThrowMsg(Exception::InputParamError,
+        ThrowErr(Exc::InternalError,
                 "buffer doesn't have proper size to store "
                 "WrappedKeyAndInfo in KeyProvider::getPureDEK");
     }
@@ -293,7 +291,7 @@ RawBuffer KeyProvider::getPureDEK(const RawBuffer &DEKInWrapForm)
         MAX_KEY_SIZE,
         PKEK2)) {
 
-        ThrowMsg(Exception::OpensslEngineError, "OPENSSL_ENGINE_ERROR");
+        ThrowErr(Exc::InternalError, "OPENSSL_ENGINE_ERROR");
     }
 
     if (0 > (keyLength = decryptAes256Gcm(
@@ -304,7 +302,7 @@ RawBuffer KeyProvider::getPureDEK(const RawBuffer &DEKInWrapForm)
         wkmcDEK.getWrappedKeyAndInfo().keyInfo.iv,
         kmcDEK.getKeyAndInfo().key))) {
 
-        ThrowMsg(Exception::UnwrapFailed,
+        ThrowErr(Exc::InternalError,
             "UnwrapDEK Failed in KeyProvider::getPureDEK");
     }
 
@@ -319,8 +317,7 @@ RawBuffer KeyProvider::getPureDEK(const RawBuffer &DEKInWrapForm)
 RawBuffer KeyProvider::generateDEK(const std::string &smackLabel)
 {
     if (!m_isInitialized) {
-        ThrowMsg(Exception::InitFailed,
-                "Object not initialized!");
+        ThrowErr(Exc::InternalError, "Object not initialized!");
     }
 
     WrappedKeyAndInfoContainer wkmcDEK = WrappedKeyAndInfoContainer();
@@ -336,7 +333,7 @@ RawBuffer KeyProvider::generateDEK(const std::string &smackLabel)
     if (!RAND_bytes(key, m_kmcDKEK->getKeyAndInfo().keyInfo.keyLength) ||
         !RAND_bytes(wkmcDEK.getWrappedKeyAndInfo().keyInfo.iv, MAX_IV_SIZE)) {
 
-        ThrowMsg(Exception::OpensslEngineError, "OPENSSL_ENGINE_ERROR");
+        ThrowErr(Exc::InternalError, "OPENSSL_ENGINE_ERROR");
     }
 
     if (!PKCS5_PBKDF2_HMAC_SHA1(
@@ -348,7 +345,7 @@ RawBuffer KeyProvider::generateDEK(const std::string &smackLabel)
         MAX_KEY_SIZE,
         PKEK2)) {
 
-        ThrowMsg(Exception::OpensslEngineError, "OPENSSL_ENGINE_ERROR");
+        ThrowErr(Exc::InternalError, "OPENSSL_ENGINE_ERROR");
     }
 
     int wrappedKeyLength;
@@ -361,8 +358,7 @@ RawBuffer KeyProvider::generateDEK(const std::string &smackLabel)
         wkmcDEK.getWrappedKeyAndInfo().wrappedKey,
         wkmcDEK.getWrappedKeyAndInfo().keyInfo.tag))) {
 
-        ThrowMsg(Exception::GenFailed,
-            "GenerateDEK Failed in KeyProvider::generateDEK");
+        ThrowErr(Exc::InternalError, "GenerateDEK Failed in KeyProvider::generateDEK");
     }
 
     wkmcDEK.setKeyInfoKeyLength((unsigned int)wrappedKeyLength);
@@ -381,7 +377,7 @@ RawBuffer KeyProvider::reencrypt(
     if (domainKEKInWrapForm.size() != sizeof(WrappedKeyAndInfo)) {
         LogError("input size:" << domainKEKInWrapForm.size()
                   << " Expected: " << sizeof(WrappedKeyAndInfo));
-        ThrowMsg(Exception::InputParamError,
+        ThrowErr(Exc::InternalError,
                 "buffer doesn't have proper size to store "
                 "WrappedKeyAndInfo in KeyProvider::reencrypt");
     }
@@ -409,7 +405,7 @@ RawBuffer KeyProvider::reencrypt(
         PKEK1)) {
 
         delete[] concat_user_pass;
-        ThrowMsg(Exception::OpensslEngineError, "OPENSSL_ENGINE_ERROR");
+        ThrowErr(Exc::InternalError, "OPENSSL_ENGINE_ERROR");
     }
     delete[] concat_user_pass;
 
@@ -421,8 +417,7 @@ RawBuffer KeyProvider::reencrypt(
         wkmcOldDKEK.getWrappedKeyAndInfo().keyInfo.iv,
         kmcDKEK.getKeyAndInfo().key))) {
 
-        ThrowMsg(Exception::PassWordError,
-            "Incorrect Old Password ");
+        ThrowErr(Exc::AuthenticationFailed, "Incorrect Old Password ");
     }
 
     kmcDKEK.setKeyInfo(&(wkmcOldDKEK.getWrappedKeyAndInfo().keyInfo));
@@ -442,7 +437,7 @@ RawBuffer KeyProvider::reencrypt(
         PKEK1)) {
 
         delete[] concat_user_pass;
-        ThrowMsg(Exception::OpensslEngineError, "OPENSSL_ENGINE_ERROR");
+        ThrowErr(Exc::InternalError, "OPENSSL_ENGINE_ERROR");
     }
 
     delete[] concat_user_pass;
@@ -458,8 +453,7 @@ RawBuffer KeyProvider::reencrypt(
         wkmcNewDKEK.getWrappedKeyAndInfo().wrappedKey,
         wkmcNewDKEK.getWrappedKeyAndInfo().keyInfo.tag))) {
 
-        ThrowMsg(Exception::UnwrapFailed,
-            "UpdateDomainKEK in KeyProvider::reencrypt Failed");
+        ThrowErr(Exc::InternalError, "UpdateDomainKEK in KeyProvider::reencrypt Failed");
     }
 
     wkmcNewDKEK.setKeyInfoKeyLength((unsigned int)wrappedKeyLength);
@@ -479,7 +473,7 @@ RawBuffer KeyProvider::generateDomainKEK(
     if (!RAND_bytes(wkmcDKEK.getWrappedKeyAndInfo().keyInfo.salt, MAX_SALT_SIZE) ||
         !RAND_bytes(key, MAX_KEY_SIZE) ||
         !RAND_bytes(wkmcDKEK.getWrappedKeyAndInfo().keyInfo.iv, MAX_IV_SIZE))
-        ThrowMsg(Exception::OpensslEngineError, "OPENSSL_ENGINE_ERROR");
+        ThrowErr(Exc::InternalError, "OPENSSL_ENGINE_ERROR");
 
     int wrappedKeyLength;
     char *concat_user_pass = NULL;
@@ -494,7 +488,7 @@ RawBuffer KeyProvider::generateDomainKEK(
         PKEK1)) {
 
         delete[] concat_user_pass;
-        ThrowMsg(Exception::OpensslEngineError, "OPENSSL_ENGINED_ERROR");
+        ThrowErr(Exc::InternalError, "OPENSSL_ENGINED_ERROR");
     }
 
     delete[] concat_user_pass;
@@ -507,7 +501,7 @@ RawBuffer KeyProvider::generateDomainKEK(
         wkmcDKEK.getWrappedKeyAndInfo().wrappedKey,
         wkmcDKEK.getWrappedKeyAndInfo().keyInfo.tag))) {
 
-        ThrowMsg(Exception::GenFailed,
+        ThrowErr(Exc::InternalError,
             "GenerateDomainKEK Failed in KeyProvider::generateDomainKEK");
     }
 

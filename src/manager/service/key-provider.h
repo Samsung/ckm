@@ -9,7 +9,6 @@
 #include <memory>
 
 #include <ckm/ckm-type.h>
-#include <dpl/exception.h>
 
 #ifndef SUCCESS
 #define SUCCESS               0
@@ -82,10 +81,6 @@ private:
 
 class KeyAndInfoContainer{
 public:
-    class Exception{
-    public:
-        DECLARE_EXCEPTION_TYPE(CKM::Exception, Base)
-    };
     KeyAndInfoContainer();
     KeyAndInfoContainer(const unsigned char*);
     KeyAndInfo& getKeyAndInfo();
@@ -100,18 +95,6 @@ private:
 // This is internal api so all functions should throw exception on errors.
 class KeyProvider {
 public:
-    class Exception {
-    public:
-        DECLARE_EXCEPTION_TYPE(CKM::Exception, Base)
-        DECLARE_EXCEPTION_TYPE(Base, InitFailed)
-        DECLARE_EXCEPTION_TYPE(Base, GenFailed)
-        DECLARE_EXCEPTION_TYPE(Base, WrapFailed)
-        DECLARE_EXCEPTION_TYPE(Base, UnwrapFailed)
-        DECLARE_EXCEPTION_TYPE(Base, PassWordError)
-        DECLARE_EXCEPTION_TYPE(Base, InputParamError)
-        DECLARE_EXCEPTION_TYPE(Base, OpensslEngineError)
-    };
-
     // To store in std containers
     KeyProvider();
     // In constructor you must check if SKMM is initialized. On error -> exception
