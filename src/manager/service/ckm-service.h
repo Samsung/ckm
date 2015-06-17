@@ -21,7 +21,8 @@
  */
 #pragma once
 
-#include <thread-service.h>
+#include <mutex>
+#include <message-service.h>
 #include <message-buffer.h>
 #include <dpl/exception.h>
 
@@ -29,7 +30,7 @@ namespace CKM {
 
 class CKMLogic;
 
-class CKMService : public CKM::ThreadService
+class CKMService : public ThreadMessageService<MsgKeyRequest>
 {
 public:
     CKMService();
@@ -46,6 +47,8 @@ public:
     ServiceDescriptionVector GetServiceDescription();
 
 private:
+    virtual void SetCommManager(CommMgr *manager);
+
     class Exception {
     public:
         DECLARE_EXCEPTION_TYPE(CKM::Exception, Base)
@@ -62,6 +65,8 @@ private:
     RawBuffer ProcessStorage(
         Credentials &cred,
         MessageBuffer &buffer);
+
+    virtual void ProcessMessage(MsgKeyRequest msg);
 
     CKMLogic *m_logic;
 };

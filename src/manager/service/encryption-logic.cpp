@@ -44,12 +44,39 @@ void EncryptionLogic::Crypt(const CryptoRequest& request)
 
     // request key
     try {
-        m_service.RequestKey(request.cred, request.name, request.label);
+        m_service.RequestKey(request);
     } catch (...) {
         LogError("Key request failed");
         m_requests.erase(request.msgId);
         m_service.RespondToClient(request, CKM_API_ERROR_SERVER_ERROR);
     }
+}
+
+void EncryptionLogic::KeyRetrieved(MsgKeyResponse response)
+{
+    auto it = m_requests.find(response.id);
+    if (it == m_requests.end()) {
+        LogError("No matching request found"); // nothing we can do
+        return;
+    }
+    CryptoRequest req = std::move(it->second);
+    m_requests.erase(it);
+
+    if (response.error != CKM_API_SUCCESS) {
+        LogError("Attempt to retrieve key failed with error: " << response.error);
+        m_service.RespondToClient(req, response.error);
+        return;
+    }
+
+    if (!response.key) {
+        LogError("Retrieved key is empty");
+        m_service.RespondToClient(req, CKM_API_ERROR_SERVER_ERROR);
+        return;
+    }
+
+    // TODO encrypt/decrypt
+    LogError("Encryption/decryption not yet supported");
+    m_service.RespondToClient(req, CKM_API_ERROR_SERVER_ERROR);
 }
 
 } /* namespace CKM */

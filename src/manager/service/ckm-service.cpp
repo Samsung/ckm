@@ -59,6 +59,12 @@ GenericSocketService::ServiceDescriptionVector CKMService::GetServiceDescription
     };
 }
 
+void CKMService::SetCommManager(CommMgr *manager)
+{
+    ThreadService::SetCommManager(manager);
+    Register(*manager);
+}
+
 bool CKMService::ProcessOne(
     const ConnectionID &conn,
     ConnectionInfo &info)
@@ -375,6 +381,23 @@ RawBuffer CKMService::ProcessStorage(Credentials &cred, MessageBuffer &buffer)
         }
         default:
             Throw(Exception::BrokenProtocol);
+    }
+}
+
+void CKMService::ProcessMessage(MsgKeyRequest msg)
+{
+    Crypto::GKeyShPtr key;
+    int ret = m_logic->getKeyForService(msg.cred,
+                                        msg.name,
+                                        msg.label,
+                                        msg.password,
+                                        key);
+    MsgKeyResponse kResp(msg.id, key, ret);
+    try {
+        if (!m_commMgr->SendMessage(kResp))
+            LogError("No listener found"); // can't do much more
+    } catch (...) {
+        LogError("Uncaught exception in SendMessage. Check listeners.");
     }
 }
 

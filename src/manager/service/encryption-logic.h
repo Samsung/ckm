@@ -37,6 +37,7 @@ public:
     virtual ~EncryptionLogic() {}
 
     void Crypt(const CryptoRequest& request);
+    void KeyRetrieved(MsgKeyResponse response);
 private:
     IEncryptionService& m_service;
 
