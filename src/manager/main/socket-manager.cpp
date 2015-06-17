@@ -94,10 +94,10 @@ struct DummyService : public GenericSocketService {
     void Start() {}
     void Stop() {}
 
-    void Event(const AcceptEvent &event) { (void)event; }
-    void Event(const WriteEvent &event) { (void)event; }
-    void Event(const ReadEvent &event) { (void)event; }
-    void Event(const CloseEvent &event) { (void)event; }
+    void Event(const AcceptEvent &) {}
+    void Event(const WriteEvent &) {}
+    void Event(const ReadEvent &) {}
+    void Event(const CloseEvent &) {}
 };
 
 struct SignalService : public GenericSocketService {
@@ -118,9 +118,9 @@ struct SignalService : public GenericSocketService {
     void Start() {}
     void Stop() {}
 
-    void Event(const AcceptEvent &event) { (void)event; } // not supported
-    void Event(const WriteEvent &event) { (void)event; }  // not supported
-    void Event(const CloseEvent &event) { (void)event; }  // not supported
+    void Event(const AcceptEvent &) {} // not supported
+    void Event(const WriteEvent &) {}  // not supported
+    void Event(const CloseEvent &) {}  // not supported
 
     void Event(const ReadEvent &event) {
         LogDebug("Get signal information");
@@ -564,6 +564,7 @@ void SocketManager::CreateDomainSocket(
 
 void SocketManager::RegisterSocketService(GenericSocketService *service) {
     service->SetSocketManager(this);
+    service->SetCommManager(&m_commMgr);
     auto serviceVector = service->GetServiceDescription();
     Try {
         for (auto iter = serviceVector.begin(); iter != serviceVector.end(); ++iter)

@@ -36,6 +36,7 @@
 #include <dpl/raw-buffer.h>
 #include <ckm/ckm-type.h>
 #include <credentials.h>
+#include <service-messages.h>
 
 extern "C" {
 struct msghdr;
@@ -100,6 +101,9 @@ struct GenericSocketService {
     virtual void SetSocketManager(GenericSocketManager *manager) {
         m_serviceManager = manager;
     }
+    virtual void SetCommManager(CommMgr *manager) {
+        m_commMgr = manager;
+    }
 
     virtual ServiceDescriptionVector GetServiceDescription() = 0;
     virtual void Event(const AcceptEvent &event) = 0;
@@ -110,10 +114,11 @@ struct GenericSocketService {
     virtual void Start() = 0;
     virtual void Stop() = 0;
 
-    GenericSocketService() : m_serviceManager(NULL) {}
+    GenericSocketService() : m_serviceManager(NULL), m_commMgr(NULL) {}
     virtual ~GenericSocketService(){}
 protected:
     GenericSocketManager *m_serviceManager;
+    CommMgr *m_commMgr;
 };
 
 struct GenericSocketManager {

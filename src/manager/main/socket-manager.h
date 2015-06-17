@@ -35,6 +35,7 @@
 #include <dpl/exception.h>
 
 #include <generic-socket-manager.h>
+#include <service-messages.h>
 
 namespace CKM {
 
@@ -119,6 +120,7 @@ protected:
     int m_notifyMe[2];
     int m_counter;
     std::priority_queue<Timeout> m_timeoutQueue;
+    CommMgr m_commMgr;
 };
 
 } // namespace CKM

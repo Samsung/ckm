@@ -43,11 +43,12 @@ public:
 protected:
     virtual bool ProcessOne(const ConnectionID &conn,
                             ConnectionInfo &info) = 0;
-private:
+
     template <typename E>
     void ThreadEvent(const E& event) {
         CreateEvent([this, event]() { this->Handle(event); });
     }
+private:
 
     void Handle(const AcceptEvent &event);
     void Handle(const WriteEvent &event);
