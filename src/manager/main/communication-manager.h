@@ -44,10 +44,15 @@ public:
     }
 
     // Sends message of type M to all registered listeners
-    void SendMessage(const M& msg)
+    // Returns the number of listeners called
+    size_t SendMessage(const M& msg) const
     {
-        for(auto it : m_listeners)
+        size_t num = 0;
+        for(auto& it : m_listeners) {
             it(msg);
+            num++;
+        }
+        return num;
     }
 protected:
     MessageManager() {}
@@ -82,10 +87,11 @@ public:
     }
 
     // M message type
+    // Sending a message calls an unknown listener callback on the receiving side. It may throw.
     template <typename M>
-    void SendMessage(const M& msg)
+    size_t SendMessage(const M& msg) const
     {
-        MessageManager<M>::SendMessage(msg);
+        return MessageManager<M>::SendMessage(msg);
     }
 };
 

@@ -63,15 +63,14 @@ BOOST_AUTO_TEST_SUITE(MESSAGE_MANAGER_TEST)
 
 BOOST_AUTO_TEST_CASE(TMM_0010_NoListener) {
     CKM::CommunicationManager<MessageA> mgr;
-    //int reci = 0;
-    mgr.SendMessage(MessageA(22));
+    BOOST_REQUIRE_MESSAGE(0 == mgr.SendMessage(MessageA(22)), "There should be no listener.");
 }
 
 BOOST_AUTO_TEST_CASE(TMM_0020_Basic) {
     CKM::CommunicationManager<MessageA> mgr;
     int received = 0;
     mgr.Register<MessageA>([&](const MessageA& msg){ received = msg.i; });
-    mgr.SendMessage(MessageA(4));
+    BOOST_REQUIRE_MESSAGE(1 == mgr.SendMessage(MessageA(4)), "No listener found");
     BOOST_REQUIRE_MESSAGE(received != 0, "Message not received");
     BOOST_REQUIRE_MESSAGE(received == 4, "Wrong message received i=" << received);
 }
@@ -82,12 +81,12 @@ BOOST_AUTO_TEST_CASE(TMM_0030_MultipleMessages) {
     char recc = 0;
     mgr.Register<MessageA>([&](const MessageA& msg){ reci = msg.i; });
     mgr.Register<MessageB>([&](const MessageB& msg){ recc = msg.c; });
-    mgr.SendMessage(MessageB('c'));
+    BOOST_REQUIRE_MESSAGE(1 == mgr.SendMessage(MessageB('c')), "No listener found");
     BOOST_REQUIRE_MESSAGE(reci == 0, "Unexpected message received");
     BOOST_REQUIRE_MESSAGE(recc != 0, "Message not received");
     BOOST_REQUIRE_MESSAGE(recc == 'c', "Wrong message received c=" << recc);
 
-    mgr.SendMessage(MessageA(42));
+    BOOST_REQUIRE_MESSAGE(1 == mgr.SendMessage(MessageA(42)), "No listener found");
     BOOST_REQUIRE_MESSAGE(reci!= 0, "Message not received");
     BOOST_REQUIRE_MESSAGE(reci == 42, "Wrong message received i=" << reci);
     BOOST_REQUIRE_MESSAGE(recc == 'c', "Previous message overwritten c=" << recc);
@@ -99,12 +98,12 @@ BOOST_AUTO_TEST_CASE(TMM_0040_Listener) {
     mgr.Register<MessageC>([&](const MessageC& msg){ l.Handle(msg); });
     mgr.Register<MessageA>([&](const MessageA& msg){ l.Handle(msg); });
 
-    mgr.SendMessage(MessageC("lorem ipsum"));
+    BOOST_REQUIRE_MESSAGE(1 == mgr.SendMessage(MessageC("lorem ipsum")), "No listener found");
     BOOST_REQUIRE_MESSAGE(l.i == 0, "Unexpected message received");
     BOOST_REQUIRE_MESSAGE(!l.str.empty(), "Message not received");
     BOOST_REQUIRE_MESSAGE(l.str == "lorem ipsum", "Wrong message received c=" << l.str);
 
-    mgr.SendMessage(MessageA(3));
+    BOOST_REQUIRE_MESSAGE(1 == mgr.SendMessage(MessageA(3)), "No listener found");
     BOOST_REQUIRE_MESSAGE(l.i!= 0, "Message not received");
     BOOST_REQUIRE_MESSAGE(l.i == 3, "Wrong message received i=" << l.i);
     BOOST_REQUIRE_MESSAGE(l.str == "lorem ipsum", "Previous message overwritten str=" << l.str);
@@ -124,7 +123,7 @@ BOOST_AUTO_TEST_CASE(TMM_0050_2Listeners) {
         called[1] = true;
     });
 
-    mgr.SendMessage(MessageA(5));
+    BOOST_REQUIRE_MESSAGE(2 == mgr.SendMessage(MessageA(5)), "No listener found");
     BOOST_REQUIRE_MESSAGE(called[0], "First listener not called");
     BOOST_REQUIRE_MESSAGE(called[1], "Second listener not called");
 }
@@ -159,15 +158,15 @@ BOOST_AUTO_TEST_CASE(TMM_0060_Stress) {
             switch(message_dist(generator))
             {
             case 0:
-                mgr.SendMessage(MessageA(42));
+                BOOST_REQUIRE_MESSAGE(1 == mgr.SendMessage(MessageA(42)), "No listener found");
                 a--;
                 break;
             case 1:
-                mgr.SendMessage(MessageB('c'));
+                BOOST_REQUIRE_MESSAGE(1 == mgr.SendMessage(MessageB('c')), "No listener found");
                 b--;
                 break;
             case 2:
-                mgr.SendMessage(MessageC("lorem ipsum"));
+                BOOST_REQUIRE_MESSAGE(1 == mgr.SendMessage(MessageC("lorem ipsum")), "No listener found");
                 c--;
                 break;
             default:
