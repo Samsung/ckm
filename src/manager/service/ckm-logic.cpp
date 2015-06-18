@@ -517,9 +517,6 @@ int CKMLogic::getKeyForService(
         if (retCode == CKM_API_SUCCESS)
             key = m_decider.getStore(row).getKey(row);
         return retCode;
-    } catch (const KeyProvider::Exception::Base &e) {
-        LogError("KeyProvider failed with error: " << e.GetMessage());
-        return CKM_API_ERROR_SERVER_ERROR;
     } catch (const DB::Crypto::Exception::Base &e) {
         LogError("DB::Crypto failed with message: " << e.GetMessage());
         return CKM_API_ERROR_DB_ERROR;

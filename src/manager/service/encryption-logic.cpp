@@ -74,9 +74,20 @@ void EncryptionLogic::KeyRetrieved(MsgKeyResponse response)
         return;
     }
 
-    // TODO encrypt/decrypt
-    LogError("Encryption/decryption not yet supported");
-    m_service.RespondToClient(req, CKM_API_ERROR_SERVER_ERROR);
+    // encrypt/decrypt
+    try {
+        RawBuffer output;
+        if (req.command == EncryptionCommand::ENCRYPT)
+            output = response.key->encrypt(req.cas, req.input);
+        else
+            output = response.key->decrypt(req.cas, req.input);
+        m_service.RespondToClient(req, CKM_API_SUCCESS, output);
+    } catch (const Exc::Exception& ex) {
+        m_service.RespondToClient(req, ex.error());
+    } catch (...) {
+        LogError("Uncaught exception from encrypt/decrypt.");
+        m_service.RespondToClient(req, CKM_API_ERROR_SERVER_ERROR);
+    }
 }
 
 } /* namespace CKM */

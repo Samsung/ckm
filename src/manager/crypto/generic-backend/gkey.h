@@ -57,6 +57,7 @@ public:
 };
 
 typedef std::unique_ptr<GKey> GKeyUPtr;
+typedef std::shared_ptr<GKey> GKeyShPtr;
 
 } // namespace Crypto
 } // namespace CKM
