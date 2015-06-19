@@ -148,6 +148,7 @@ enum class AlgoType : int {
     RSA_GEN,
     DSA_GEN,
     ECDSA_GEN,
+    AES_GEN,
 };
 
 // cryptographic algorithm description

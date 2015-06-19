@@ -1145,6 +1145,7 @@ int CKMLogic::createKeyAESHelper(
     const PolicySerializable &policy)
 {
     CryptoAlgorithm keyGenAlgorithm;
+    keyGenAlgorithm.setParam(ParamName::ALGO_TYPE, AlgoType::AES_GEN);
     keyGenAlgorithm.setParam(ParamName::GEN_KEY_LEN, size);
     Token key = m_decider.getStore(DataType::KEY_AES, policy.extractable).generateSKey(keyGenAlgorithm);
 

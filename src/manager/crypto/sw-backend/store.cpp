@@ -68,38 +68,12 @@ GKeyUPtr Store::getKey(const Token &token) {
 
 TokenPair Store::generateAKey(const CryptoAlgorithm &algorithm)
 {
-    AlgoType keyType = AlgoType::RSA_GEN;
-    algorithm.getParam(ParamName::ALGO_TYPE, keyType);
-
-    if(keyType == AlgoType::RSA_GEN || keyType == AlgoType::DSA_GEN)
-    {
-        int keyLength = 0;
-        if(!algorithm.getParam(ParamName::GEN_KEY_LEN, keyLength))
-            ThrowErr(Exc::Crypto::InputParam, "Error, parameter GEN_KEY_LEN not found.");
-
-        if(keyType == AlgoType::RSA_GEN)
-            return Internals::createKeyPairRSA(m_backendId, keyLength);
-        else
-            return Internals::createKeyPairDSA(m_backendId, keyLength);
-    }
-    else if(keyType == AlgoType::ECDSA_GEN)
-    {
-        int ecType = 0;
-        if(!algorithm.getParam(ParamName::GEN_EC, ecType))
-            ThrowErr(Exc::Crypto::InputParam, "Error, parameter GEN_EC not found.");
-
-        return Internals::createKeyPairECDSA(m_backendId, static_cast<ElipticCurve>(ecType));
-    }
-    ThrowErr(Exc::Crypto::InputParam, "wrong key type");
+    return Internals::generateAKey(m_backendId, algorithm);
 }
 
 Token Store::generateSKey(const CryptoAlgorithm &algorithm)
 {
-    int keyLength = 0;
-    if(!algorithm.getParam(ParamName::GEN_KEY_LEN, keyLength))
-        ThrowErr(Exc::Crypto::InputParam, "Error, parameter GEN_KEY_LEN not found.");
-
-    return Internals::createKeyAES(m_backendId, keyLength);
+    return Internals::generateSKey(m_backendId, algorithm);
 }
 
 Token Store::import(DataType dataType, const RawBuffer &buffer) {

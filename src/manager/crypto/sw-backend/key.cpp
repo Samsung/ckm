@@ -37,6 +37,26 @@ namespace CKM {
 namespace Crypto {
 namespace SW {
 
+namespace {
+
+AlgoType key2algo(DataType type) {
+    switch(static_cast<int>(type)) {
+    case DataType::Type::KEY_RSA_PRIVATE:
+    case DataType::Type::KEY_RSA_PUBLIC:
+        return AlgoType::RSA_SV;
+    case DataType::Type::KEY_DSA_PRIVATE:
+    case DataType::Type::KEY_DSA_PUBLIC:
+        return AlgoType::DSA_SV;
+    case DataType::Type::KEY_ECDSA_PRIVATE:
+    case DataType::Type::KEY_ECDSA_PUBLIC:
+        return AlgoType::ECDSA_SV;
+    default:
+        ThrowErr(Exc::Crypto::InputParam, "Invalid key type: ", type);
+    }
+}
+
+} // namespace anonymous
+
 typedef std::unique_ptr<BIO, std::function<void(BIO*)>> BioUniquePtr;
 
 RawBuffer SKey::getBinary() const {
@@ -56,7 +76,9 @@ RawBuffer AKey::sign(
     const CryptoAlgorithm &alg,
     const RawBuffer &message)
 {
-    return Internals::sign(getEvpShPtr().get(), alg, message);
+    CryptoAlgorithm algWithType(alg);
+    algWithType.setParam(ParamName::ALGO_TYPE, key2algo(m_type));
+    return Internals::sign(getEvpShPtr().get(), algWithType, message);
 }
 
 RawBuffer AKey::getBinary() const {
@@ -64,7 +86,26 @@ RawBuffer AKey::getBinary() const {
 }
 
 int AKey::verify(const CryptoAlgorithm &alg, const RawBuffer &message, const RawBuffer &sign) {
-    return Internals::verify(getEvpShPtr().get(), alg, message, sign);
+    CryptoAlgorithm algWithType(alg);
+    EVP_PKEY* evp = getEvpShPtr().get();
+    AlgoType type;
+
+    // setup algorithm type basing on evp key type if it doesn't exist
+    if(!algWithType.getParam(ParamName::ALGO_TYPE, type)) {
+        int subType = EVP_PKEY_type(evp->type);
+        switch(subType) {
+        case EVP_PKEY_RSA:
+            type = AlgoType::RSA_SV; break;
+        case EVP_PKEY_DSA:
+            type = AlgoType::DSA_SV; break;
+        case EVP_PKEY_EC:
+            type = AlgoType::ECDSA_SV; break;
+        default:
+            ThrowErr(Exc::Crypto::InputParam, "Invalid key type: ", subType);
+        }
+        algWithType.setParam(ParamName::ALGO_TYPE, type);
+    }
+    return Internals::verify(evp, algWithType, message, sign);
 }
 
 EvpShPtr AKey::getEvpShPtr() {

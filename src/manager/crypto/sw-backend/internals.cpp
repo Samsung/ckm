@@ -21,6 +21,7 @@
 #include <exception>
 #include <fstream>
 #include <utility>
+#include <algorithm>
 
 #include <openssl/evp.h>
 #include <openssl/obj_mac.h>
@@ -39,6 +40,7 @@
 #include <dpl/log/log.h>
 
 #include <generic-backend/exception.h>
+#include <generic-backend/algo-validation.h>
 #include <sw-backend/internals.h>
 #include <sw-backend/crypto.h>
 
@@ -47,6 +49,11 @@
 #define DEV_HW_RANDOM_FILE    "/dev/hwrng"
 #define DEV_URANDOM_FILE    "/dev/urandom"
 
+namespace CKM {
+namespace Crypto {
+namespace SW {
+namespace Internals {
+
 namespace {
 typedef std::unique_ptr<EVP_MD_CTX, std::function<void(EVP_MD_CTX*)>> EvpMdCtxUPtr;
 typedef std::unique_ptr<EVP_PKEY_CTX, std::function<void(EVP_PKEY_CTX*)>> EvpPkeyCtxUPtr;
@@ -54,51 +61,161 @@ typedef std::unique_ptr<EVP_PKEY, std::function<void(EVP_PKEY*)>> EvpPkeyUPtr;
 
 typedef std::unique_ptr<BIO, std::function<void(BIO*)>> BioUniquePtr;
 typedef int(*I2D_CONV)(BIO*, EVP_PKEY*);
-CKM::RawBuffer i2d(I2D_CONV fun, EVP_PKEY* pkey) {
+
+const size_t DEFAULT_AES_GCM_TAG_LEN = 128; // tag length in bits according to W3C Crypto API
+const size_t DEFAULT_AES_IV_LEN = 16; // default iv size in bytes for AES
+
+RawBuffer i2d(I2D_CONV fun, EVP_PKEY* pkey) {
     BioUniquePtr bio(BIO_new(BIO_s_mem()), BIO_free_all);
 
     if (NULL == pkey) {
-        ThrowErr(CKM::Exc::Crypto::InternalError, "attempt to parse an empty key!");
+        ThrowErr(Exc::Crypto::InternalError, "attempt to parse an empty key!");
     }
 
     if (NULL == bio.get()) {
-        ThrowErr(CKM::Exc::Crypto::InternalError, "Error in memory allocation! Function: BIO_new.");
+        ThrowErr(Exc::Crypto::InternalError, "Error in memory allocation! Function: BIO_new.");
     }
 
     if (1 != fun(bio.get(), pkey)) {
-        ThrowErr(CKM::Exc::Crypto::InternalError, "Error in conversion EVP_PKEY to DER");
+        ThrowErr(Exc::Crypto::InternalError, "Error in conversion EVP_PKEY to DER");
     }
 
-    CKM::RawBuffer output(8196);
+    RawBuffer output(8196);
 
     int size = BIO_read(bio.get(), output.data(), output.size());
 
     if (size <= 0) {
-        ThrowErr(CKM::Exc::Crypto::InternalError, "Error in BIO_read: ", size);
+        ThrowErr(Exc::Crypto::InternalError, "Error in BIO_read: ", size);
     }
 
     output.resize(size);
     return output;
 }
 
-template<typename T>
-T unpack(
-    const CKM::CryptoAlgorithm &alg,
-    CKM::ParamName paramName)
+// encryption / decryption
+typedef ParamCheck<ParamName::ALGO_TYPE,
+                   AlgoType,
+                   true,
+                   Type<AlgoType>::Equals<AlgoType::AES_CTR,
+                                          AlgoType::AES_CBC,
+                                          AlgoType::AES_GCM,
+                                          AlgoType::AES_CFB,
+                                          AlgoType::RSA_OAEP>> IsEncryption;
+
+typedef ParamCheck<ParamName::ED_IV,
+                   RawBuffer,
+                   true,
+                   Type<size_t>::Equals<DEFAULT_AES_IV_LEN>,
+                   BufferSizeGetter> IvSizeCheck;
+
+typedef ParamCheck<ParamName::ED_CTR_LEN,
+                   int,
+                   false,
+                   Type<int>::Equals<128>> CtrLenCheck;
+
+typedef ParamCheck<ParamName::ED_IV,
+                   RawBuffer,
+                   true,
+                   DefaultValidator<size_t>,
+                   BufferSizeGetter> GcmIvCheck;
+
+typedef ParamCheck<ParamName::ED_TAG_LEN,
+                   int,
+                   false,
+                   Type<int>::Equals<32, 64, 96, 104, 112, 120, 128>> GcmTagCheck;
+
+// sign / verify
+typedef ParamCheck<ParamName::ALGO_TYPE,
+                   AlgoType,
+                   false,
+                   Type<AlgoType>::Equals<AlgoType::RSA_SV,
+                                          AlgoType::DSA_SV,
+                                          AlgoType::ECDSA_SV>> IsSignVerify;
+
+typedef ParamCheck<ParamName::SV_HASH_ALGO,
+                   HashAlgorithm,
+                   false,
+                   Type<HashAlgorithm>::Equals<HashAlgorithm::NONE,
+                                               HashAlgorithm::SHA1,
+                                               HashAlgorithm::SHA256,
+                                               HashAlgorithm::SHA384,
+                                               HashAlgorithm::SHA512>> HashAlgoCheck;
+
+typedef ParamCheck<ParamName::SV_RSA_PADDING,
+                   RSAPaddingAlgorithm,
+                   false,
+                   Type<RSAPaddingAlgorithm>::Equals<RSAPaddingAlgorithm::NONE,
+                                                     RSAPaddingAlgorithm::PKCS1,
+                                                     RSAPaddingAlgorithm::X931>> RsaPaddingCheck;
+
+// key generation
+typedef ParamCheck<ParamName::ALGO_TYPE,
+                   AlgoType,
+                   true,
+                   Type<AlgoType>::Equals<AlgoType::RSA_GEN,
+                                          AlgoType::DSA_GEN,
+                                          AlgoType::ECDSA_GEN>> IsAsymGeneration;
+
+typedef ParamCheck<ParamName::ALGO_TYPE,
+                   AlgoType,
+                   true,
+                   Type<AlgoType>::Equals<AlgoType::AES_GEN>> IsSymGeneration;
+
+typedef ParamCheck<ParamName::GEN_KEY_LEN,
+                   int,
+                   true,
+                   Type<int>::Equals<1024, 2048, 4096>> RsaKeyLenCheck;
+
+typedef ParamCheck<ParamName::GEN_KEY_LEN,
+                   int,
+                   true,
+                   Type<int>::Equals<1024, 2048, 3072, 4096>> DsaKeyLenCheck;
+
+typedef ParamCheck<ParamName::GEN_KEY_LEN,
+                   int,
+                   true,
+                   Type<int>::Equals<128, 192, 256>> AesKeyLenCheck;
+
+typedef ParamCheck<ParamName::GEN_EC,
+                   ElipticCurve,
+                   true,
+                   Type<ElipticCurve>::Equals<ElipticCurve::prime192v1,
+                                              ElipticCurve::prime256v1,
+                                              ElipticCurve::secp384r1>> EcdsaEcCheck;
+
+typedef std::map<AlgoType, ValidatorVector> ValidatorMap;
+ValidatorMap initValidators() {
+    ValidatorMap validators;
+    validators.emplace(AlgoType::RSA_SV, VBuilder<HashAlgoCheck, RsaPaddingCheck>::Build());
+    validators.emplace(AlgoType::RSA_SV, VBuilder<HashAlgoCheck, RsaPaddingCheck>::Build());
+    validators.emplace(AlgoType::DSA_SV, VBuilder<HashAlgoCheck>::Build());
+    validators.emplace(AlgoType::ECDSA_SV, VBuilder<HashAlgoCheck>::Build());
+    validators.emplace(AlgoType::RSA_GEN, VBuilder<RsaKeyLenCheck>::Build());
+    validators.emplace(AlgoType::DSA_GEN, VBuilder<DsaKeyLenCheck>::Build());
+    validators.emplace(AlgoType::ECDSA_GEN, VBuilder<EcdsaEcCheck>::Build());
+    validators.emplace(AlgoType::AES_GEN, VBuilder<AesKeyLenCheck>::Build());
+    validators.emplace(AlgoType::AES_CTR, VBuilder<IvSizeCheck, CtrLenCheck>::Build());
+    validators.emplace(AlgoType::AES_CBC, VBuilder<IvSizeCheck>::Build());
+    validators.emplace(AlgoType::AES_CFB, VBuilder<IvSizeCheck>::Build());
+    validators.emplace(AlgoType::AES_GCM, VBuilder<GcmIvCheck, GcmTagCheck>::Build());
+    return validators;
+};
+ValidatorMap g_validators = initValidators();
+
+template <typename TypeCheck>
+void validateParams(const CryptoAlgorithm& ca)
 {
-    T result;
-    if (!alg.getParam(paramName, result)) {
-        ThrowErr(CKM::Exc::Crypto::InputParam, "Wrong input param");
+    // check algorithm type (Encryption/Decryption, Sign/Verify, Key generation)
+    TypeCheck tc;
+    tc.Check(ca);
+
+    AlgoType at = unpack<AlgoType>(ca, ParamName::ALGO_TYPE);
+    for(const auto& validator : g_validators.at(at)) {
+        validator->Check(ca);
     }
-    return result;
 }
 
 } // anonymous namespace
-
-namespace CKM {
-namespace Crypto {
-namespace SW {
-namespace Internals {
 
 int initialize() {
     int hw_rand_ret = 0;
@@ -332,6 +449,34 @@ Token createKeyAES(CryptoBackend backendId, const int sizeBits)
     return Token(backendId, DataType(KeyType::KEY_AES), CKM::RawBuffer(key, key+sizeBytes));
 }
 
+TokenPair generateAKey(CryptoBackend backendId, const CryptoAlgorithm &algorithm)
+{
+    validateParams<IsAsymGeneration>(algorithm);
+
+    AlgoType keyType = unpack<AlgoType>(algorithm, ParamName::ALGO_TYPE);
+    if(keyType == AlgoType::RSA_GEN || keyType == AlgoType::DSA_GEN)
+    {
+        int keyLength = unpack<int>(algorithm, ParamName::GEN_KEY_LEN);
+        if(keyType == AlgoType::RSA_GEN)
+            return createKeyPairRSA(backendId, keyLength);
+        else
+            return createKeyPairDSA(backendId, keyLength);
+    }
+    else // AlgoType::ECDSA_GEN
+    {
+        ElipticCurve ecType = unpack<ElipticCurve>(algorithm, ParamName::GEN_EC);
+        return createKeyPairECDSA(backendId, ecType);
+    }
+}
+
+Token generateSKey(CryptoBackend backendId, const CryptoAlgorithm &algorithm)
+{
+    validateParams<IsSymGeneration>(algorithm);
+
+    int keySizeBits = unpack<int>(algorithm, ParamName::GEN_KEY_LEN);
+    return createKeyAES(backendId, keySizeBits);
+}
+
 RawBuffer encryptDataAesCbc(
     const RawBuffer &key,
     const RawBuffer &data,
@@ -423,6 +568,7 @@ RawBuffer symmetricEncrypt(const RawBuffer &key,
                            const CryptoAlgorithm &alg,
                            const RawBuffer &data)
 {
+    validateParams<IsEncryption>(alg);
     AlgoType keyType = unpack<AlgoType>(alg, ParamName::ALGO_TYPE);
 
     switch(keyType)
@@ -430,8 +576,14 @@ RawBuffer symmetricEncrypt(const RawBuffer &key,
         case AlgoType::AES_CBC:
             return encryptDataAesCbc(key, data, unpack<RawBuffer>(alg, ParamName::ED_IV));
         case AlgoType::AES_GCM:
-            return encryptDataAesGcmPacked(key, data, unpack<RawBuffer>(alg, ParamName::ED_IV),
-              unpack<int>(alg, ParamName::ED_TAG_LEN));
+        {
+            int tagLenBits = DEFAULT_AES_GCM_TAG_LEN;
+            alg.getParam(ParamName::ED_TAG_LEN, tagLenBits);
+            return encryptDataAesGcmPacked(key,
+                                           data,
+                                           unpack<RawBuffer>(alg, ParamName::ED_IV),
+                                           tagLenBits/8);
+        }
         default:
             break;
     }
@@ -443,6 +595,7 @@ RawBuffer symmetricDecrypt(const RawBuffer &key,
                            const CryptoAlgorithm &alg,
                            const RawBuffer &data)
 {
+    validateParams<IsEncryption>(alg);
     AlgoType keyType = unpack<AlgoType>(alg, ParamName::ALGO_TYPE);
 
     switch(keyType)
@@ -450,8 +603,14 @@ RawBuffer symmetricDecrypt(const RawBuffer &key,
         case AlgoType::AES_CBC:
             return decryptDataAesCbc(key, data, unpack<RawBuffer>(alg, ParamName::ED_IV));
         case AlgoType::AES_GCM:
-            return decryptDataAesGcmPacked(key, data, unpack<RawBuffer>(alg, ParamName::ED_IV),
-                unpack<int>(alg, ParamName::ED_TAG_LEN));
+        {
+            int tagLenBits = DEFAULT_AES_GCM_TAG_LEN;
+            alg.getParam(ParamName::ED_TAG_LEN, tagLenBits);
+            return decryptDataAesGcmPacked(key,
+                                           data,
+                                           unpack<RawBuffer>(alg, ParamName::ED_IV),
+                                           tagLenBits/8);
+        }
         default:
             break;
     }
@@ -462,6 +621,8 @@ RawBuffer sign(EVP_PKEY *pkey,
     const CryptoAlgorithm &alg,
     const RawBuffer &message)
 {
+    validateParams<IsSignVerify>(alg);
+
     int rsa_padding = NOT_DEFINED;
     const EVP_MD *md_algo = NULL;
 
@@ -600,6 +761,8 @@ int verify(EVP_PKEY *pkey,
     const RawBuffer &message,
     const RawBuffer &signature)
 {
+    validateParams<IsSignVerify>(alg);
+
     int rsa_padding = NOT_DEFINED;
     const EVP_MD *md_algo = NULL;
 

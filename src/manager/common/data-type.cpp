@@ -32,7 +32,8 @@ DataType::DataType(Type data)
   : m_dataType(data)
 {
     if (!isInRange(data))
-        ThrowMsg(Exception::OutOfRange, "Invalid conversion from DataType to DBDataType");
+        ThrowMsg(Exception::OutOfRange,
+                 "Invalid conversion from DataType=" << static_cast<int>(data) << " to DBDataType");
 }
 
 DataType::DataType(KeyType key) {
@@ -45,7 +46,8 @@ DataType::DataType(KeyType key) {
     case KeyType::KEY_ECDSA_PRIVATE: m_dataType = DataType::KEY_ECDSA_PRIVATE; break;
     case KeyType::KEY_AES:           m_dataType = DataType::KEY_AES;           break;
     default:
-        ThrowMsg(Exception::OutOfRange, "Invalid conversion from KeyType to DBDataType");
+        ThrowMsg(Exception::OutOfRange,
+                 "Invalid conversion from KeyType=" << static_cast<int>(key) << " to DBDataType");
     }
 }
 
@@ -54,12 +56,19 @@ DataType::DataType(AlgoType algorithmType) {
     case AlgoType::AES_CTR:
     case AlgoType::AES_CBC:
     case AlgoType::AES_GCM:
-    case AlgoType::AES_CFB:         m_dataType = DataType::KEY_AES;             break;
+    case AlgoType::AES_CFB:
+    case AlgoType::AES_GEN:         m_dataType = DataType::KEY_AES;             break;
+    case AlgoType::RSA_SV:
+    case AlgoType::RSA_OAEP:
     case AlgoType::RSA_GEN:         m_dataType = DataType::KEY_RSA_PUBLIC;      break;
+    case AlgoType::DSA_SV:
     case AlgoType::DSA_GEN:         m_dataType = DataType::KEY_DSA_PUBLIC;      break;
+    case AlgoType::ECDSA_SV:
     case AlgoType::ECDSA_GEN:       m_dataType = DataType::KEY_ECDSA_PUBLIC;    break;
     default:
-        ThrowMsg(Exception::OutOfRange, "Invalid conversion from AlgoType to DBDataType");
+        ThrowMsg(Exception::OutOfRange,
+                 "Invalid conversion from AlgoType=" << static_cast<int>(algorithmType) <<
+                 " to DBDataType");
     }
 }
 
@@ -67,7 +76,7 @@ DataType::DataType(int data)
   : m_dataType(static_cast<Type>(data))
 {
     if (!isInRange(data))
-        ThrowMsg(Exception::OutOfRange, "Invalid conversion from int to DBDataType");
+        ThrowMsg(Exception::OutOfRange, "Invalid conversion from int=" << data << " to DBDataType");
 }
 
 DataType::operator int () const {
@@ -84,7 +93,9 @@ DataType::operator KeyType () const {
     case DataType::KEY_ECDSA_PUBLIC: return KeyType::KEY_ECDSA_PUBLIC;
     case DataType::KEY_AES: return KeyType::KEY_AES;
     default:
-        ThrowMsg(Exception::OutOfRange, "Invalid conversion from DBDataType to KeyType");
+        ThrowMsg(Exception::OutOfRange,
+                 "Invalid conversion from DBDataType=" << static_cast<int>(m_dataType) <<
+                 " to KeyType" );
     }
 }
 
