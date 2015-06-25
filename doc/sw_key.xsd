@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema elementFormDefault="qualified" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+	<xsd:element name="DeviceKey" type="DeviceKeyType"></xsd:element>
+
+	<xsd:complexType name="DeviceKeyType">
+		<xsd:sequence maxOccurs="1" minOccurs="1">
+			<xsd:choice maxOccurs="1" minOccurs="1">
+				<xsd:element name="RSAPrivateKey" type="RSAPrivateKeyType"
+					maxOccurs="1" minOccurs="1">
+				</xsd:element>
+			</xsd:choice>
+		</xsd:sequence>
+		<xsd:attribute name="version" type="xsd:int" use="required"></xsd:attribute>
+	</xsd:complexType>
+
+	<xsd:complexType name="RSAPrivateKeyType">
+		<xsd:sequence maxOccurs="1" minOccurs="1">
+			<xsd:choice maxOccurs="1" minOccurs="1">
+				<xsd:element name="PEM"
+					type="EncodingPemType" maxOccurs="1" minOccurs="1">
+				</xsd:element>
+				<xsd:element name="DER"
+					type="EncodingDerType" maxOccurs="1" minOccurs="1">
+				</xsd:element>
+				<xsd:element name="Base64"
+					type="EncodingRawType" maxOccurs="1" minOccurs="1">
+				</xsd:element>
+			</xsd:choice>
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:simpleType name="EncodingDerType">
+		<xsd:restriction base="xsd:string"></xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="EncodingPemType">
+		<xsd:restriction base="xsd:string"></xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="EncodingRawType">
+		<xsd:restriction base="xsd:string"></xsd:restriction>
+	</xsd:simpleType>
+</xsd:schema>
