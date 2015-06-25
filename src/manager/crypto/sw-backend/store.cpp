@@ -25,6 +25,15 @@
 #include <sw-backend/store.h>
 #include <sw-backend/internals.h>
 
+namespace {
+
+template <typename T, typename ...Args>
+std::unique_ptr<T> make_unique(Args&& ...args) {
+    return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
+}
+
+} // namespace anonymous
+
 namespace CKM {
 namespace Crypto {
 namespace SW {
@@ -36,21 +45,21 @@ Store::Store(CryptoBackend backendId)
     Internals::initialize();
 }
 
-GKeyShPtr Store::getKey(const Token &token) {
+GKeyUPtr Store::getKey(const Token &token) {
     if (token.backendId != m_backendId) {
         ThrowErr(Exc::Crypto::WrongBackend, "Decider choose wrong backend!");
     }
 
     if (token.dataType.isKeyPrivate() || token.dataType.isKeyPublic()) {
-         return std::make_shared<AKey>(token.data, token.dataType);
+         return make_unique<AKey>(token.data, token.dataType);
     }
 
     if (token.dataType == DataType(DataType::KEY_AES)) {
-         return std::make_shared<SKey>(token.data, token.dataType);
+         return make_unique<SKey>(token.data, token.dataType);
     }
 
     if (token.dataType.isCertificate()) {
-        return std::make_shared<Cert>(token.data, token.dataType);
+        return make_unique<Cert>(token.data, token.dataType);
     }
 
     ThrowErr(Exc::Crypto::KeyNotSupported,

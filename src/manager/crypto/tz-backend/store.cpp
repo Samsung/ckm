@@ -30,7 +30,7 @@ Store::Store(CryptoBackend backendId)
   : GStore(backendId)
 {}
 
-GKeyShPtr Store::getKey(const Token &) {
+GKeyUPtr Store::getKey(const Token &) {
     ThrowErr(Exc::Crypto::OperationNotSupported, "Trust zone backend is not implemented!");
 }
 
