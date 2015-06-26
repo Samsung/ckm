@@ -41,7 +41,7 @@ public:
 private:
     IEncryptionService& m_service;
 
-    std::map<int, CryptoRequest> m_requests;
+    std::map<int, CryptoRequest> m_requestsMap;
 };
 
 } /* namespace CKM */

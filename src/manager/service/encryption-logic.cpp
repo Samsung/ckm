@@ -35,7 +35,7 @@ void EncryptionLogic::Crypt(const CryptoRequest& request)
     }
 
     // store request in the map
-    auto ret = m_requests.insert(std::make_pair(request.msgId, request));
+    auto ret = m_requestsMap.insert(std::make_pair(request.msgId, request));
     if (!ret.second) {
         LogError("Request with id " << request.msgId << " already exists");
         m_service.RespondToClient(request, CKM_API_ERROR_INPUT_PARAM);
@@ -47,20 +47,20 @@ void EncryptionLogic::Crypt(const CryptoRequest& request)
         m_service.RequestKey(request);
     } catch (...) {
         LogError("Key request failed");
-        m_requests.erase(request.msgId);
+        m_requestsMap.erase(request.msgId);
         m_service.RespondToClient(request, CKM_API_ERROR_SERVER_ERROR);
     }
 }
 
 void EncryptionLogic::KeyRetrieved(MsgKeyResponse response)
 {
-    auto it = m_requests.find(response.id);
-    if (it == m_requests.end()) {
+    auto it = m_requestsMap.find(response.id);
+    if (it == m_requestsMap.end()) {
         LogError("No matching request found"); // nothing we can do
         return;
     }
     CryptoRequest req = std::move(it->second);
-    m_requests.erase(it);
+    m_requestsMap.erase(it);
 
     if (response.error != CKM_API_SUCCESS) {
         LogError("Attempt to retrieve key failed with error: " << response.error);
