@@ -123,7 +123,7 @@ void StorageReceiver::parseGetCommand()
 
 void StorageReceiver::parseGetPKCS12Command()
 {
-    int retCode;
+    int retCode = 0;
     PKCS12Serializable gotPkcs;
     m_buffer.Deserialize(retCode, gotPkcs);
 
@@ -255,7 +255,7 @@ void StorageReceiver::parseCreateSignatureCommand()
 
 void StorageReceiver::parseSetPermission()
 {
-    int retCode;
+    int retCode = 0;
     m_buffer.Deserialize(retCode);
 
     // check error code
