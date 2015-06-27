@@ -172,6 +172,14 @@ RawBuffer CKMService::ProcessStorage(Credentials &cred, MessageBuffer &buffer)
     buffer.Deserialize(command);
     buffer.Deserialize(msgID);
 
+    // This is a workaround solution for locktype=None in Tizen 2.2.1
+    // When locktype is None, lockscreen app doesn't interfere with unlocking process.
+    // Therefor lockscreen app cannot notify unlock events to key-manager when locktype is None.
+    // So, to unlock user data when lock type is None, key-manager always try to unlock user data with null password.
+    // Even if the result is fail, it will be ignored.
+    Password nullPassword("");
+    m_logic->unlockUserKey(cred.clientUid, nullPassword);
+
     LogDebug("Process storage. Command: " << command);
 
     switch(static_cast<LogicCommand>(command)) {
