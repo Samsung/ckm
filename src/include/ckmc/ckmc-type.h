@@ -246,7 +246,7 @@ typedef enum __ckmc_param_name {
  * @brief Structure for algorithm parameter list.
  * @since_tizen 3.0
  */
-struct ckmc_param_list_s;
+typedef struct __ckmc_param_list ckmc_param_list_s;
 
 /**
  * @brief Enumeration for crypto algorithm types.
