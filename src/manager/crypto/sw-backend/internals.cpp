@@ -215,6 +215,57 @@ void validateParams(const CryptoAlgorithm& ca)
     }
 }
 
+typedef std::unique_ptr<Cipher::EvpCipherWrapper<RawBuffer>> EvpCipherPtr;
+
+typedef std::function<void(EvpCipherPtr&, const RawBuffer& key, const RawBuffer& iv)> InitCipherFn;
+
+// aes mode, key length in bits, encryption
+typedef std::map<AlgoType, std::map<size_t, std::map<bool, InitCipherFn>>> CipherTree;
+
+template <typename T>
+void initCipher(EvpCipherPtr& ptr, const RawBuffer& key, const RawBuffer& iv)
+{
+    ptr.reset(new T(key, iv));
+}
+
+CipherTree initializeCipherTree()
+{
+    CipherTree tree;
+    tree[AlgoType::AES_CBC][128][true] = initCipher<Cipher::AesCbcEncryption128>;
+    tree[AlgoType::AES_CBC][192][true] = initCipher<Cipher::AesCbcEncryption192>;
+    tree[AlgoType::AES_CBC][256][true] = initCipher<Cipher::AesCbcEncryption256>;
+
+    tree[AlgoType::AES_CBC][128][false] = initCipher<Cipher::AesCbcDecryption128>;
+    tree[AlgoType::AES_CBC][192][false] = initCipher<Cipher::AesCbcDecryption192>;
+    tree[AlgoType::AES_CBC][256][false] = initCipher<Cipher::AesCbcDecryption256>;
+
+    tree[AlgoType::AES_GCM][128][true] = initCipher<Cipher::AesGcmEncryption128>;
+    tree[AlgoType::AES_GCM][192][true] = initCipher<Cipher::AesGcmEncryption192>;
+    tree[AlgoType::AES_GCM][256][true] = initCipher<Cipher::AesGcmEncryption256>;
+
+    tree[AlgoType::AES_GCM][128][false] = initCipher<Cipher::AesGcmDecryption128>;
+    tree[AlgoType::AES_GCM][192][false] = initCipher<Cipher::AesGcmDecryption192>;
+    tree[AlgoType::AES_GCM][256][false] = initCipher<Cipher::AesGcmDecryption256>;
+
+    return tree;
+}
+
+CipherTree g_cipherTree = initializeCipherTree();
+
+// key length in bytes
+InitCipherFn selectCipher(AlgoType type, size_t key_len = 32, bool encryption = true)
+{
+    try {
+        return g_cipherTree.at(type).at(key_len*8).at(encryption);
+    } catch (const std::out_of_range&) {
+        ThrowErr(Exc::Crypto::InternalError,
+                 "Unsupported cipher: ",
+                 static_cast<int>(type), ", ",
+                 key_len, ", ",
+                 encryption);
+    }
+}
+
 } // anonymous namespace
 
 int initialize() {
@@ -482,9 +533,10 @@ RawBuffer encryptDataAesCbc(
     const RawBuffer &data,
     const RawBuffer &iv)
 {
-    Crypto::SW::Cipher::AesCbcEncryption enc(key, iv);
-    RawBuffer result = enc.Append(data);
-    RawBuffer tmp = enc.Finalize();
+    EvpCipherPtr enc;
+    selectCipher(AlgoType::AES_CBC, key.size())(enc, key, iv);
+    RawBuffer result = enc->Append(data);
+    RawBuffer tmp = enc->Finalize();
     std::copy(tmp.begin(), tmp.end(), std::back_inserter(result));
     return result;
 }
@@ -496,11 +548,12 @@ std::pair<RawBuffer, RawBuffer> encryptDataAesGcm(
     int tagSize)
 {
     RawBuffer tag(tagSize);
-    Crypto::SW::Cipher::AesGcmEncryption enc(key, iv);
-    RawBuffer result = enc.Append(data);
-    RawBuffer tmp = enc.Finalize();
+    EvpCipherPtr enc;
+    selectCipher(AlgoType::AES_GCM, key.size())(enc, key, iv);
+    RawBuffer result = enc->Append(data);
+    RawBuffer tmp = enc->Finalize();
     std::copy(tmp.begin(), tmp.end(), std::back_inserter(result));
-    if (0 == enc.Control(EVP_CTRL_GCM_GET_TAG, tagSize, tag.data())) {
+    if (0 == enc->Control(EVP_CTRL_GCM_GET_TAG, tagSize, tag.data())) {
         ThrowErr(Exc::Crypto::InternalError, "Error in AES control function. Get tag failed.");
     }
     return std::make_pair(result, tag);
@@ -522,9 +575,10 @@ RawBuffer decryptDataAesCbc(
     const RawBuffer &data,
     const RawBuffer &iv)
 {
-    Crypto::SW::Cipher::AesCbcDecryption dec(key, iv);
-    RawBuffer result = dec.Append(data);
-    RawBuffer tmp = dec.Finalize();
+    EvpCipherPtr dec;
+    selectCipher(AlgoType::AES_CBC, key.size(), false)(dec, key, iv);
+    RawBuffer result = dec->Append(data);
+    RawBuffer tmp = dec->Finalize();
     std::copy(tmp.begin(), tmp.end(), std::back_inserter(result));
     return result;
 }
@@ -535,14 +589,15 @@ RawBuffer decryptDataAesGcm(
     const RawBuffer &iv,
     const RawBuffer &tag)
 {
-    Crypto::SW::Cipher::AesGcmDecryption dec(key, iv);
+    EvpCipherPtr dec;
+    selectCipher(AlgoType::AES_GCM, key.size(), false)(dec, key, iv);
     void *ptr = (void*)tag.data();
-    if (0 == dec.Control(EVP_CTRL_GCM_SET_TAG, tag.size(), ptr)) {
+    if (0 == dec->Control(EVP_CTRL_GCM_SET_TAG, tag.size(), ptr)) {
         ThrowErr(Exc::Crypto::InternalError,
             "Error in AES control function. Set tag failed.");
     }
-    RawBuffer result = dec.Append(data);
-    RawBuffer tmp = dec.Finalize();
+    RawBuffer result = dec->Append(data);
+    RawBuffer tmp = dec->Finalize();
     std::copy(tmp.begin(), tmp.end(), std::back_inserter(result));
     return result;
 }
