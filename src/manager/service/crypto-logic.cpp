@@ -155,7 +155,7 @@ void CryptoLogic::encryptRow(const Password &password, DB::Row &row)
         if (!password.empty()) {
             key = passwordToKey(password, crow.iv, AES_CBC_KEY_SIZE);
 
-            crow.data = Crypto::SW::Internals::encryptDataAesCbc(key, crow.data, crow.iv);
+            crow.data = Crypto::SW::Internals::encryptDataAes(AlgoType::AES_CBC, key, crow.data, crow.iv);
             crow.encryptionScheme |= ENCR_PASSWORD;
         }
 
@@ -200,7 +200,7 @@ void CryptoLogic::decryptRow(const Password &password, DB::Row &row)
 
         if (crow.encryptionScheme & ENCR_PASSWORD) {
             key = passwordToKey(password, crow.iv, AES_CBC_KEY_SIZE);
-            crow.data = Crypto::SW::Internals::decryptDataAesCbc(key, crow.data, crow.iv);
+            crow.data = Crypto::SW::Internals::decryptDataAes(AlgoType::AES_CBC, key, crow.data, crow.iv);
         }
 
         if (crow.encryptionScheme & ENCR_APPKEY) {

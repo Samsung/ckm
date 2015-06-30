@@ -247,6 +247,22 @@ CipherTree initializeCipherTree()
     tree[AlgoType::AES_GCM][192][false] = initCipher<Cipher::AesGcmDecryption192>;
     tree[AlgoType::AES_GCM][256][false] = initCipher<Cipher::AesGcmDecryption256>;
 
+    tree[AlgoType::AES_CTR][128][true] = initCipher<Cipher::AesCtrEncryption128>;
+    tree[AlgoType::AES_CTR][192][true] = initCipher<Cipher::AesCtrEncryption192>;
+    tree[AlgoType::AES_CTR][256][true] = initCipher<Cipher::AesCtrEncryption256>;
+
+    tree[AlgoType::AES_CTR][128][false] = initCipher<Cipher::AesCtrDecryption128>;
+    tree[AlgoType::AES_CTR][192][false] = initCipher<Cipher::AesCtrDecryption192>;
+    tree[AlgoType::AES_CTR][256][false] = initCipher<Cipher::AesCtrDecryption256>;
+
+    tree[AlgoType::AES_CFB][128][true] = initCipher<Cipher::AesCfbEncryption128>;
+    tree[AlgoType::AES_CFB][192][true] = initCipher<Cipher::AesCfbEncryption192>;
+    tree[AlgoType::AES_CFB][256][true] = initCipher<Cipher::AesCfbEncryption256>;
+
+    tree[AlgoType::AES_CFB][128][false] = initCipher<Cipher::AesCfbDecryption128>;
+    tree[AlgoType::AES_CFB][192][false] = initCipher<Cipher::AesCfbDecryption192>;
+    tree[AlgoType::AES_CFB][256][false] = initCipher<Cipher::AesCfbDecryption256>;
+
     return tree;
 }
 
@@ -528,13 +544,14 @@ Token generateSKey(CryptoBackend backendId, const CryptoAlgorithm &algorithm)
     return createKeyAES(backendId, keySizeBits);
 }
 
-RawBuffer encryptDataAesCbc(
+RawBuffer encryptDataAes(
+    AlgoType type,
     const RawBuffer &key,
     const RawBuffer &data,
     const RawBuffer &iv)
 {
     EvpCipherPtr enc;
-    selectCipher(AlgoType::AES_CBC, key.size())(enc, key, iv);
+    selectCipher(type, key.size())(enc, key, iv);
     RawBuffer result = enc->Append(data);
     RawBuffer tmp = enc->Finalize();
     std::copy(tmp.begin(), tmp.end(), std::back_inserter(result));
@@ -570,13 +587,14 @@ RawBuffer encryptDataAesGcmPacked(
     return pair.first;
 }
 
-RawBuffer decryptDataAesCbc(
+RawBuffer decryptDataAes(
+    AlgoType type,
     const RawBuffer &key,
     const RawBuffer &data,
     const RawBuffer &iv)
 {
     EvpCipherPtr dec;
-    selectCipher(AlgoType::AES_CBC, key.size(), false)(dec, key, iv);
+    selectCipher(type, key.size(), false)(dec, key, iv);
     RawBuffer result = dec->Append(data);
     RawBuffer tmp = dec->Finalize();
     std::copy(tmp.begin(), tmp.end(), std::back_inserter(result));
@@ -629,7 +647,9 @@ RawBuffer symmetricEncrypt(const RawBuffer &key,
     switch(keyType)
     {
         case AlgoType::AES_CBC:
-            return encryptDataAesCbc(key, data, unpack<RawBuffer>(alg, ParamName::ED_IV));
+        case AlgoType::AES_CTR:
+        case AlgoType::AES_CFB:
+            return encryptDataAes(keyType, key, data, unpack<RawBuffer>(alg, ParamName::ED_IV));
         case AlgoType::AES_GCM:
         {
             int tagLenBits = DEFAULT_AES_GCM_TAG_LEN;
@@ -656,7 +676,9 @@ RawBuffer symmetricDecrypt(const RawBuffer &key,
     switch(keyType)
     {
         case AlgoType::AES_CBC:
-            return decryptDataAesCbc(key, data, unpack<RawBuffer>(alg, ParamName::ED_IV));
+        case AlgoType::AES_CTR:
+        case AlgoType::AES_CFB:
+            return decryptDataAes(keyType, key, data, unpack<RawBuffer>(alg, ParamName::ED_IV));
         case AlgoType::AES_GCM:
         {
             int tagLenBits = DEFAULT_AES_GCM_TAG_LEN;

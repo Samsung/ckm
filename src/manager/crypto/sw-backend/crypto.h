@@ -127,6 +127,20 @@ DEFINE_CIPHER(AesGcmDecryption192, RawBuffer, EVP_aes_192_gcm(), false);
 DEFINE_CIPHER(AesGcmEncryption256, RawBuffer, EVP_aes_256_gcm(), true);
 DEFINE_CIPHER(AesGcmDecryption256, RawBuffer, EVP_aes_256_gcm(), false);
 
+DEFINE_CIPHER(AesCtrEncryption128, RawBuffer, EVP_aes_128_ctr(), true);
+DEFINE_CIPHER(AesCtrDecryption128, RawBuffer, EVP_aes_128_ctr(), false);
+DEFINE_CIPHER(AesCtrEncryption192, RawBuffer, EVP_aes_192_ctr(), true);
+DEFINE_CIPHER(AesCtrDecryption192, RawBuffer, EVP_aes_192_ctr(), false);
+DEFINE_CIPHER(AesCtrEncryption256, RawBuffer, EVP_aes_256_ctr(), true);
+DEFINE_CIPHER(AesCtrDecryption256, RawBuffer, EVP_aes_256_ctr(), false);
+
+DEFINE_CIPHER(AesCfbEncryption128, RawBuffer, EVP_aes_128_cfb(), true);
+DEFINE_CIPHER(AesCfbDecryption128, RawBuffer, EVP_aes_128_cfb(), false);
+DEFINE_CIPHER(AesCfbEncryption192, RawBuffer, EVP_aes_192_cfb(), true);
+DEFINE_CIPHER(AesCfbDecryption192, RawBuffer, EVP_aes_192_cfb(), false);
+DEFINE_CIPHER(AesCfbEncryption256, RawBuffer, EVP_aes_256_cfb(), true);
+DEFINE_CIPHER(AesCfbDecryption256, RawBuffer, EVP_aes_256_cfb(), false);
+
 #undef DEFINE_CIPHER
 
 } // namespace Cipher

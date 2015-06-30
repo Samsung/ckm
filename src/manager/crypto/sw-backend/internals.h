@@ -70,11 +70,13 @@ RawBuffer decryptDataAesGcm(const RawBuffer &key,
     const RawBuffer &iv,
     const RawBuffer &tag);
 
-RawBuffer encryptDataAesCbc(const RawBuffer &key,
+RawBuffer encryptDataAes(AlgoType type,
+    const RawBuffer &key,
     const RawBuffer &data,
     const RawBuffer &iv);
 
-RawBuffer decryptDataAesCbc(const RawBuffer &key,
+RawBuffer decryptDataAes(AlgoType type,
+    const RawBuffer &key,
     const RawBuffer &data,
     const RawBuffer &iv);
 
