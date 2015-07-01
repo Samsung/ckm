@@ -372,7 +372,7 @@ int CKMLogic::checkSaveConditions(
 {
     // verify name and label are correct
     if (!isNameValid(name) || !isLabelValid(ownerLabel)) {
-        LogWarning("Invalid parameter passed to key-manager");
+        LogDebug("Invalid parameter passed to key-manager");
         return CKM_API_ERROR_INPUT_PARAM;
     }
 
@@ -380,7 +380,7 @@ int CKMLogic::checkSaveConditions(
     int access_ec = m_accessControl.canSave(cred, ownerLabel);
     if( access_ec != CKM_API_SUCCESS)
     {
-        LogWarning("label " << cred.smackLabel << " can not save rows using label " << ownerLabel);
+        LogDebug("label " << cred.smackLabel << " can not save rows using label " << ownerLabel);
         return access_ec;
     }
 
@@ -449,7 +449,7 @@ int CKMLogic::toBinaryData(DataType dataType,
             output_key = CKM::Key::create(input_data);
         if(output_key.get() == NULL)
         {
-            LogError("provided binary data is not valid key data");
+            LogDebug("provided binary data is not valid key data");
             return CKM_API_ERROR_INPUT_PARAM;
         }
         output_data = output_key->getDER();
@@ -459,7 +459,7 @@ int CKMLogic::toBinaryData(DataType dataType,
         CertificateShPtr cert = CKM::Certificate::create(input_data, DataFormat::FORM_DER);
         if(cert.get() == NULL)
         {
-            LogError("provided binary data is not valid certificate data");
+            LogDebug("provided binary data is not valid certificate data");
             return CKM_API_ERROR_INPUT_PARAM;
         }
         output_data = cert->getDER();
@@ -632,7 +632,7 @@ int CKMLogic::removeDataHelper(
     // use client label if not explicitly provided
     const Label &ownerLabel = label.empty() ? cred.smackLabel : label;
     if (!isNameValid(name) || !isLabelValid(ownerLabel)) {
-        LogError("Invalid label or name format");
+        LogDebug("Invalid label or name format");
         return CKM_API_ERROR_INPUT_PARAM;
     }
 
@@ -654,7 +654,7 @@ int CKMLogic::removeDataHelper(
     if(erased)
         transaction.commit();
     else {
-        LogError("No row for given name and label");
+        LogDebug("No row for given name and label");
         return CKM_API_ERROR_DB_ALIAS_UNKNOWN;
     }
 
@@ -711,7 +711,7 @@ int CKMLogic::readSingleRow(const Name &name,
     }
 
     if(!row_optional) {
-        LogError("No row for given name, label and type");
+        LogDebug("No row for given name, label and type");
         return CKM_API_ERROR_DB_ALIAS_UNKNOWN;
     } else {
         row = *row_optional;
@@ -755,7 +755,7 @@ int CKMLogic::readMultiRow(const Name &name,
     }
 
     if(!output.size()) {
-        LogError("No row for given name, label and type");
+        LogDebug("No row for given name, label and type");
         return CKM_API_ERROR_DB_ALIAS_UNKNOWN;
     }
 

@@ -111,13 +111,13 @@ public:
 typedef DefineException<CKM_API_ERROR_SERVER_ERROR,
         Stringify, PrintError> InternalError;
 typedef DefineException<CKM_API_ERROR_INPUT_PARAM,
-        Stringify, PrintError> InputParam;
+        StringifyDebug, PrintDebug> InputParam;
 typedef DefineException<CKM_API_ERROR_DB_LOCKED,
         Stringify, PrintError> DatabaseLocked;
 typedef DefineException<CKM_API_ERROR_FILE_SYSTEM,
         Stringify, PrintError> FileSystemFailed;
 typedef DefineException<CKM_API_ERROR_AUTHENTICATION_FAILED,
-        Stringify, PrintError> AuthenticationFailed;
+        StringifyDebug, PrintDebug> AuthenticationFailed;
 
 } // namespace Exc
 } // namespace CKM

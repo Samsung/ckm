@@ -37,7 +37,7 @@ public:
     }
 
     template <typename... Args>
-    std::string operator()(const Args&... args){
+    std::string operator()(const Args&...){
         return std::string();
     }
 };

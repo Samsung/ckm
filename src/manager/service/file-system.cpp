@@ -209,10 +209,10 @@ UidVector FileSystem::getUIDsFromDBFile() {
         try {
             uids.push_back(static_cast<uid_t>(std::stoi((pDirEntry->d_name)+CKM_KEY_PREFIX.size())));
         } catch (const std::invalid_argument) {
-            LogError("Error in extracting uid from db file. Error=std::invalid_argument."
+            LogDebug("Error in extracting uid from db file. Error=std::invalid_argument."
                 "This will be ignored.File=" << pDirEntry->d_name << "");
         } catch(const std::out_of_range) {
-            LogError("Error in extracting uid from db file. Error=std::out_of_range."
+            LogDebug("Error in extracting uid from db file. Error=std::out_of_range."
                 "This will be ignored. File="<< pDirEntry->d_name << "");
         }
     }
@@ -226,28 +226,28 @@ int FileSystem::removeUserData() const {
     if (unlink(getDBPath().c_str())) {
         retCode = -1;
         err = errno;
-        LogError("Error in unlink user database: " << getDBPath()
+        LogDebug("Error in unlink user database: " << getDBPath()
             << "Errno: " << errno << " " << GetErrnoString(err));
     }
 
     if (unlink(getDKEKPath().c_str())) {
         retCode = -1;
         err = errno;
-        LogError("Error in unlink user DKEK: " << getDKEKPath()
+        LogDebug("Error in unlink user DKEK: " << getDKEKPath()
             << "Errno: " << errno << " " << GetErrnoString(err));
     }
 
     if (unlink(getDBDEKPath().c_str())) {
         retCode = -1;
         err = errno;
-        LogError("Error in unlink user DBDEK: " << getDBDEKPath()
+        LogDebug("Error in unlink user DBDEK: " << getDBDEKPath()
             << "Errno: " << errno << " " << GetErrnoString(err));
     }
 
     if (unlink(getRemovedAppsPath().c_str())) {
         retCode = -1;
         err = errno;
-        LogError("Error in unlink user's Removed Apps File: " << getRemovedAppsPath()
+        LogDebug("Error in unlink user's Removed Apps File: " << getRemovedAppsPath()
             << "Errno: " << errno << " " << GetErrnoString(err));
     }
 
