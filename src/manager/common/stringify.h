@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2000 - 2014 Samsung Electronics Co., Ltd All Rights Reserved
+ *  Copyright (c) 2000 - 2015 Samsung Electronics Co., Ltd All Rights Reserved
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -31,35 +31,38 @@ class StringifyBasic;
 
 template <>
 class StringifyBasic<false> {
+    StringifyBasic() = delete;
 public:
-    std::string operator()() {
+    static std::string Merge() {
         return std::string();
     }
 
     template <typename... Args>
-    std::string operator()(const Args&...){
+    static std::string Merge(const Args&...){
         return std::string();
     }
 };
 
 template <>
 class StringifyBasic<true> {
-    void concatenate(std::ostringstream&) {}
+    StringifyBasic() = delete;
+
+    static void Concatenate(std::ostringstream&) {}
 
     template <typename t, typename... Args>
-    void concatenate(std::ostringstream& stream, const t& arg1, const Args&... args) {
+    static void Concatenate(std::ostringstream& stream, const t& arg1, const Args&... args) {
         stream << arg1;
-        concatenate(stream, args...);
+        Concatenate(stream, args...);
     }
 public:
-    std::string operator()() {
+    static std::string Merge() {
         return std::string();
     }
 
     template <typename T, typename... Args>
-    std::string operator()(const T& arg1, const Args&... args){
+    static std::string Merge(const T& arg1, const Args&... args) {
         std::ostringstream stream;
-        concatenate(stream, arg1, args...);
+        Concatenate(stream, arg1, args...);
         return stream.str();
     }
 };
