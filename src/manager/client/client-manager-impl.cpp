@@ -92,7 +92,7 @@ ManagerImpl::ManagerImpl()
     m_ocspConnection(SERVICE_SOCKET_OCSP),
     m_encryptionConnection(SERVICE_SOCKET_ENCRYPTION)
 {
-    initCryptoLib();
+    initOpenSslOnce();
 }
 
 

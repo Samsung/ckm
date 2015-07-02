@@ -39,12 +39,6 @@ namespace Crypto {
 namespace SW {
 namespace Internals {
 
-// During initialization, FIPS_MODE and the entropy source are set
-// and system certificates are loaded to memory.
-//    FIPS_MODE - ON, OFF(Default)
-//    entropy source - /dev/random,/dev/urandom(Default)
-int initialize();
-
 TokenPair createKeyPairRSA(CryptoBackend backendId, const int size);
 TokenPair createKeyPairDSA(CryptoBackend backendId, const int size);
 TokenPair createKeyPairECDSA(CryptoBackend backendId, ElipticCurve type1);

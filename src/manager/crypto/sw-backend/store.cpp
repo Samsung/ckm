@@ -41,8 +41,6 @@ namespace SW {
 Store::Store(CryptoBackend backendId)
   : GStore(backendId)
 {
-    // initialize openssl internals
-    Internals::initialize();
 }
 
 GKeyUPtr Store::getKey(const Token &token) {

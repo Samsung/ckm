@@ -34,6 +34,7 @@
 #include <openssl/evp.h>
 #include <openssl/pem.h>
 #include <fstream>
+#include <crypto-init.h>
 
 namespace {
 
@@ -194,7 +195,7 @@ int ckmc_cert_new(unsigned char *raw_cert, size_t cert_size, ckmc_data_format_e 
 KEY_MANAGER_CAPI
 int ckmc_load_cert_from_file(const char *file_path, ckmc_cert_s **cert)
 {
-    OpenSSL_add_all_algorithms();
+    CKM::initOpenSslOnce();
 
     FILE *fp = fopen(file_path, "r");
     if(fp == NULL)
@@ -394,7 +395,7 @@ int ckmc_load_from_pkcs12_file(const char *file_path, const char *passphrase, ck
 
     };
 
-    OpenSSL_add_all_algorithms();
+    CKM::initOpenSslOnce();
 
     int ret = CKMC_ERROR_NONE;
 

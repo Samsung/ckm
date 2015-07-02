@@ -22,11 +22,6 @@
 #include <stdlib.h>
 #include <signal.h>
 
-#include <openssl/ssl.h>
-#include <openssl/conf.h>
-#include <openssl/err.h>
-#include <openssl/evp.h>
-
 #include <dpl/log/log.h>
 #include <dpl/singleton.h>
 
@@ -35,6 +30,7 @@
 #include <ckm-service.h>
 #include <ocsp-service.h>
 #include <encryption-service.h>
+#include <crypto-init.h>
 
 #include <key-provider.h>
 #include <file-system.h>
@@ -88,10 +84,7 @@ int main(void) {
         }
         LogInfo("Init external libraries SKMM and openssl");
 
-        SSL_load_error_strings();
-        SSL_library_init();
-        OpenSSL_add_all_ciphers();
-        OPENSSL_config(NULL);
+        CKM::initOpenSsl();
 
         CKM::KeyProvider::initializeLibrary();
 
@@ -108,9 +101,8 @@ int main(void) {
         // Manager has been destroyed and we may close external libraries.
         LogInfo("Deinit SKMM and openssl");
         CKM::KeyProvider::closeLibrary();
-        // Deinit OPENSSL ?
-        EVP_cleanup();
-        ERR_free_strings();
+
+        CKM::deinitOpenSsl();
     }
     catch (const std::runtime_error& e)
     {

@@ -34,6 +34,8 @@
 #include <functional>
 #include <condition_variable>
 
+#include <crypto-init.h>
+
 #include <cstdio>
 
 #include <dpl/exception.h>
@@ -95,6 +97,9 @@ protected:
 
     static void ThreadLoopStatic(ServiceThread *ptr) {
         ptr->ThreadLoop();
+
+        // cleanup openssl in every thread
+        deinitOpenSslThread();
     }
 
     void ThreadLoop(){

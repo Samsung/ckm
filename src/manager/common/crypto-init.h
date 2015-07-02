@@ -24,7 +24,10 @@
 
 namespace CKM {
 
-COMMON_API void initCryptoLib();
+COMMON_API void initOpenSsl();
+COMMON_API void deinitOpenSsl();
+COMMON_API void deinitOpenSslThread();
+COMMON_API void initOpenSslOnce();
 
 } // namespace CKM
 

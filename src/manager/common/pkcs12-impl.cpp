@@ -69,7 +69,7 @@ PKCS12Impl::PKCS12Impl(const RawBuffer &buffer, const Password &password)
     }
 
     // needed if parsing is done before manager initialization
-    initCryptoLib();
+    initOpenSslOnce();
 
     if (!PKCS12_verify_mac(pkcs12, password.c_str(), password.size())) {
         LogDebug("Pkcs12 verify failed. Wrong password");

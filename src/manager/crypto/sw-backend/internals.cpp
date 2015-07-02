@@ -19,7 +19,6 @@
  * @version    1.0
  */
 #include <exception>
-#include <fstream>
 #include <utility>
 #include <algorithm>
 
@@ -46,8 +45,6 @@
 
 #define OPENSSL_SUCCESS 1       // DO NOTCHANGE THIS VALUE
 #define OPENSSL_FAIL    0       // DO NOTCHANGE THIS VALUE
-#define DEV_HW_RANDOM_FILE    "/dev/hwrng"
-#define DEV_URANDOM_FILE    "/dev/urandom"
 
 namespace CKM {
 namespace Crypto {
@@ -283,31 +280,6 @@ InitCipherFn selectCipher(AlgoType type, size_t key_len = 32, bool encryption = 
 }
 
 } // anonymous namespace
-
-int initialize() {
-    int hw_rand_ret = 0;
-    int u_rand_ret = 0;
-
-    // try to initialize using ERR_load_crypto_strings and OpenSSL_add_all_algorithms
-    ERR_load_crypto_strings();
-    OpenSSL_add_all_algorithms();
-
-    // initialize entropy
-    std::ifstream ifile(DEV_HW_RANDOM_FILE);
-    if(ifile.is_open()) {
-        u_rand_ret= RAND_load_file(DEV_HW_RANDOM_FILE, 32);
-    }
-    if(u_rand_ret != 32 ){
-        LogError("Error in HW_RAND file load");
-        hw_rand_ret = RAND_load_file(DEV_URANDOM_FILE, 32);
-
-        if(hw_rand_ret != 32) {
-            ThrowErr(Exc::Crypto::InternalError, "Error in U_RAND_file_load");
-        }
-    }
-
-    return CKM_CRYPTO_INIT_SUCCESS;
-}
 
 const EVP_MD *getMdAlgo(const HashAlgorithm hashAlgo) {
     const EVP_MD *md_algo=NULL;
