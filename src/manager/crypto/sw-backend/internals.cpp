@@ -534,11 +534,16 @@ std::pair<RawBuffer, RawBuffer> encryptDataAesGcm(
     const RawBuffer &key,
     const RawBuffer &data,
     const RawBuffer &iv,
-    int tagSize)
+    int tagSize,
+    const RawBuffer &aad)
 {
     RawBuffer tag(tagSize);
     EvpCipherPtr enc;
     selectCipher(AlgoType::AES_GCM, key.size())(enc, key, iv);
+
+    if (!aad.empty())
+        enc->AppendAAD(aad);
+
     RawBuffer result = enc->Append(data);
     RawBuffer tmp = enc->Finalize();
     std::copy(tmp.begin(), tmp.end(), std::back_inserter(result));
@@ -552,9 +557,10 @@ RawBuffer encryptDataAesGcmPacked(
     const RawBuffer &key,
     const RawBuffer &data,
     const RawBuffer &iv,
-    int tagSize)
+    int tagSize,
+    const RawBuffer &aad)
 {
-    auto pair = encryptDataAesGcm(key, data, iv, tagSize);
+    auto pair = encryptDataAesGcm(key, data, iv, tagSize, aad);
     std::copy(pair.second.begin(), pair.second.end(), std::back_inserter(pair.first));
     return pair.first;
 }
@@ -577,7 +583,8 @@ RawBuffer decryptDataAesGcm(
     const RawBuffer &key,
     const RawBuffer &data,
     const RawBuffer &iv,
-    const RawBuffer &tag)
+    const RawBuffer &tag,
+    const RawBuffer &aad)
 {
     EvpCipherPtr dec;
     selectCipher(AlgoType::AES_GCM, key.size(), false)(dec, key, iv);
@@ -586,6 +593,9 @@ RawBuffer decryptDataAesGcm(
         ThrowErr(Exc::Crypto::InternalError,
             "Error in AES control function. Set tag failed.");
     }
+    if (!aad.empty())
+        dec->AppendAAD(aad);
+
     RawBuffer result = dec->Append(data);
     RawBuffer tmp = dec->Finalize();
     std::copy(tmp.begin(), tmp.end(), std::back_inserter(result));
@@ -596,7 +606,8 @@ RawBuffer decryptDataAesGcmPacked(
     const RawBuffer &key,
     const RawBuffer &data,
     const RawBuffer &iv,
-    int tagSize)
+    int tagSize,
+    const RawBuffer &aad)
 {
     if (tagSize > static_cast<int>(data.size()))
         ThrowErr(Exc::Crypto::InputParam, "Wrong size of tag");
@@ -606,7 +617,8 @@ RawBuffer decryptDataAesGcmPacked(
         key,
         RawBuffer(data.data(), tagPos),
         iv,
-        RawBuffer(tagPos, data.data() + data.size()));
+        RawBuffer(tagPos, data.data() + data.size()),
+        aad);
 }
 
 RawBuffer symmetricEncrypt(const RawBuffer &key,
@@ -626,10 +638,13 @@ RawBuffer symmetricEncrypt(const RawBuffer &key,
         {
             int tagLenBits = DEFAULT_AES_GCM_TAG_LEN;
             alg.getParam(ParamName::ED_TAG_LEN, tagLenBits);
+            RawBuffer aad;
+            alg.getParam(ParamName::ED_AAD, aad);
             return encryptDataAesGcmPacked(key,
                                            data,
                                            unpack<RawBuffer>(alg, ParamName::ED_IV),
-                                           tagLenBits/8);
+                                           tagLenBits/8,
+                                           aad);
         }
         default:
             break;
@@ -655,10 +670,13 @@ RawBuffer symmetricDecrypt(const RawBuffer &key,
         {
             int tagLenBits = DEFAULT_AES_GCM_TAG_LEN;
             alg.getParam(ParamName::ED_TAG_LEN, tagLenBits);
+            RawBuffer aad;
+            alg.getParam(ParamName::ED_AAD, aad);
             return decryptDataAesGcmPacked(key,
                                            data,
                                            unpack<RawBuffer>(alg, ParamName::ED_IV),
-                                           tagLenBits/8);
+                                           tagLenBits/8,
+                                           aad);
         }
         default:
             break;

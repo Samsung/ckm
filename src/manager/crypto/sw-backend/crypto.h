@@ -52,6 +52,7 @@ struct Base {
         return EVP_CIPHER_CTX_ctrl(m_ctx, type, arg, ptr);
     }
 
+    virtual void AppendAAD(const T&) = 0;
     virtual T Append(const T&) = 0;
     virtual T Finalize() = 0;
     virtual ~Base(){
@@ -83,12 +84,20 @@ public:
         EVP_CIPHER_CTX_set_padding(m_ctx, 1);
     }
 
+    void AppendAAD(const T& data) {
+        static_assert(sizeof(typename T::value_type) == 1, "Unsupported type inside container.");
+        int bytesLen;
+        if (1 != EVP_CipherUpdate(m_ctx, NULL, &bytesLen, data.data(), data.size())) {
+            ThrowErr(Exc::Crypto::InternalError, "AppendAAD(): Failed in EVP_CipherUpdate");
+        }
+    }
+
     T Append(const T& data) {
         static_assert(sizeof(typename T::value_type) == 1, "Unsupported type inside container.");
         int bytesLen = static_cast<int>(data.size() + EVP_CIPHER_CTX_block_size(m_ctx));
         T output(bytesLen);
         if (1 != EVP_CipherUpdate(m_ctx, output.data(), &bytesLen, data.data(), data.size())) {
-            ThrowErr(Exc::Crypto::InternalError, "Failed in EVP_CipherUpdate");
+            ThrowErr(Exc::Crypto::InternalError, "Append(): Failed in EVP_CipherUpdate");
         }
         output.resize(bytesLen);
         return output;
