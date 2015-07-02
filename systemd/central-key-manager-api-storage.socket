@@ -1,8 +1,6 @@
 [Socket]
 ListenStream=/tmp/.central-key-manager-api-storage.sock
 SocketMode=0777
-SmackLabelIPIn=*
-SmackLabelIPOut=@
 
 Service=central-key-manager.service
 
