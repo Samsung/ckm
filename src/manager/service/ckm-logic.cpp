@@ -1318,10 +1318,18 @@ int CKMLogic::getCertificateChainHelper(
     if (cert.empty())
         return CKM_API_ERROR_INPUT_PARAM;
 
-    for (auto &e: untrustedCertificates)
-        untrustedCertVector.push_back(CertificateImpl(e, DataFormat::FORM_DER));
-    for (auto &e: trustedCertificates)
-        trustedCertVector.push_back(CertificateImpl(e, DataFormat::FORM_DER));
+    for (auto &e: untrustedCertificates) {
+        CertificateImpl c(e, DataFormat::FORM_DER);
+        if(c.empty())
+            return CKM_API_ERROR_INPUT_PARAM;
+        untrustedCertVector.push_back(std::move(c));
+    }
+    for (auto &e: trustedCertificates) {
+        CertificateImpl c(e, DataFormat::FORM_DER);
+        if(c.empty())
+            return CKM_API_ERROR_INPUT_PARAM;
+        trustedCertVector.push_back(std::move(c));
+    }
 
     CertificateStore store;
     int retCode = store.verifyCertificate(cert,

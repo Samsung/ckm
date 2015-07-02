@@ -573,6 +573,9 @@ int ManagerImpl::getCertificateChain(
     RawBufferVector untrustedVector;
     RawBufferVector trustedVector;
 
+    if(!certificate || certificate->empty())
+        return CKM_API_ERROR_INPUT_PARAM;
+
     for (auto &e: untrustedCertificates) {
         untrustedVector.push_back(e->getDER());
     }
@@ -600,6 +603,9 @@ int ManagerImpl::getCertificateChain(
 {
     LabelNameVector untrustedVector;
     LabelNameVector trustedVector;
+
+    if(!certificate || certificate->empty())
+        return CKM_API_ERROR_INPUT_PARAM;
 
     for (auto &e: untrustedCertificates) {
         AliasSupport helper(e);
