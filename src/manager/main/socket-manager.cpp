@@ -488,6 +488,14 @@ int SocketManager::CreateDomainSocketHelp(
 {
     int sockfd;
 
+    if(desc.serviceHandlerPath.size()*sizeof(decltype(desc.serviceHandlerPath)::value_type) >=
+         sizeof(static_cast<sockaddr_un*>(0)->sun_path))
+    {
+        LogError("Service handler path too long: " << desc.serviceHandlerPath.size());
+        ThrowMsg(Exception::InitFailed,
+                 "Service handler path too long: " << desc.serviceHandlerPath.size());
+    }
+
     if (-1 == (sockfd = socket(AF_UNIX, SOCK_STREAM, 0))) {
         int err = errno;
         LogError("Error in socket: " << GetErrnoString(err));
