@@ -248,6 +248,8 @@ void ManagerAsync::Impl::ocspCheck(const ObserverPtr& observer,
     try_catch_async([&] {
         RawBufferVector rawCertChain;
         for (auto &e: certificateChainVector) {
+            if(!e || e->empty())
+                return observer->ReceivedError(CKM_API_ERROR_INPUT_PARAM);
             rawCertChain.push_back(e->getDER());
         }
 

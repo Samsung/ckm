@@ -711,6 +711,10 @@ int ManagerImpl::ocspCheck(const CertificateShPtrVector &certChain, int &ocspSta
 
         RawBufferVector rawCertChain;
         for (auto &e: certChain) {
+            if (!e || e->empty()) {
+                LogError("Empty certificate");
+                return CKM_API_ERROR_INPUT_PARAM;
+            }
             rawCertChain.push_back(e->getDER());
         }
 

@@ -37,12 +37,17 @@ RawBuffer OCSPLogic::ocspCheck(int commandId, const RawBufferVector &rawChain) {
     int retCode = CKM_API_SUCCESS;
     int ocspStatus = CKM_API_OCSP_STATUS_INTERNAL_ERROR;
 
-    for (auto &e: rawChain) {
-        certChain.push_back(CertificateImpl(e, DataFormat::FORM_DER));
-        if (certChain.rbegin()->empty()) {
-            LogDebug("Error in parsing certificates!");
-            retCode = CKM_API_ERROR_INPUT_PARAM;
-            break;
+    if(rawChain.size() < 2) {
+        LogError("Certificate chain should contain at least 2 certificates");
+        retCode = CKM_API_ERROR_INPUT_PARAM;
+    } else {
+        for (auto &e: rawChain) {
+            certChain.push_back(CertificateImpl(e, DataFormat::FORM_DER));
+            if (certChain.rbegin()->empty()) {
+                LogDebug("Error in parsing certificates!");
+                retCode = CKM_API_ERROR_INPUT_PARAM;
+                break;
+            }
         }
     }
 
