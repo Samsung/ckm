@@ -108,6 +108,16 @@ int AKey::verify(const CryptoAlgorithm &alg, const RawBuffer &message, const Raw
     return Internals::verify(evp, algWithType, message, sign);
 }
 
+RawBuffer AKey::encrypt(const CryptoAlgorithm &alg, const RawBuffer &data)
+{
+    return Internals::asymmetricEncrypt(getEvpShPtr(), alg, data);
+}
+
+RawBuffer AKey::decrypt(const CryptoAlgorithm &alg, const RawBuffer &data)
+{
+    return Internals::asymmetricDecrypt(getEvpShPtr(), alg, data);
+}
+
 EvpShPtr AKey::getEvpShPtr() {
     if (m_evp)
         return m_evp;

@@ -25,6 +25,7 @@
 #include <ckm/ckm-type.h>
 #include <openssl/evp.h>
 #include <token.h>
+#include <sw-backend/key.h>
 
 #define EVP_SUCCESS 1	// DO NOTCHANGE THIS VALUE
 #define EVP_FAIL    0	// DO NOTCHANGE THIS VALUE
@@ -53,6 +54,12 @@ RawBuffer symmetricEncrypt(const RawBuffer &key,
 RawBuffer symmetricDecrypt(const RawBuffer &key,
                            const CryptoAlgorithm &alg,
                            const RawBuffer &cipher);
+RawBuffer asymmetricEncrypt(const EvpShPtr &key,
+                            const CryptoAlgorithm &alg,
+                            const RawBuffer &data);
+RawBuffer asymmetricDecrypt(const EvpShPtr &key,
+                            const CryptoAlgorithm &alg,
+                            const RawBuffer &data);
 
 std::pair<RawBuffer, RawBuffer> encryptDataAesGcm(const RawBuffer &key,
     const RawBuffer &data,

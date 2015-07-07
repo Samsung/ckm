@@ -96,8 +96,12 @@ typedef ParamCheck<ParamName::ALGO_TYPE,
                    Type<AlgoType>::Equals<AlgoType::AES_CTR,
                                           AlgoType::AES_CBC,
                                           AlgoType::AES_GCM,
-                                          AlgoType::AES_CFB,
-                                          AlgoType::RSA_OAEP>> IsEncryption;
+                                          AlgoType::AES_CFB>> IsSymEncryption;
+
+typedef ParamCheck<ParamName::ALGO_TYPE,
+                   AlgoType,
+                   true,
+                   Type<AlgoType>::Equals<AlgoType::RSA_OAEP>> IsAsymEncryption;
 
 typedef ParamCheck<ParamName::ED_IV,
                    RawBuffer,
@@ -113,13 +117,17 @@ typedef ParamCheck<ParamName::ED_CTR_LEN,
 typedef ParamCheck<ParamName::ED_IV,
                    RawBuffer,
                    true,
-                   DefaultValidator<size_t>,
-                   BufferSizeGetter> GcmIvCheck;
+                   DefaultValidator<RawBuffer>> GcmIvCheck;
 
 typedef ParamCheck<ParamName::ED_TAG_LEN,
                    int,
                    false,
                    Type<int>::Equals<32, 64, 96, 104, 112, 120, 128>> GcmTagCheck;
+
+typedef ParamCheck<ParamName::ED_LABEL,
+                   RawBuffer,
+                   false,
+                   Unsupported<RawBuffer>> RsaLabelCheck;
 
 // sign / verify
 typedef ParamCheck<ParamName::ALGO_TYPE,
@@ -195,6 +203,7 @@ ValidatorMap initValidators() {
     validators.emplace(AlgoType::AES_CBC, VBuilder<IvSizeCheck>::Build());
     validators.emplace(AlgoType::AES_CFB, VBuilder<IvSizeCheck>::Build());
     validators.emplace(AlgoType::AES_GCM, VBuilder<GcmIvCheck, GcmTagCheck>::Build());
+    validators.emplace(AlgoType::RSA_OAEP, VBuilder<RsaLabelCheck>::Build());
     return validators;
 };
 ValidatorMap g_validators = initValidators();
@@ -207,8 +216,11 @@ void validateParams(const CryptoAlgorithm& ca)
     tc.Check(ca);
 
     AlgoType at = unpack<AlgoType>(ca, ParamName::ALGO_TYPE);
-    for(const auto& validator : g_validators.at(at)) {
-        validator->Check(ca);
+    try {
+        for(const auto& validator : g_validators.at(at))
+            validator->Check(ca);
+    } catch(const std::out_of_range&) {
+        ThrowErr(Exc::Crypto::InputParam, "Unsupported algorithm ", static_cast<int>(at));
     }
 }
 
@@ -277,6 +289,39 @@ InitCipherFn selectCipher(AlgoType type, size_t key_len = 32, bool encryption = 
                  key_len, ", ",
                  encryption);
     }
+}
+
+
+RawBuffer asymmetricHelper(int (*cryptoFn)(int, const unsigned char*, unsigned char*, RSA*, int),
+                           const std::string logPrefix,
+                           const EvpShPtr &pkey,
+                           const CryptoAlgorithm &alg,
+                           const RawBuffer &data)
+{
+    validateParams<IsAsymEncryption>(alg);
+
+    RSA* rsa = EVP_PKEY_get1_RSA(pkey.get());
+    if (!rsa)
+        ThrowErr(Exc::Crypto::InputParam, logPrefix, "invalid key");
+
+    /*
+     * RSA_padding_add_PKCS1_OAEP supports custom label but RSA_public_encrypt calls it with NULL
+     * value so for now label is not supported. Alternative is to rewrite the openssl implementation
+     * to support it: openssl-fips/crypto/rsa/rsa_eay.c
+     */
+    RawBuffer output;
+    output.resize(RSA_size(rsa));
+    int ret = cryptoFn(data.size(),
+                   data.data(),
+                   output.data(),
+                   rsa,
+                   RSA_PKCS1_OAEP_PADDING);
+    RSA_free(rsa);
+    if (ret < 0)
+        ThrowErr(Exc::Crypto::InternalError, logPrefix, "failed");
+
+    output.resize(ret);
+    return output;
 }
 
 } // anonymous namespace
@@ -625,7 +670,7 @@ RawBuffer symmetricEncrypt(const RawBuffer &key,
                            const CryptoAlgorithm &alg,
                            const RawBuffer &data)
 {
-    validateParams<IsEncryption>(alg);
+    validateParams<IsSymEncryption>(alg);
     AlgoType keyType = unpack<AlgoType>(alg, ParamName::ALGO_TYPE);
 
     switch(keyType)
@@ -649,15 +694,14 @@ RawBuffer symmetricEncrypt(const RawBuffer &key,
         default:
             break;
     }
-    ThrowErr(Exc::Crypto::OperationNotSupported,
-        "symmetric enc error: algorithm not recognized");
+    ThrowErr(Exc::Crypto::OperationNotSupported, "symmetric enc: algorithm not recognized");
 }
 
 RawBuffer symmetricDecrypt(const RawBuffer &key,
                            const CryptoAlgorithm &alg,
                            const RawBuffer &data)
 {
-    validateParams<IsEncryption>(alg);
+    validateParams<IsSymEncryption>(alg);
     AlgoType keyType = unpack<AlgoType>(alg, ParamName::ALGO_TYPE);
 
     switch(keyType)
@@ -681,7 +725,21 @@ RawBuffer symmetricDecrypt(const RawBuffer &key,
         default:
             break;
     }
-    ThrowErr(Exc::Crypto::InputParam, "symmetric dec error: algorithm not recognized");
+    ThrowErr(Exc::Crypto::InputParam, "symmetric dec: algorithm not recognized");
+}
+
+RawBuffer asymmetricEncrypt(const EvpShPtr &pkey,
+                            const CryptoAlgorithm &alg,
+                            const RawBuffer &data)
+{
+    return asymmetricHelper(RSA_public_encrypt, "Asymmetric encryption: ", pkey, alg, data);
+}
+
+RawBuffer asymmetricDecrypt(const EvpShPtr &pkey,
+                            const CryptoAlgorithm &alg,
+                            const RawBuffer &data)
+{
+    return asymmetricHelper(RSA_private_decrypt, "Asymmetric decryption: ", pkey, alg, data);
 }
 
 RawBuffer sign(EVP_PKEY *pkey,

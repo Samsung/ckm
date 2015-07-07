@@ -56,6 +56,8 @@ public:
     {}
     virtual RawBuffer sign(const CryptoAlgorithm &alg, const RawBuffer &message);
     virtual int verify(const CryptoAlgorithm &alg, const RawBuffer &message, const RawBuffer &sign);
+    virtual RawBuffer encrypt(const CryptoAlgorithm &, const RawBuffer &);
+    virtual RawBuffer decrypt(const CryptoAlgorithm &, const RawBuffer &);
     virtual RawBuffer getBinary() const;
     virtual ~AKey(){}
 protected:

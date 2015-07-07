@@ -85,6 +85,12 @@ struct Type {
     };
 };
 
+template <typename T>
+struct Unsupported {
+    static bool Check(const T&) { return false; }
+    static void Why(std::ostringstream& os) { os << "is not supported"; }
+};
+
 
 ////////// Getters //////////////
 
@@ -93,12 +99,19 @@ template <typename T>
 struct DefaultGetter {
     static T Get(const T& value) { return value; }
     static void What(std::ostringstream& os) { os << "value"; }
+    static void Print(std::ostringstream& os, const T& value) { os << static_cast<int>(value); }
 };
+
+template <>
+void DefaultGetter<RawBuffer>::Print(std::ostringstream& os, const RawBuffer& buffer) {
+    os << "[" << buffer.size() << "B buffer]";
+}
 
 // returns buffer param size
 struct BufferSizeGetter {
     static size_t Get(const RawBuffer& buffer) { return buffer.size(); }
     static void What(std::ostringstream& os) { os << "buffer size"; }
+    static void Print(std::ostringstream& os, const RawBuffer& buffer) { os << buffer.size(); }
 };
 
 
@@ -125,6 +138,13 @@ typedef std::vector<ParamCheckBasePtr> ValidatorVector;
 // ValidatorVector builder. Creates a vector of ParamCheckBasePtr's specified as Args
 template <typename ...Args>
 struct VBuilder;
+
+template <>
+struct VBuilder<> {
+static ValidatorVector Build() {
+        return ValidatorVector();
+    }
+};
 
 template <typename First>
 struct VBuilder<First> {
@@ -187,8 +207,9 @@ struct ParamCheck : public ParamCheckBase {
         if(!Validator::Check(Getter::Get(value))) {
             os << "The ";
             Getter::What(os);
-            os << " of param '" << static_cast<int>(Name) << "'=" <<
-                  static_cast<int>(Getter::Get(value)) << " ";
+            os << " of param '" << static_cast<int>(Name) << "'=";
+            Getter::Print(os, value);
+            os << " ";
             Validator::Why(os);
             ErrorHandler::Handle(os.str());
         }
