@@ -27,7 +27,7 @@ class IReceiver {
 public:
     DECLARE_EXCEPTION_TYPE(CKM::Exception, BadResponse);
 
-    virtual void parseResponse() = 0;
+    virtual void processResponse() = 0;
     virtual ~IReceiver() {};
 };
 

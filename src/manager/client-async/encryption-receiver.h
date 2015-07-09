@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2000 - 2014 Samsung Electronics Co., Ltd All Rights Reserved
+ *  Copyright (c) 2000 - 2015 Samsung Electronics Co., Ltd All Rights Reserved
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  *  limitations under the License
  */
 /*
- * @file       ocsp-receiver.h
+ * @file       encryption-receiver.h
  * @author     Krzysztof Jackiewicz (k.jackiewicz@samsung.com)
  * @version    1.0
  */
@@ -28,13 +28,13 @@
 
 namespace CKM {
 
-class OcspReceiver : public IReceiver
+class EncryptionReceiver : public IReceiver
 {
 public:
-    OcspReceiver(MessageBuffer& buffer, AsyncRequest::Map& reqMap);
-    virtual ~OcspReceiver() {}
+    EncryptionReceiver(MessageBuffer& buffer, AsyncRequest::Map& reqMap);
+    virtual ~EncryptionReceiver() {}
 
-    NONCOPYABLE(OcspReceiver);
+    NONCOPYABLE(EncryptionReceiver);
 
     void processResponse();
 

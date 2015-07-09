@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2000 - 2014 Samsung Electronics Co., Ltd All Rights Reserved
+ *  Copyright (c) 2000 - 2015 Samsung Electronics Co., Ltd All Rights Reserved
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -153,6 +153,14 @@ public:
                           useSystemTrustedCertificates);
         }, [&observer](int error){ observer->ReceivedError(error); } );
     }
+
+    void crypt(
+            const ObserverPtr& observer,
+            const CryptoAlgorithm& algo,
+            const Alias& keyAlias,
+            const Password& password,
+            const RawBuffer& input,
+            bool encryption);
 
 private:
 

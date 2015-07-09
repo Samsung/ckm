@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2000 - 2014 Samsung Electronics Co., Ltd All Rights Reserved
+ *  Copyright (c) 2000 - 2015 Samsung Electronics Co., Ltd All Rights Reserved
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -14,26 +14,30 @@
  *  limitations under the License
  */
 /*
- * @file       ocsp-receiver.cpp
+ * @file       encryption-receiver.cpp
  * @author     Krzysztof Jackiewicz (k.jackiewicz@samsung.com)
  * @version    1.0
  */
 
-#include <ocsp-receiver.h>
+#include <encryption-receiver.h>
 #include <dpl/log/log.h>
+#include <protocols.h>
 
 namespace CKM {
 
-OcspReceiver::OcspReceiver(MessageBuffer& buffer, AsyncRequest::Map& requests) :
+EncryptionReceiver::EncryptionReceiver(MessageBuffer& buffer, AsyncRequest::Map& requests) :
     m_buffer(buffer),
     m_requests(requests)
 {
 }
 
-void OcspReceiver::processResponse()
+void EncryptionReceiver::processResponse()
 {
-    int id = 0, retCode = 0, ocspStatus = 0;
-    m_buffer.Deserialize(id, retCode, ocspStatus);
+    int command = 0;
+    int id = 0;
+    int retCode;
+    RawBuffer output;
+    m_buffer.Deserialize(command, id, retCode, output);
 
     auto it = m_requests.find(id);
     if (it == m_requests.end()) {
@@ -45,10 +49,24 @@ void OcspReceiver::processResponse()
     AsyncRequest req = std::move(m_requests.at(id));
     m_requests.erase(id);
 
-    if (retCode == CKM_API_SUCCESS)
-        req.observer->ReceivedOCSPCheck(ocspStatus);
-    else
-        req.observer->ReceivedError(retCode);
+    switch (static_cast<EncryptionCommand>(command)) {
+    case EncryptionCommand::ENCRYPT:
+        if (retCode == CKM_API_SUCCESS)
+            req.observer->ReceivedEncrypted(std::move(output));
+        else
+            req.observer->ReceivedError(retCode);
+        break;
+    case EncryptionCommand::DECRYPT:
+        if (retCode == CKM_API_SUCCESS)
+            req.observer->ReceivedDecrypted(std::move(output));
+        else
+            req.observer->ReceivedError(retCode);
+        break;
+    default:
+        LogError("Unknown command id: " << command);
+        ThrowMsg(BadResponse, "Unknown command id: " << command);
+        break;
+    }
 }
 
 } /* namespace CKM */

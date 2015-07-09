@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2000 - 2014 Samsung Electronics Co., Ltd All Rights Reserved
+ *  Copyright (c) 2000 - 2015 Samsung Electronics Co., Ltd All Rights Reserved
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@
 
 #include <storage-receiver.h>
 #include <ocsp-receiver.h>
+#include <encryption-receiver.h>
 #include <protocols.h>
 
 namespace CKM {
@@ -186,12 +187,14 @@ void Service::receiveData()
             receiver.reset(new StorageReceiver(*m_responseBuffer, m_responseMap));
         else if (m_interface == SERVICE_SOCKET_OCSP)
             receiver.reset(new OcspReceiver(*m_responseBuffer, m_responseMap));
+        else if (m_interface == SERVICE_SOCKET_ENCRYPTION)
+            receiver.reset(new EncryptionReceiver(*m_responseBuffer, m_responseMap));
         else {
             LogError("Unknown service " << m_interface);
             serviceError(CKM_API_ERROR_RECV_FAILED);
             return;
         }
-        receiver->parseResponse();
+        receiver->processResponse();
 
         if (m_responseMap.empty())
             watch(m_sendQueue.empty()?0:POLLOUT);

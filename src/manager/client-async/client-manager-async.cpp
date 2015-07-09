@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2000 - 2014 Samsung Electronics Co., Ltd All Rights Reserved
+ *  Copyright (c) 2000 - 2015 Samsung Electronics Co., Ltd All Rights Reserved
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -256,6 +256,26 @@ void ManagerAsync::setPermission(const ObserverPtr& observer,
                                  PermissionMask permissionMask)
 {
     m_impl->setPermission(observer, alias, accessor, permissionMask);
+}
+
+void ManagerAsync::encrypt(
+        const ObserverPtr& observer,
+        const CryptoAlgorithm& algo,
+        const Alias& keyAlias,
+        const Password& password,
+        const RawBuffer& plain)
+{
+    m_impl->crypt(observer, algo, keyAlias, password, plain, true);
+}
+
+void ManagerAsync::decrypt(
+        const ObserverPtr& observer,
+        const CryptoAlgorithm& algo,
+        const Alias& keyAlias,
+        const Password& password,
+        const RawBuffer& encrypted)
+{
+    m_impl->crypt(observer, algo, keyAlias, password, encrypted, false);
 }
 
 } // namespace CKM

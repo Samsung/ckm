@@ -35,7 +35,7 @@ StorageReceiver::StorageReceiver(MessageBuffer& buffer, AsyncRequest::Map& reque
 {
 }
 
-void StorageReceiver::parseResponse()
+void StorageReceiver::processResponse()
 {
     int command = 0, id = 0;
     m_buffer.Deserialize(command, id);

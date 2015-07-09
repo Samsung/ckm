@@ -119,6 +119,7 @@ SET(KEY_MANAGER_CLIENT_SOURCES
     ${KEY_MANAGER_CLIENT_ASYNC_SRC_PATH}/service.cpp
     ${KEY_MANAGER_CLIENT_ASYNC_SRC_PATH}/storage-receiver.cpp
     ${KEY_MANAGER_CLIENT_ASYNC_SRC_PATH}/ocsp-receiver.cpp
+    ${KEY_MANAGER_CLIENT_ASYNC_SRC_PATH}/encryption-receiver.cpp
     ${KEY_MANAGER_CLIENT_ASYNC_SRC_PATH}/descriptor-set.cpp
     ${KEY_MANAGER_CLIENT_CAPI_SRC_PATH}/ckmc-type.cpp
     ${KEY_MANAGER_CLIENT_CAPI_SRC_PATH}/ckmc-error.cpp

@@ -37,7 +37,7 @@ public:
 
     NONCOPYABLE(StorageReceiver);
 
-    void parseResponse();
+    void processResponse();
 
 private:
     void parseGetCommand();

@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2000 - 2014 Samsung Electronics Co., Ltd All Rights Reserved
+ *  Copyright (c) 2000 - 2015 Samsung Electronics Co., Ltd All Rights Reserved
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -75,6 +75,9 @@ public:
         virtual void ReceivedOCSPCheck(int) {}
 
         virtual void ReceivedSetPermission() {}
+
+        virtual void ReceivedEncrypted(RawBuffer &&) {}
+        virtual void ReceivedDecrypted(RawBuffer &&) {}
 
         virtual ~Observer() {}
     };
@@ -190,6 +193,20 @@ public:
             const Alias& alias,
             const Label& accessor,
             PermissionMask permissionMask);
+
+    void encrypt(
+            const ObserverPtr& observer,
+            const CryptoAlgorithm& algo,
+            const Alias& keyAlias,
+            const Password& password,
+            const RawBuffer& plain);
+
+    void decrypt(
+            const ObserverPtr& observer,
+            const CryptoAlgorithm& algo,
+            const Alias& keyAlias,
+            const Password& password,
+            const RawBuffer& encrypted);
 
 private:
     std::unique_ptr<Impl> m_impl;
