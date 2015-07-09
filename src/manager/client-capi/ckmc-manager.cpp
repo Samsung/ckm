@@ -117,11 +117,11 @@ ckmc_cert_list_s *_toNewCkmCertList(const CKM::CertificateShPtrVector &certVecto
     return start;
 }
 
-typedef int (CKM::Manager::*cryptoFn)(const CKM::CryptoAlgorithm &algo,
-                                      const CKM::Alias &keyAlias,
-                                      const CKM::Password &password,
-                                      const CKM::RawBuffer& plain,
-                                      CKM::RawBuffer& encrypted);
+typedef int (CKM::Manager::*cryptoFn)(const CKM::CryptoAlgorithm&,
+                                      const CKM::Alias&,
+                                      const CKM::Password&,
+                                      const CKM::RawBuffer&,
+                                      CKM::RawBuffer&);
 
 int _cryptoOperation(cryptoFn operation,
                      const ckmc_param_list_s *params,
