@@ -80,7 +80,7 @@ public:
      * @throws Timeout exception in case of timeout
      * @throws InternalError in case of other error
      */
-    void wait(int timeout_ms = 10000);
+    void wait(int timeout_ms = 60000);
     /*
      * Removes and closes all descriptors
      */
