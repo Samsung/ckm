@@ -378,6 +378,8 @@ private:
 
     int resetUserPasswordHelper(uid_t user, const Password &newPassword);
 
+    int loadAppKey(UserData& handle, const Label& appLabel);
+
     std::map<uid_t, UserData> m_userDataMap;
     AccessControl m_accessControl;
     Crypto::Decider m_decider;

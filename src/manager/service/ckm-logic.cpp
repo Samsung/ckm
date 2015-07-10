@@ -417,8 +417,10 @@ DB::Row CKMLogic::createEncryptedRow(
     const RawBuffer &data,
     const Policy &policy) const
 {
-    DB::Row row(name, label, static_cast<int>(policy.extractable), dataType, data, static_cast<int>(data.size()));
-    row.backendId = m_decider.chooseCryptoBackend(dataType, policy.extractable);
+    Crypto::GStore& store = m_decider.getStore(dataType, policy.extractable);
+    Token token = store.import(dataType, data);
+
+    DB::Row row(std::move(token), name, label, static_cast<int>(policy.extractable));
 
     // do not encrypt data with password during cc_mode on
     if(m_accessControl.isCCMode()) {
@@ -649,14 +651,33 @@ int CKMLogic::removeDataHelper(
         return retCode;
     }
 
-    auto erased = handler.database.deleteRow(name, ownerLabel);
-    // check if the data existed or not
-    if(erased)
-        transaction.commit();
-    else {
+    // get all matching rows
+    DB::RowVector rows;
+    handler.database.getRows(name, ownerLabel, DataType::DB_FIRST, DataType::DB_LAST, rows);
+    if (rows.empty()) {
         LogDebug("No row for given name and label");
         return CKM_API_ERROR_DB_ALIAS_UNKNOWN;
     }
+
+    // load app key if needed
+    retCode = loadAppKey(handler, rows.front().ownerLabel);
+    if(CKM_API_SUCCESS != retCode)
+        return retCode;
+
+    // destroy it in store
+    for(auto& r : rows) {
+        /*
+         * TODO: If row is encrypted with user password we won't be able to decrypt it (tz id).
+         * Encryption/decryption with user password and with app key should both be done inside the
+         * store (import, getKey and generateXKey).
+         */
+        handler.crypto.decryptRow(Password(), r);
+        m_decider.getStore(r.dataType, r.exportable).destroy(r);
+    }
+
+    // delete row in db
+    handler.database.deleteRow(name, ownerLabel);
+    transaction.commit();
 
     return CKM_API_SUCCESS;
 }
@@ -809,18 +830,12 @@ int CKMLogic::readDataHelper(
     if(CKM_API_SUCCESS != retCode)
         return retCode;
 
+    // load app key if needed
+    retCode = loadAppKey(handler, firstRow.ownerLabel);
+    if(CKM_API_SUCCESS != retCode)
+        return retCode;
+
     // decrypt row
-    if (!handler.crypto.haveKey(firstRow.ownerLabel)) {
-        RawBuffer key;
-        auto key_optional = handler.database.getKey(firstRow.ownerLabel);
-        if(!key_optional) {
-            LogError("No key for given label in database");
-            return CKM_API_ERROR_DB_ERROR;
-        }
-        key = *key_optional;
-        key = handler.keyProvider.getPureDEK(key);
-        handler.crypto.pushKey(firstRow.ownerLabel, key);
-    }
     for(auto &row : rows)
         handler.crypto.decryptRow(password, row);
 
@@ -855,18 +870,12 @@ int CKMLogic::readDataHelper(
     if(CKM_API_SUCCESS != retCode)
         return retCode;
 
+    // load app key if needed
+    retCode = loadAppKey(handler, row.ownerLabel);
+    if(CKM_API_SUCCESS != retCode)
+        return retCode;
+
     // decrypt row
-    if (!handler.crypto.haveKey(row.ownerLabel)) {
-        RawBuffer key;
-        auto key_optional = handler.database.getKey(row.ownerLabel);
-        if(!key_optional) {
-            LogError("No key for given label in database");
-            return CKM_API_ERROR_DB_ERROR;
-        }
-        key = *key_optional;
-        key = handler.keyProvider.getPureDEK(key);
-        handler.crypto.pushKey(row.ownerLabel, key);
-    }
     handler.crypto.decryptRow(password, row);
 
     return CKM_API_SUCCESS;
@@ -1618,6 +1627,22 @@ RawBuffer CKMLogic::setPermission(
     }
 
     return MessageBuffer::Serialize(command, msgID, retCode).Pop();
+}
+
+int CKMLogic::loadAppKey(UserData& handle, const Label& appLabel)
+{
+    if (!handle.crypto.haveKey(appLabel)) {
+        RawBuffer key;
+        auto key_optional = handle.database.getKey(appLabel);
+        if(!key_optional) {
+            LogError("No key for given label in database");
+            return CKM_API_ERROR_DB_ERROR;
+        }
+        key = *key_optional;
+        key = handle.keyProvider.getPureDEK(key);
+        handle.crypto.pushKey(appLabel, key);
+    }
+    return CKM_API_SUCCESS;
 }
 
 } // namespace CKM

@@ -31,6 +31,29 @@
 namespace CKM {
 namespace Crypto {
 
+namespace {
+CryptoBackend chooseCryptoBackend(DataType dataType, bool exportable) {
+// The list of items that MUST be support by OpenSSL
+    if (dataType.isCertificate())
+        return CryptoBackend::OpenSSL;
+
+    if (dataType.isBinaryData())
+        return CryptoBackend::OpenSSL;
+
+    if (exportable)
+        return CryptoBackend::OpenSSL;
+
+//  This is the place where we can use trust zone backend
+//  Examples:
+//
+//  if (dataType.isKeyPrivate())
+//      return CryptoBackend::TrustZone;
+
+// This item does not met Trust Zone requirements. Let's use software backend
+    return CryptoBackend::OpenSSL;
+}
+} // namespace
+
 Decider::Decider()
   : m_swStore(new SW::Store(CryptoBackend::OpenSSL))
   , m_tzStore(new TZ::Store(CryptoBackend::TrustZone))
@@ -56,27 +79,6 @@ GStore& Decider::getStore(CryptoBackend cryptoBackend) const {
 
 GStore& Decider::getStore(DataType data, bool exportable) const {
     return getStore(chooseCryptoBackend(data, exportable));
-}
-
-CryptoBackend Decider::chooseCryptoBackend(DataType dataType, bool exportable) const {
-// The list of items that MUST be support by OpenSSL
-    if (dataType.isCertificate())
-        return CryptoBackend::OpenSSL;
-
-    if (dataType.isBinaryData())
-        return CryptoBackend::OpenSSL;
-
-    if (exportable)
-        return CryptoBackend::OpenSSL;
-
-//  This is the place where we can use trust zone backend
-//  Examples:
-//
-//  if (dataType.isKeyPrivate())
-//      return CryptoBackend::TrustZone;
-
-// This item does not met Trust Zone requirements. Let's use software backend
-    return CryptoBackend::OpenSSL;
 }
 
 } // namespace Crypto

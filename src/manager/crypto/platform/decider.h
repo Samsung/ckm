@@ -37,7 +37,6 @@ public:
     Decider();
     GStore& getStore(const Token &token) const;
     GStore& getStore(DataType data, bool exportable) const;
-    CryptoBackend chooseCryptoBackend(DataType data, bool exportable) const;
 
     virtual ~Decider(){}
 protected:

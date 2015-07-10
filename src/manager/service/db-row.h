@@ -32,19 +32,17 @@ namespace DB {
 struct Row : public Token {
     Row() = default;
 
-    Row(const Name &pName,
+    Row(Token token,
+        const Name &pName,
         const Label &pLabel,
-        int pExportable,
-        DataType pDataType,
-        const RawBuffer &pData,
-        int pDataSize) :
-        Token(CryptoBackend::None, pDataType, pData)
+        int pExportable) :
+        Token(std::move(token))
       , name(pName)
       , ownerLabel(pLabel)
       , exportable(pExportable)
       , algorithmType(DBCMAlgType::NONE)
       , encryptionScheme(0)
-      , dataSize(pDataSize)
+      , dataSize(data.size())
     {}
 
     Name name;
