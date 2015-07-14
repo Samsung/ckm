@@ -13,47 +13,73 @@
       Wid4fIHzBpi8rkkxr80/ym2BkeA/piaPNGOQtKjVfBOn/SuR2LQJreG6QbI6MYXC
       ZVOanzc0euaenw1q9b+yEQ==
   </EncryptionKey>
-  <Key name="key1" type="RSA_PUB" password="123">
+  <Key name="test-key1" type="RSA_PUB" password="123">
     <PEM>
       -----BEGIN PUBLIC KEY-----
-      MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA2b1bXDa+S8/MGWnMkru4
-      T4tUddtZNi0NVjQn9RFH1NMa220GsRhRO56F77FlSVFKfSfVZKIiWg6C+DVCkcLf
-      zXJ/Z0pvwOQYBAqVMFjV6efQGN0JzJ1Unu7pPRiZl7RKGEI+cyzzrcDyrLLrQ2W7
-      0ZySkNEOv6Frx9JgC5NExuYY4lk2fQQa38JXiZkfyzif2em0px7mXbyf5LjccsKq
-      v1e+XLtMsL0ZefRcqsP++NzQAI8fKX7WBT+qK0HJDLiHrKOTWYzx6CwJ66LD/vvf
-      j55xtsKDLVDbsotvf8/m6VLMab+vqKk11TP4tq6yo0mwyTADvgl1zowQEO9I1W6o
-      zQIDAQAB
+      MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAzIft00bxMjLwkweLexg3
+      +dmcibxEJRf6veU+9uYMLxnZfWS6YX0EGab6Ab17jj5TOO4tIVzTUT6b/RxZ1wui
+      tagFvGhm3Uy6pMvj64AI1e3IjZ6TAQKw7Fb+YO6r7X9gzY8MnAKA4IfzzTQqJEaB
+      x8yLSKIcza6SOxcUywNb1Ij+ro7mTus3fLP3ZbhEuA/sd3+wsgaw0uL04kgC72H2
+      QNv3kBPuYdQQrXhoxCcIVtSIl8pUfI367KQQ3MsXCucjkAvm6xAr/Wig91yue6t8
+      9paSCZakBt8SGjA6mSpmrp7lPlKE9FYZ8Sxgj3H4fXIcyyD0aOa0RxZBE6t06OE4
+      m41dD/Lzv0ZQE1mSDwxjrZWpxOzblliTiGDLhdWMF3zxeDhcWY9cTALOedJI3GNA
+      +wRMf3yd41q6yvTC1rVd/+R6P37JIudLZqwQTEr8wX12cT1fLmGBwAgbgTdzz1Kp
+      f6AeVzqY2OYgdOHMCQzcTg9PqdS4V3mUq6gnguhf/2iTgCPfVRgEuc3mLESGDNp4
+      +klR5zlh8+kN5ZjfzEgpZ+eWlDesNBBCZni0ELe1+JHD9V5oaloLEOk5e5JiwRTZ
+      4rsmBqOwuglHFW52dIZEG9u/20taQMImzIym1nxl1e6GoL+yeNVs6oK90+lX3s7+
+      8lLQwmLiBLx0Yr/RXKf6gJUCAwEAAQ==
       -----END PUBLIC KEY-----
     </PEM>
     <Permission accessor="web_app1"/>
+  </Key>
+  <Key name="test-key2" type="RSA_PRV" exportable="true">
+    <DER>
+      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
+      Vx676FQrM4EzjSSqgA==
+    </DER>
     <Permission accessor="web_app2"/>
   </Key>
-  <Key name="key2" type="RSA_PRV" exportable="true">
-    <DER>
-      MIIEpAIBAAKCAQEAyJjUHY2pJJUBRBCrlerrgcS7aBiWlY3594dufu3m4qy48b9hsw1R/AHSNUPU
-      11vzQ+kUcXkEZOby5SHRHBAXIJ1dLbTPtRwsVwgf1nmc/ZGGV/XOrOaKi7nSKgYHaglPgc9dLPuu
-      osRHs/EdIWh3o59MdY6rA6y+QTJrQm3axRKdT7unX3kFS3SsId02GWBkLtrw+yQVtvhCYlY/n2/T
-      uZBJpZN7vT2it0rJS4fQkfjcjAi8f/isZLrfUgDqxIDSWVbVyjlQOphIO+K3ABjev3ZbJMWl+w10
-      pV0nbmF8lviEYft9mhERS9kUdQwzy3KIgyjyt+ewQG6hjyMJ/5y5KwIDAQABAoIBAQC3S06nIoZn
-      su/RLhpbhqljjkxgNfeC+JRsJghFW0UZ4xGrdGDlp0o+p7tYiH63uoFykEvp09a8DHvt+xSEO/+m
-      AaTe2tTgfLnXXMkaxU06Nfs37JfJTW9TdZwgYhnsPk20I7LUI7XTbN7IAY3ItRh9HlZTJOYHGZVP
-      Ja70qES6xUOTaVOvKIbB2W9XeiMX6cNoHTLM9rl1I8bA13Er0M0acKRtF4Rfw4z43nJKzORCYKm3
-      mA3zqtQja7z+zdQBib34RHZiKgvuJDqg89p7FTLT9z+lbXONH+K/3MldaYG1O8mtgt4zv6onH199
-      QBOrww158Z6keH3tBz+xsrClfIpBAoGBAPkar4ugZYLRgyuythby3uHrlMBNajmJf2gFwngvfUgO
-      JS45fLN2AIDrA5VYUiT8cFjVFfzEiu1xa33Juy8rfHlQuY8yOIVDnbdGJvOBYsrvlyYWY+9jEydd
-      cLctQKquACLb3jNYbrC9m8cBBcSZelRAVSF4O1k8HdlcdV7IIVyjAoGBAM4mY5PNLr3I/pyyNizw
-      7cUmHdblU+sScwFdC/KDwfG5WOI3WorTLutD4EiEA3yQIDStuVJLiray4Pu+bqhUPAJumpRrpQJ4
-      PCPxr/M98FhXvMmDWzGu/xK/6hLP5g1Ngp6qvVygnYNBkyqMzfM0rUAxQLS3qmocWk2xBKDEnjHZ
-      AoGBAJkWgVO52yiuQYKVbbpkv/zvnpcf/GwnyBjRkVXzOXcS2l6yDaTsnBqeU7FweespCJJPQhf5
-      YbfSwFCprVOr0e9sYN1T69BaYY7EmiOEHIbC/4z0ra3soVTL4/1u3hMGpCbIIKJFcqFDpXyDcFwG
-      RluIvci37yFEBMQUQj1hmL8pAoGAJBHtfG/7TLO9cRdxiT2CrOs1b2Ni4o+w1b09GOra5XujxLkg
-      u4el/v46YRXQMlxZdj4rXe3f0IXN/d5dKFDMyzQlEfEfxyXYiAWC3tGomxyG6M92BmRzNwmjYDVG
-      MG+ueiqvxWRJCy1PHbPTWUmPQtsbUkOMqtJZLpzZjXO5pkkCgYA9uyQ8os9yfjALc1VDZ4HtGxaC
-      Uq8zy0jJEJxchRn1JUNHop/skaRA65x613lWDygfNCuakozjP5x+GA5WEIuxIE8V7JPac1zpEZW4
-      5nwmxoR1l3HUDT8kRYkLzMIo55PpLG9arNLwH9mSRh/taG8020aGg3nFSNCJNDs12x/9RA==
-    </DER>
-  </Key>
-  <Cert exportable="true" name="cert1">
+  <Cert exportable="true" name="test-cert1">
     <DER>
       MIIDnzCCAoegAwIBAgIJAMH/ADkC5YSTMA0GCSqGSIb3DQEBBQUAMGYxCzAJBgNVBAYTAkFVMRMw
       EQYDVQQIDApTb21lLVN0YXRlMQ0wCwYDVQQKDARBQ01FMRAwDgYDVQQLDAdUZXN0aW5nMSEwHwYD
@@ -73,11 +99,14 @@
       7+XYvhodLRsVqMn7nf7taidDKLO2T4bhujztnTYOhhaXKgPy7AtZ28N2wvX96VyAPB/vrchGmyBK
       kOg11TpPdNDkhb1J4ZCh2gupDg==
     </DER>
+    <Permission accessor="web_app2"/>
   </Cert>
-  <Data name="data1">
+  <Data name="test-data1" exportable="true">
     <ASCII>My secret data</ASCII>
+    <Permission accessor="web_app1"/>
+    <Permission accessor="web_app2"/>
   </Data>
-  <Key name="aes1" type="AES">
+  <Key name="test-aes1" type="AES">
     <Base64>
       MIIEgDCCA2igAwIBAgIIcjtBYJGQtOAwDQYJKoZIhvcNAQEFBQAwSTELMAkGA1UE
     </Base64>
@@ -86,12 +115,11 @@
   </Key>
   <!-- key below is encrypted using AES-CBC algorithm.
      The key used is decrypted <EncryptionKey> provided above.
-     IV is Base64 encoded.
      Encryption:
        * encrypt AES CBC: openssl aes-256-cbc -K `xxd -p -c 64 encryption_AES_key` -iv `xxd -p -c 64 encryption_AES_IV` -e -in data -out data.enc
   -->
   <Key name="test-encryption-prv" type="RSA_PRV">
-    <EncryptedDER IV="X1RoaXNJc0lWRm9yQUVTXw==">
+    <EncryptedDER IV="_ThisIsIVForAES_">
       BflJyNgOcGyJSqTegG+y7MJXI1crgsGY3PjFfMpbmMbwJkVexvxoEPdf2yE5Z7da
       6Vp4Qo2WOCUv/hllNTfm/dH7kOJOjcs/vaV1eRIfzEx3hvgKOyP82Hhkm1POynsF
       0GyMm/VwtJFwFHA5DaJzwLln2/AoD//vC731Qhucw0Zvi2hi74d6igPog9EugIj/
@@ -109,7 +137,7 @@
   </Key>
   <Cert name="test-encryption-certificate" exportable="true">
     <!-- Note IV differs between items -->
-    <EncryptedDER IV="SVZkaWZmZXJzRnJJdGVtcw==">
+    <EncryptedDER IV="IVdiffersFrItems">
       H/1CXNoQJ13MLdMESto1BHP5583n7fbwkN4mRVELQepeJNUhX2Kc+6foG3eTOBEH
       N/z5xPFlYZLxeRArknVaCE/2Nmrk9STQZpja//B6FEXTUg4PbVEQl1zE5vJV8RUE
       W1jetcEoxPZtNirqH03P1izud/vQVCQRy+WYe00Nm/MluGTJ8sytW+k+wCO+GmHf
@@ -139,11 +167,11 @@
   </Cert>
   <Data name="test-ascii-data-encryption">
     <!-- this below decrypts to ASCII: "My secret data" -->
-    <EncryptedASCII IV="X19hbm90aGVyX0lWXzJfXw==">zuBDjp8ptFthrU69Ua5cfg==</EncryptedASCII>
+    <EncryptedASCII IV="__another_IV_2__">zuBDjp8ptFthrU69Ua5cfg==</EncryptedASCII>
   </Data>
   <Data name="test-binary-data-encryption">
     <!-- this below decrypts to small PNG image -->
-    <EncryptedBinary IV="UE5HSVZQTkdJVlBOR0lWUA==">
+    <EncryptedBinary IV="PNGIVPNGIVPNGIVP">
       weK/LmGIPHeNA2YipqJa4B7DRMJBaoGSldawgSDQeIIIXgrmypSH42Gbm6m09gp0
       Wn0frkCcALHGxJyDK3rOsWDjJisYweblBgcFGa/eG7DiLgL1mv/fjstjSda1bh8x
       sLtmKCrYPPZI6RVEZKdl6oBXK7+uVavY9vdo69DrTZulZMGR2NW3i665kTVhvIUn

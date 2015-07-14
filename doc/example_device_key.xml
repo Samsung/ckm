@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <DeviceKey version="1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="sw_key.xsd ">
   <RSAPrivateKey>
-    <DER>
+    <DERBase64>
       MIIEpAIBAAKCAQEAyJjUHY2pJJUBRBCrlerrgcS7aBiWlY3594dufu3m4qy48b9hsw1R/AHSNUPU
       11vzQ+kUcXkEZOby5SHRHBAXIJ1dLbTPtRwsVwgf1nmc/ZGGV/XOrOaKi7nSKgYHaglPgc9dLPuu
       osRHs/EdIWh3o59MdY6rA6y+QTJrQm3axRKdT7unX3kFS3SsId02GWBkLtrw+yQVtvhCYlY/n2/T
@@ -23,6 +23,6 @@
       MG+ueiqvxWRJCy1PHbPTWUmPQtsbUkOMqtJZLpzZjXO5pkkCgYA9uyQ8os9yfjALc1VDZ4HtGxaC
       Uq8zy0jJEJxchRn1JUNHop/skaRA65x613lWDygfNCuakozjP5x+GA5WEIuxIE8V7JPac1zpEZW4
       5nwmxoR1l3HUDT8kRYkLzMIo55PpLG9arNLwH9mSRh/taG8020aGg3nFSNCJNDs12x/9RA==
-    </DER>
+    </DERBase64>
   </RSAPrivateKey>
 </DeviceKey>

@@ -136,12 +136,15 @@
 	<xsd:complexType name="EncryptedBase64Type">
 		<xsd:simpleContent>
 			<xsd:extension base="EncodingRawType">
-				<xsd:attribute name="IV" type="IV_Base64_string" use="required"/>
+				<xsd:attribute name="IV" type="IV_string" use="required"/>
 			</xsd:extension>
 		</xsd:simpleContent>
 	</xsd:complexType>
-	<xsd:simpleType name="IV_Base64_string">
-		<xsd:restriction base="xsd:string"></xsd:restriction>
+	<xsd:simpleType name="IV_string">
+		<xsd:restriction base="xsd:string">
+			<xsd:minLength value="16" />
+			<xsd:maxLength value="16" />
+		</xsd:restriction>
 	</xsd:simpleType>
 
 	<xsd:complexType name="PermissionType">

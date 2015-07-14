@@ -34,7 +34,10 @@ const char *XSD_1_okay          = "XML_1_okay.xsd";
 const char *XML_1_wrong         = "XML_1_wrong.xml";
 const char *XSD_1_wrong         = "XML_1_wrong.xsd";
 const char *XML_2_structure     = "XML_2_structure.xml";
-const char *XML_3_structure     = "XML_3_structure.xml";
+const char *XML_3_encrypted     = "XML_3_encrypted.xml";
+const char *XSD_3_encrypted     = "XML_3_encrypted.xsd";
+const char *XML_4_device_key    = "XML_4_device_key.xml";
+const char *XSD_4_device_key    = "XML_4_device_key.xsd";
 
 std::string format_test_path(const char *file)
 {
@@ -116,7 +119,6 @@ BOOST_AUTO_TEST_CASE(XmlParserTest_XML1_correct_parse)
     BOOST_REQUIRE(startCallbackFlag == true);
     BOOST_REQUIRE(endCallbackFlag == true);
 }
-
 
 class StructureTest
 {
@@ -287,6 +289,31 @@ BOOST_AUTO_TEST_CASE(XmlParserTest_XML2_structure)
     BOOST_REQUIRE(0 == parser.Parse());
     BOOST_REQUIRE_MESSAGE(parser.getSum() == parser.getExpectedSum(),
                           "got sum: " << parser.getSum() << " while expected: " << parser.getExpectedSum());
+}
+
+BOOST_AUTO_TEST_CASE(XmlParserTest_XML3_encrypted_correct_parse)
+{
+    XML::Parser parser(format_test_path(XML_3_encrypted).c_str());
+    BOOST_REQUIRE(0 == parser.Validate(format_test_path(XSD_3_encrypted).c_str()));
+
+    BOOST_REQUIRE(Parser::ErrorCode::PARSE_SUCCESS == parser.RegisterElementCb("Key", dummyStartCallback, NULL));
+    BOOST_REQUIRE(Parser::ErrorCode::PARSE_SUCCESS == parser.RegisterElementCb("Cert", NULL, dummyEndCallback));
+    startCallbackFlag = false;
+    endCallbackFlag = false;
+    BOOST_REQUIRE(Parser::ErrorCode::PARSE_SUCCESS == parser.Parse());
+    BOOST_REQUIRE(startCallbackFlag == true);
+    BOOST_REQUIRE(endCallbackFlag == true);
+}
+
+BOOST_AUTO_TEST_CASE(XmlParserTest_XML4_device_key_correct_parse)
+{
+    XML::Parser parser(format_test_path(XML_4_device_key).c_str());
+    BOOST_REQUIRE(0 == parser.Validate(format_test_path(XSD_4_device_key).c_str()));
+
+    BOOST_REQUIRE(Parser::ErrorCode::PARSE_SUCCESS == parser.RegisterElementCb("RSAPrivateKey", dummyStartCallback, NULL));
+    startCallbackFlag = false;
+    BOOST_REQUIRE(Parser::ErrorCode::PARSE_SUCCESS == parser.Parse());
+    BOOST_REQUIRE(startCallbackFlag == true);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

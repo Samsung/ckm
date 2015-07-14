@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<DeviceKey version="1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="XML_4_device_key.xsd">
+  <RSAPrivateKey>
+    <DERBase64>
+      MIIEowIBAAKCAQEA4Vx4MBKFGalaRh+BzSYnW8am8ajbnyD6AaweHcH+oAAQX7Ll
+      1/XrorzOkyQV3+eo4czRCklq6BXMI4Ppa+Hy+/X/pMBa4MHrjzH01gzzV0jyqEOr
+      S6/MGPsoWUgGl6FRhEnSX62JQoUpsURMbNLgjBkbrmKEMHMk6jT5NUtKhpBXo0/g
+      OgW48PuADuSjRmKWQssfR/KMsv3SRy9iGFOG1tFxGbeQkmBBxXVIr7u/z9WDG32R
+      DiG8Mda8dNXJGaBcltUY9HvMogmgCPMrBspFy7ek0x0Lll3t1P7FMgF1V21PFhcl
+      yX0L0XbBthpYojjglCYT5MnFfhKnI9zbMLlcSQIDAQABAoIBAGnH57pY1xUGgxMr
+      MthCsnLHuhDwu7Xj2rXyPmilaIldvlHNPUmzaxmGGkjCxWnF6WWjp/N2JrItmRaK
+      koRLGKzf+VEx4PZiz9j1EAFxLr+nxA7rRHpQWDLZoUTXJBEEbaj0pcS3RhhtPPay
+      IlVqXnAkUPP31iiPw6ITn24+mwqx0I6AenMsh9vJHKl5y9Yu/aslYbwcxkSXinlO
+      HHcWopZlJKUQnqlwJ6Xk4e4hjwZn7OQN2jQWKT5oQHO9tEUARqF8waY9yVfUSpjM
+      mw+gvywAoP1cT7M3q7MsKRNlZsrrC5zYWJ0ev4TIEa+zooqQymZoYeCd8s/77gsv
+      l7nz/CECgYEA846Xp3wWci8auSUv4SrqcjFZHz3YTqnPZzEf/U4nfFhhwzDHgOHD
+      u/M4gmEIcvxukhGO66/fqNnDJKQeu5XzgOKKO8/YCkjdIvULKNIOijmucx6oKn+K
+      4AIIzTYaI9Ft8+nOpfQV78+xnLGxiUamp8iRJgXei0RcISrEuw7+LQUCgYEA7N/m
+      Xgb1wkkrFp2fefTD6/5hGWizx3yO+jd+LXBRrPJQOvcf3Wh8jrEpWkeuUF8JYBZP
+      IOqc+TmbETuRUiokoYCihJKT0VkCqKz8qjUq7IwYf5Cx0gfEVUk3iyt3yTlJe9RJ
+      hOXV61PPtaebzg7MYmDfAkSU0ScqXV6Gd5Dl9XUCgYBprXE4Bqtml/Gsa+o+dPSM
+      38SfvaHhX+TSDYqnygVv+plQrBWkYlEfeAUI7TlRSx5e2qd8tC8DgJkfiOac1g91
+      2NXJ5gEDVWI+DLzu1VXhu+1pnd+xsO19DOTsxZDKAdEHiGdVsnbiOugB6UfzHGir
+      XGc+bEWHf/3JllkOIQ9AUQKBgCnL6C43NC4wEvZOodE3K0r8+80r+Gz+wYvNNup1
+      ozPNHfMJoAnFYhUblZxkgZGU82aNCTFZtJEVZRNJW38QCJ6mwAZ8hrCt8BYrT/oI
+      n6ZVog0ATyAsVqxl2vMnnF9ZSGodL0vP8ksv4rq+9HMLkWzagv83crrlGkiXYUq/
+      upPxAoGBAMrq/dAyhHKaM84C68JDZNuzPt/flAEgIf/iCYwHDKlWu0W2PmN9ZFbG
+      RkeC5ljD1V2QodLF6BZ+LWbK7aY9OGQR37tdm5whxZo+CqmQZ5Bybnlkfvo3cEPI
+      tW38eiYAnPQ3zy8WJ6if3Q+y+vaiM15C/MMVKyXAGcyop1qFVYAT
+    </DERBase64>
+  </RSAPrivateKey>
+</DeviceKey>
