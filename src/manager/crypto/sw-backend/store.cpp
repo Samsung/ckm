@@ -27,6 +27,8 @@
 #include <sw-backend/obj.h>
 #include <sw-backend/store.h>
 #include <sw-backend/internals.h>
+#include <SWKeyFile.h>
+#include <dpl/log/log.h>
 
 #include <message-buffer.h>
 
@@ -142,9 +144,31 @@ RawBuffer pack(const RawBuffer& data, const Password& pass)
 
 } // namespace anonymous
 
+namespace
+{
+const char * const DEVICE_KEY_XSD       = "/usr/share/ckm/sw_key.xsd";
+const char * const DEVICE_KEY_SW_FILE   = "/opt/data/ckm/device_key.xml";
+}
+
 Store::Store(CryptoBackend backendId)
   : GStore(backendId)
 {
+    // get the device key if present
+    InitialValues::SWKeyFile keyFile(DEVICE_KEY_SW_FILE);
+    int rc = keyFile.Validate(DEVICE_KEY_XSD);
+    if(rc == XML::Parser::PARSE_SUCCESS)
+    {
+        rc = keyFile.Parse();
+        if(rc == XML::Parser::PARSE_SUCCESS)
+            m_deviceKey = keyFile.getPrivKey();
+        else
+        {
+            // do nothing, bypass encrypted elements
+            LogWarning("invalid SW key file: " << DEVICE_KEY_SW_FILE << ", parsing code: " << rc);
+        }
+    }
+    else
+        LogWarning("invalid SW key file: " << DEVICE_KEY_SW_FILE << ", validation code: " << rc);
 }
 
 GObjUPtr Store::getObject(const Token &token, const Password &pass) {
@@ -194,8 +218,21 @@ Token Store::import(const Data &data, const Password &pass) {
     return Token(m_backendId, data.type, pack(data.data, pass));
 }
 
-Token Store::importEncrypted(const Data &, const Password &, const DataEncryption &) {
-    ThrowErr(Exc::Crypto::OperationNotSupported, "Importing encrypted data not yet implemented!");
+Token Store::importEncrypted(const Data &data, const Password &pass, const DataEncryption &enc) {
+    if(!m_deviceKey)
+        ThrowErr(Exc::Crypto::InternalError, "No device key present");
+
+    // decrypt the AES key using device key
+    CryptoAlgorithm algorithmRSAOAEP;
+    algorithmRSAOAEP.setParam(ParamName::ALGO_TYPE, AlgoType::RSA_OAEP);
+    Crypto::SW::SKey aesKey(m_deviceKey->decrypt(algorithmRSAOAEP, enc.encryptedKey), DataType::KEY_AES);
+
+    // decrypt the buffer using AES key
+    CryptoAlgorithm algorithmAESCBC;
+    algorithmAESCBC.setParam(ParamName::ALGO_TYPE, AlgoType::AES_CBC);
+    algorithmAESCBC.setParam(ParamName::ED_IV, enc.iv);
+    RawBuffer rawData = aesKey.decrypt(algorithmAESCBC, data.data);
+    return Token(m_backendId, data.type, pack(rawData, pass));
 }
 
 } // namespace SW

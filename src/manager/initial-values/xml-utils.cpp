@@ -28,7 +28,7 @@
 namespace
 {
 const char * const WHITESPACE       = " \n\r\t\v";
-const char * const LINE_WHITESPACE  = " \t";
+const char * const LINE_WHITESPACE  = " \r\t\v";
 
 std::string trim_left(const std::string& s, const char *whitespaces)
 {
@@ -46,27 +46,51 @@ std::string trim(const std::string& s, const char *whitespaces)
 {
     return trim_right(trim_left(s, whitespaces), whitespaces);
 }
+
 }
 
 namespace CKM {
 namespace XML {
-std::string trim(const std::string& s)
+
+template <typename T>
+T removeChars(const T& input, const char *what)
 {
-    return ::trim(s, WHITESPACE);
+    T out(input);
+    auto endit = std::remove_if(out.begin(), out.end(),
+        [what](char c)
+        {
+            for (const char *ptr = what; *ptr; ++ptr)
+                if (*ptr == c)
+                    return true;
+            return false;
+        });
+
+    out.erase(endit, out.end());
+    return out;
 }
 
-std::string trimEachLine(const std::string& s)
-{
-    std::istringstream stream(s);
-    size_t line_cnt = 0;
-    std::string line, output;
-    while(std::getline(stream, line)) {
-        if(line_cnt>0)
-            output += "\n";
-        output += ::trim(line, LINE_WHITESPACE);
-        line_cnt ++;
+RawBuffer removeWhiteChars(const RawBuffer &buffer) {
+    return removeChars(buffer, WHITESPACE);
+}
+
+std::string trimEachLine(const std::string& input) {
+    std::stringstream ss(input);
+    std::stringstream output;
+    std::string line;
+
+    while(std::getline(ss, line, '\n')) {
+        auto afterTrim = ::trim(line, LINE_WHITESPACE);
+        if (!afterTrim.empty())
+            output << afterTrim << std::endl;
     }
-    return output;
+
+    return output.str();
 }
+
+std::string trim(const std::string &s) {
+    return removeChars(s, WHITESPACE);
 }
-}
+
+} // namespace XML
+} // namespace CKM
+

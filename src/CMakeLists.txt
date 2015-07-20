@@ -61,6 +61,7 @@ SET(KEY_MANAGER_SOURCES
     ${KEY_MANAGER_PATH}/initial-values/InitialValueHandler.cpp
     ${KEY_MANAGER_PATH}/initial-values/InitialValuesFile.cpp
     ${KEY_MANAGER_PATH}/initial-values/NoCharactersHandler.cpp
+    ${KEY_MANAGER_PATH}/initial-values/SWKeyFile.cpp
     ${KEY_MANAGER_PATH}/initial-values/xml-utils.cpp
     ${KEY_MANAGER_PATH}/initial-values/initial-value-loader.cpp
     ${KEY_MANAGER_PATH}/dpl/core/src/assert.cpp

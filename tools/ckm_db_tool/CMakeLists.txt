@@ -33,6 +33,7 @@ SET(CKM_DB_TOOL_SOURCES
     ${PROJECT_SOURCE_DIR}/tools/ckm_db_tool/ckm_db_tool.cpp
     ${PROJECT_SOURCE_DIR}/tools/ckm_db_tool/db-crypto-ext.cpp
     ${PROJECT_SOURCE_DIR}/tools/ckm_db_tool/ckm-logic-ext.cpp
+    ${KEY_MANAGER_PATH}/initial-values/SWKeyFile.cpp
 
     ${KEY_MANAGER_PATH}/main/cynara.cpp
     ${KEY_MANAGER_PATH}/main/generic-socket-manager.cpp

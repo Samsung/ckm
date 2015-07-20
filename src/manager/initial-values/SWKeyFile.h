@@ -14,14 +14,14 @@
  *  limitations under the License
  *
  *
- * @file        InitialValuesFile.h
+ * @file        SWKeyFile.h
  * @author      Maciej Karpiuk (m.karpiuk2@samsung.com)
  * @version     1.0
- * @brief       InitialValuesFile class.
+ * @brief       SWKeyFile class.
  */
 
-#ifndef INITIALVALUESFILE_H_
-#define INITIALVALUESFILE_H_
+#ifndef SWKEYFILE_H_
+#define SWKEYFILE_H_
 
 #include <parser.h>
 #include <InitialValueHandler.h>
@@ -31,45 +31,29 @@
 #include <cctype>
 #include <xml-utils.h>
 #include <base64.h>
-
+#include <generic-backend/gobj.h>
+#include <dpl/log/log.h>
 namespace CKM {
 namespace InitialValues {
 
 
-class InitialValuesFile
+class SWKeyFile
 {
 public:
-    InitialValuesFile(const std::string &XML_filename,
-                      CKMLogic & db_logic);
+    explicit SWKeyFile(const std::string &XML_filename);
 
     int Validate(const std::string &XSD_file);
     int Parse();
 
-protected:
-    enum ObjectType {
-        KEY,
-        CERT,
-        DATA
-    };
+    Crypto::GObjShPtr getPrivKey() {
+        return m_deviceKey;
+    }
 
-    XML::Parser::ElementHandlerPtr GetObjectHandler(ObjectType type);
-    void ReleaseObjectHandler(ObjectType type);
-
-    XML::Parser::ElementHandlerPtr GetBufferHandler(EncodingType type);
-    void ReleaseBufferHandler(EncodingType type);
-
-    XML::Parser::ElementHandlerPtr GetPermissionHandler();
-    void ReleasePermissionHandler();
 private:
-    std::string m_filename;
-    XML::Parser m_parser;
-    InitialValueHandler::InitialValueHandlerPtr m_currentHandler;
-    CKMLogic & m_db_logic;
-
     class HeaderHandler : public XML::Parser::ElementHandler
     {
     public:
-        explicit HeaderHandler(InitialValuesFile & parent);
+        explicit HeaderHandler(SWKeyFile & parent);
         virtual void Start(const XML::Parser::Attributes & attr);
         virtual void Characters(const std::string &) {};
         virtual void End() {};
@@ -78,28 +62,30 @@ private:
 
     private:
         int m_version;
-        InitialValuesFile & m_parent;
+        SWKeyFile & m_parent;
     };
 
-    class EncryptionKeyHandler : public XML::Parser::ElementHandler
+    class RSAKeyHandler : public XML::Parser::ElementHandler
     {
     public:
-        explicit EncryptionKeyHandler(InitialValuesFile & parent);
+        explicit RSAKeyHandler(SWKeyFile & parent);
         virtual void Start(const XML::Parser::Attributes &) {};
         virtual void Characters(const std::string &data);
         virtual void End();
 
-        CKM::RawBuffer getEncryptedKey() const;
+        Crypto::GObjShPtr getPrivKey();
     private:
         CKM::RawBuffer m_encryptedKey;
-        InitialValuesFile & m_parent;
+        SWKeyFile & m_parent;
     };
 
+    std::string m_filename;
+    XML::Parser m_parser;
     typedef std::shared_ptr<HeaderHandler> HeaderHandlerPtr;
-    typedef std::shared_ptr<EncryptionKeyHandler> EncryptionKeyHandlerPtr;
+    typedef std::shared_ptr<RSAKeyHandler> RSAKeyHandlerPtr;
     HeaderHandlerPtr m_header;
-    EncryptionKeyHandlerPtr m_encryptionKeyHandler;
-    CKM::RawBuffer m_encryptedAESkey;
+    RSAKeyHandlerPtr m_RSAKeyHandler;
+    Crypto::GObjShPtr m_deviceKey;
 
     void registerElementListeners();
     static void Error(const XML::Parser::ErrorType errorType,
@@ -109,4 +95,4 @@ private:
 
 }
 }
-#endif /* INITIALVALUESFILE_H_ */
+#endif /* SWKEYFILE_H_ */
