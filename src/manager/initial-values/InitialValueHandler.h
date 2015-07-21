@@ -40,8 +40,8 @@ class InitialValueHandler : public NoCharactersHandler
 public:
     typedef std::shared_ptr<InitialValueHandler> InitialValueHandlerPtr;
 
-    explicit InitialValueHandler(CKMLogic & db_logic) : m_exportable(false),
-                                                        m_db_logic(db_logic) {}
+    explicit InitialValueHandler(CKMLogic & db_logic, const CKM::RawBuffer &encryptedKey)
+        : m_exportable(false), m_db_logic(db_logic), m_encryptedKey(encryptedKey) {}
     virtual ~InitialValueHandler() {};
 
     BufferHandler::BufferHandlerPtr CreateBufferHandler(EncodingType type);
@@ -56,6 +56,7 @@ protected:
     Password   m_password;
     bool       m_exportable;
     CKMLogic & m_db_logic;
+    const CKM::RawBuffer & m_encryptedKey;
 
     BufferHandler::BufferHandlerPtr m_bufferHandler;
     std::vector<PermissionHandler::PermissionHandlerPtr> m_permissions;

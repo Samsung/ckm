@@ -1092,6 +1092,38 @@ RawBuffer CKMLogic::getDataList(
     return response.Pop();
 }
 
+int CKMLogic::importInitialData(
+    const Name &name,
+    const Crypto::Data &data,
+    const Crypto::DataEncryption &enc,
+    const Policy &policy)
+{
+    if (CKM_API_SUCCESS != unlockSystemDB() )
+        ThrowErr(Exc::DatabaseLocked, "can not unlock system database");
+    auto &handler = m_userDataMap[SYSTEM_DB_UID];
+
+    if (!isNameValid(name))
+        return CKM_API_ERROR_INPUT_PARAM;
+
+    Crypto::GStore& store =
+        m_decider.getStore(data.type, policy.extractable, !enc.encryptedKey.empty());
+
+    Token token;
+    if (enc.encryptedKey.empty())
+        token = store.import(data, m_accessControl.isCCMode() ? "" : policy.password);
+    else
+        token = store.importEncrypted(data, m_accessControl.isCCMode() ? "" : policy.password, enc);
+
+    DB::Row row(std::move(token), name, OWNER_ID_SYSTEM, static_cast<int>(policy.extractable));
+    handler.crypto.encryptRow(row);
+
+    DB::Crypto::Transaction transaction(&handler.database);
+    handler.database.saveRow(row);
+    transaction.commit();
+
+    return CKM_API_SUCCESS;
+}
+
 int CKMLogic::saveDataHelper(
     const Credentials &cred,
     const Name &name,

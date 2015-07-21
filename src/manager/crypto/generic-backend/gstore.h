@@ -41,6 +41,11 @@ struct Data {
 
 // Too generic. The name does not say anything aobut content.
 struct DataEncryption {
+    DataEncryption() {};
+    DataEncryption(RawBuffer encKey, RawBuffer ivector)
+      : encryptedKey(std::move(encKey))
+      , iv(std::move(ivector))
+    {}
     RawBuffer encryptedKey;
     RawBuffer iv;
 };

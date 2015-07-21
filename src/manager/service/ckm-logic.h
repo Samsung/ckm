@@ -185,11 +185,11 @@ public:
         const PermissionMask permissionMask);
 
     int setPermissionHelper(
-            const Credentials &cred,
-            const Name &name,
-            const Label &ownerLabel,
-            const Label &accessorLabel,
-            const PermissionMask permissionMask);
+        const Credentials &cred,
+        const Name &name,
+        const Label &ownerLabel,
+        const Label &accessorLabel,
+        const PermissionMask permissionMask);
 
     int verifyAndSaveDataHelper(
         const Credentials &cred,
@@ -198,11 +198,18 @@ public:
         const Crypto::Data &data,
         const PolicySerializable &policy);
 
-    int getKeyForService(const Credentials &cred,
-                         const Name &name,
-                         const Label &label,
-                         const Password& pass,
-                         Crypto::GObjShPtr& key);
+    int getKeyForService(
+        const Credentials &cred,
+        const Name &name,
+        const Label &label,
+        const Password& pass,
+        Crypto::GObjShPtr& key);
+
+    int importInitialData(
+        const Name &name,
+        const Crypto::Data &data,
+        const Crypto::DataEncryption &enc,
+        const Policy &policy);
 
 protected:
     int unlockSystemDB();

@@ -27,14 +27,28 @@
 #include <xml-utils.h>
 #include <base64.h>
 
+namespace
+{
+const char * const XML_ATTR_IV  = "IV";
+}
+
 namespace CKM {
 namespace InitialValues {
 
 BufferHandler::BufferHandler(EncodingType type) : m_encoding(type) {}
 BufferHandler::~BufferHandler() {}
 
-void BufferHandler::Start(const XML::Parser::Attributes &)
+void BufferHandler::Start(const XML::Parser::Attributes &attr)
 {
+    // get key type
+    if(attr.find(XML_ATTR_IV) != attr.end()) {
+        std::string IVstring = attr.at(XML_ATTR_IV);
+        Base64Decoder base64;
+        base64.reset();
+        base64.append(RawBuffer(IVstring.begin(), IVstring.end()));
+        base64.finalize();
+        m_IV = base64.get();
+    }
 }
 
 
@@ -46,6 +60,7 @@ void BufferHandler::Characters(const std::string & data)
 
 void BufferHandler::End()
 {
+    // decoding section
     switch(m_encoding)
     {
         // PEM requires that "----- END" section comes right after "\n" character
@@ -59,6 +74,7 @@ void BufferHandler::End()
         // Base64 decoder also does not accept any whitespaces
         case DER:
         case BASE64:
+        case ENCRYPTED:
         {
             std::string trimmed = XML::trimEachLine(std::string(m_data.begin(), m_data.end()));
             Base64Decoder base64;

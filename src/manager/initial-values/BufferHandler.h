@@ -26,6 +26,7 @@
 #include <parser.h>
 #include <EncodingType.h>
 #include <ckm/ckm-type.h>
+#include <generic-backend/gobj.h>
 
 namespace CKM {
 namespace InitialValues {
@@ -45,9 +46,18 @@ public:
     const RawBuffer & getData() const {
         return m_data;
     }
+    bool isEncrypted() const {
+        if(m_encoding == EncodingType::ENCRYPTED)
+            return true;
+        return false;
+    }
+    const RawBuffer & getIV() const {
+        return m_IV;
+    }
 private:
-    EncodingType m_encoding;
-    RawBuffer  m_data;
+    EncodingType        m_encoding;
+    RawBuffer           m_IV;
+    RawBuffer           m_data;
 };
 
 }

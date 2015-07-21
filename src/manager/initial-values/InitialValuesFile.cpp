@@ -43,6 +43,9 @@ const char * const XML_TAG_PEM              = "PEM";
 const char * const XML_TAG_DER              = "DER";
 const char * const XML_TAG_ASCII            = "ASCII";
 const char * const XML_TAG_BASE64           = "Base64";
+const char * const XML_TAG_ENCRYPTED_DER    = "EncryptedDER";
+const char * const XML_TAG_ENCRYPTED_ASCII  = "EncryptedASCII";
+const char * const XML_TAG_ENCRYPTED_BINARY = "EncryptedBinary";
 const char * const XML_TAG_PERMISSION       = "Permission";
 const char * const XML_ATTR_VERSION         = "version";
 }
@@ -79,7 +82,7 @@ void InitialValuesFile::registerElementListeners()
     m_parser.RegisterElementCb(XML_TAG_KEY,
             [this]() -> XML::Parser::ElementHandlerPtr
             {
-                return GetObjectHandler(ObjectType::KEY);
+                return GetObjectHandler(ObjectType::KEY, m_encryptedAESkey);
             },
             [this](const XML::Parser::ElementHandlerPtr &)
             {
@@ -88,7 +91,7 @@ void InitialValuesFile::registerElementListeners()
     m_parser.RegisterElementCb(XML_TAG_CERT,
             [this]() -> XML::Parser::ElementHandlerPtr
             {
-                return GetObjectHandler(ObjectType::CERT);
+                return GetObjectHandler(ObjectType::CERT, m_encryptedAESkey);
             },
             [this](const XML::Parser::ElementHandlerPtr &)
             {
@@ -97,7 +100,7 @@ void InitialValuesFile::registerElementListeners()
     m_parser.RegisterElementCb(XML_TAG_DATA,
             [this]() -> XML::Parser::ElementHandlerPtr
             {
-                return GetObjectHandler(ObjectType::DATA);
+                return GetObjectHandler(ObjectType::DATA, m_encryptedAESkey);
             },
             [this](const XML::Parser::ElementHandlerPtr &)
             {
@@ -139,6 +142,33 @@ void InitialValuesFile::registerElementListeners()
             [this](const XML::Parser::ElementHandlerPtr &)
             {
                 ReleaseBufferHandler(EncodingType::BASE64);
+            });
+    m_parser.RegisterElementCb(XML_TAG_ENCRYPTED_DER,
+            [this]() -> XML::Parser::ElementHandlerPtr
+            {
+                return GetBufferHandler(EncodingType::ENCRYPTED);
+            },
+            [this](const XML::Parser::ElementHandlerPtr &)
+            {
+                ReleaseBufferHandler(EncodingType::ENCRYPTED);
+            });
+    m_parser.RegisterElementCb(XML_TAG_ENCRYPTED_ASCII,
+            [this]() -> XML::Parser::ElementHandlerPtr
+            {
+                return GetBufferHandler(EncodingType::ENCRYPTED);
+            },
+            [this](const XML::Parser::ElementHandlerPtr &)
+            {
+                ReleaseBufferHandler(EncodingType::ENCRYPTED);
+            });
+    m_parser.RegisterElementCb(XML_TAG_ENCRYPTED_BINARY,
+            [this]() -> XML::Parser::ElementHandlerPtr
+            {
+                return GetBufferHandler(EncodingType::ENCRYPTED);
+            },
+            [this](const XML::Parser::ElementHandlerPtr &)
+            {
+                ReleaseBufferHandler(EncodingType::ENCRYPTED);
             });
     m_parser.RegisterElementCb(XML_TAG_PERMISSION,
             [this]() -> XML::Parser::ElementHandlerPtr
@@ -183,20 +213,21 @@ int InitialValuesFile::Parse()
     return ec;
 }
 
-XML::Parser::ElementHandlerPtr InitialValuesFile::GetObjectHandler(ObjectType type)
+XML::Parser::ElementHandlerPtr InitialValuesFile::GetObjectHandler(ObjectType type,
+                                                                   const CKM::RawBuffer &encryptedKey)
 {
     switch(type)
     {
         case KEY:
-            m_currentHandler = std::make_shared<KeyHandler>(m_db_logic);
+            m_currentHandler = std::make_shared<KeyHandler>(m_db_logic, encryptedKey);
             break;
 
         case CERT:
-            m_currentHandler = std::make_shared<CertHandler>(m_db_logic);
+            m_currentHandler = std::make_shared<CertHandler>(m_db_logic, encryptedKey);
             break;
 
         case DATA:
-            m_currentHandler = std::make_shared<DataHandler>(m_db_logic);
+            m_currentHandler = std::make_shared<DataHandler>(m_db_logic, encryptedKey);
             break;
 
         default:

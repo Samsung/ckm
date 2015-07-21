@@ -36,7 +36,7 @@ class Decider {
 public:
     Decider();
     GStore& getStore(const Token &token) const;
-    GStore& getStore(DataType data, bool exportable) const;
+    GStore& getStore(DataType data, bool exportable, bool encrypted = false) const;
 
     virtual ~Decider(){}
 protected:

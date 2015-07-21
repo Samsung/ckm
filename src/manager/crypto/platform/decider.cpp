@@ -32,7 +32,11 @@ namespace CKM {
 namespace Crypto {
 
 namespace {
-CryptoBackend chooseCryptoBackend(DataType dataType, bool exportable) {
+CryptoBackend chooseCryptoBackend(DataType dataType, bool exportable, bool encrypted) {
+// Only software backend supports device encyption key
+    if (encrypted)
+        return CryptoBackend::OpenSSL;
+
 // The list of items that MUST be support by OpenSSL
     if (dataType.isCertificate())
         return CryptoBackend::OpenSSL;
@@ -77,8 +81,8 @@ GStore& Decider::getStore(CryptoBackend cryptoBackend) const {
              "Backend not available. BackendId: ", (int)cryptoBackend);
 }
 
-GStore& Decider::getStore(DataType data, bool exportable) const {
-    return getStore(chooseCryptoBackend(data, exportable));
+GStore& Decider::getStore(DataType data, bool exportable, bool encrypted) const {
+    return getStore(chooseCryptoBackend(data, exportable, encrypted));
 }
 
 } // namespace Crypto

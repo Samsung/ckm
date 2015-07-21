@@ -52,7 +52,7 @@ protected:
         DATA
     };
 
-    XML::Parser::ElementHandlerPtr GetObjectHandler(ObjectType type);
+    XML::Parser::ElementHandlerPtr GetObjectHandler(ObjectType type, const CKM::RawBuffer &encryptedKey);
     void ReleaseObjectHandler(ObjectType type);
 
     XML::Parser::ElementHandlerPtr GetBufferHandler(EncodingType type);
@@ -60,12 +60,8 @@ protected:
 
     XML::Parser::ElementHandlerPtr GetPermissionHandler();
     void ReleasePermissionHandler();
-private:
-    std::string m_filename;
-    XML::Parser m_parser;
-    InitialValueHandler::InitialValueHandlerPtr m_currentHandler;
-    CKMLogic & m_db_logic;
 
+private:
     class HeaderHandler : public XML::Parser::ElementHandler
     {
     public:
@@ -95,6 +91,10 @@ private:
         InitialValuesFile & m_parent;
     };
 
+    std::string m_filename;
+    XML::Parser m_parser;
+    InitialValueHandler::InitialValueHandlerPtr m_currentHandler;
+    CKMLogic & m_db_logic;
     typedef std::shared_ptr<HeaderHandler> HeaderHandlerPtr;
     typedef std::shared_ptr<EncryptionKeyHandler> EncryptionKeyHandlerPtr;
     HeaderHandlerPtr m_header;

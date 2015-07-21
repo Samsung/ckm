@@ -115,11 +115,12 @@
   </Key>
   <!-- key below is encrypted using AES-CBC algorithm.
      The key used is decrypted <EncryptionKey> provided above.
+     IV is Base64 encoded.
      Encryption:
        * encrypt AES CBC: openssl aes-256-cbc -K `xxd -p -c 64 encryption_AES_key` -iv `xxd -p -c 64 encryption_AES_IV` -e -in data -out data.enc
   -->
   <Key name="test-encryption-prv" type="RSA_PRV">
-    <EncryptedDER IV="_ThisIsIVForAES_">
+    <EncryptedDER IV="X1RoaXNJc0lWRm9yQUVTXw==">
       BflJyNgOcGyJSqTegG+y7MJXI1crgsGY3PjFfMpbmMbwJkVexvxoEPdf2yE5Z7da
       6Vp4Qo2WOCUv/hllNTfm/dH7kOJOjcs/vaV1eRIfzEx3hvgKOyP82Hhkm1POynsF
       0GyMm/VwtJFwFHA5DaJzwLln2/AoD//vC731Qhucw0Zvi2hi74d6igPog9EugIj/
@@ -137,41 +138,34 @@
   </Key>
   <Cert name="test-encryption-certificate" exportable="true">
     <!-- Note IV differs between items -->
-    <EncryptedDER IV="IVdiffersFrItems">
-      H/1CXNoQJ13MLdMESto1BHP5583n7fbwkN4mRVELQepeJNUhX2Kc+6foG3eTOBEH
-      N/z5xPFlYZLxeRArknVaCE/2Nmrk9STQZpja//B6FEXTUg4PbVEQl1zE5vJV8RUE
-      W1jetcEoxPZtNirqH03P1izud/vQVCQRy+WYe00Nm/MluGTJ8sytW+k+wCO+GmHf
-      5vyCal0xr+o2rIHzPPJId3eg/6IbWCAmOeNU+l03im98zSrqD9bG2cdgdciNUb4B
-      ANCv/3r+Vx6Xcs3N1p33ewXP+suCqDYBUE9YwsIaZABMB9yk02cuZtpeYytBCkNk
-      QzESDqzFoIV3JREjxKL69VyJWm+ttL4OnrAinZIndJ/0zk77Dg64vg63HBRGL+qi
-      w9C5eOXfIWylfUn/CMmHbRjg378G2svAOAynZhHmTLWqfviGKJcS6Mulxs2o/egL
-      /uuITbEQNKPX5LVvtBPygUPPgV66Q3zjBGX/vbPwpMn/M8Z5gOOrUfoIKTTTh7a+
-      VwkujHjC68TJ21AJSauTH7qg291cQZOMeC3LfXXjCXQYg3qOyJnlmDrfZFfnzRk6
-      W4z6i868Dk12B8KDXtSPSR9AigSiooTOgvhqVk+diILYBdpwfrEUTIt2Cq5hgcoO
-      2e9gIe03vxD3dxOQjvEC7XYbdWeB87mlEgkOKjm9sC/XRJCnF33xVJPxsc+ixoRk
-      4udR5UdYVZMc8tkGIgO7v/aOJyaAwSnRc5NVA8L+4w/0MUNtfD911buUzeV/wmwg
-      q/YqNI7AluNifXEK5CTYBP0CmAVlGUC3k4Q0W+gRIg1peiURl0pvantE26NXsNEr
-      GuIHCkKrQcUKkcCpCGeAuzjZAfXLdtEm9oLg44BGBNEP6cBvgoryJATv5XPSR7TJ
-      SvKPQM/hkPwc2NIzJEFP2729+HagOp2ANyMob/5Z4dE6ynDpZ1hTBBRanI6WBerX
-      SBClj+MnJJhnxUsSXL9r6O9s24ajCqNUib8K8M+P5+7+K+rO07C+ckzNiy9j7uyX
-      RZm7eWfsZ7zbjwKsFPqBp0v0pDUJZ1LvTwpL/OOHE19LDE0sdpVXJqp7JyMbnFvn
-      yiT7xfFAOp0kseCee0UVk4V5Og4u+vdSrjt6HBFcueTnE1OtDkMlX0sSL3+mEyF+
-      +mkPx8bIkSvvitoPHfipP13kG8qBQ/yKaKjCgQYb7OwFOGOtwkaUaqHRm0GEBxe1
-      xr0v1lyJzpaS6ZMU/kSH2QGNrfhiiif9+nlKiUbfPmUMKqrLKAYn8KFEDkU7Wrrm
-      /cW0Y+cCntKyhszBs8jcKHyoJDCi4imUlZHg4t4MwYrD8GgaeBfUxPP5rUroHMRy
-      6K/UKXhraU9CoEtKIyAk0oXH3JlqCz0WRxjA322kAhVxDYIHa6D1pSVFY1K8FXfq
-      0hSZOw4yFBYhyEIwBkstpNiRXWtFR1xRlVTdb9ksmAPTfr0TyNWbygz8Pa6gz7qx
-      j3B+24jAShhq8PHWxpJgfsObLsr4aASNZKSxpzSC140o+BTxqmSIjljdTKF+golD
-      /XBwmrhqsfI/3mRocIte34Pcfqj0T3zKUZ45zRLQGvA=
+    <EncryptedDER IV="SVZkaWZmZXJzRnJJdGVtcw==">
+      pPjY7wULPaBIwPKkgwKyKSZPa6NVJN3312q829KaXcNdQSoNJmsyyPDMqLr1W3Nw
+      /5DSfstMCh/MiUq4Dc1VCaHbVkRFVZMvitg7nfjDVkI9HGLpSGWzz1dc6kxn/rPv
+      l1Ox3sVog96Ebss+Givm4cKKYSQihCLTxcQcP6v4RGvTMhXIZmlz8n4Tr3MgyRB7
+      XTWdoowosEUWrzPMSD39y18gRJVZ/ZKv68o5mntatSE8FS1L6dgb2TdKEFdydVd2
+      /ob9GVwRkMxpBsQeUvPRYXnZS2f1L18IRPrKLKLKsDB+FysyXMAHMaxGWWil29/d
+      osOwMt34i6Bv21132lGt08t2LebmDJViZRVjzz9edIChBzsoG/E/3hX6v32ruJGU
+      2kq5l0bOmpQFs9M0TTNNWnaZKvpFPA8b3ywaDRWeKAPHsNQpnrx0WygCmvbjUChf
+      TP1E5BVm6YjWxptvFvEINcotCj2+0fvG3zIcq01O/MpSFWbGdu9MLZtFl1rTRt8e
+      ER8+nOKZNi9JUOfsYJyrZmtwm56LXTPjgNYY+a8yp2EXFtHjO62QKYr8zAi98PxL
+      oiELHLF2xwFufvBAssSOPwRmDSIhljPbUy4UKUxFCeMJzdxgK0DMZw4FtcyBXGgG
+      ABP57OQ60HomoZZDwAQ/4B8unuOCp7uERsQH5Z4Ns+PiIM4Tk8j9Qg4YVN43FJtJ
+      tCsfagBPuQM+Cm5law0Y01asMr0wq/VlILMKX0KXpwgnVmQClRfcYBLHQmDTyCos
+      kYSWrSYDesvXJnB1j/hn1puCQHfyrmPH5fQTzanD5whyed7DeXBl+F5+f73uj9pC
+      DrtqG+YEOeJNj0PCAMq9B4Qe6xi06P6D/sG17Phl9wH5DSzfxxlst1xeaPBko9Bo
+      LM6Sh6echKIh0HddStmaBICXNeVKz958tD0piVYMVipZm5/+cpDxdGSuemUxWXJO
+      XAuYydZkuLksYjLyXDO5vEaqcVMtu54tjfdFS7vO87a9IF+mI7HHHdnNaDRHaAFi
+      4rXdaGQr8zohq91NE3JYgSMbk1DlGfL1m9GN6IEUjqMQlAkGWal1Et9uwO98PpOk
+      a+r+N4lsYPKJbX2ywUvDHg==
     </EncryptedDER>
   </Cert>
   <Data name="test-ascii-data-encryption">
     <!-- this below decrypts to ASCII: "My secret data" -->
-    <EncryptedASCII IV="__another_IV_2__">zuBDjp8ptFthrU69Ua5cfg==</EncryptedASCII>
+    <EncryptedASCII IV="X19hbm90aGVyX0lWXzJfXw==">zuBDjp8ptFthrU69Ua5cfg==</EncryptedASCII>
   </Data>
   <Data name="test-binary-data-encryption">
     <!-- this below decrypts to small PNG image -->
-    <EncryptedBinary IV="PNGIVPNGIVPNGIVP">
+    <EncryptedBinary IV="UE5HSVZQTkdJVlBOR0lWUA==">
       weK/LmGIPHeNA2YipqJa4B7DRMJBaoGSldawgSDQeIIIXgrmypSH42Gbm6m09gp0
       Wn0frkCcALHGxJyDK3rOsWDjJisYweblBgcFGa/eG7DiLgL1mv/fjstjSda1bh8x
       sLtmKCrYPPZI6RVEZKdl6oBXK7+uVavY9vdo69DrTZulZMGR2NW3i665kTVhvIUn

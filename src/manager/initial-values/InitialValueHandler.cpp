@@ -60,37 +60,48 @@ void InitialValueHandler::Start(const XML::Parser::Attributes &attr)
 
 void InitialValueHandler::End()
 {
-    if(m_bufferHandler)
+    if (!m_bufferHandler) {
+        LogError("Invalid data with name: " << m_name << ", reason: no key data!");
+        return;
+    }
+ 
+    // save data
+    Policy policy(m_password, m_exportable);
+
+    Crypto::DataEncryption de;
+    if(m_bufferHandler->isEncrypted()) {
+        de.encryptedKey = m_encryptedKey;
+        de.iv = m_bufferHandler->getIV();
+    }
+
+    int ec = m_db_logic.importInitialData(m_name,
+                                          Crypto::Data(getDataType(), m_bufferHandler->getData()),
+                                          de,
+                                          policy);
+
+    if(CKM_API_SUCCESS != ec) {
+        LogError("Saving type: " << getDataType() << " with params: name(" <<
+            m_name << "), exportable(" << m_exportable<< ") failed, code: " << ec);
+        return;
+    }
+
+    // save permissions
+    for(const auto & permission : m_permissions)
     {
-        // save data
-        Policy policy(m_password, m_exportable);
-        int ec = m_db_logic.verifyAndSaveDataHelper(
+        ec = m_db_logic.setPermissionHelper(
                 Credentials(CKMLogic::SYSTEM_DB_UID, OWNER_ID_SYSTEM),
                 m_name,
                 OWNER_ID_SYSTEM,
-                Crypto::Data(getDataType(), m_bufferHandler->getData()),
-                PolicySerializable(policy));
-        if(CKM_API_SUCCESS == ec)
-        {
-            // save permissions
-            for(const auto & permission : m_permissions)
-            {
-                ec = m_db_logic.setPermissionHelper(
-                        Credentials(CKMLogic::SYSTEM_DB_UID, OWNER_ID_SYSTEM),
-                        m_name,
-                        OWNER_ID_SYSTEM,
-                        permission->getAccessor(),
-                        Permission::READ);
-                if(CKM_API_SUCCESS != ec)
-                    LogError("Saving permission to: " << m_name << " with params: accessor("<<permission->getAccessor()<<") failed, code: " << ec);
-            }
+                permission->getAccessor(),
+                Permission::READ);
+        if (CKM_API_SUCCESS != ec) {
+            LogError("Saving permission to: " << m_name <<
+              " with params: accessor(" << permission->getAccessor() <<
+              ") failed, code: " << ec);
         }
-        else
-            LogError("Saving type: " << getDataType() << " with params: name("<<m_name<<"), exportable("<<m_exportable<<") failed, code: " << ec);
     }
-    else
-        LogError("Invalid data with name: " << m_name << ", reason: no key data!");
-}
+} 
+
 
 BufferHandler::BufferHandlerPtr InitialValueHandler::CreateBufferHandler(EncodingType type)
 {
