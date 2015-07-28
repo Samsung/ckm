@@ -16,7 +16,7 @@
  *
  * @file        create_schema.sql
  * @author      Maciej Karpiuk (m.karpiuk2@samsung.com)
- * @version     3.0
+ * @version     4.0
  * @brief       DB script to create database schema.
  */
 
