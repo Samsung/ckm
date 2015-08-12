@@ -368,6 +368,17 @@ class SqlConnection
          * @throw Exception::InvalidColumn
          */
         boost::optional<RawBuffer> GetColumnOptionalBlob(ColumnIndex column);
+
+        /**
+         * Get number of column.
+         */
+        ColumnIndex GetColumnCount();
+        /**
+         * Get type of the column.
+         *
+         * @throw Exception::InvalidColumn
+         */
+        int GetColumnType(ColumnIndex column);
     };
 
     // Move on copy constructor. No copy semantics

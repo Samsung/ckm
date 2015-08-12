@@ -115,6 +115,10 @@ namespace DB {
                     const Name &name,
                     const Label &ownerLabel);
 
+            std::string getSchema();
+
+            std::string getContent();
+
             // keys
             void saveKey(const Label& label, const RawBuffer &key);
             RawBufferOptional getKey(const Label& label);
