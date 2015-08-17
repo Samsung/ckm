@@ -334,7 +334,7 @@ void SocketManager::ReadyForWriteBuffer(int sock) {
 }
 
 void SocketManager::ReadyForWrite(int sock) {
-        ReadyForWriteBuffer(sock);
+    ReadyForWriteBuffer(sock);
 }
 
 void SocketManager::MainLoop() {
@@ -383,8 +383,6 @@ void SocketManager::MainLoop() {
             ptrTimeout->tv_sec =
               currentTime < pqTimeout.time ? pqTimeout.time - currentTime : 0;
             ptrTimeout->tv_usec = 0;
-//            LogDebug("Set up timeout: " << (int)ptrTimeout->tv_sec
-//                << " seconds. Socket: " << pqTimeout.sock);
         }
 
         int ret = select(m_maxDesc+1, &readSet, &writeSet, NULL, ptrTimeout);
@@ -664,7 +662,6 @@ void SocketManager::ProcessQueue() {
 }
 
 void SocketManager::CloseSocket(int sock) {
-//    LogInfo("Closing socket: " << sock);
     auto &desc = m_socketDescriptionVector[sock];
 
     if (!(desc.isOpen)) {
