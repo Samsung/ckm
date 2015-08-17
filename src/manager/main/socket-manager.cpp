@@ -1,7 +1,5 @@
 /*
- *  Copyright (c) 2000 - 2013 Samsung Electronics Co., Ltd All Rights Reserved
- *
- *  Contact: Bumjin Im <bj.im@samsung.com>
+ *  Copyright (c) 2000 - 2015 Samsung Electronics Co., Ltd All Rights Reserved
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -46,39 +44,29 @@
 
 #include <smack-check.h>
 #include <socket-manager.h>
+#include <socket-2-id.h>
 
 namespace {
 
 const time_t SOCKET_TIMEOUT = 1000;
 
 int getCredentialsFromSocket(int sock, CKM::Credentials &cred) {
-    std::vector<char> result(1);
-    socklen_t length = 1;
+    static CKM::Socket2Id sock2id;
+    std::string ownerId;
+
+    if (0 > sock2id.translate(sock, ownerId)) {
+        return -1;
+    }
+
     ucred peerCred;
-
-    if ((0 > getsockopt(sock, SOL_SOCKET, SO_PEERSEC, result.data(), &length))
-        && errno != ERANGE)
-    {
-        LogError("getsockopt failed");
-        return -1;
-    }
-
-    result.resize(length);
-
-    if (0 > getsockopt(sock, SOL_SOCKET, SO_PEERSEC, result.data(), &length)) {
-        LogError("getsockopt failed");
-        return -1;
-    }
-
-    length = sizeof(ucred);
+    socklen_t length = sizeof(ucred);
 
     if (0 > getsockopt(sock, SOL_SOCKET, SO_PEERCRED, &peerCred, &length)) {
         LogError("getsockopt failed");
         return -1;
     }
 
-    result.push_back('\0');
-    cred = CKM::Credentials(peerCred.uid, result.data());
+    cred = CKM::Credentials(peerCred.uid, std::move(ownerId));
     return 0;
 }
 

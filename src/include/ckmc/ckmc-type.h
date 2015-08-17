@@ -38,6 +38,16 @@ extern "C" {
  * @{
  */
 
+/*
+ * Note: on tizen 3.0 owner id is equal to pkgId.
+ *       Preinstalled system(uid < 5000) and user (uid >= 5000) applications
+ *       does not have any pkgId. Thats why ckm uses special "virtual"
+ *       pkgid for them. The virtual strings are defined under:
+ *          ckmc_ownerid_system
+ *          ckmc_ownerid_user
+ *
+ */
+
 /**
  * @brief Separator between alias and label.
  * @since_tizen 2.3
@@ -49,6 +59,9 @@ extern "C" {
 KEY_MANAGER_CAPI extern char const * const ckmc_label_name_separator;
 
 /**
+ * This is deprecated: Tizen 3.0 does not use smack labels directly.
+ *                     You should use pkgId instead.
+ *
  * @brief Shared owner label
  * @since_tizen 3.0
  * @remarks Shared database label - user may be given permission to access shared
@@ -59,6 +72,24 @@ KEY_MANAGER_CAPI extern char const * const ckmc_label_name_separator;
  * @see key-manager_doc.h
  */
 KEY_MANAGER_CAPI extern char const * const ckmc_label_shared_owner;
+
+/**
+ * alias can be provided as an alias alone, or together with owner id - in this
+ * case, separator " " (space bar) is used to separate id and alias.
+ * @see key-manager_doc.h
+ */
+KEY_MANAGER_CAPI extern char const * const ckmc_owner_id_separator;
+
+/**
+ * ckmc_owner_id_system constains id connected with all SYSTEM applications that runs
+ * with uid less then 5000.
+ *
+ * Client should use ckmc_owner_id_system to access data owned by system application
+ * and stored in system database.
+ *
+ * Note: Client must have permission to access proper row.
+ */
+KEY_MANAGER_CAPI extern char const * const ckmc_owner_id_system;
 
 /**
  * @brief Enumeration for key types of key manager.

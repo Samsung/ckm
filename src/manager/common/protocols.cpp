@@ -35,8 +35,7 @@ char const * const SERVICE_SOCKET_CKM_STORAGE = "/tmp/.central-key-manager-api-s
 char const * const SERVICE_SOCKET_OCSP = "/tmp/.central-key-manager-api-ocsp.sock";
 char const * const SERVICE_SOCKET_ENCRYPTION = "/tmp/.central-key-manager-api-encryption.sock";
 char const * const LABEL_NAME_SEPARATOR = " ";
-char const * const LABEL_SYSTEM_DB = "/";
-
+char const * const OWNER_ID_SYSTEM = "/System";
 
 PKCS12Serializable::PKCS12Serializable() {}
 PKCS12Serializable::PKCS12Serializable(const PKCS12 &pkcs)

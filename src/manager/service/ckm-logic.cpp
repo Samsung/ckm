@@ -191,7 +191,7 @@ UserData & CKMLogic::selectDatabase(const Credentials &cred, const Label &incomi
         if (0 == m_userDataMap.count(cred.clientUid))
             ThrowErr(Exc::DatabaseLocked, "database with UID: ", cred.clientUid, " locked");
 
-        if (0 != incoming_label.compare(LABEL_SYSTEM_DB))
+        if (0 != incoming_label.compare(OWNER_ID_SYSTEM))
             return m_userDataMap[cred.clientUid];
     }
 
@@ -1047,7 +1047,7 @@ RawBuffer CKMLogic::getDataList(
         {
             // lookup system DB
             retCode = getDataListHelper(Credentials(SYSTEM_DB_UID,
-                                                    LABEL_SYSTEM_DB),
+                                                    OWNER_ID_SYSTEM),
                                         dataType,
                                         systemVector);
         }
@@ -1094,7 +1094,7 @@ int CKMLogic::saveDataHelper(
 
     // use client label if not explicitly provided
     const Label &ownerLabel = label.empty() ? cred.smackLabel : label;
-    if( m_accessControl.isSystemService(cred) && ownerLabel.compare(LABEL_SYSTEM_DB)!=0)
+    if( m_accessControl.isSystemService(cred) && ownerLabel.compare(OWNER_ID_SYSTEM)!=0)
         return CKM_API_ERROR_INPUT_PARAM;
 
     // check if save is possible
@@ -1123,7 +1123,7 @@ int CKMLogic::saveDataHelper(
 
     // use client label if not explicitly provided
     const Label &ownerLabel = label.empty() ? cred.smackLabel : label;
-    if( m_accessControl.isSystemService(cred) && ownerLabel.compare(LABEL_SYSTEM_DB)!=0)
+    if( m_accessControl.isSystemService(cred) && ownerLabel.compare(OWNER_ID_SYSTEM)!=0)
         return CKM_API_ERROR_INPUT_PARAM;
 
     // check if save is possible
@@ -1579,7 +1579,7 @@ int CKMLogic::setPermissionHelper(
         return CKM_API_ERROR_INPUT_PARAM;
 
     // system database does not support write/remove permissions
-    if ((0 == ownerLabel.compare(LABEL_SYSTEM_DB)) &&
+    if ((0 == ownerLabel.compare(OWNER_ID_SYSTEM)) &&
         (permissionMask & Permission::REMOVE))
         return CKM_API_ERROR_INPUT_PARAM;
 

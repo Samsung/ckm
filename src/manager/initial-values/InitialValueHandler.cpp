@@ -70,9 +70,9 @@ void InitialValueHandler::End()
         // save data
         Policy policy(m_password, m_exportable);
         int ec = m_db_logic.verifyAndSaveDataHelper(
-                Credentials(CKMLogic::SYSTEM_DB_UID, LABEL_SYSTEM_DB),
+                Credentials(CKMLogic::SYSTEM_DB_UID, OWNER_ID_SYSTEM),
                 m_name,
-                LABEL_SYSTEM_DB,
+                OWNER_ID_SYSTEM,
                 m_bufferHandler->getData(),
                 getDataType(),
                 PolicySerializable(policy));
@@ -82,9 +82,9 @@ void InitialValueHandler::End()
             for(const auto & permission : m_permissions)
             {
                 ec = m_db_logic.setPermissionHelper(
-                        Credentials(CKMLogic::SYSTEM_DB_UID, LABEL_SYSTEM_DB),
+                        Credentials(CKMLogic::SYSTEM_DB_UID, OWNER_ID_SYSTEM),
                         m_name,
-                        LABEL_SYSTEM_DB,
+                        OWNER_ID_SYSTEM,
                         permission->getAccessor(),
                         Permission::READ);
                 if(CKM_API_SUCCESS != ec)
