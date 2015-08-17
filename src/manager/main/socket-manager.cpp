@@ -339,8 +339,7 @@ void SocketManager::ReadyForWrite(int sock) {
 
 void SocketManager::MainLoop() {
     // remove evironment values passed by systemd
-    // uncomment it after removing old security-server code
-    // sd_listen_fds(1);
+    sd_listen_fds(1);
 
     // Daemon is ready to work.
     sd_notify(0, "READY=1");
