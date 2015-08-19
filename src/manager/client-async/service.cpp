@@ -18,6 +18,8 @@
  * @author     Krzysztof Jackiewicz (k.jackiewicz@samsung.com)
  * @version    1.0
  */
+#include <sys/types.h>
+#include <sys/socket.h>
 
 #include <service.h>
 
@@ -125,16 +127,17 @@ void Service::sendData()
     while (!m_sendQueue.empty()) {
         AsyncRequest& req = m_sendQueue.front();
 
-        ssize_t temp = TEMP_FAILURE_RETRY(write(m_socket->get(),
-                                                &req.buffer[req.written],
-                                                req.buffer.size() - req.written));
+        ssize_t temp = TEMP_FAILURE_RETRY(::send(m_socket->get(),
+                                                 &req.buffer[req.written],
+                                                 req.buffer.size() - req.written,
+                                                 MSG_NOSIGNAL));
         if (-1 == temp) {
             int err = errno;
             // can't write? -> go to sleep
             if (EAGAIN == err || EWOULDBLOCK == err)
                 return;
 
-            LogError("Error in write: " << GetErrnoString(err));
+            LogError("Error in send: " << GetErrnoString(err));
             serviceError(CKM_API_ERROR_SEND_FAILED);
             return;
         }
@@ -159,16 +162,16 @@ void Service::receiveData()
 {
     char buffer[RECV_BUFFER_SIZE];
 
-    ssize_t temp = TEMP_FAILURE_RETRY(read(m_socket->get(), buffer, RECV_BUFFER_SIZE));
+    ssize_t temp = TEMP_FAILURE_RETRY(::recv(m_socket->get(), buffer, RECV_BUFFER_SIZE,0));
     if (-1 == temp) {
         int err = errno;
-        LogError("Error in read: " << GetErrnoString(err));
+        LogError("Error in recv: " << GetErrnoString(err));
         serviceError(CKM_API_ERROR_RECV_FAILED);
         return;
     }
 
     if (0 == temp) {
-        LogError("Read return 0/Connection closed by server(?)");
+        LogError("Recv return 0/Connection closed by server(?)");
         serviceError(CKM_API_ERROR_RECV_FAILED);
         return;
     }

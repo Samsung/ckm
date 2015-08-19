@@ -241,9 +241,10 @@ int ServiceConnection::send(const CKM::RawBuffer &send_buf)
             break;
         }
 
-        ssize_t temp = TEMP_FAILURE_RETRY(write(m_socket.get(),
-                                                &send_buf[done],
-                                                send_buf.size() - done));
+        ssize_t temp = TEMP_FAILURE_RETRY(::send(m_socket.get(),
+                                                 &send_buf[done],
+                                                 send_buf.size() - done,
+                                                 MSG_NOSIGNAL));
         if (-1 == temp) {
             LogError("Error in write: " << CKM::GetErrnoString(errno));
             retCode = CKM_API_ERROR_SOCKET;
@@ -278,9 +279,10 @@ int ServiceConnection::receive(CKM::MessageBuffer &recv_buf)
             break;
         }
 
-        ssize_t temp = TEMP_FAILURE_RETRY(read(m_socket.get(),
-                                               buffer,
-                                               sizeof(buffer)));
+        ssize_t temp = TEMP_FAILURE_RETRY(::recv(m_socket.get(),
+                                                 buffer,
+                                                 sizeof(buffer),
+                                                 0));
         if(-1 == temp) {
             LogError("Error in read: " << CKM::GetErrnoString(errno));
             ec = CKM_API_ERROR_SOCKET;
