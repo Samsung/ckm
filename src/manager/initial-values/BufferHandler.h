@@ -46,7 +46,7 @@ public:
         return m_data;
     }
 private:
-    EncodingType    m_encoding;
+    EncodingType m_encoding;
     RawBuffer  m_data;
 };
 

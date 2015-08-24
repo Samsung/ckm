@@ -68,8 +68,7 @@ void InitialValueHandler::End()
                 Credentials(CKMLogic::SYSTEM_DB_UID, OWNER_ID_SYSTEM),
                 m_name,
                 OWNER_ID_SYSTEM,
-                m_bufferHandler->getData(),
-                getDataType(),
+                Crypto::Data(getDataType(), m_bufferHandler->getData()),
                 PolicySerializable(policy));
         if(CKM_API_SUCCESS == ec)
         {

@@ -198,8 +198,7 @@ RawBuffer CKMService::ProcessStorage(Credentials &cred, MessageBuffer &buffer)
                 msgID,
                 name,
                 label,
-                rawData,
-                DataType(tmpDataType),
+                Crypto::Data(DataType(tmpDataType), std::move(rawData)),
                 policy);
         }
         case LogicCommand::SAVE_PKCS12:

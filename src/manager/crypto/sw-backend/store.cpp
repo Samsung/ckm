@@ -190,13 +190,14 @@ Token Store::generateSKey(const CryptoAlgorithm &algorithm, const Password &pass
     return Token(m_backendId, ret.type, pack(ret.buffer, pass));
 }
 
-Token Store::import(DataType dataType, const RawBuffer &input, const Password &pass) {
+Token Store::import(const Data &data, const Password &pass) {
+    return Token(m_backendId, data.type, pack(data.data, pass));
+}
 
-    RawBuffer data = pack(input, pass);
-    return Token(m_backendId, dataType, std::move(data));
+Token Store::importEncrypted(const Data &, const Password &, const DataEncryption &) {
+    ThrowErr(Exc::Crypto::OperationNotSupported, "Importing encrypted data not yet implemented!");
 }
 
 } // namespace SW
 } // namespace Crypto
 } // namespace CKM
-

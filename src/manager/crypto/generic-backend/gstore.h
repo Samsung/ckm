@@ -31,6 +31,20 @@
 namespace CKM {
 namespace Crypto {
 
+// Data is very generic and does not say anything about content.
+struct Data {
+    Data() {};
+    Data(const DataType& t, RawBuffer d) : type(t), data(std::move(d)) {}
+    DataType type;
+    RawBuffer data; // buffer will be better?
+};
+
+// Too generic. The name does not say anything aobut content.
+struct DataEncryption {
+    RawBuffer encryptedKey;
+    RawBuffer iv;
+};
+
 class GStore {
 public:
     virtual GObjUPtr getObject(const Token &, const Password &) {
@@ -42,7 +56,10 @@ public:
     virtual Token generateSKey(const CryptoAlgorithm &, const Password &) {
         ThrowErr(Exc::Crypto::OperationNotSupported);
     }
-    virtual Token import(DataType, const RawBuffer &, const Password &) {
+    virtual Token import(const Data &, const Password &) {
+        ThrowErr(Exc::Crypto::OperationNotSupported);
+    }
+    virtual Token importEncrypted(const Data &, const Password &, const DataEncryption &) {
         ThrowErr(Exc::Crypto::OperationNotSupported);
     }
     virtual void destroy(const Token &) {
@@ -58,4 +75,3 @@ protected:
 
 } // namespace Crypto
 } // namespace CKM
-
