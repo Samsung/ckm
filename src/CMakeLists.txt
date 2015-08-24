@@ -16,10 +16,19 @@ FIND_PACKAGE(Threads REQUIRED)
 SET(KEY_MANAGER_SRC_PATH ${PROJECT_SOURCE_DIR}/src)
 SET(KEY_MANAGER_PATH ${PROJECT_SOURCE_DIR}/src/manager)
 
+IF (MOCKUP_SM MATCHES "ON")
+    IF (CMAKE_BUILD_TYPE MATCHES "RELEASE")
+        MESSAGE(FATAL_ERROR "You cannot compile release version with mockups!")
+    ENDIF (CMAKE_BUILD_TYPE MATCHES "RELEASE")
+    MESSAGE("USING MOCKUP INSTEAD SECURITY MANAGER")
+    SET(SECURITY_MANAGER_PATH ${KEY_MANAGER_PATH}/main/socket-2-id-mockup.cpp)
+ELSE (MOCKUP_SM MATCHES "ON")
+    SET(SECURITY_MANAGER_PATH ${KEY_MANAGER_PATH}/main/socket-2-id.cpp)
+ENDIF (MOCKUP_SM MATCHES "ON")
+
 SET(KEY_MANAGER_SOURCES
     ${KEY_MANAGER_PATH}/main/generic-socket-manager.cpp
     ${KEY_MANAGER_PATH}/main/socket-manager.cpp
-    ${KEY_MANAGER_PATH}/main/socket-2-id.cpp
     ${KEY_MANAGER_PATH}/main/key-manager-main.cpp
     ${KEY_MANAGER_PATH}/main/smack-check.cpp
     ${KEY_MANAGER_PATH}/main/thread-service.cpp
@@ -58,6 +67,7 @@ SET(KEY_MANAGER_SOURCES
     ${KEY_MANAGER_PATH}/crypto/platform/decider.cpp
     ${KEY_MANAGER_PATH}/crypto/tz-backend/key.cpp
     ${KEY_MANAGER_PATH}/crypto/tz-backend/store.cpp
+    ${SECURITY_MANAGER_PATH}
     )
 
 # -fPIE and -pie flag is added for ASLR

@@ -120,7 +120,8 @@ export LDFLAGS+="-Wl,--rpath=%{_libdir},-Bsymbolic-functions "
         -DSECURITY_MDFPP_STATE_ENABLE=1 \
 %endif
         -DSYSTEMD_UNIT_DIR=%{_unitdir} \
-        -DSYSTEMD_ENV_FILE="/etc/sysconfig/central-key-manager"
+        -DSYSTEMD_ENV_FILE="/etc/sysconfig/central-key-manager" \
+        -DMOCKUP_SM=%{?mockup_sm:%mockup_sm}%{!?mockup_sm:OFF}
 
 make %{?jobs:-j%jobs}
 
