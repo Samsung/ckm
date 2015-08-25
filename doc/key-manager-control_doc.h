@@ -16,7 +16,6 @@
 #ifndef __TIZEN_CORE_KEY_MANAGER_CONTROL_DOC_H__
 #define __TIZEN_CORE_KEY_MANAGER_CONTROL_DOC_H__
 /**
- * @internal
  * @ingroup CAPI_KEY_MANAGER_MODULE
  * @defgroup CAPI_KEY_MANAGER_CONTROL_MODULE Key Manager Control
  * @brief    These APIs control the key manager state (Unlocked/Locked) and reflects the user's password change.

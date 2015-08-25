@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2014 Samsung Electronics Co., Ltd All Rights Reserved
+ *  Copyright (c) 2000 - 2015 Samsung Electronics Co., Ltd All Rights Reserved
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -35,7 +35,7 @@ extern "C" {
  * @brief Enumeration for Key Manager Errors.
  * @since_tizen 2.3
  */
-typedef enum{
+typedef enum {
 	CKMC_ERROR_NONE                     = TIZEN_ERROR_NONE,               /**< Successful */
 	CKMC_ERROR_INVALID_PARAMETER        = TIZEN_ERROR_INVALID_PARAMETER,  /**< Invalid function parameter */
 	CKMC_ERROR_OUT_OF_MEMORY            = TIZEN_ERROR_OUT_OF_MEMORY,      /**< Out of memory */

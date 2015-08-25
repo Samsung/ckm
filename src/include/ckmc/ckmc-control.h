@@ -33,7 +33,6 @@ extern "C" {
 #endif
 
 /**
- * @internal
  * @addtogroup CAPI_KEY_MANAGER_CONTROL_MODULE
  * @{
  */

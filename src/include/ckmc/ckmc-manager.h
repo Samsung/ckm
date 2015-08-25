@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2000 - 2014 Samsung Electronics Co., Ltd All Rights Reserved
+ *  Copyright (c) 2000 - 2015 Samsung Electronics Co., Ltd All Rights Reserved
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -336,7 +336,7 @@ int ckmc_get_cert_alias_list(ckmc_alias_list_s** ppalias_list);
 
 /**
  * @brief Stores PKCS12's contents inside key manager based on the provided policies.
- * All items from the PKCS12 will use the same alias.
+ *        All items from the PKCS12 will use the same alias.
  *
  * @since_tizen 2.4
  * @privlevel public
@@ -399,7 +399,8 @@ int ckmc_save_pkcs12(const char *alias,
  * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN   Alias does not exist
  * @retval #CKMC_ERROR_PERMISSION_DENIED  Failed to access key manager
  * @retval #CKMC_ERROR_AUTHENTICATION_FAILED
- *                                        Decryption failed because password is incorrect.
+ *                                        key_password or cert_password does not match with password
+ *                                        used to encrypt data
  *
  * @pre User is already logged in and the user key is already loaded into memory in plain text form.
  *
@@ -1129,32 +1130,34 @@ int ckmc_deny_access(const char *alias, const char *accessor);
  * @pre User is already logged in and the user key is already loaded into memory in plain text form.
  *
  * @see ckmc_save_key()
- * @see ckmc_save_cert
- * @see ckmc_save_data
- * @see ckmc_save_pkcs12
- * @see ckmc_create_key_pair_rsa
- * @see ckmc_create_key_pair_dsa
- * @see ckmc_create_key_pair_ecdsa
+ * @see ckmc_save_cert()
+ * @see ckmc_save_data()
+ * @see ckmc_save_pkcs12()
+ * @see ckmc_create_key_pair_rsa()
+ * @see ckmc_create_key_pair_dsa()
+ * @see ckmc_create_key_pair_ecdsa()
  */
 int ckmc_remove_alias(const char *alias);
 
 /**
- * @brief Encrypts data using selected key and algorithm
+ * @brief Encrypts data using selected key and algorithm.
  *
  * @since_tizen 3.0
  * @privlevel public
  * @privilege %http://tizen.org/privilege/keymanager
  *
- * @remarks Key identified by @a key_alias should exist
+ * @remarks Key identified by @a key_alias should exist.
  *
  * @param[in] params            Algorithm parameters
  * @param[in] key_alias         Alias of the key to be used for encryption
- * @param[in] password          The password used in decrypting a key value. If password of policy
- *                              is provided in ckmc_save_key(), the same password should be provided
+ * @param[in] password          The password used in decrypting a key value \n
+ *                              If password of policy is provided in ckmc_save_key(), the same
+ *                              password should be provided
  * @param[in] decrypted         Data to be encrypted
  * @param[out] ppencrypted      Encrypted data (some algorithms may return additional information
- *                              embedded in encrypted data. AES GCM is an example). The caller is
- *                              responsible for freeing ppencrypted with ckmc_buffer_free().
+ *                              embedded in encrypted data. AES GCM is an example) \n
+ *                              The caller is responsible for freeing ppencrypted with
+ *                              ckmc_buffer_free()
  *
  * @return @c 0 on success, otherwise a negative error value
  *
@@ -1166,9 +1169,18 @@ int ckmc_remove_alias(const char *alias);
  * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN     Key with given alias does not exist
  * @retval #CKMC_ERROR_PERMISSION_DENIED    Failed to access key manager
  * @retval #CKMC_ERROR_AUTHENTICATION_FAILED
- *                                          Key decryption failed because password is incorrect.
+ *                                          Key decryption failed because password is incorrect
  *
  * @pre User is already logged in and the user key is already loaded into memory in plain text form.
+ *
+ * @see ckmc_buffer_free()
+ * @see ckmc_param_list_new()
+ * @see ckmc_param_list_free()
+ * @see ckmc_param_list_add_integer()
+ * @see ckmc_param_list_add_buffer()
+ * @see ckmc_generate_params()
+ * @see #ckmc_param_list_s
+ * @see #ckmc_param_name_e
  */
 int ckmc_encrypt_data(const ckmc_param_list_s *params,
                       const char *key_alias,
@@ -1177,22 +1189,24 @@ int ckmc_encrypt_data(const ckmc_param_list_s *params,
                       ckmc_raw_buffer_s **ppencrypted);
 
 /**
- * @brief Decrypts data using selected key and algorithm
+ * @brief Decrypts data using selected key and algorithm.
  *
  * @since_tizen 3.0
  * @privlevel public
  * @privilege %http://tizen.org/privilege/keymanager
  *
- * @remarks Key identified by @a key_alias should exist
+ * @remarks Key identified by @a key_alias should exist.
  *
  * @param[in] params            Algorithm parameters
  * @param[in] key_alias         Alias of the key to be used for encryption
- * @param[in] password          The password used in decrypting a key value. If password of policy
- *                              is provided in ckmc_save_key(), the same password should be provided
+ * @param[in] password          The password used in decrypting a key value \n
+ *                              If password of policy is provided in ckmc_save_key(), the same
+ *                              password should be provided
  * @param[in] encrypted         Data to be decrypted (some algorithms may require additional
- *                              information embedded in encrypted data. AES GCM is an example).
- * @param[out] ppdecrypted      Decrypted data. The caller is responsible for freeing ppdecrypted
- *                              with ckmc_buffer_free().
+ *                              information embedded in encrypted data. AES GCM is an example)
+ * @param[out] ppdecrypted      Decrypted data \n
+ *                              The caller is responsible for freeing ppdecrypted with
+ *                              ckmc_buffer_free()
  *
  * @return @c 0 on success, otherwise a negative error value
  *
@@ -1204,9 +1218,18 @@ int ckmc_encrypt_data(const ckmc_param_list_s *params,
  * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN     Key with given alias does not exist
  * @retval #CKMC_ERROR_PERMISSION_DENIED    Failed to access key manager
  * @retval #CKMC_ERROR_AUTHENTICATION_FAILED
- *                                          Key decryption failed because password is incorrect.
+ *                                          Key decryption failed because password is incorrect
  *
  * @pre User is already logged in and the user key is already loaded into memory in plain text form.
+ *
+ * @see ckmc_buffer_free()
+ * @see ckmc_param_list_new()
+ * @see ckmc_param_list_free()
+ * @see ckmc_param_list_add_integer()
+ * @see ckmc_param_list_add_buffer()
+ * @see ckmc_generate_params()
+ * @see #ckmc_param_list_s
+ * @see #ckmc_param_name_e
  */
 int ckmc_decrypt_data(const ckmc_param_list_s *params,
                       const char *key_alias,
