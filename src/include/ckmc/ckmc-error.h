@@ -35,15 +35,6 @@ extern "C" {
  * @brief Enumeration for Key Manager Errors.
  * @since_tizen 2.3
  */
-
-
-// MJK TODO: this should be moved into /usr/include/tizen_error.h
-#ifndef TIZEN_ERROR_KEY_MANAGER
-/** Tizen Key Manager Error */
-#define TIZEN_ERROR_KEY_MANAGER     -0x01E10000
-#endif
-
-
 typedef enum{
 	CKMC_ERROR_NONE                     = TIZEN_ERROR_NONE,               /**< Successful */
 	CKMC_ERROR_INVALID_PARAMETER        = TIZEN_ERROR_INVALID_PARAMETER,  /**< Invalid function parameter */
