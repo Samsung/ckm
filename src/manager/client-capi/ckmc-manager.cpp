@@ -383,12 +383,6 @@ int ckmc_save_pkcs12(const char *alias, const ckmc_pkcs12_s *ppkcs, const ckmc_p
 }
 
 KEY_MANAGER_CAPI
-int ckmc_remove_pkcs12(const char *alias)
-{
-    return ckmc_remove_alias(alias);
-}
-
-KEY_MANAGER_CAPI
 int ckmc_get_pkcs12(const char *alias, const char *key_password, const char *cert_password, ckmc_pkcs12_s **pkcs12)
 {
     int ret;

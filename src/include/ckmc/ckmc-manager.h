@@ -373,38 +373,6 @@ int ckmc_save_pkcs12(const char *alias,
                      const ckmc_policy_s cert_policy);
 
 /**
- * @deprecated Deprecated since 2.4. [Use ckmc_remove_alias() instead]
- * @brief Removes all PKCS12 contents from key manager.
- *
- * @since_tizen 2.4
- * @privlevel public
- * @privilege %http://tizen.org/privilege/keymanager
- *
- * @remarks To remove PKCS12, client must have remove permission to the specified PKCS12 object.
- * @remarks The key owner can remove by default.
- *
- * @param[in] alias The name of PKCS12 to be removed
- *
- * @return @c 0 on success,
- *         otherwise a negative error value
- *
- * @retval #CKMC_ERROR_NONE               Successful
- * @retval #CKMC_ERROR_INVALID_PARAMETER  Input parameter is invalid
- * @retval #CKMC_ERROR_DB_LOCKED          A user key is not loaded in memory (a user is not logged
- *                                        in)
- * @retval #CKMC_ERROR_DB_ERROR           Failed due to a database error
- * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN   Alias does not exist
- * @retval #CKMC_ERROR_PERMISSION_DENIED  Failed to access key manager
- *
- * @pre User is already logged in and the user key is already loaded into memory in plain text form.
- *
- * @see ckmc_remove_alias()
- * @see ckmc_save_pkcs12()
- * @see ckmc_get_pkcs12()
- */
-int ckmc_remove_pkcs12(const char *alias);
-
-/**
  * @brief Gets a pkcs12 from key manager.
  *
  * @since_tizen 2.4
