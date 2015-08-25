@@ -6,9 +6,10 @@ Group:      System/Security
 License:    Apache-2.0
 Source0:    %{name}-%{version}.tar.gz
 Source1001: key-manager.manifest
-Source1002: key-manager-listener.manifest
-Source1003: libkey-manager-client.manifest
-Source1004: libkey-manager-common.manifest
+Source1002: key-manager-pam-plugin.manifest
+Source1003: key-manager-listener.manifest
+Source1004: libkey-manager-client.manifest
+Source1005: libkey-manager-common.manifest
 BuildRequires: cmake
 BuildRequires: zip
 BuildRequires: pkgconfig(dlog)
@@ -86,7 +87,7 @@ Requires:   key-manager = %{version}-%{release}
 Internal test for key-manager implementation.
 
 %package -n key-manager-pam-plugin
-Summary:    CKM login/password module to PAM.
+Summary:    CKM login/password module to PAM
 Group:      Development/Libraries
 BuildRequires: pam-devel
 Requires:   key-manager = %{version}-%{release}
@@ -94,8 +95,8 @@ Requires(post): /sbin/ldconfig
 Requires(postun): /sbin/ldconfig
 
 %description -n key-manager-pam-plugin
-CKM login/password module to PAM.
-It's used to monitor user login/logout and password change events from PAM.
+CKM login/password module to PAM. Used to monitor user login/logout
+and password change events from PAM
 
 
 %prep
@@ -104,6 +105,7 @@ cp -a %{SOURCE1001} .
 cp -a %{SOURCE1002} .
 cp -a %{SOURCE1003} .
 cp -a %{SOURCE1004} .
+cp -a %{SOURCE1005} .
 
 %build
 %if 0%{?sec_build_binary_debug_enable}
@@ -132,12 +134,14 @@ rm -rf %{buildroot}
 mkdir -p %{buildroot}/usr/share/license
 cp LICENSE %{buildroot}/usr/share/license/%{name}
 cp LICENSE %{buildroot}/usr/share/license/libkey-manager-client
-cp LICENSE %{buildroot}/usr/share/license/libkey-manager-control-client
 mkdir -p %{buildroot}/opt/data/ckm/initial_values
 mkdir -p %{buildroot}/etc/security/
 mkdir -p %{buildroot}/usr/share/ckm/scripts
+mkdir -p %{buildroot}/etc/gumd/userdel.d/
 cp data/scripts/*.sql %{buildroot}/usr/share/ckm/scripts
 cp doc/initial_values.xsd %{buildroot}/usr/share/ckm
+cp data/gumd/10_key-manager.post %{buildroot}/etc/gumd/userdel.d/
+
 mkdir -p %{buildroot}/usr/share/ckm-db-test
 cp tests/testme_ver1.db %{buildroot}/usr/share/ckm-db-test/
 cp tests/testme_ver2.db %{buildroot}/usr/share/ckm-db-test/
@@ -147,18 +151,14 @@ cp tests/XML_1_okay.xsd %{buildroot}/usr/share/ckm-db-test/
 cp tests/XML_1_wrong.xml %{buildroot}/usr/share/ckm-db-test/
 cp tests/XML_1_wrong.xsd %{buildroot}/usr/share/ckm-db-test/
 cp tests/XML_2_structure.xml %{buildroot}/usr/share/ckm-db-test/
-mkdir -p %{buildroot}/etc/gumd/userdel.d/
-cp data/gumd/10_key-manager.post %{buildroot}/etc/gumd/userdel.d/
 
 %make_install
-mkdir -p %{buildroot}%{_unitdir}/multi-user.target.wants
-mkdir -p %{buildroot}%{_unitdir}/sockets.target.wants
-ln -s ../central-key-manager.service %{buildroot}%{_unitdir}/multi-user.target.wants/central-key-manager.service
-ln -s ../central-key-manager-listener.service %{buildroot}%{_unitdir}/multi-user.target.wants/central-key-manager-listener.service
-ln -s ../central-key-manager-api-control.socket %{buildroot}%{_unitdir}/sockets.target.wants/central-key-manager-api-control.socket
-ln -s ../central-key-manager-api-storage.socket %{buildroot}%{_unitdir}/sockets.target.wants/central-key-manager-api-storage.socket
-ln -s ../central-key-manager-api-ocsp.socket %{buildroot}%{_unitdir}/sockets.target.wants/central-key-manager-api-ocsp.socket
-ln -s ../central-key-manager-api-encryption.socket %{buildroot}%{_unitdir}/sockets.target.wants/central-key-manager-api-encryption.socket
+%install_service multi-user.target.wants central-key-manager.service
+%install_service multi-user.target.wants central-key-manager-listener.service
+%install_service sockets.target.wants central-key-manager-api-control.socket
+%install_service sockets.target.wants central-key-manager-api-storage.socket
+%install_service sockets.target.wants central-key-manager-api-ocsp.socket
+%install_service sockets.target.wants central-key-manager-api-encryption.socket
 
 %clean
 rm -rf %{buildroot}
@@ -188,8 +188,9 @@ if [ $1 = 0 ]; then
     systemctl daemon-reload
 fi
 
+%post -n libkey-manager-common -p /sbin/ldconfig
 %post -n libkey-manager-client -p /sbin/ldconfig
-
+%postun -n libkey-manager-common -p /sbin/ldconfig
 %postun -n libkey-manager-client -p /sbin/ldconfig
 
 %post -n key-manager-listener
@@ -231,15 +232,16 @@ fi
 %{_unitdir}/sockets.target.wants/central-key-manager-api-encryption.socket
 %{_unitdir}/central-key-manager-api-encryption.socket
 %{_datadir}/license/%{name}
-%{_datadir}/ckm/scripts/*.sql
-%{_datadir}/
 %{_datadir}/ckm/initial_values.xsd
 /opt/data/ckm/initial_values/
 %attr(444, root, root) %{_datadir}/ckm/scripts/*.sql
 /etc/opt/upgrade/230.key-manager-migrate-dkek.patch.sh
-/etc/gumd/userdel.d/10_key-manager.post
 %attr(550, root, root) /etc/gumd/userdel.d/10_key-manager.post
 %{_bindir}/ckm_tool
+
+%files -n key-manager-pam-plugin
+%manifest key-manager-pam-plugin.manifest
+%{_libdir}/security/pam_key_manager_plugin.so*
 
 %files -n key-manager-listener
 %manifest key-manager-listener.manifest
@@ -256,10 +258,8 @@ fi
 %{_libdir}/libkey-manager-client.so.*
 %{_libdir}/libkey-manager-control-client.so.*
 %{_datadir}/license/libkey-manager-client
-%{_datadir}/license/libkey-manager-control-client
 
 %files -n libkey-manager-client-devel
-%defattr(-,root,root,-)
 %{_libdir}/libkey-manager-client.so
 %{_libdir}/libkey-manager-control-client.so
 %{_libdir}/libkey-manager-common.so
@@ -280,7 +280,6 @@ fi
 %{_libdir}/pkgconfig/*.pc
 
 %files -n key-manager-tests
-%defattr(-,root,root,-)
 %{_bindir}/ckm-tests-internal
 %{_datadir}/ckm-db-test/testme_ver1.db
 %{_datadir}/ckm-db-test/testme_ver2.db
@@ -292,7 +291,3 @@ fi
 %{_datadir}/ckm-db-test/XML_2_structure.xml
 %{_bindir}/ckm_so_loader
 %{_bindir}/ckm_db_tool
-
-%files -n key-manager-pam-plugin
-%defattr(-,root,root,-)
-%{_libdir}/security/pam_key_manager_plugin.so*
