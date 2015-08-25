@@ -93,6 +93,9 @@ extern "C" {
 /*! \brief   indicating that files are corrupted or access to files was denied */
 #define CKM_API_ERROR_FILE_SYSTEM -20
 
+/*! \brief   indicating that device needed to run API is not supported */
+#define CKM_API_ERROR_NOT_SUPPORTED -21
+
 #define CKM_API_OCSP_STATUS_GOOD                (1<<0)
 #define CKM_API_OCSP_STATUS_UNSUPPORTED         (1<<1)
 #define CKM_API_OCSP_STATUS_UNKNOWN             (1<<2)

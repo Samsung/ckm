@@ -1,13 +1,14 @@
 PKG_CHECK_MODULES(KEY_MANAGER_DEP
+    REQUIRED
     dlog
     openssl
     libsmack
     libcrypto
     libsystemd-daemon
     capi-base-common
+    capi-system-info
     vconf
     libxml-2.0
-    REQUIRED
     )
 FIND_PACKAGE(Threads REQUIRED)
 

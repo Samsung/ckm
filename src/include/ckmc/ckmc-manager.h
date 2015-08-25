@@ -1003,6 +1003,7 @@ int ckmc_get_cert_chain_with_trustedcert_alias(const ckmc_cert_s *cert,
  * @retval #CKMC_ERROR_NONE                 Successful
  * @retval #CKMC_ERROR_INVALID_PARAMETER    Input parameter is invalid
  * @retval #CKMC_ERROR_PERMISSION_DENIED    Failed to access key manager
+ * @retval #CKMC_ERROR_NOT_SUPPORTED        Device needed to run API is not supported
  *
  * @pre User is already logged in and the user key is already loaded into memory in plain text form.
  * @pre @a pcert_chain_list is created with ckmc_get_certificate_chain() or

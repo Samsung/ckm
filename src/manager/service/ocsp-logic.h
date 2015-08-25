@@ -27,7 +27,7 @@ namespace CKM {
 
 class OCSPLogic {
 public:
-    OCSPLogic(){}
+    OCSPLogic();
     OCSPLogic(const OCSPLogic &) = delete;
     OCSPLogic(OCSPLogic &&) = delete;
     OCSPLogic& operator=(const OCSPLogic &) = delete;
@@ -35,6 +35,9 @@ public:
 
     RawBuffer ocspCheck(int commandId, const RawBufferVector &rawChain);
     virtual ~OCSPLogic(){}
+private:
+    void setNetAvailable();
+    bool m_isNetAvailable;
 };
 
 

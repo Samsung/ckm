@@ -40,6 +40,7 @@ typedef enum {
 	CKMC_ERROR_INVALID_PARAMETER        = TIZEN_ERROR_INVALID_PARAMETER,  /**< Invalid function parameter */
 	CKMC_ERROR_OUT_OF_MEMORY            = TIZEN_ERROR_OUT_OF_MEMORY,      /**< Out of memory */
 	CKMC_ERROR_PERMISSION_DENIED        = TIZEN_ERROR_PERMISSION_DENIED,  /**< Permission denied */
+	CKMC_ERROR_NOT_SUPPORTED            = TIZEN_ERROR_NOT_SUPPORTED,      /**< Device needed to run API is not supported*/
 
 	CKMC_ERROR_SOCKET                   = TIZEN_ERROR_KEY_MANAGER | 0x01, /**< Socket error between client and Central Key Manager */
 	CKMC_ERROR_BAD_REQUEST              = TIZEN_ERROR_KEY_MANAGER | 0x02,  /**< Invalid request from client */
