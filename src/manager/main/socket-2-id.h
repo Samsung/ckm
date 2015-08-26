@@ -34,6 +34,9 @@ public:
 
     virtual ~Socket2Id() {}
 private:
+    int getCredentialsFromSocket(int sock, std::string &res);
+    int getPkgIdFromSmack(const std::string &smack, std::string &pkgId);
+
     typedef std::map<std::string, std::string> StringMap;
     StringMap m_stringMap;
 };

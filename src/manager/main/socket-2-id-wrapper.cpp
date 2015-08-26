@@ -14,11 +14,13 @@
  *  limitations under the License
  */
 /*
- * @file       socket-2-id-mockup.cpp
+ * @file       socket-2-id-wrapper.cpp
  * @author     Bartlomiej Grzelewski (b.grzelewski@samsung.com)
  * @version    1.0
  */
 #include <string>
+
+#include <security-manager.h>
 
 #include <dpl/log/log.h>
 #include <protocols.h>
@@ -27,6 +29,11 @@
 namespace CKM {
 
 int Socket2Id::getPkgIdFromSmack(const std::string &smack, std::string &pkgId) {
+    // TODO
+    // Conversion from smack label to pkgId should be done
+    // by security-manager. Current version of security-manager
+    // does not support this feature yet.
+
     static const std::string SMACK_PREFIX_APPID  = "User::App::";
 
     if (smack.empty()) {
@@ -42,29 +49,45 @@ int Socket2Id::getPkgIdFromSmack(const std::string &smack, std::string &pkgId) {
 
     std::string appId = smack.substr(SMACK_PREFIX_APPID.size(), std::string::npos);
 
-    if (appId.empty()) {
-        LogError("After conversion (smack->pkgId) pkgId is empty. Label: " << appId);
+    char *pkg = nullptr;
+
+    if (0 > security_manager_get_app_pkgid(&pkg, appId.c_str())) {
+        LogError("Error in security_manager_get_app_pkgid");
         return -1;
     }
 
-    pkgId = std::move(appId);
+    if (!pkg) {
+        LogError("PkgId could not be NULL");
+        return -1;
+    }
+
+    pkgId = pkg;
+    free(pkg);
     LogDebug("Smack: " << smack << " Was translated to owner id: " << pkgId);
     return 0;
 }
 
 int Socket2Id::translate(int sock, std::string &result) {
     std::string smack;
-    std::string pkgId;
 
     if (0 > getCredentialsFromSocket(sock, smack)) {
         return -1;
     }
 
+    StringMap::iterator it = m_stringMap.find(smack);
+
+    if (it != m_stringMap.end()) {
+        result = it->second;
+        return 0;
+    }
+
+    std::string pkgId;
     if (0 > getPkgIdFromSmack(smack, pkgId)) {
         return -1;
     }
 
-    result = std::move(pkgId);
+    result = pkgId;
+    m_stringMap.emplace(std::move(smack), std::move(pkgId));
     return 0;
 }
 
