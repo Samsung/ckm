@@ -49,11 +49,13 @@ extern "C" {
  */
 
 /**
+ * @deprecated Deprecated since 3.0. [Use ckmc_owner_id_separator instead]
  * @brief Separator between alias and label.
  * @since_tizen 2.3
  * @remarks Alias can be provided as an alias alone, or together with label - in this
  *          case, separator " " (space bar) is used to separate label and alias.
  *
+ * @see #ckmc_owner_id_separator
  * @see key-manager_doc.h
  */
 KEY_MANAGER_CAPI extern char const * const ckmc_label_name_separator;
@@ -74,20 +76,22 @@ KEY_MANAGER_CAPI extern char const * const ckmc_label_name_separator;
 KEY_MANAGER_CAPI extern char const * const ckmc_label_shared_owner;
 
 /**
- * alias can be provided as an alias alone, or together with owner id - in this
- * case, separator " " (space bar) is used to separate id and alias.
+ * @brief Separator between alias and owner id.
+ * @since_tizen 3.0
+ * @remarks Alias can be provided as an alias alone, or together with owner id.
+ *          In this case, separator " " (space bar) is used to separate id and alias.
  * @see key-manager_doc.h
  */
 KEY_MANAGER_CAPI extern char const * const ckmc_owner_id_separator;
 
 /**
- * ckmc_owner_id_system constains id connected with all SYSTEM applications that runs
- * with uid less then 5000.
- *
- * Client should use ckmc_owner_id_system to access data owned by system application
- * and stored in system database.
- *
- * Note: Client must have permission to access proper row.
+ * @brief The owner of system database.
+ * @since_tizen 3.0
+ * @remarks ckmc_owner_id_system constains id connected with all SYSTEM applications that run
+ *          with uid less than 5000.
+ *          Client should use ckmc_owner_id_system to access data owned by system application
+ *          and stored in system database.
+ *          Note: Client must have permission to access proper row.
  */
 KEY_MANAGER_CAPI extern char const * const ckmc_owner_id_system;
 
