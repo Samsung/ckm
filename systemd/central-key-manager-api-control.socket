@@ -1,6 +1,6 @@
 [Socket]
 ListenStream=/tmp/.central-key-manager-api-control.sock
-SocketMode=0777
+SocketMode=0700
 
 Service=central-key-manager.service
 
