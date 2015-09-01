@@ -210,8 +210,9 @@ namespace DB {
                 bool m_inTransaction;
             };
 
-         private:
+         protected:
             SqlConnection* m_connection;
+         private:
             bool m_inUserTransaction;
 
             void resetDB();

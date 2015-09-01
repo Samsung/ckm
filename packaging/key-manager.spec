@@ -289,6 +289,7 @@ fi
 %{_datadir}/ckm-db-test/XML_1_wrong.xsd
 %{_datadir}/ckm-db-test/XML_2_structure.xml
 %{_bindir}/ckm_so_loader
+%{_bindir}/ckm_db_tool
 
 %files -n key-manager-pam-plugin
 %defattr(-,root,root,-)

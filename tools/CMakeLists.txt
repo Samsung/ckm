@@ -46,3 +46,4 @@ INSTALL(TARGETS ${CKM_TOOL}
                 WORLD_EXECUTE
      )
 
+ADD_SUBDIRECTORY(ckm_db_tool)

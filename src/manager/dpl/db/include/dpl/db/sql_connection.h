@@ -55,6 +55,24 @@ class SqlConnection
         DECLARE_EXCEPTION_TYPE(Base, InvalidArguments)
     };
 
+    /**
+     * Output of SQL command
+     */
+    class Output {
+    public:
+        typedef std::vector<std::string> Row;
+        typedef std::vector<Row> Rows;
+
+        static int Callback(void*,int,char**,char**);
+        const Row& GetNames() const { return m_names; }
+        const Rows& GetValues() const { return m_values; }
+    private:
+        void SetResults(int columns, char** values, char** names);
+
+        Row m_names;
+        Rows m_values;
+    };
+
     typedef int ColumnIndex;
     typedef int ArgumentIndex;
 
@@ -502,6 +520,17 @@ class SqlConnection
     void ExecCommand(const char *format, ...);
 
     /**
+     * Execute SQL command without result
+     *
+     * @param output  The output of SQL command will be stored in this object
+     *                if it's no NULL.
+     * @param format
+     * @param ...
+     */
+    //To prevent sql injection do not use this method for direct sql execution
+    void ExecCommand(Output* output, const char *format, ...);
+
+    /**
      * Execute BEGIN; command to start new transaction
      *
      */
@@ -541,6 +570,9 @@ class SqlConnection
      * @return Row ID
      */
     RowID GetLastInsertRowID() const;
+
+  private:
+    void ExecCommandHelper(Output* out, const char *format, va_list args);
 };
 } // namespace DB
 } // namespace CKM
