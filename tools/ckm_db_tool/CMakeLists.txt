@@ -10,6 +10,8 @@ PKG_CHECK_MODULES(CKM_DB_TOOL_DEP
     capi-system-info
     vconf
     libxml-2.0
+    cynara-client-async
+    cynara-creds-socket
     )
 
 FIND_PACKAGE(Threads REQUIRED)
@@ -33,6 +35,7 @@ SET(CKM_DB_TOOL_SOURCES
     ${PROJECT_SOURCE_DIR}/tools/ckm_db_tool/db-crypto-ext.cpp
     ${PROJECT_SOURCE_DIR}/tools/ckm_db_tool/ckm-logic-ext.cpp
 
+    ${KEY_MANAGER_PATH}/main/cynara.cpp
     ${KEY_MANAGER_PATH}/main/generic-socket-manager.cpp
     ${KEY_MANAGER_PATH}/main/socket-manager.cpp
     ${KEY_MANAGER_PATH}/main/smack-check.cpp

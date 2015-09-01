@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2000 - 2013 Samsung Electronics Co., Ltd All Rights Reserved
+ *  Copyright (c) 2000 - 2015 Samsung Electronics Co., Ltd All Rights Reserved
  *
  *  Contact: Bumjin Im <bj.im@samsung.com>
  *
@@ -36,6 +36,7 @@ namespace CKM
         InterfaceID interfaceID;
         MessageBuffer buffer;
         Credentials credentials;
+        bool checkInProgress;
     };
 
     typedef std::map<int, ConnectionInfo> ConnectionInfoMap;

@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2014 Samsung Electronics Co.
+ *  Copyright (c) 2014 - 2015 Samsung Electronics Co., Ltd All Rights Reserved
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ public:
     OCSPLogic& operator=(const OCSPLogic &) = delete;
     OCSPLogic& operator=(OCSPLogic &&) = delete;
 
-    RawBuffer ocspCheck(int commandId, const RawBufferVector &rawChain);
+    RawBuffer ocspCheck(int commandId, const RawBufferVector &rawChain, bool allowed);
     virtual ~OCSPLogic(){}
 private:
     void setNetAvailable();

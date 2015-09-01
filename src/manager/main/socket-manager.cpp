@@ -46,6 +46,8 @@
 #include <socket-manager.h>
 #include <socket-2-id.h>
 
+#include <cynara.h>
+
 namespace {
 
 const time_t SOCKET_TIMEOUT = 1000;
@@ -86,6 +88,7 @@ struct DummyService : public GenericSocketService {
     void Event(const WriteEvent &) {}
     void Event(const ReadEvent &) {}
     void Event(const CloseEvent &) {}
+    void Event(const SecurityEvent &) {}
 };
 
 struct SignalService : public GenericSocketService {
@@ -109,6 +112,7 @@ struct SignalService : public GenericSocketService {
     void Event(const AcceptEvent &) {} // not supported
     void Event(const WriteEvent &) {}  // not supported
     void Event(const CloseEvent &) {}  // not supported
+    void Event(const SecurityEvent &) {} // not supported
 
     void Event(const ReadEvent &event) {
         LogDebug("Get signal information");
@@ -139,23 +143,22 @@ SocketManager::CreateDefaultReadSocketDescription(int sock, bool timeout)
         m_socketDescriptionVector.resize(sock+20);
 
     auto &desc = m_socketDescriptionVector[sock];
-    desc.isListen = false;
-    desc.isOpen = true;
+    desc.setListen(false);
+    desc.setOpen(true);
+    desc.setCynara(false);
     desc.interfaceID = 0;
     desc.service = NULL;
     desc.counter = ++m_counter;
 
     if (timeout) {
         desc.timeout = time(NULL) + SOCKET_TIMEOUT;
-        if (false == desc.isTimeout) {
-            Timeout tm;
-            tm.time = desc.timeout;
-            tm.sock = sock;
-            m_timeoutQueue.push(tm);
-        }
+        Timeout tm;
+        tm.time = desc.timeout;
+        tm.sock = sock;
+        m_timeoutQueue.push(tm);
     }
 
-    desc.isTimeout = timeout;
+    desc.setTimeout(timeout);
 
     FD_SET(sock, &m_readSet);
     m_maxDesc = sock > m_maxDesc ? sock : m_maxDesc;
@@ -195,26 +198,31 @@ SocketManager::SocketManager()
         desc2.service = signalService;
         LogInfo("SignalService mounted on " << filefd << " descriptor");
     }
+
+    // We cannot create Cynara earlier because descriptors are not initialized!
+    m_cynara.reset(new Cynara(this));
 }
 
 SocketManager::~SocketManager() {
+    m_cynara.reset(nullptr);
     std::set<GenericSocketService*> serviceMap;
 
     // Find all services. Set is used to remove duplicates.
     // In this implementation, services are not able to react in any way.
     for (size_t i=0; i < m_socketDescriptionVector.size(); ++i)
-        if (m_socketDescriptionVector[i].isOpen)
+        if (m_socketDescriptionVector[i].isOpen())
             serviceMap.insert(m_socketDescriptionVector[i].service);
 
     // Time to destroy all services.
     for (auto service : serviceMap) {
         LogDebug("delete " << (void*)(service));
-        service->Stop();
+        if (service)
+            service->Stop();
         delete service;
     }
 
     for (size_t i = 0; i < m_socketDescriptionVector.size(); ++i)
-        if (m_socketDescriptionVector[i].isOpen)
+        if (m_socketDescriptionVector[i].isOpen())
             close(i);
 
     // All socket except one were closed. Now pipe input must be closed.
@@ -225,16 +233,21 @@ void SocketManager::ReadyForAccept(int sock) {
     struct sockaddr_un clientAddr;
     unsigned int clientLen = sizeof(clientAddr);
     int client = accept4(sock, (struct sockaddr*) &clientAddr, &clientLen, SOCK_NONBLOCK);
-//    LogInfo("Accept on sock: " << sock << " Socket opended: " << client);
     if (-1 == client) {
         int err = errno;
         LogDebug("Error in accept: " << GetErrnoString(err));
         return;
     }
 
+    std::string smack;
+    std::string user;
     Credentials peerCred;
-    if (0 > getCredentialsFromSocket(client, peerCred)) {
-        LogDebug("Error in getCredentialsFromSocket. Socket closed.");
+
+    if (0 > getCredentialsFromSocket(client, peerCred)
+        || !Cynara::GetUserFromSocket(client, user)
+        || !Cynara::GetClientFromSocket(client, smack))
+    {
+        LogDebug("Error in getting credentials from socket.");
         TEMP_FAILURE_RETRY(close(client));
         return;
     }
@@ -242,6 +255,9 @@ void SocketManager::ReadyForAccept(int sock) {
     auto &desc = CreateDefaultReadSocketDescription(client, true);
     desc.interfaceID = m_socketDescriptionVector[sock].interfaceID;
     desc.service = m_socketDescriptionVector[sock].service;
+    desc.cynaraPrivilege = m_socketDescriptionVector[sock].cynaraPrivilege;
+    desc.cynaraUser = std::move(user);
+    desc.cynaraClient = std::move(smack);
 
     GenericSocketService::AcceptEvent event;
     event.connectionID.sock = client;
@@ -251,9 +267,35 @@ void SocketManager::ReadyForAccept(int sock) {
     desc.service->Event(event);
 }
 
+void SocketManager::SecurityStatus(int sock, int counter, bool allowed) {
+    auto &desc = m_socketDescriptionVector[sock];
+    if (!desc.isOpen()) {
+        LogDebug("Client from socket " << sock <<
+            " closed connection before cynara answer was received.");
+        return;
+    }
+
+    if (desc.counter != counter) {
+        LogDebug("Client from socket " << sock <<
+            " closed connection before cynara answer was received.");
+        return;
+    }
+
+    GenericSocketService::SecurityEvent event;
+    event.connectionID.sock = sock;
+    event.connectionID.counter = counter;
+    event.allowed = allowed;
+    desc.service->Event(event);
+}
+
 void SocketManager::ReadyForRead(int sock) {
-    if (m_socketDescriptionVector[sock].isListen) {
+    if (m_socketDescriptionVector[sock].isListen()) {
         ReadyForAccept(sock);
+        return;
+    }
+
+    if (m_socketDescriptionVector[sock].isCynara()) {
+        m_cynara->ProcessSocket();
         return;
     }
 
@@ -285,7 +327,12 @@ void SocketManager::ReadyForRead(int sock) {
     }
 }
 
-void SocketManager::ReadyForWriteBuffer(int sock) {
+void SocketManager::ReadyForWrite(int sock) {
+    if (m_socketDescriptionVector[sock].isCynara()) {
+        m_cynara->ProcessSocket();
+        return;
+    }
+
     auto &desc = m_socketDescriptionVector[sock];
     size_t size = desc.rawBuffer.size();
     ssize_t result = write(sock, &desc.rawBuffer[0], size);
@@ -319,10 +366,6 @@ void SocketManager::ReadyForWriteBuffer(int sock) {
     event.left = desc.rawBuffer.size();
 
     desc.service->Event(event);
-}
-
-void SocketManager::ReadyForWrite(int sock) {
-    ReadyForWriteBuffer(sock);
 }
 
 void SocketManager::MainLoop() {
@@ -383,9 +426,9 @@ void SocketManager::MainLoop() {
 
             auto &desc = m_socketDescriptionVector[pqTimeout.sock];
 
-            if (!desc.isTimeout || !desc.isOpen) {
+            if (!desc.isTimeout() || !desc.isOpen()) {
                 // Connection was closed. Timeout is useless...
-                desc.isTimeout = false;
+                desc.setTimeout(false);
                 continue;
             }
 
@@ -400,7 +443,7 @@ void SocketManager::MainLoop() {
             // timeout from m_timeoutQueue matches with socket.timeout
             // and connection is open. Time to close it!
             // Putting new timeout in queue here is pointless.
-            desc.isTimeout = false;
+            desc.setTimeout(false);
             CloseSocket(pqTimeout.sock);
 
             // All done. Now we should process next select ;-)
@@ -488,12 +531,12 @@ int SocketManager::CreateDomainSocketHelp(
     }
 
     if (smack_check()) {
-        LogInfo("Set up smack label: " << desc.smackLabel);
+        LogInfo("Set up smack label: " << desc.privilege);
 
-        if (0 != smack_fsetlabel(sockfd, desc.smackLabel.c_str(), SMACK_LABEL_IPIN)) {
-            LogError("Error in smack_fsetlabel");
-            ThrowMsg(Exception::InitFailed, "Error in smack_fsetlabel");
-        }
+//        if (0 != smack_fsetlabel(sockfd, desc.smackLabel.c_str(), SMACK_LABEL_IPIN)) {
+//            LogError("Error in smack_fsetlabel");
+//            ThrowMsg(Exception::InitFailed, "Error in smack_fsetlabel");
+//        }
     } else {
         LogInfo("No smack on platform. Socket won't be securied with smack label!");
     }
@@ -547,9 +590,10 @@ void SocketManager::CreateDomainSocket(
 
     auto &description = CreateDefaultReadSocketDescription(sockfd, false);
 
-    description.isListen = true;
+    description.setListen(true);
     description.interfaceID = desc.interfaceID;
     description.service = service;
+    description.cynaraPrivilege = desc.privilege;
 
     LogDebug("Listen on socket: " << sockfd <<
         " Handler: " << desc.serviceHandlerPath.c_str());
@@ -566,9 +610,9 @@ void SocketManager::RegisterSocketService(GenericSocketService *service) {
         for (int i =0; i < (int)m_socketDescriptionVector.size(); ++i)
         {
             auto &desc = m_socketDescriptionVector[i];
-            if (desc.service == service && desc.isOpen) {
+            if (desc.service == service && desc.isOpen()) {
                 close(i);
-                desc.isOpen = false;
+                desc.setOpen(false);
             }
         }
         ReThrow(Exception::Base);
@@ -576,20 +620,28 @@ void SocketManager::RegisterSocketService(GenericSocketService *service) {
 }
 
 void SocketManager::Close(ConnectionID connectionID) {
-    {
-        std::lock_guard<std::mutex> ulock(m_eventQueueMutex);
-        m_closeQueue.push(connectionID);
-    }
-    NotifyMe();
+    CloseEvent event;
+    event.sock = connectionID.sock;
+    event.counter = connectionID.counter;
+    AddEvent(event);
 }
 
 void SocketManager::Write(ConnectionID connectionID, const RawBuffer &rawBuffer) {
-    WriteBuffer buffer;
-    buffer.connectionID = connectionID;
-    buffer.rawBuffer = rawBuffer;
+    WriteEvent event{connectionID, rawBuffer};
+    AddEvent(event);
+}
+
+void SocketManager::SecurityCheck(ConnectionID connectionID) {
+    SecurityEvent event;
+    event.sock = connectionID.sock;
+    event.counter = connectionID.counter;
+    AddEvent(event);
+}
+
+void SocketManager::CreateEvent(EventFunction fun) {
     {
         std::lock_guard<std::mutex> ulock(m_eventQueueMutex);
-        m_writeBufferQueue.push(buffer);
+        m_eventQueue.push(std::move(fun));
     }
     NotifyMe();
 }
@@ -599,60 +651,74 @@ void SocketManager::NotifyMe() {
 }
 
 void SocketManager::ProcessQueue() {
-    WriteBuffer buffer;
-    {
-        std::lock_guard<std::mutex> ulock(m_eventQueueMutex);
-        while (!m_writeBufferQueue.empty()) {
-            buffer = m_writeBufferQueue.front();
-            m_writeBufferQueue.pop();
-
-            auto &desc = m_socketDescriptionVector[buffer.connectionID.sock];
-
-            if (!desc.isOpen) {
-                LogDebug("Received packet for write but connection is closed. Packet ignored!");
-                continue;
-            }
-
-            if (desc.counter != buffer.connectionID.counter)
-            {
-                LogDebug("Received packet for write but counter is broken. Packet ignored!");
-                continue;
-            }
-
-            std::copy(
-                buffer.rawBuffer.begin(),
-                buffer.rawBuffer.end(),
-                std::back_inserter(desc.rawBuffer));
-
-            FD_SET(buffer.connectionID.sock, &m_writeSet);
-        }
-
-    }
-
-    while (1) {
-        ConnectionID connection;
+    while(1) {
+        EventFunction fun;
         {
             std::lock_guard<std::mutex> ulock(m_eventQueueMutex);
-            if (m_closeQueue.empty())
+            if (m_eventQueue.empty())
                 return;
-            connection = m_closeQueue.front();
-            m_closeQueue.pop();
+            fun = std::move(m_eventQueue.front());
+            m_eventQueue.pop();
         }
-
-        if (!m_socketDescriptionVector[connection.sock].isOpen)
-            continue;
-
-        if (connection.counter != m_socketDescriptionVector[connection.sock].counter)
-            continue;
-
-        CloseSocket(connection.sock);
+        fun();
     }
+}
+
+void SocketManager::Handle(const WriteEvent &event) {
+    auto &desc = m_socketDescriptionVector[event.connectionID.sock];
+
+    if (!desc.isOpen()) {
+        LogDebug("Received packet for write but connection is closed. Packet ignored!");
+        return;
+    }
+
+    if (desc.counter != event.connectionID.counter)
+    {
+        LogDebug("Received packet for write but counter is broken. Packet ignored!");
+        return;
+    }
+
+    std::copy(
+        event.rawBuffer.begin(),
+        event.rawBuffer.end(),
+        std::back_inserter(desc.rawBuffer));
+
+    FD_SET(event.connectionID.sock, &m_writeSet);
+}
+
+void SocketManager::Handle(const CloseEvent &event) {
+    if (!m_socketDescriptionVector[event.sock].isOpen())
+        return;
+
+    if (event.counter != m_socketDescriptionVector[event.sock].counter)
+        return;
+
+    CloseSocket(event.sock);
+}
+
+void SocketManager::Handle(const SecurityEvent &event) {
+    auto& desc = m_socketDescriptionVector[event.sock];
+    if (!desc.isOpen())
+        return;
+
+    if (event.counter != desc.counter)
+        return;
+
+    std::string session = std::to_string(desc.counter);
+
+    m_cynara->Request(desc.cynaraUser,
+                      desc.cynaraClient,
+                      session,
+                      desc.cynaraPrivilege,
+                      [this, event](bool allowed) {
+                          this->SecurityStatus(event.sock, event.counter, allowed);
+                      });
 }
 
 void SocketManager::CloseSocket(int sock) {
     auto &desc = m_socketDescriptionVector[sock];
 
-    if (!(desc.isOpen)) {
+    if (!(desc.isOpen())) {
         // This may happend when some information was waiting for write to the
         // socket and in the same time socket was closed by the client.
         LogError("Socket " << sock << " is not open. Nothing to do!");
@@ -664,7 +730,7 @@ void SocketManager::CloseSocket(int sock) {
     event.connectionID.counter = desc.counter;
     auto service = desc.service;
 
-    desc.isOpen = false;
+    desc.setOpen(false);
     desc.service = NULL;
     desc.interfaceID = -1;
     desc.rawBuffer.clear();
@@ -677,6 +743,33 @@ void SocketManager::CloseSocket(int sock) {
     TEMP_FAILURE_RETRY(close(sock));
     FD_CLR(sock, &m_readSet);
     FD_CLR(sock, &m_writeSet);
+}
+
+void SocketManager::CynaraSocket(int oldFd, int newFd, bool isRW) {
+    if (newFd != oldFd) {
+        if (newFd >= 0) {
+            auto &desc = CreateDefaultReadSocketDescription(newFd, false);
+            desc.service = nullptr;
+            desc.setCynara(true);
+        }
+
+        if (oldFd >= 0) {
+            auto &old = m_socketDescriptionVector[oldFd];
+            old.setOpen(false);
+            old.setCynara(false);
+            FD_CLR(oldFd, &m_writeSet);
+            FD_CLR(oldFd, &m_readSet);
+        }
+    }
+
+    if (newFd >= 0) {
+        FD_SET(newFd, &m_readSet);
+
+        if (isRW)
+            FD_SET(newFd, &m_writeSet);
+        else
+            FD_CLR(newFd, &m_writeSet);
+    }
 }
 
 } // namespace CKM

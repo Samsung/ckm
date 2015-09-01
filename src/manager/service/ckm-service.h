@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2000 - 2014 Samsung Electronics Co., Ltd All Rights Reserved
+ *  Copyright (c) 2000 - 2015 Samsung Electronics Co., Ltd All Rights Reserved
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -39,12 +39,27 @@ public:
     CKMService& operator=(const CKMService &) = delete;
     CKMService& operator=(CKMService &&) = delete;
 
+    // Custom add custom support for ReadEvent and SecurityEvent
+    // because we want to bypass security check in CKMService
+    virtual void Event(const ReadEvent &event) {
+        CreateEvent([this, event]() { this->CustomHandle(event); });
+    }
+
+    virtual void Event(const SecurityEvent &event) {
+        CreateEvent([this, event]() { this->CustomHandle(event); });
+    }
+
     virtual void Start(void);
     virtual void Stop(void);
 
     virtual ~CKMService();
 
     ServiceDescriptionVector GetServiceDescription();
+
+protected:
+    // CustomHandle is used to bypass security check
+    void CustomHandle(const ReadEvent &event);
+    void CustomHandle(const SecurityEvent &event);
 
 private:
     virtual void SetCommManager(CommMgr *manager);
@@ -57,7 +72,8 @@ private:
 
     bool ProcessOne(
         const ConnectionID &conn,
-        ConnectionInfo &info);
+        ConnectionInfo &info,
+        bool allowed);
 
     RawBuffer ProcessControl(
         MessageBuffer &buffer);

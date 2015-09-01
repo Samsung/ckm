@@ -28,7 +28,7 @@
 
 namespace CKM {
 
-class ThreadService: public CKM::GenericSocketService, public CKM::ServiceThread
+class ThreadService: public GenericSocketService, public ServiceThread
 {
 public:
     ThreadService();
@@ -39,21 +39,23 @@ public:
     void Event(const WriteEvent& event) { ThreadEvent(event); }
     void Event(const ReadEvent& event) { ThreadEvent(event); }
     void Event(const CloseEvent& event) { ThreadEvent(event); }
+    void Event(const SecurityEvent &event) { ThreadEvent(event); }
 
 protected:
     virtual bool ProcessOne(const ConnectionID &conn,
-                            ConnectionInfo &info) = 0;
+                            ConnectionInfo &info,
+                            bool allowed) = 0;
 
     template <typename E>
     void ThreadEvent(const E& event) {
         CreateEvent([this, event]() { this->Handle(event); });
     }
-private:
 
     void Handle(const AcceptEvent &event);
     void Handle(const WriteEvent &event);
     void Handle(const ReadEvent &event);
     void Handle(const CloseEvent &event);
+    void Handle(const SecurityEvent &event);
 
     ConnectionInfoMap m_connectionInfoMap;
 };

@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2000 - 2014 Samsung Electronics Co., Ltd All Rights Reserved
+ *  Copyright (c) 2000 - 2015 Samsung Electronics Co., Ltd All Rights Reserved
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -54,8 +54,8 @@ void CKMService::Stop() {
 GenericSocketService::ServiceDescriptionVector CKMService::GetServiceDescription()
 {
     return ServiceDescriptionVector {
-        {SERVICE_SOCKET_CKM_CONTROL, "key-manager::api-control", SOCKET_ID_CONTROL},
-        {SERVICE_SOCKET_CKM_STORAGE, "key-manager::api-storage", SOCKET_ID_STORAGE}
+        {SERVICE_SOCKET_CKM_CONTROL, "http://tizen.org/privilege/keymanager.admin", SOCKET_ID_CONTROL},
+        {SERVICE_SOCKET_CKM_STORAGE, "http://tizen.org/privilege/keymanager", SOCKET_ID_STORAGE}
     };
 }
 
@@ -65,9 +65,12 @@ void CKMService::SetCommManager(CommMgr *manager)
     Register(*manager);
 }
 
+// CKMService does not support security check
+// so 3rd parameter is not used
 bool CKMService::ProcessOne(
     const ConnectionID &conn,
-    ConnectionInfo &info)
+    ConnectionInfo &info,
+    bool /*allowed*/)
 {
     LogDebug ("process One");
     RawBuffer response;
@@ -407,6 +410,17 @@ void CKMService::ProcessMessage(MsgKeyRequest msg)
     } catch (...) {
         LogError("Uncaught exception in SendMessage. Check listeners.");
     }
+}
+
+void CKMService::CustomHandle(const ReadEvent &event) {
+    LogDebug("Read event");
+    auto &info = m_connectionInfoMap[event.connectionID.counter];
+    info.buffer.Push(event.rawBuffer);
+    while(ProcessOne(event.connectionID, info, true));
+}
+
+void CKMService::CustomHandle(const SecurityEvent & /*event*/) {
+    LogError("This should not happend! SecurityEvent was called on CKMService!");
 }
 
 } // namespace CKM

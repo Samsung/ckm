@@ -39,13 +39,28 @@ public:
     // from ThreadService
     ServiceDescriptionVector GetServiceDescription();
 
+    // Custom add custom support for ReadEvent and SecurityEvent
+    // because we want to bypass security check in EncryptionService
+    virtual void Event(const ReadEvent &event) {
+        CreateEvent([this, event]() { this->CustomHandle(event); });
+    }
+
+    virtual void Event(const SecurityEvent &event) {
+        CreateEvent([this, event]() { this->CustomHandle(event); });
+    }
+
     void Start();
     void Stop();
+
+protected:
+    // CustomHandle is used to bypass security check
+    void CustomHandle(const ReadEvent &event);
+    void CustomHandle(const SecurityEvent &event);
 
 private:
     virtual void SetCommManager(CommMgr *manager);
 
-    bool ProcessOne(const ConnectionID &conn, ConnectionInfo &info);
+    bool ProcessOne(const ConnectionID &conn, ConnectionInfo &info, bool allowed);
     void ProcessMessage(MsgKeyResponse msg);
     void ProcessEncryption(const ConnectionID &conn,
                            const Credentials &cred,

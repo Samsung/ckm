@@ -10,6 +10,8 @@ PKG_CHECK_MODULES(KEY_MANAGER_DEP
     vconf
     libxml-2.0
     security-manager
+    cynara-client-async
+    cynara-creds-socket
     )
 FIND_PACKAGE(Threads REQUIRED)
 
@@ -27,6 +29,7 @@ ELSE (MOCKUP_SM MATCHES "ON")
 ENDIF (MOCKUP_SM MATCHES "ON")
 
 SET(KEY_MANAGER_SOURCES
+    ${KEY_MANAGER_PATH}/main/cynara.cpp
     ${KEY_MANAGER_PATH}/main/generic-socket-manager.cpp
     ${KEY_MANAGER_PATH}/main/socket-manager.cpp
     ${KEY_MANAGER_PATH}/main/key-manager-main.cpp

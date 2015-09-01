@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2014 Samsung Electronics Co.
+ *  Copyright (c) 2014 - 2015 Samsung Electronics Co., Ltd All Rights Reserved
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -76,7 +76,7 @@ void OCSPLogic::setNetAvailable()
     m_isNetAvailable = false;
 }
 
-RawBuffer OCSPLogic::ocspCheck(int commandId, const RawBufferVector &rawChain) {
+RawBuffer OCSPLogic::ocspCheck(int commandId, const RawBufferVector &rawChain, bool allowed) {
     CertificateImplVector certChain;
     OCSPModule ocsp;
     int retCode = CKM_API_SUCCESS;
@@ -89,18 +89,18 @@ RawBuffer OCSPLogic::ocspCheck(int commandId, const RawBufferVector &rawChain) {
 
     if (!m_isNetAvailable) {
         retCode = CKM_API_ERROR_NOT_SUPPORTED;
+    } else if (!allowed) {
+        retCode = CKM_API_ERROR_ACCESS_DENIED;
+    } else if(rawChain.size() < 2) {
+        LogError("Certificate chain should contain at least 2 certificates");
+        retCode = CKM_API_ERROR_INPUT_PARAM;
     } else {
-        if (rawChain.size() < 2) {
-            LogError("Certificate chain should contain at least 2 certificates");
-            retCode = CKM_API_ERROR_INPUT_PARAM;
-        } else {
-            for (auto &e: rawChain) {
-                certChain.push_back(CertificateImpl(e, DataFormat::FORM_DER));
-                if (certChain.rbegin()->empty()) {
-                    LogDebug("Error in parsing certificates!");
-                    retCode = CKM_API_ERROR_INPUT_PARAM;
-                    break;
-                }
+        for (auto &e: rawChain) {
+            certChain.push_back(CertificateImpl(e, DataFormat::FORM_DER));
+            if (certChain.rbegin()->empty()) {
+                LogDebug("Error in parsing certificates!");
+                retCode = CKM_API_ERROR_INPUT_PARAM;
+                break;
             }
         }
     }

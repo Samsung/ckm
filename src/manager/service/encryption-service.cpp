@@ -64,7 +64,7 @@ void EncryptionService::RequestKey(const CryptoRequest& request)
 GenericSocketService::ServiceDescriptionVector EncryptionService::GetServiceDescription()
 {
     return ServiceDescriptionVector {
-        {SERVICE_SOCKET_ENCRYPTION, "key-manager::api-encryption", SOCKET_ID_ENCRYPTION}
+        {SERVICE_SOCKET_ENCRYPTION, "http://tizen.org/privilege/keymanager", SOCKET_ID_ENCRYPTION}
     };
 }
 
@@ -82,9 +82,12 @@ void EncryptionService::SetCommManager(CommMgr *manager)
     Register(*manager);
 }
 
+// Encryption Service does not support any kind of security-check
+// and 3rd parameter is not required
 bool EncryptionService::ProcessOne(
     const ConnectionID &conn,
-    ConnectionInfo &info)
+    ConnectionInfo &info,
+    bool /*allowed*/)
 {
     LogDebug ("process One");
     try {
@@ -125,6 +128,17 @@ void EncryptionService::ProcessEncryption(const ConnectionID &conn,
     req.conn = conn;
     req.cred = cred;
     m_logic.Crypt(req);
+}
+
+void EncryptionService::CustomHandle(const ReadEvent &event) {
+    LogDebug("Read event");
+    auto &info = m_connectionInfoMap[event.connectionID.counter];
+    info.buffer.Push(event.rawBuffer);
+    while(ProcessOne(event.connectionID, info, true));
+}
+
+void EncryptionService::CustomHandle(const SecurityEvent &/*event*/) {
+    LogError("This should not happend! SecurityEvent was called on EncryptionService!");
 }
 
 } /* namespace CKM */

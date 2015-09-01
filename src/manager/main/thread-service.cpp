@@ -47,12 +47,43 @@ void ThreadService::Handle(const ReadEvent &event) {
     LogDebug("Read event");
     auto &info = m_connectionInfoMap[event.connectionID.counter];
     info.buffer.Push(event.rawBuffer);
-    while(ProcessOne(event.connectionID, info));
+
+    if (!info.buffer.Ready())
+        return;
+
+    if (info.checkInProgress)
+        return;
+
+    info.checkInProgress = true;
+    m_serviceManager->SecurityCheck(event.connectionID);
 }
 
 void ThreadService::Handle(const CloseEvent &event) {
     LogDebug("Close event");
     m_connectionInfoMap.erase(event.connectionID.counter);
+}
+
+void ThreadService::Handle(const SecurityEvent &event) {
+    LogDebug("Security event");
+    auto it = m_connectionInfoMap.find(event.connectionID.counter);
+
+    if (it == m_connectionInfoMap.end()) {
+        LogDebug("Connection has been closed already");
+        return;
+    }
+    auto &info = it->second;
+
+    if (!info.checkInProgress) {
+        LogDebug("Wrong status in info.checkInProgress. Expected: true.");
+        return;
+    }
+
+    ProcessOne(event.connectionID, info, event.allowed);
+
+    if (info.buffer.Ready())
+        m_serviceManager->SecurityCheck(event.connectionID);
+    else
+        info.checkInProgress = false;
 }
 
 } /* namespace CKM */

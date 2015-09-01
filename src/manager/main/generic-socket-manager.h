@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2000 - 2014 Samsung Electronics Co., Ltd All Rights Reserved
+ *  Copyright (c) 2000 - 2015 Samsung Electronics Co., Ltd All Rights Reserved
  *
  *  Contact: Bumjin Im <bj.im@samsung.com>
  *
@@ -60,16 +60,16 @@ struct GenericSocketService {
     typedef std::string ServiceHandlerPath;
     struct ServiceDescription {
         ServiceDescription(const char *path,
-            const char *smackLabel,
+            const char *privilege,
             InterfaceID interfaceID = 0,
             bool useSendMsg = false)
-          : smackLabel(smackLabel)
+          : privilege(privilege)
           , interfaceID(interfaceID)
           , serviceHandlerPath(path)
           , useSendMsg(useSendMsg)
         {}
 
-        Label smackLabel;                      // Smack label for socket
+        std::string privilege;                 // privilege for socket
         InterfaceID interfaceID;               // All data from serviceHandlerPath will be marked with this interfaceHandler
         ServiceHandlerPath serviceHandlerPath; // Path to file
         bool useSendMsg;
@@ -98,6 +98,11 @@ struct GenericSocketService {
         ConnectionID connectionID;
     };
 
+    struct SecurityEvent : public GenericEvent {
+        ConnectionID connectionID;
+        bool allowed;
+    };
+
     virtual void SetSocketManager(GenericSocketManager *manager) {
         m_serviceManager = manager;
     }
@@ -110,6 +115,7 @@ struct GenericSocketService {
     virtual void Event(const WriteEvent &event) = 0;
     virtual void Event(const ReadEvent &event) = 0;
     virtual void Event(const CloseEvent &event) = 0;
+    virtual void Event(const SecurityEvent &event) = 0;
 
     virtual void Start() = 0;
     virtual void Stop() = 0;
@@ -124,8 +130,10 @@ protected:
 struct GenericSocketManager {
     virtual void MainLoop() = 0;
     virtual void RegisterSocketService(GenericSocketService *ptr) = 0;
+    virtual void CynaraSocket(int oldFd, int newFd, bool isRW) = 0;
     virtual void Close(ConnectionID connectionID) = 0;
     virtual void Write(ConnectionID connectionID, const RawBuffer &rawBuffer) = 0;
+    virtual void SecurityCheck(ConnectionID connectionID) = 0;
     virtual ~GenericSocketManager(){}
 };
 

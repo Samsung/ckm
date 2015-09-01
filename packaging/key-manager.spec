@@ -21,6 +21,8 @@ BuildRequires: pkgconfig(libsystemd-journal)
 BuildRequires: pkgconfig(libxml-2.0)
 BuildRequires: pkgconfig(capi-system-info)
 BuildRequires: pkgconfig(security-manager)
+BuildRequires: pkgconfig(cynara-client-async)
+BuildRequires: pkgconfig(cynara-creds-socket)
 BuildRequires: boost-devel
 Requires: libkey-manager-common = %{version}-%{release}
 %{?systemd_requires}
