@@ -404,17 +404,6 @@ void SqlConnection::DataCommand::Reset()
     LogPedantic("SQL data command reset");
 }
 
-SqlConnection::ColumnIndex SqlConnection::DataCommand::GetColumnCount() {
-    return sqlcipher3_column_count(m_stmt);
-}
-
-int SqlConnection::DataCommand::GetColumnType(
-    SqlConnection::ColumnIndex column)
-{
-    CheckColumnIndex(column);
-    return sqlcipher3_column_type(m_stmt, column);
-}
-
 void SqlConnection::DataCommand::CheckColumnIndex(
     SqlConnection::ColumnIndex column)
 {

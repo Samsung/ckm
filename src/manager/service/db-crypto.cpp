@@ -21,7 +21,6 @@
  */
 
 #include <fstream>
-#include <sstream>
 #include <db-crypto.h>
 #include <dpl/db/sql_connection.h>
 #include <dpl/log/log.h>
@@ -826,74 +825,6 @@ namespace DB {
         insertObjectCommand->BindString (102, row.ownerLabel.c_str());
 
         insertObjectCommand->Step();
-    }
-
-    std::string Crypto::getSchema() {
-        SqlConnection::DataCommandUniquePtr schema =
-                m_connection->PrepareDataCommand("SELECT sql FROM "
-                        "(SELECT * FROM sqlcipher_master UNION ALL "
-                        "SELECT * FROM sqlcipher_temp_master) "
-                        "WHERE type!='meta' "
-                        "ORDER BY tbl_name, type DESC, name;");
-
-        std::stringstream ss;
-        while(schema->Step()) {
-            ss << schema->GetColumnString(0) << std::endl;
-        }
-        return ss.str();
-    }
-
-    std::string Crypto::getContent() {
-        SqlConnection::DataCommandUniquePtr tableSelect =
-                m_connection->PrepareDataCommand(
-                        "SELECT name FROM sqlcipher_master "
-                        "WHERE type IN ('table','view') AND name NOT LIKE 'sqlcipher_%' "
-                        "UNION ALL "
-                        "SELECT name FROM sqlcipher_temp_master "
-                        "WHERE type IN ('table','view') "
-                        "ORDER BY 1; ");
-
-        std::vector<std::string> tables;
-        while(tableSelect->Step()) {
-            tables.push_back(tableSelect->GetColumnString(0));
-        }
-
-        std::stringstream ss;
-
-        for (auto &e : tables) {
-            ss << "Table " << e << std::endl;
-            std::string query = "select * from " + e + ";";
-            SqlConnection::DataCommandUniquePtr result =
-                m_connection->PrepareDataCommand(query.c_str());
-            while(result->Step()) {
-                int maxColumn = result->GetColumnCount();
-                for (int i = 0; i < maxColumn; ++i) {
-                    switch(result->GetColumnType(i)) {
-                        case 1: // int64
-                            ss << result->GetColumnInteger(i) << " | ";
-                            break;
-                        case 2: // float
-                            ss << result->GetColumnFloat(i) << " | ";
-                            break;
-                        case 3: // string
-                            ss << result->GetColumnString(i) << " | ";
-                            break;
-                        case 4: // Blob
-                            {
-                            auto buffer = result->GetColumnBlob(i);
-                            ss << "BLOB (Size: " << buffer.size() << ") | ";
-                            break;
-                            }
-                        case 5: // NULL
-                            ss << "NULL | ";
-                            break;
-                    }
-                }
-                ss << std::endl;
-            }
-        }
-
-        return ss.str();
     }
 } // namespace DB
 } // namespace CKM
