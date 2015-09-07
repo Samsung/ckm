@@ -20,6 +20,7 @@
  */
 #pragma once
 #include <memory>
+#include <vector>
 
 #include <ckm/ckm-raw-buffer.h>
 #include <ckm/ckm-type.h>
@@ -58,6 +59,7 @@ public:
 
 typedef std::unique_ptr<GObj> GObjUPtr;
 typedef std::shared_ptr<GObj> GObjShPtr;
+typedef std::vector<GObjUPtr> GObjUPtrVector;
 
 } // namespace Crypto
 } // namespace CKM

@@ -38,17 +38,37 @@ public:
     virtual ~CryptoLogic(){}
 
     void decryptRow(const Password &password, DB::Row &row);
-    void encryptRow(const Password &password, DB::Row &row);
+    void encryptRow(DB::Row &row);
+
+    static int getSchemeVersion(int encryptionScheme);
 
     bool haveKey(const Label &smackLabel);
     void pushKey(const Label &smackLabel,
                  const RawBuffer &applicationKey);
     void removeKey(const Label &smackLabel);
 
+    static const int ENCRYPTION_V1 = 0;
+    static const int ENCRYPTION_V2 = 1;
+
 private:
+    // Encryption scheme flags (enable/disable specific encryption type, multiple choice)
     static const int ENCR_BASE64 =   1 << 0;
     static const int ENCR_APPKEY =   1 << 1;
     static const int ENCR_PASSWORD = 1 << 2;
+
+    // Encryption order flags (single choice)
+    static const int ENCR_ORDER_CLEAR = 0x00ffffff;
+    static const int ENCR_ORDER_FILTER = ~ENCR_ORDER_CLEAR;
+    /*
+     * ENCR_ORDER_V1 - v1 encryption order. Token returned from store is encrypted with app key and
+     * optionally by custom user password. Is such form it is stored in db.
+     */
+    static const int ENCR_ORDER_V1 = ENCR_ORDER_CLEAR + 0;
+    /*
+     * ENCR_ORDER_V2 - v2 encryption order. Stored data is optionally encrypted by store with
+     * user password. Returned token is encrypted with app key and stored in db.
+     */
+    static const int ENCR_ORDER_V2 = ENCR_ORDER_CLEAR + 1;
 
     std::map<Label, RawBuffer> m_keyMap;
 

@@ -31,10 +31,10 @@ class Store : public GStore {
 public:
     explicit Store(CryptoBackend backendId);
 
-    virtual GObjUPtr getObject(const Token &token);
-    virtual TokenPair generateAKey(const CryptoAlgorithm &);
-    virtual Token generateSKey(const CryptoAlgorithm &);
-    virtual Token import(DataType dataType, const RawBuffer &buffer);
+    virtual GObjUPtr getObject(const Token &, const Password &);
+    virtual TokenPair generateAKey(const CryptoAlgorithm &, const Password &, const Password &);
+    virtual Token generateSKey(const CryptoAlgorithm &, const Password &);
+    virtual Token import(DataType, const RawBuffer &, const Password &);
     virtual void destroy(const Token &){}
 };
 

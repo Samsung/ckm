@@ -30,15 +30,15 @@ Store::Store(CryptoBackend backendId)
   : GStore(backendId)
 {}
 
-GObjUPtr Store::getObject(const Token &) {
+GObjUPtr Store::getObject(const Token &, const  Password &) {
     ThrowErr(Exc::Crypto::OperationNotSupported, "Trust zone backend is not implemented!");
 }
 
-TokenPair Store::generateAKey(const CryptoAlgorithm &) {
+TokenPair Store::generateAKey(const CryptoAlgorithm &, const Password &, const Password &) {
     ThrowErr(Exc::Crypto::OperationNotSupported, "Trust zone backend is not implemented!");
 }
 
-Token Store::import(DataType, const RawBuffer &) {
+Token Store::import(DataType, const RawBuffer &, const Password &) {
     ThrowErr(Exc::Crypto::OperationNotSupported, "Trust zone backend is not implemented!");
 }
 

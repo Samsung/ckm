@@ -59,10 +59,6 @@ AlgoType key2algo(DataType type) {
 
 typedef std::unique_ptr<BIO, std::function<void(BIO*)>> BioUniquePtr;
 
-RawBuffer BData::getBinary() const {
-    return m_raw;
-}
-
 RawBuffer SKey::encrypt(const CryptoAlgorithm &alg, const RawBuffer &data)
 {
     return Internals::symmetricEncrypt(getBinary(), alg, data);

@@ -40,7 +40,7 @@ public:
       , m_type(keyType)
     {}
 
-    virtual RawBuffer getBinary() const;
+    virtual RawBuffer getBinary() const { return m_raw; }
 protected:
     RawBuffer m_raw;
     DataType m_type;

@@ -314,14 +314,10 @@ private:
         bool exportFlag,
         DB::Crypto & database);
 
-    int readDataHelper(
-        bool exportFlag,
-        const Credentials &cred,
-        DataType dataType,
-        const Name &name,
-        const Label &label,
-        const Password &password,
-        DB::Row &row);
+    Crypto::GObjUPtr rowToObject(
+        UserData& handler,
+        DB::Row row,
+        const Password& password);
 
     int readDataHelper(
         bool exportFlag,
@@ -330,7 +326,26 @@ private:
         const Name &name,
         const Label &label,
         const Password &password,
-        DB::RowVector &rows);
+        Crypto::GObjUPtr &obj);
+
+    int readDataHelper(
+        bool exportFlag,
+        const Credentials &cred,
+        DataType dataType,
+        const Name &name,
+        const Label &label,
+        const Password &password,
+        Crypto::GObjUPtr &obj,
+        DataType& objDataType);
+
+    int readDataHelper(
+        bool exportFlag,
+        const Credentials &cred,
+        DataType dataType,
+        const Name &name,
+        const Label &label,
+        const Password &password,
+        Crypto::GObjUPtrVector &objs);
 
     int createKeyAESHelper(
         const Credentials &cred,

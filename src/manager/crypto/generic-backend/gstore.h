@@ -33,11 +33,21 @@ namespace Crypto {
 
 class GStore {
 public:
-    virtual GObjUPtr getObject(const Token &) { ThrowErr(Exc::Crypto::OperationNotSupported); }
-    virtual TokenPair generateAKey(const CryptoAlgorithm &) { ThrowErr(Exc::Crypto::OperationNotSupported); }
-    virtual Token generateSKey(const CryptoAlgorithm &) { ThrowErr(Exc::Crypto::OperationNotSupported); }
-    virtual Token import(DataType, const RawBuffer &) { ThrowErr(Exc::Crypto::OperationNotSupported); }
-    virtual void destroy(const Token &) { ThrowErr(Exc::Crypto::OperationNotSupported); }
+    virtual GObjUPtr getObject(const Token &, const Password &) {
+        ThrowErr(Exc::Crypto::OperationNotSupported);
+    }
+    virtual TokenPair generateAKey(const CryptoAlgorithm &, const Password &, const Password &) {
+        ThrowErr(Exc::Crypto::OperationNotSupported);
+    }
+    virtual Token generateSKey(const CryptoAlgorithm &, const Password &) {
+        ThrowErr(Exc::Crypto::OperationNotSupported);
+    }
+    virtual Token import(DataType, const RawBuffer &, const Password &) {
+        ThrowErr(Exc::Crypto::OperationNotSupported);
+    }
+    virtual void destroy(const Token &) {
+        ThrowErr(Exc::Crypto::OperationNotSupported);
+    }
     virtual ~GStore() {}
 
 protected:

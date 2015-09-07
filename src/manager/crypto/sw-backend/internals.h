@@ -24,7 +24,6 @@
 #include <certificate-impl.h>
 #include <ckm/ckm-type.h>
 #include <openssl/evp.h>
-#include <token.h>
 #include <sw-backend/obj.h>
 
 #define EVP_SUCCESS 1	// DO NOTCHANGE THIS VALUE
@@ -40,13 +39,21 @@ namespace Crypto {
 namespace SW {
 namespace Internals {
 
-TokenPair createKeyPairRSA(CryptoBackend backendId, const int size);
-TokenPair createKeyPairDSA(CryptoBackend backendId, const int size);
-TokenPair createKeyPairECDSA(CryptoBackend backendId, ElipticCurve type1);
-Token     createKeyAES(CryptoBackend backendId, const int sizeBits);
+// TODO replace it with DataContainer
+struct Data {
+    DataType type;
+    RawBuffer buffer;
+};
 
-TokenPair generateAKey(CryptoBackend backendId, const CryptoAlgorithm &algorithm);
-Token generateSKey(CryptoBackend backendId, const CryptoAlgorithm &algorithm);
+typedef std::pair<Data,Data> DataPair;
+
+DataPair createKeyPairRSA(const int size);
+DataPair createKeyPairDSA(const int size);
+DataPair createKeyPairECDSA(ElipticCurve type1);
+Data     createKeyAES(const int sizeBits);
+
+DataPair generateAKey(const CryptoAlgorithm &algorithm);
+Data generateSKey(const CryptoAlgorithm &algorithm);
 
 RawBuffer symmetricEncrypt(const RawBuffer &key,
                            const CryptoAlgorithm &alg,

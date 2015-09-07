@@ -368,7 +368,7 @@ int getRsaPadding(const RSAPaddingAlgorithm padAlgo) {
     return rsa_padding;
 }
 
-TokenPair createKeyPairRSA(CryptoBackend backendId, const int size)
+DataPair createKeyPairRSA(const int size)
 {
     EvpPkeyUPtr pkey;
 
@@ -396,12 +396,13 @@ TokenPair createKeyPairRSA(CryptoBackend backendId, const int size)
     }
     pkey = EvpPkeyUPtr(pkeyTmp, EVP_PKEY_free);
 
-    return std::make_pair<Token, Token>(Token(backendId, DataType(KeyType::KEY_RSA_PRIVATE), i2d(i2d_PrivateKey_bio, pkey.get())),
-                                        Token(backendId, DataType(KeyType::KEY_RSA_PUBLIC), i2d(i2d_PUBKEY_bio, pkey.get())));
+    return std::make_pair<Data, Data>(
+            {DataType(KeyType::KEY_RSA_PRIVATE), i2d(i2d_PrivateKey_bio, pkey.get())},
+            {DataType(KeyType::KEY_RSA_PUBLIC), i2d(i2d_PUBKEY_bio, pkey.get())});
 }
 
 
-TokenPair createKeyPairDSA(CryptoBackend backendId, const int size)
+DataPair createKeyPairDSA(const int size)
 {
     EvpPkeyUPtr pkey;
     EvpPkeyUPtr pparam;
@@ -449,11 +450,12 @@ TokenPair createKeyPairDSA(CryptoBackend backendId, const int size)
     }
     pkey = EvpPkeyUPtr(pkeyTmp, EVP_PKEY_free);
 
-    return std::make_pair<Token, Token>(Token(backendId, DataType(KeyType::KEY_DSA_PRIVATE), i2d(i2d_PrivateKey_bio, pkey.get())),
-                                        Token(backendId, DataType(KeyType::KEY_DSA_PUBLIC), i2d(i2d_PUBKEY_bio, pkey.get())));
+    return std::make_pair<Data, Data>(
+            {DataType(KeyType::KEY_DSA_PRIVATE), i2d(i2d_PrivateKey_bio, pkey.get())},
+            {DataType(KeyType::KEY_DSA_PUBLIC), i2d(i2d_PUBKEY_bio, pkey.get())});
 }
 
-TokenPair createKeyPairECDSA(CryptoBackend backendId, ElipticCurve type)
+DataPair createKeyPairECDSA(ElipticCurve type)
 {
     int ecCurve = NOT_DEFINED;
     EvpPkeyUPtr pkey;
@@ -511,11 +513,12 @@ TokenPair createKeyPairECDSA(CryptoBackend backendId, ElipticCurve type)
     }
     pkey = EvpPkeyUPtr(pkeyTmp, EVP_PKEY_free);
 
-    return std::make_pair<Token, Token>(Token(backendId, DataType(KeyType::KEY_ECDSA_PRIVATE), i2d(i2d_PrivateKey_bio, pkey.get())),
-                                        Token(backendId, DataType(KeyType::KEY_ECDSA_PUBLIC), i2d(i2d_PUBKEY_bio, pkey.get())));
+    return std::make_pair<Data, Data>(
+            {DataType(KeyType::KEY_ECDSA_PRIVATE), i2d(i2d_PrivateKey_bio, pkey.get())},
+            {DataType(KeyType::KEY_ECDSA_PUBLIC), i2d(i2d_PUBKEY_bio, pkey.get())});
 }
 
-Token createKeyAES(CryptoBackend backendId, const int sizeBits)
+Data createKeyAES(const int sizeBits)
 {
     // check the parameters of functions
     if(sizeBits!=128 && sizeBits!=192 && sizeBits!=256) {
@@ -530,10 +533,10 @@ Token createKeyAES(CryptoBackend backendId, const int sizeBits)
         ThrowMsg(Exc::Crypto::InternalError, "Error in AES key generation");
     }
 
-    return Token(backendId, DataType(KeyType::KEY_AES), CKM::RawBuffer(key, key+sizeBytes));
+    return { DataType(KeyType::KEY_AES), CKM::RawBuffer(key, key+sizeBytes)};
 }
 
-TokenPair generateAKey(CryptoBackend backendId, const CryptoAlgorithm &algorithm)
+DataPair generateAKey(const CryptoAlgorithm &algorithm)
 {
     validateParams<IsAsymGeneration>(algorithm);
 
@@ -542,23 +545,23 @@ TokenPair generateAKey(CryptoBackend backendId, const CryptoAlgorithm &algorithm
     {
         int keyLength = unpack<int>(algorithm, ParamName::GEN_KEY_LEN);
         if(keyType == AlgoType::RSA_GEN)
-            return createKeyPairRSA(backendId, keyLength);
+            return createKeyPairRSA(keyLength);
         else
-            return createKeyPairDSA(backendId, keyLength);
+            return createKeyPairDSA(keyLength);
     }
     else // AlgoType::ECDSA_GEN
     {
         ElipticCurve ecType = unpack<ElipticCurve>(algorithm, ParamName::GEN_EC);
-        return createKeyPairECDSA(backendId, ecType);
+        return createKeyPairECDSA(ecType);
     }
 }
 
-Token generateSKey(CryptoBackend backendId, const CryptoAlgorithm &algorithm)
+Data generateSKey(const CryptoAlgorithm &algorithm)
 {
     validateParams<IsSymGeneration>(algorithm);
 
     int keySizeBits = unpack<int>(algorithm, ParamName::GEN_KEY_LEN);
-    return createKeyAES(backendId, keySizeBits);
+    return createKeyAES(keySizeBits);
 }
 
 RawBuffer encryptDataAes(

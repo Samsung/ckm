@@ -20,66 +20,180 @@
  */
 #include <memory>
 
+#include <openssl/rand.h>
+#include <openssl/evp.h>
+
 #include <generic-backend/exception.h>
 #include <sw-backend/obj.h>
 #include <sw-backend/store.h>
 #include <sw-backend/internals.h>
 
+#include <message-buffer.h>
+
+namespace CKM {
+namespace Crypto {
+namespace SW {
+
 namespace {
+
+const int ITERATIONS = 1024;
+const int KEY_LENGTH = 16; // length of AES key derived from password
+const int STORE_AES_GCM_TAG_SIZE = 16; // length of AES GCM tag
+
+// internal SW encryption scheme flags
+enum EncryptionScheme {
+    NONE = 0,
+    PASSWORD = 1 << 0
+};
 
 template <typename T, typename ...Args>
 std::unique_ptr<T> make_unique(Args&& ...args) {
     return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
 }
 
-} // namespace anonymous
+RawBuffer generateRandIV() {
+    RawBuffer civ(EVP_MAX_IV_LENGTH);
 
-namespace CKM {
-namespace Crypto {
-namespace SW {
+    if (1 != RAND_bytes(civ.data(), civ.size()))
+        ThrowErr(Exc::Crypto::InternalError, "RAND_bytes failed to generate IV.");
+    return civ;
+}
+
+RawBuffer passwordToKey(const Password &password, const RawBuffer &salt, size_t keySize)
+{
+    RawBuffer result(keySize);
+
+    if (1 != PKCS5_PBKDF2_HMAC_SHA1(
+                password.c_str(),
+                password.size(),
+                salt.data(),
+                salt.size(),
+                ITERATIONS,
+                result.size(),
+                result.data()))
+    {
+        ThrowErr(Exc::InternalError, "PCKS5_PKKDF2_HMAC_SHA1 failed.");
+    }
+
+    return result;
+}
+
+RawBuffer unpack(const RawBuffer& packed, const Password& pass)
+{
+    MessageBuffer buffer;
+    buffer.Push(packed);
+    int encryptionScheme = 0;
+    RawBuffer data;
+    buffer.Deserialize(encryptionScheme, data);
+
+    if (encryptionScheme == 0)
+        return data;
+
+    MessageBuffer internalBuffer;
+    internalBuffer.Push(data);
+    RawBuffer encrypted;
+    RawBuffer iv;
+    RawBuffer tag;
+
+    // serialization exceptions will be catched as CKM::Exception and will cause
+    // CKM_API_ERROR_SERVER_ERROR
+    internalBuffer.Deserialize(encrypted, iv, tag);
+
+    /*
+     * AES GCM will check data integrity and handle cases where:
+     * - wrong password is used
+     * - password is empty when it shouldn't be
+     * - password is not empty when it should be
+     */
+    RawBuffer key = passwordToKey(pass, iv, KEY_LENGTH);
+
+    RawBuffer ret;
+    try {
+        ret = Crypto::SW::Internals::decryptDataAesGcm(key, encrypted, iv, tag);
+    } catch( const Exc::Crypto::InternalError& e) {
+        ThrowErr(Exc::AuthenticationFailed, "Decryption with custom password failed");
+    }
+    return ret;
+}
+
+RawBuffer pack(const RawBuffer& data, const Password& pass)
+{
+    int scheme = EncryptionScheme::NONE;
+    RawBuffer packed = data;
+    if (!pass.empty()) {
+        RawBuffer iv = generateRandIV();
+        RawBuffer key = passwordToKey(pass, iv, KEY_LENGTH);
+
+        std::pair<RawBuffer, RawBuffer> ret;
+        try {
+            ret = Crypto::SW::Internals::encryptDataAesGcm(key, data, iv, STORE_AES_GCM_TAG_SIZE);
+        } catch( const Exc::Crypto::InternalError& e) {
+            ThrowErr(Exc::AuthenticationFailed, "Encryption with custom password failed");
+        }
+        scheme |= EncryptionScheme::PASSWORD;
+
+        // serialization exceptions will be catched as CKM::Exception and will cause
+        // CKM_API_ERROR_SERVER_ERROR
+        packed = MessageBuffer::Serialize(ret.first, iv, ret.second).Pop();
+    }
+    // encryption scheme + internal buffer
+    return MessageBuffer::Serialize(scheme, packed).Pop();
+}
+
+} // namespace anonymous
 
 Store::Store(CryptoBackend backendId)
   : GStore(backendId)
 {
 }
 
-GObjUPtr Store::getObject(const Token &token) {
+GObjUPtr Store::getObject(const Token &token, const Password &pass) {
     if (token.backendId != m_backendId) {
         ThrowErr(Exc::Crypto::WrongBackend, "Decider choose wrong backend!");
     }
 
+    RawBuffer data = unpack(token.data, pass);
+
     if (token.dataType.isKeyPrivate() || token.dataType.isKeyPublic()) {
-         return make_unique<AKey>(token.data, token.dataType);
+         return make_unique<AKey>(data, token.dataType);
     }
 
     if (token.dataType == DataType(DataType::KEY_AES)) {
-         return make_unique<SKey>(token.data, token.dataType);
+         return make_unique<SKey>(data, token.dataType);
     }
 
-    if (token.dataType.isCertificate()) {
-        return make_unique<Cert>(token.data, token.dataType);
+    if (token.dataType.isCertificate() || token.dataType.isChainCert()) {
+        return make_unique<Cert>(data, token.dataType);
     }
 
     if (token.dataType.isBinaryData()) {
-        return make_unique<BData>(token.data, token.dataType);
+        return make_unique<BData>(data, token.dataType);
     }
 
     ThrowErr(Exc::Crypto::DataTypeNotSupported,
         "This type of data is not supported by openssl backend: ", (int)token.dataType);
 }
 
-TokenPair Store::generateAKey(const CryptoAlgorithm &algorithm)
+TokenPair Store::generateAKey(const CryptoAlgorithm &algorithm,
+                              const Password &prvPass,
+                              const Password &pubPass)
 {
-    return Internals::generateAKey(m_backendId, algorithm);
+    Internals::DataPair ret = Internals::generateAKey(algorithm);
+    return std::make_pair<Token,Token>(
+            Token(m_backendId, ret.first.type, pack(ret.first.buffer, prvPass)),
+            Token(m_backendId, ret.second.type, pack(ret.second.buffer, pubPass)));
 }
 
-Token Store::generateSKey(const CryptoAlgorithm &algorithm)
+Token Store::generateSKey(const CryptoAlgorithm &algorithm, const Password &pass)
 {
-    return Internals::generateSKey(m_backendId, algorithm);
+    Internals::Data ret = Internals::generateSKey(algorithm);
+    return Token(m_backendId, ret.type, pack(ret.buffer, pass));
 }
 
-Token Store::import(DataType dataType, const RawBuffer &buffer) {
-    return Token(m_backendId, dataType, buffer);
+Token Store::import(DataType dataType, const RawBuffer &input, const Password &pass) {
+
+    RawBuffer data = pack(input, pass);
+    return Token(m_backendId, dataType, std::move(data));
 }
 
 } // namespace SW

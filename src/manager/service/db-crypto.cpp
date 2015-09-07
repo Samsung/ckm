@@ -94,6 +94,17 @@ namespace {
             "          ?009"
             "         );";
 
+    const char *DB_CMD_OBJECT_UPDATE =
+            "UPDATE OR FAIL OBJECTS SET"
+            "   algorithmType = ?003,"
+            "   encryptionScheme = ?004,"
+            "   iv = ?005,"
+            "   dataSize = ?006,"
+            "   data = ?007,"
+            "   tag = ?008"
+            "   WHERE idx IN (SELECT idx FROM NAMES WHERE name=?101 and label=?102)"
+            "   AND dataType = ?002;";
+
     const char *DB_CMD_OBJECT_SELECT_BY_NAME_AND_LABEL =
             "SELECT * FROM [join_name_object_tables] "
             " WHERE (dataType BETWEEN ?001 AND ?002) "
@@ -386,6 +397,21 @@ namespace DB {
         }
         ThrowMsg(Crypto::Exception::InternalError,
                 "Couldn't save Row");
+    }
+
+    void Crypto::updateRow(const Row &row) {
+        Try {
+            // transaction is present in the layer above
+            ObjectTable objectTable(this->m_connection);
+            objectTable.updateRow(row);
+            return;
+        } Catch(SqlConnection::Exception::SyntaxError) {
+            LogError("Couldn't prepare update statement");
+        } Catch(SqlConnection::Exception::InternalError) {
+            LogError("Couldn't execute update statement");
+        }
+        ThrowMsg(Crypto::Exception::InternalError,
+                "Couldn't update Row");
     }
 
     bool Crypto::deleteRow(
@@ -825,6 +851,25 @@ namespace DB {
         insertObjectCommand->BindString (102, row.ownerLabel.c_str());
 
         insertObjectCommand->Step();
+    }
+
+    void Crypto::ObjectTable::updateRow(const Row &row)
+    {
+        SqlConnection::DataCommandUniquePtr updateObjectCommand =
+                m_connection->PrepareDataCommand(DB_CMD_OBJECT_UPDATE);
+        updateObjectCommand->BindInteger(2, static_cast<int>(row.dataType));
+        updateObjectCommand->BindInteger(3, static_cast<int>(row.algorithmType));
+        updateObjectCommand->BindInteger(4, row.encryptionScheme);
+        updateObjectCommand->BindBlob   (5, row.iv);
+        updateObjectCommand->BindInteger(6, row.dataSize);
+        updateObjectCommand->BindBlob   (7, row.data);
+        updateObjectCommand->BindBlob   (8, row.tag);
+
+        // name table reference
+        updateObjectCommand->BindString (101, row.name.c_str());
+        updateObjectCommand->BindString (102, row.ownerLabel.c_str());
+
+        updateObjectCommand->Step();
     }
 } // namespace DB
 } // namespace CKM

@@ -23,6 +23,7 @@
 #include <iostream>
 #include <fstream>
 #include <utility>
+#include <climits>
 
 #include <stdio.h>
 #include <string.h>
@@ -41,14 +42,34 @@
 #include <generic-backend/exception.h>
 #include <sw-backend/internals.h>
 
+namespace CKM {
+
 namespace {
 
 const static int AES_CBC_KEY_SIZE = 32;
 const static int AES_GCM_TAG_SIZE = 16;
 
-} // anonymous namespace
+// Encryption scheme flags (enable/disable specific encryption type, multiple choice)
+const int ENCR_BASE64 =   1 << 0;
+const int ENCR_APPKEY =   1 << 1;
+const int ENCR_PASSWORD = 1 << 2;
 
-namespace CKM {
+// Encryption order flags (single choice)
+const int ENCR_ORDER_OFFSET = 24;
+const int ENCR_ORDER_FILTER = INT_MAX << ENCR_ORDER_OFFSET; // 0xff000000
+const int ENCR_ORDER_CLEAR = ~ENCR_ORDER_FILTER; // 0x00ffffff
+/*
+ * ENCR_ORDER_V1 - v1 encryption order. Token returned from store is encrypted with app key and
+ * optionally by custom user password. In such form it is stored in db.
+ */
+const int ENCR_ORDER_V1 = CryptoLogic::ENCRYPTION_V1 << ENCR_ORDER_OFFSET;
+/*
+ * ENCR_ORDER_V2 - v2 encryption order. Stored data is optionally encrypted by store with
+ * user password. Returned token is encrypted with app key and stored in db.
+ */
+const int ENCR_ORDER_V2 = CryptoLogic::ENCRYPTION_V2 << ENCR_ORDER_OFFSET;
+
+} // anonymous namespace
 
 CryptoLogic::CryptoLogic() {}
 
@@ -122,7 +143,7 @@ RawBuffer CryptoLogic::generateRandIV() const {
     return civ;
 }
 
-void CryptoLogic::encryptRow(const Password &password, DB::Row &row)
+void CryptoLogic::encryptRow(DB::Row &row)
 {
     try {
         DB::Row crow = row;
@@ -154,16 +175,12 @@ void CryptoLogic::encryptRow(const Password &password, DB::Row &row)
 
         crow.tag = dataPair.second;
 
-        if (!password.empty()) {
-            key = passwordToKey(password, crow.iv, AES_CBC_KEY_SIZE);
-
-            crow.data = Crypto::SW::Internals::encryptDataAes(AlgoType::AES_CBC, key, crow.data, crow.iv);
-            crow.encryptionScheme |= ENCR_PASSWORD;
-        }
-
         encBase64(crow.data);
         crow.encryptionScheme |= ENCR_BASE64;
         encBase64(crow.iv);
+
+        crow.encryptionScheme &= ENCR_ORDER_CLEAR;
+        crow.encryptionScheme |= ENCR_ORDER_V2;
 
         row = std::move(crow);
     } catch(const CKM::Base64Encoder::Exception::Base &e) {
@@ -171,6 +188,11 @@ void CryptoLogic::encryptRow(const Password &password, DB::Row &row)
     } catch(const CKM::Base64Decoder::Exception::Base &e) {
         ThrowErr(Exc::InternalError, e.GetMessage());
     }
+}
+
+int CryptoLogic::getSchemeVersion(int encryptionScheme)
+{
+    return encryptionScheme >> ENCR_ORDER_OFFSET;
 }
 
 void CryptoLogic::decryptRow(const Password &password, DB::Row &row)
@@ -200,16 +222,22 @@ void CryptoLogic::decryptRow(const Password &password, DB::Row &row)
             decBase64(crow.data);
         }
 
-        if (crow.encryptionScheme & ENCR_PASSWORD) {
-            key = passwordToKey(password, crow.iv, AES_CBC_KEY_SIZE);
-            crow.data = Crypto::SW::Internals::decryptDataAes(AlgoType::AES_CBC, key, crow.data, crow.iv);
-        }
+        if((crow.encryptionScheme >> ENCR_ORDER_OFFSET) == ENCR_ORDER_V2) {
+            if (crow.encryptionScheme & ENCR_APPKEY) {
+                key = m_keyMap[crow.ownerLabel];
+                crow.data = Crypto::SW::Internals::decryptDataAesGcm(key, crow.data, crow.iv, crow.tag);
+            }
+        } else {
+            if (crow.encryptionScheme & ENCR_PASSWORD) {
+                key = passwordToKey(password, crow.iv, AES_CBC_KEY_SIZE);
+                crow.data = Crypto::SW::Internals::decryptDataAes(AlgoType::AES_CBC, key, crow.data, crow.iv);
+            }
 
-        if (crow.encryptionScheme & ENCR_APPKEY) {
-            key = m_keyMap[crow.ownerLabel];
-            crow.data = Crypto::SW::Internals::decryptDataAesGcm(key, crow.data, crow.iv, crow.tag);
+            if (crow.encryptionScheme & ENCR_APPKEY) {
+                key = m_keyMap[crow.ownerLabel];
+                crow.data = Crypto::SW::Internals::decryptDataAesGcm(key, crow.data, crow.iv, crow.tag);
+            }
         }
-
         if (static_cast<int>(crow.data.size()) < crow.dataSize) {
             ThrowErr(Exc::AuthenticationFailed, "Decrypted row size mismatch");
         }

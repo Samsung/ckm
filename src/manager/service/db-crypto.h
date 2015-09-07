@@ -72,6 +72,9 @@ namespace DB {
                     const Label &owner,
                     const RowVector &rows);
 
+            void updateRow(
+                    const Row &row);
+
             bool isNameLabelPresent(
                     const Name &name,
                     const Label &owner) const;
@@ -276,6 +279,8 @@ namespace DB {
                 explicit ObjectTable(SqlConnection* connection) : m_connection(connection) {}
 
                 void addRow(
+                        const Row &row);
+                void updateRow(
                         const Row &row);
 
             private:
