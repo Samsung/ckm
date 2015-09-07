@@ -39,27 +39,12 @@ public:
     CKMService& operator=(const CKMService &) = delete;
     CKMService& operator=(CKMService &&) = delete;
 
-    // Custom add custom support for ReadEvent and SecurityEvent
-    // because we want to bypass security check in CKMService
-    virtual void Event(const ReadEvent &event) {
-        CreateEvent([this, event]() { this->CustomHandle(event); });
-    }
-
-    virtual void Event(const SecurityEvent &event) {
-        CreateEvent([this, event]() { this->CustomHandle(event); });
-    }
-
     virtual void Start(void);
     virtual void Stop(void);
 
     virtual ~CKMService();
 
     ServiceDescriptionVector GetServiceDescription();
-
-protected:
-    // CustomHandle is used to bypass security check
-    void CustomHandle(const ReadEvent &event);
-    void CustomHandle(const SecurityEvent &event);
 
 private:
     virtual void SetCommManager(CommMgr *manager);
@@ -80,7 +65,8 @@ private:
 
     RawBuffer ProcessStorage(
         Credentials &cred,
-        MessageBuffer &buffer);
+        MessageBuffer &buffer,
+        bool allowed);
 
     virtual void ProcessMessage(MsgKeyRequest msg);
 

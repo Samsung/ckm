@@ -53,7 +53,7 @@ void OCSPService::Stop() {
 GenericSocketService::ServiceDescriptionVector OCSPService::GetServiceDescription()
 {
     return ServiceDescriptionVector {
-        {SERVICE_SOCKET_OCSP, "http://tizen.org/privilege/internet", SOCKET_ID_OCSP}
+        {SERVICE_SOCKET_OCSP, "http://tizen.org/privilege/keymanager", SOCKET_ID_OCSP}
     };
 }
 
