@@ -20,16 +20,17 @@ SET(KEY_MANAGER_PATH ${PROJECT_SOURCE_DIR}/src/manager)
 
 IF (MOCKUP_SM MATCHES "ON")
     IF (CMAKE_BUILD_TYPE MATCHES "RELEASE")
-        MESSAGE(FATAL_ERROR "You cannot compile release version with mockups!")
+        MESSAGE(FATAL_ERROR "You cannot compile release version with SECURITY MOCKUPS!")
     ENDIF (CMAKE_BUILD_TYPE MATCHES "RELEASE")
-    MESSAGE("USING MOCKUP INSTEAD SECURITY MANAGER")
+    MESSAGE("USING MOCKUPS INSTEAD SECURITY MODULES (SECURITY MANAGER AND CYNARA)")
     SET(SECURITY_MANAGER_WRAPPER_PATH ${KEY_MANAGER_PATH}/main/socket-2-id-mockup.cpp)
+    SET(CYNARA_WRAPPER_PATH ${KEY_MANAGER_PATH}/main/cynara-mockup.cpp)
 ELSE (MOCKUP_SM MATCHES "ON")
     SET(SECURITY_MANAGER_WRAPPER_PATH ${KEY_MANAGER_PATH}/main/socket-2-id-wrapper.cpp)
+    SET(CYNARA_WRAPPER_PATH ${KEY_MANAGER_PATH}/main/cynara.cpp)
 ENDIF (MOCKUP_SM MATCHES "ON")
 
 SET(KEY_MANAGER_SOURCES
-    ${KEY_MANAGER_PATH}/main/cynara.cpp
     ${KEY_MANAGER_PATH}/main/generic-socket-manager.cpp
     ${KEY_MANAGER_PATH}/main/socket-manager.cpp
     ${KEY_MANAGER_PATH}/main/key-manager-main.cpp
@@ -72,6 +73,7 @@ SET(KEY_MANAGER_SOURCES
     ${KEY_MANAGER_PATH}/crypto/tz-backend/key.cpp
     ${KEY_MANAGER_PATH}/crypto/tz-backend/store.cpp
     ${SECURITY_MANAGER_WRAPPER_PATH}
+    ${CYNARA_WRAPPER_PATH}
     )
 
 # -fPIE and -pie flag is added for ASLR
