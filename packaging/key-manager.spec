@@ -105,6 +105,9 @@ cp -a %{SOURCE1002} .
 cp -a %{SOURCE1003} .
 cp -a %{SOURCE1004} .
 
+# optional password disabled temporary for milestone release
+%define ckm_optional_password_enable 0
+
 %build
 %if 0%{?sec_build_binary_debug_enable}
     export CFLAGS="$CFLAGS -DTIZEN_DEBUG_ENABLE"
@@ -120,6 +123,9 @@ export LDFLAGS+="-Wl,--rpath=%{_libdir},-Bsymbolic-functions "
         -DCMAKE_VERBOSE_MAKEFILE=ON \
 %if "%{sec_product_feature_security_mdfpp_enable}" == "1"
         -DSECURITY_MDFPP_STATE_ENABLE=1 \
+%endif
+%if 0%{?ckm_optional_password_enable}
+        -DOPTIONAL_PASSWORD_ENABLE=1 \
 %endif
         -DSYSTEMD_UNIT_DIR=%{_unitdir} \
         -DSYSTEMD_ENV_FILE="/etc/sysconfig/central-key-manager" \
