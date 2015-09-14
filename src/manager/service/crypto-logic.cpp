@@ -22,6 +22,8 @@
 
 #include <iostream>
 #include <fstream>
+#include <utility>
+
 #include <stdio.h>
 #include <string.h>
 
@@ -167,7 +169,7 @@ void CryptoLogic::encryptRow(const Password &password, DB::Row &row)
         crow.encryptionScheme |= ENCR_BASE64;
         encBase64(crow.iv);
 
-        row = crow;
+        row = std::move(crow);
     } catch(const CKM::Base64Encoder::Exception::Base &e) {
         ThrowErr(Exc::InternalError, e.GetMessage());
     } catch(const CKM::Base64Decoder::Exception::Base &e) {
@@ -222,7 +224,7 @@ void CryptoLogic::decryptRow(const Password &password, DB::Row &row)
             crow.data.resize(crow.dataSize);
         }
 
-        row = crow;
+        row = std::move(crow);
     } catch(const CKM::Base64Encoder::Exception::Base &e) {
         ThrowErr(Exc::InternalError, e.GetMessage());
     } catch(const CKM::Base64Decoder::Exception::Base &e) {
