@@ -21,7 +21,7 @@
 #include <memory>
 
 #include <generic-backend/exception.h>
-#include <sw-backend/key.h>
+#include <sw-backend/obj.h>
 #include <sw-backend/store.h>
 #include <sw-backend/internals.h>
 
@@ -43,7 +43,7 @@ Store::Store(CryptoBackend backendId)
 {
 }
 
-GKeyUPtr Store::getKey(const Token &token) {
+GObjUPtr Store::getObject(const Token &token) {
     if (token.backendId != m_backendId) {
         ThrowErr(Exc::Crypto::WrongBackend, "Decider choose wrong backend!");
     }
@@ -60,7 +60,11 @@ GKeyUPtr Store::getKey(const Token &token) {
         return make_unique<Cert>(token.data, token.dataType);
     }
 
-    ThrowErr(Exc::Crypto::KeyNotSupported,
+    if (token.dataType.isBinaryData()) {
+        return make_unique<BData>(token.data, token.dataType);
+    }
+
+    ThrowErr(Exc::Crypto::DataTypeNotSupported,
         "This type of data is not supported by openssl backend: ", (int)token.dataType);
 }
 

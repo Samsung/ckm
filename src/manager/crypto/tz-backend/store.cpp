@@ -19,7 +19,7 @@
  * @version    1.0
  */
 #include <generic-backend/exception.h>
-#include <tz-backend/key.h>
+#include <tz-backend/obj.h>
 #include <tz-backend/store.h>
 
 namespace CKM {
@@ -30,7 +30,7 @@ Store::Store(CryptoBackend backendId)
   : GStore(backendId)
 {}
 
-GKeyUPtr Store::getKey(const Token &) {
+GObjUPtr Store::getObject(const Token &) {
     ThrowErr(Exc::Crypto::OperationNotSupported, "Trust zone backend is not implemented!");
 }
 

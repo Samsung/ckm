@@ -396,7 +396,7 @@ RawBuffer CKMService::ProcessStorage(Credentials &cred, MessageBuffer &buffer)
 
 void CKMService::ProcessMessage(MsgKeyRequest msg)
 {
-    Crypto::GKeyShPtr key;
+    Crypto::GObjShPtr key;
     int ret = m_logic->getKeyForService(msg.cred,
                                         msg.name,
                                         msg.label,

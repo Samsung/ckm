@@ -23,7 +23,7 @@
 
 #include <generic-socket-manager.h>
 #include <ckm/ckm-type.h>
-#include <generic-backend/gkey.h>
+#include <generic-backend/gobj.h>
 #include <protocols.h>
 #include <crypto-request.h>
 

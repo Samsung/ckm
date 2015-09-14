@@ -14,7 +14,7 @@
  *  limitations under the License
  */
 /*
- * @file       gkey.h
+ * @file       gobj.h
  * @author     Bartłomiej Grzelewski (b.grzelewski@samsung.com)
  * @version    1.0
  */
@@ -29,9 +29,9 @@
 namespace CKM {
 namespace Crypto {
 
-class GKey {
+class GObj {
 protected:
-    GKey(){}
+    GObj(){}
 public:
     virtual RawBuffer getBinary() const {
         ThrowErr(Exc::Crypto::OperationNotSupported);
@@ -53,11 +53,11 @@ public:
         ThrowErr(Exc::Crypto::OperationNotSupported);
     }
 
-    virtual ~GKey () {}
+    virtual ~GObj () {}
 };
 
-typedef std::unique_ptr<GKey> GKeyUPtr;
-typedef std::shared_ptr<GKey> GKeyShPtr;
+typedef std::unique_ptr<GObj> GObjUPtr;
+typedef std::shared_ptr<GObj> GObjShPtr;
 
 } // namespace Crypto
 } // namespace CKM

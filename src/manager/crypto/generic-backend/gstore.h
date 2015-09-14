@@ -23,7 +23,7 @@
 #include <memory>
 
 #include <generic-backend/exception.h>
-#include <generic-backend/gkey.h>
+#include <generic-backend/gobj.h>
 #include <ckm/ckm-type.h>
 #include <crypto-backend.h>
 #include <token.h>
@@ -33,7 +33,7 @@ namespace Crypto {
 
 class GStore {
 public:
-    virtual GKeyUPtr getKey(const Token &) { ThrowErr(Exc::Crypto::OperationNotSupported); }
+    virtual GObjUPtr getObject(const Token &) { ThrowErr(Exc::Crypto::OperationNotSupported); }
     virtual TokenPair generateAKey(const CryptoAlgorithm &) { ThrowErr(Exc::Crypto::OperationNotSupported); }
     virtual Token generateSKey(const CryptoAlgorithm &) { ThrowErr(Exc::Crypto::OperationNotSupported); }
     virtual Token import(DataType, const RawBuffer &) { ThrowErr(Exc::Crypto::OperationNotSupported); }

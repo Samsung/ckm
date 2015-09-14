@@ -28,7 +28,7 @@
 #include <protocols.h>
 #include <ckm/ckm-error.h>
 #include <communication-manager.h>
-#include <generic-backend/gkey.h>
+#include <generic-backend/gobj.h>
 
 namespace CKM {
 
@@ -64,12 +64,12 @@ struct MsgKeyRequest : public MsgBase
 // key response
 struct MsgKeyResponse : public MsgBase
 {
-    MsgKeyResponse(int id, const Crypto::GKeyShPtr& key, int errorCode = CKM_API_SUCCESS) :
+    MsgKeyResponse(int id, const Crypto::GObjShPtr& key, int errorCode = CKM_API_SUCCESS) :
         MsgBase(id),
         key(key),
         error(errorCode)
     {}
-    Crypto::GKeyShPtr key;
+    Crypto::GObjShPtr key;
     int error;
 };
 

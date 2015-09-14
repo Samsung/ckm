@@ -28,7 +28,7 @@ namespace Crypto {
 
 typedef CKM::Exc::InputParam InputParam;
 typedef CKM::Exc::InternalError InternalError;
-typedef CKM::Exc::InternalError KeyNotSupported;
+typedef CKM::Exc::InternalError DataTypeNotSupported;
 typedef CKM::Exc::InternalError OperationNotSupported;
 typedef CKM::Exc::InternalError WrongBackend;
 

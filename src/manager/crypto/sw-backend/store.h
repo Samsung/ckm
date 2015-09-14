@@ -20,7 +20,7 @@
  */
 #pragma once
 
-#include <generic-backend/gkey.h>
+#include <generic-backend/gobj.h>
 #include <generic-backend/gstore.h>
 
 namespace CKM {
@@ -31,7 +31,7 @@ class Store : public GStore {
 public:
     explicit Store(CryptoBackend backendId);
 
-    virtual GKeyUPtr getKey(const Token &token);
+    virtual GObjUPtr getObject(const Token &token);
     virtual TokenPair generateAKey(const CryptoAlgorithm &);
     virtual Token generateSKey(const CryptoAlgorithm &);
     virtual Token import(DataType dataType, const RawBuffer &buffer);

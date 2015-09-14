@@ -35,7 +35,7 @@
 #include <access-control.h>
 #include <certificate-impl.h>
 #include <sys/types.h>
-#include <generic-backend/gkey.h>
+#include <generic-backend/gobj.h>
 
 #include <platform/decider.h>
 
@@ -206,7 +206,7 @@ public:
                          const Name &name,
                          const Label &label,
                          const Password& pass,
-                         Crypto::GKeyShPtr& key);
+                         Crypto::GObjShPtr& key);
 
 protected:
     int unlockSystemDB();

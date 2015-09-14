@@ -14,7 +14,7 @@
  *  limitations under the License
  */
 /*
- * @file       key.h
+ * @file       obj.h
  * @author     Bartłomiej Grzelewski (b.grzelewski@samsung.com)
  * @version    1.0
  */
@@ -23,7 +23,7 @@
 
 #include <openssl/evp.h>
 
-#include <generic-backend/gkey.h>
+#include <generic-backend/gobj.h>
 #include <data-type.h>
 
 namespace CKM {
@@ -33,39 +33,41 @@ namespace SW {
 typedef std::unique_ptr<EVP_PKEY_CTX,std::function<void(EVP_PKEY_CTX*)>> ContextUPtr;
 typedef std::shared_ptr<EVP_PKEY> EvpShPtr;
 
-class SKey : public GKey {
+class BData : public GObj {
 public:
-    SKey(RawBuffer buffer, DataType keyType)
-      : m_key(std::move(buffer))
+    BData(RawBuffer buffer, DataType keyType)
+      : m_raw(std::move(buffer))
       , m_type(keyType)
     {}
 
     virtual RawBuffer getBinary() const;
-    virtual RawBuffer encrypt(const CryptoAlgorithm &, const RawBuffer &);
-    virtual RawBuffer decrypt(const CryptoAlgorithm &, const RawBuffer &);
 protected:
-    RawBuffer m_key;
+    RawBuffer m_raw;
     DataType m_type;
 };
 
-class AKey : public GKey {
+class SKey : public BData {
 public:
-    AKey(RawBuffer buffer, DataType dataType)
-      : m_key(std::move(buffer))
-      , m_type(dataType)
+    SKey(RawBuffer buffer, DataType keyType) : BData(std::move(buffer), keyType)
+    {}
+
+    virtual RawBuffer encrypt(const CryptoAlgorithm &, const RawBuffer &);
+    virtual RawBuffer decrypt(const CryptoAlgorithm &, const RawBuffer &);
+};
+
+class AKey : public BData {
+public:
+    AKey(RawBuffer buffer, DataType dataType) : BData(std::move(buffer), dataType)
     {}
     virtual RawBuffer sign(const CryptoAlgorithm &alg, const RawBuffer &message);
     virtual int verify(const CryptoAlgorithm &alg, const RawBuffer &message, const RawBuffer &sign);
     virtual RawBuffer encrypt(const CryptoAlgorithm &, const RawBuffer &);
     virtual RawBuffer decrypt(const CryptoAlgorithm &, const RawBuffer &);
-    virtual RawBuffer getBinary() const;
     virtual ~AKey(){}
 protected:
     virtual EvpShPtr getEvpShPtr();
 
     EvpShPtr m_evp;
-    RawBuffer m_key;
-    DataType m_type;
 };
 
 class Cert : public AKey {

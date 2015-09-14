@@ -14,13 +14,31 @@
  *  limitations under the License
  */
 /*
- * @file       key.cpp
+ * @file       obj.h
  * @author     Bartłomiej Grzelewski (b.grzelewski@samsung.com)
  * @version    1.0
  */
+#pragma once
+
+#include <generic-backend/gobj.h>
+
 namespace CKM {
 namespace Crypto {
 namespace TZ {
+
+class SKey : public GObj {
+public:
+    SKey(){}
+    virtual ~SKey(){}
+protected:
+};
+
+class AKey : public GObj {
+public:
+    AKey(){}
+    virtual ~AKey(){}
+protected:
+};
 
 } // namespace TZ
 } // namespace Crypto

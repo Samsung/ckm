@@ -510,14 +510,14 @@ int CKMLogic::getKeyForService(
         const Name &name,
         const Label &label,
         const Password &pass,
-        Crypto::GKeyShPtr &key)
+        Crypto::GObjShPtr &key)
 {
     DB::Row row;
     try {
         // Key is for internal service use. It won't be exported to the client
         int retCode = readDataHelper(false, cred, DataType::DB_KEY_FIRST, name, label, pass, row);
         if (retCode == CKM_API_SUCCESS)
-            key = m_decider.getStore(row).getKey(row);
+            key = m_decider.getStore(row).getObject(row);
         return retCode;
     } catch (const DB::Crypto::Exception::Base &e) {
         LogError("DB::Crypto failed with message: " << e.GetMessage());
@@ -1492,7 +1492,7 @@ RawBuffer CKMLogic::createSignature(
     try {
         retCode = readDataHelper(false, cred, DataType::DB_KEY_FIRST, privateKeyName, ownerLabel, password, row);
         if(retCode == CKM_API_SUCCESS) {
-            signature = m_decider.getStore(row).getKey(row)->sign(cryptoAlg, message);
+            signature = m_decider.getStore(row).getObject(row)->sign(cryptoAlg, message);
         }
     } catch (const DB::Crypto::Exception::Base &e) {
         LogError("DB::Crypto failed with message: " << e.GetMessage());
@@ -1540,7 +1540,7 @@ RawBuffer CKMLogic::verifySignature(
         }
 
         if (retCode == CKM_API_SUCCESS) {
-            retCode = m_decider.getStore(row).getKey(row)->verify(params, message, signature);
+            retCode = m_decider.getStore(row).getObject(row)->verify(params, message, signature);
         }
     } catch (const Exc::Exception &e) {
         retCode = e.error();

@@ -14,7 +14,7 @@
  *  limitations under the License
  */
 /*
- * @file       key.cpp
+ * @file       obj.cpp
  * @author     Bartłomiej Grzelewski (b.grzelewski@samsung.com)
  * @version    1.0
  */
@@ -27,7 +27,7 @@
 #include <dpl/log/log.h>
 
 #include <generic-backend/exception.h>
-#include <sw-backend/key.h>
+#include <sw-backend/obj.h>
 #include <sw-backend/internals.h>
 
 #define EVP_SUCCESS 1	// DO NOTCHANGE THIS VALUE
@@ -59,8 +59,8 @@ AlgoType key2algo(DataType type) {
 
 typedef std::unique_ptr<BIO, std::function<void(BIO*)>> BioUniquePtr;
 
-RawBuffer SKey::getBinary() const {
-    return m_key;
+RawBuffer BData::getBinary() const {
+    return m_raw;
 }
 
 RawBuffer SKey::encrypt(const CryptoAlgorithm &alg, const RawBuffer &data)
@@ -79,10 +79,6 @@ RawBuffer AKey::sign(
     CryptoAlgorithm algWithType(alg);
     algWithType.setParam(ParamName::ALGO_TYPE, key2algo(m_type));
     return Internals::sign(getEvpShPtr().get(), algWithType, message);
-}
-
-RawBuffer AKey::getBinary() const {
-    return m_key;
 }
 
 int AKey::verify(const CryptoAlgorithm &alg, const RawBuffer &message, const RawBuffer &sign) {
@@ -129,14 +125,14 @@ EvpShPtr AKey::getEvpShPtr() {
 
     if (!pkey) {
         (void)BIO_reset(bio.get());
-        BIO_write(bio.get(), m_key.data(), m_key.size());
+        BIO_write(bio.get(), m_raw.data(), m_raw.size());
         pkey = d2i_PrivateKey_bio(bio.get(), NULL);
         LogDebug("Trying d2i_PrivateKey_bio Status: " << (void*)pkey);
     }
 
     if (!pkey) {
         (void)BIO_reset(bio.get());
-        BIO_write(bio.get(), m_key.data(), m_key.size());
+        BIO_write(bio.get(), m_raw.data(), m_raw.size());
         pkey = d2i_PUBKEY_bio(bio.get(), NULL);
         LogDebug("Trying d2i_PUBKEY_bio Status: " << (void*)pkey);
     }
@@ -153,8 +149,8 @@ EvpShPtr Cert::getEvpShPtr() {
     if (m_evp)
         return m_evp;
 
-    int size = static_cast<int>(m_key.size());
-    const unsigned char *ptr = reinterpret_cast<const unsigned char *>(m_key.data());
+    int size = static_cast<int>(m_raw.size());
+    const unsigned char *ptr = reinterpret_cast<const unsigned char *>(m_raw.data());
 
     X509 *x509 = d2i_X509(NULL, &ptr, size);
 

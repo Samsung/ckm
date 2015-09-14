@@ -25,7 +25,7 @@
 #include <ckm/ckm-type.h>
 #include <openssl/evp.h>
 #include <token.h>
-#include <sw-backend/key.h>
+#include <sw-backend/obj.h>
 
 #define EVP_SUCCESS 1	// DO NOTCHANGE THIS VALUE
 #define EVP_FAIL    0	// DO NOTCHANGE THIS VALUE

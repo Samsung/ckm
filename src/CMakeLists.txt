@@ -66,11 +66,11 @@ SET(KEY_MANAGER_SOURCES
     ${KEY_MANAGER_PATH}/dpl/db/src/sql_connection.cpp
     ${KEY_MANAGER_PATH}/dpl/db/src/naive_synchronization_object.cpp
     ${KEY_MANAGER_PATH}/sqlcipher/sqlcipher.c
-    ${KEY_MANAGER_PATH}/crypto/sw-backend/key.cpp
+    ${KEY_MANAGER_PATH}/crypto/sw-backend/obj.cpp
     ${KEY_MANAGER_PATH}/crypto/sw-backend/internals.cpp
     ${KEY_MANAGER_PATH}/crypto/sw-backend/store.cpp
     ${KEY_MANAGER_PATH}/crypto/platform/decider.cpp
-    ${KEY_MANAGER_PATH}/crypto/tz-backend/key.cpp
+    ${KEY_MANAGER_PATH}/crypto/tz-backend/obj.cpp
     ${KEY_MANAGER_PATH}/crypto/tz-backend/store.cpp
     ${SECURITY_MANAGER_WRAPPER_PATH}
     ${CYNARA_WRAPPER_PATH}
