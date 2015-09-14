@@ -154,16 +154,12 @@ void CryptoLogic::encryptRow(const Password &password, DB::Row &row)
 
         crow.tag = dataPair.second;
 
-#ifdef OPTIONAL_PASSWORD_ENABLE
         if (!password.empty()) {
             key = passwordToKey(password, crow.iv, AES_CBC_KEY_SIZE);
 
             crow.data = Crypto::SW::Internals::encryptDataAes(AlgoType::AES_CBC, key, crow.data, crow.iv);
             crow.encryptionScheme |= ENCR_PASSWORD;
         }
-#else
-        (void)password;
-#endif
 
         encBase64(crow.data);
         crow.encryptionScheme |= ENCR_BASE64;
@@ -204,12 +200,10 @@ void CryptoLogic::decryptRow(const Password &password, DB::Row &row)
             decBase64(crow.data);
         }
 
-#ifdef OPTIONAL_PASSWORD_ENABLE
         if (crow.encryptionScheme & ENCR_PASSWORD) {
             key = passwordToKey(password, crow.iv, AES_CBC_KEY_SIZE);
             crow.data = Crypto::SW::Internals::decryptDataAes(AlgoType::AES_CBC, key, crow.data, crow.iv);
         }
-#endif
 
         if (crow.encryptionScheme & ENCR_APPKEY) {
             key = m_keyMap[crow.ownerLabel];
