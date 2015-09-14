@@ -671,7 +671,11 @@ int CKMLogic::removeDataHelper(
          * Encryption/decryption with user password and with app key should both be done inside the
          * store (import, getKey and generateXKey).
          */
-        handler.crypto.decryptRow(Password(), r);
+        try {
+            handler.crypto.decryptRow(Password(), r);
+        } catch (const Exc::AuthenticationFailed&) {
+            LogDebug("Authentication failed when removing data. Ignored.");
+        }
         m_decider.getStore(r.dataType, r.exportable).destroy(r);
     }
 
