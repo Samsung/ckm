@@ -130,6 +130,7 @@ INCLUDE_DIRECTORIES(
 SET(KEY_MANAGER_CLIENT_SOURCES
     ${KEY_MANAGER_CLIENT_SRC_PATH}/client-common.cpp
     ${KEY_MANAGER_CLIENT_SRC_PATH}/client-error.cpp
+    ${KEY_MANAGER_CLIENT_SRC_PATH}/client-manager.cpp
     ${KEY_MANAGER_CLIENT_SRC_PATH}/client-manager-impl.cpp
     ${KEY_MANAGER_CLIENT_ASYNC_SRC_PATH}/client-manager-async.cpp
     ${KEY_MANAGER_CLIENT_ASYNC_SRC_PATH}/client-manager-async-impl.cpp
