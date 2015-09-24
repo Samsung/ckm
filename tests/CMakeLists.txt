@@ -9,6 +9,8 @@ ADD_DEFINITIONS( "-DBOOST_TEST_DYN_LINK" )
 SET(KEY_MANAGER_SRC_PATH ${PROJECT_SOURCE_DIR}/src)
 SET(KEY_MANAGER_PATH ${PROJECT_SOURCE_DIR}/src/manager)
 
+SET(TARGET_ENCRYPTION_SCHEME_COMMON encryption-scheme-common)
+
 ################################################################################
 
 
@@ -65,3 +67,5 @@ TARGET_LINK_LIBRARIES(${TARGET_TEST_MERGED}
     )
 
 INSTALL(TARGETS ${TARGET_TEST_MERGED} DESTINATION bin)
+
+ADD_SUBDIRECTORY(encryption-scheme)
