@@ -1383,7 +1383,14 @@ int CKMLogic::readCertificateHelper(
     for (auto &i: labelNameVector) {
         // certificates can't be protected with custom user password
         Crypto::GObjUPtr obj;
-        int ec = readDataHelper(false, cred, DataType::CERTIFICATE, i.second, i.first, Password(), obj);
+        int ec;
+        ec = readDataHelper(true,
+                            cred,
+                            DataType::CERTIFICATE,
+                            i.second,
+                            i.first,
+                            Password(),
+                            obj);
         if (ec != CKM_API_SUCCESS)
             return ec;
 
@@ -1391,7 +1398,13 @@ int CKMLogic::readCertificateHelper(
 
         // try to read chain certificates (if present)
         Crypto::GObjUPtrVector caChainObjs;
-        ec = readDataHelper(false, cred, DataType::DB_CHAIN_FIRST, i.second, i.first, CKM::Password(), caChainObjs);
+        ec = readDataHelper(true,
+                            cred,
+                            DataType::DB_CHAIN_FIRST,
+                            i.second,
+                            i.first,
+                            CKM::Password(),
+                            caChainObjs);
         if(ec != CKM_API_SUCCESS && ec != CKM_API_ERROR_DB_ALIAS_UNKNOWN)
             return ec;
         for(auto &caCertObj : caChainObjs)
