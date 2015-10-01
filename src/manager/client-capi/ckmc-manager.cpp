@@ -124,7 +124,7 @@ typedef int (CKM::Manager::*cryptoFn)(const CKM::CryptoAlgorithm&,
                                       CKM::RawBuffer&);
 
 int _cryptoOperation(cryptoFn operation,
-                     const ckmc_param_list_s *params,
+                     ckmc_param_list_h params,
                      const char *key_alias,
                      const char *password,
                      const ckmc_raw_buffer_s in,
@@ -604,9 +604,9 @@ int ckmc_create_key_pair_ecdsa(const ckmc_ec_type_e type,
 }
 
 KEY_MANAGER_CAPI
-int ckmc_create_key_aes(const size_t size,
+int ckmc_create_key_aes(size_t size,
                         const char *key_alias,
-                        const ckmc_policy_s key_policy)
+                        ckmc_policy_s key_policy)
 {
     CKM::ManagerShPtr mgr = CKM::Manager::create();
 
@@ -874,7 +874,7 @@ int ckmc_remove_alias(const char *alias)
 }
 
 KEY_MANAGER_CAPI
-int ckmc_encrypt_data(const ckmc_param_list_s *params,
+int ckmc_encrypt_data(ckmc_param_list_h params,
                       const char *key_alias,
                       const char *password,
                       const ckmc_raw_buffer_s decrypted,
@@ -889,7 +889,7 @@ int ckmc_encrypt_data(const ckmc_param_list_s *params,
 }
 
 KEY_MANAGER_CAPI
-int ckmc_decrypt_data(const ckmc_param_list_s *params,
+int ckmc_decrypt_data(ckmc_param_list_h params,
                       const char *key_alias,
                       const char *password,
                       const ckmc_raw_buffer_s encrypted,

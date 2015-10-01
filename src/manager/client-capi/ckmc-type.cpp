@@ -572,19 +572,19 @@ void ckmc_cert_list_all_free(ckmc_cert_list_s *first)
 }
 
 KEY_MANAGER_CAPI
-int ckmc_param_list_new(ckmc_param_list_s **ppparams)
+int ckmc_param_list_new(ckmc_param_list_h *pparams)
 {
-    if (!ppparams)
+    if (!pparams || *pparams)
         return CKMC_ERROR_INVALID_PARAMETER;
 
-    *ppparams = reinterpret_cast<ckmc_param_list_s*>(new(std::nothrow)(CKM::CryptoAlgorithm));
-    if (!*ppparams)
+    *pparams = reinterpret_cast<ckmc_param_list_h>(new(std::nothrow)(CKM::CryptoAlgorithm));
+    if (!*pparams)
         return CKMC_ERROR_OUT_OF_MEMORY;
     return CKMC_ERROR_NONE;
 }
 
 KEY_MANAGER_CAPI
-int ckmc_param_list_add_integer(ckmc_param_list_s *params,
+int ckmc_param_list_set_integer(ckmc_param_list_h params,
                                 ckmc_param_name_e name,
                                 uint64_t value)
 {
@@ -597,7 +597,7 @@ int ckmc_param_list_add_integer(ckmc_param_list_s *params,
 }
 
 KEY_MANAGER_CAPI
-int ckmc_param_list_add_buffer(ckmc_param_list_s *params,
+int ckmc_param_list_set_buffer(ckmc_param_list_h params,
                                ckmc_param_name_e name,
                                const ckmc_raw_buffer_s *buffer)
 {
@@ -611,26 +611,26 @@ int ckmc_param_list_add_buffer(ckmc_param_list_s *params,
 }
 
 KEY_MANAGER_CAPI
-int ckmc_param_list_get_integer(const ckmc_param_list_s *params,
+int ckmc_param_list_get_integer(ckmc_param_list_h params,
                                 ckmc_param_name_e name,
-                                uint64_t* value)
+                                uint64_t *pvalue)
 {
-    if (!params || !value)
+    if (!params || !pvalue)
         return CKMC_ERROR_INVALID_PARAMETER;
 
     const CKM::CryptoAlgorithm* algo = reinterpret_cast<const CKM::CryptoAlgorithm*>(params);
-    if (!algo->getParam(static_cast<CKM::ParamName>(name),*value))
+    if (!algo->getParam(static_cast<CKM::ParamName>(name), *pvalue))
         return CKMC_ERROR_INVALID_PARAMETER;
 
     return CKMC_ERROR_NONE;
 }
 
 KEY_MANAGER_CAPI
-int ckmc_param_list_get_buffer(const ckmc_param_list_s *params,
+int ckmc_param_list_get_buffer(ckmc_param_list_h params,
                                ckmc_param_name_e name,
-                               ckmc_raw_buffer_s **buffer)
+                               ckmc_raw_buffer_s **ppbuffer)
 {
-    if (!params || !buffer)
+    if (!params || !ppbuffer || *ppbuffer)
         return CKMC_ERROR_INVALID_PARAMETER;
 
     const CKM::CryptoAlgorithm* algo = reinterpret_cast<const CKM::CryptoAlgorithm*>(params);
@@ -638,28 +638,30 @@ int ckmc_param_list_get_buffer(const ckmc_param_list_s *params,
     if (!algo->getParam(static_cast<CKM::ParamName>(name),value))
         return CKMC_ERROR_INVALID_PARAMETER;
 
-    return ckmc_buffer_new(value.data(), value.size(), buffer);
+    return ckmc_buffer_new(value.data(), value.size(), ppbuffer);
 }
 
 KEY_MANAGER_CAPI
-void ckmc_param_list_free(ckmc_param_list_s *params)
+void ckmc_param_list_free(ckmc_param_list_h params)
 {
     CKM::CryptoAlgorithm* algo = reinterpret_cast<CKM::CryptoAlgorithm*>(params);
     delete algo;
 }
 
 KEY_MANAGER_CAPI
-int ckmc_generate_params(ckmc_algo_type_e type, ckmc_param_list_s *params)
+int ckmc_generate_new_params(ckmc_algo_type_e type, ckmc_param_list_h *pparams)
 {
-    // return error if params are NULL
-    if(params == NULL)
+    if (!pparams || *pparams)
         return CKMC_ERROR_INVALID_PARAMETER;
 
-    int ret = CKMC_ERROR_NONE;
-    switch(type)
-    {
+    ckmc_param_list_h params = NULL;
+    int ret = ckmc_param_list_new(&params);
+    if (ret != CKMC_ERROR_NONE)
+        return ret;
+
+    switch (type) {
     case CKMC_ALGO_AES_CTR:
-        ret = ckmc_param_list_add_integer(params, CKMC_PARAM_ED_CTR_LEN, DEFAULT_IV_LEN_BITS);
+        ret = ckmc_param_list_set_integer(params, CKMC_PARAM_ED_CTR_LEN, DEFAULT_IV_LEN_BITS);
         break;
     case CKMC_ALGO_AES_CBC:
     case CKMC_ALGO_AES_GCM:
@@ -667,22 +669,23 @@ int ckmc_generate_params(ckmc_algo_type_e type, ckmc_param_list_s *params)
     case CKMC_ALGO_RSA_OAEP:
         // no iv by default
         break;
-    case CKMC_ALGO_RSA_SV:
-    case CKMC_ALGO_DSA_SV:
-    case CKMC_ALGO_ECDSA_SV:
-        // no hash, no padding by default
-        break;
-    case CKMC_ALGO_RSA_GEN:
-    case CKMC_ALGO_DSA_GEN:
-        ret = ckmc_param_list_add_integer(params, CKMC_PARAM_GEN_KEY_LEN, DEFAULT_KEY_LEN_BITS);
-        break;
-    case CKMC_ALGO_ECDSA_GEN:
-        ret = ckmc_param_list_add_integer(params, CKMC_PARAM_GEN_EC, CKMC_EC_PRIME192V1);
-        break;
     default:
-        return CKMC_ERROR_INVALID_PARAMETER;
+        ret = CKMC_ERROR_INVALID_PARAMETER;
+        break;
     }
-    if (ret == CKMC_ERROR_NONE)
-        return ckmc_param_list_add_integer(params, CKMC_PARAM_ALGO_TYPE, type);
-    return ret;
+
+    if (ret != CKMC_ERROR_NONE) {
+        ckmc_param_list_free(params);
+        return ret;
+    }
+
+    ret = ckmc_param_list_set_integer(params, CKMC_PARAM_ALGO_TYPE, type);
+    if (ret != CKMC_ERROR_NONE) {
+        ckmc_param_list_free(params);
+        return ret;
+    }
+
+    *pparams = params;
+
+    return CKMC_ERROR_NONE;
 }
