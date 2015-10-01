@@ -208,13 +208,19 @@ void CryptoLogic::decryptRow(const Password &password, DB::Row &row)
 
         if ((row.encryptionScheme & ENCR_PASSWORD) && password.empty()) {
             ThrowErr(Exc::AuthenticationFailed,
-              "DB row is password protected, but given password is "
-              "empty.");
+                     "DB row is password protected, but given password is empty.");
+        }
+
+        if(!(row.encryptionScheme & ENCR_PASSWORD) && !password.empty()) {
+            ThrowErr(Exc::AuthenticationFailed,
+                     "DB row is not password protected, but given password is not empty.");
         }
 
         if ((row.encryptionScheme & ENCR_APPKEY) && !haveKey(row.ownerLabel)) {
-            ThrowErr(Exc::AuthenticationFailed, "Missing application key for ",
-              row.ownerLabel, " label.");
+            ThrowErr(Exc::AuthenticationFailed,
+                     "Missing application key for ",
+                     row.ownerLabel,
+                     " label.");
         }
 
         decBase64(crow.iv);
