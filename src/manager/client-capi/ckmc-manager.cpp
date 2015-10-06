@@ -94,9 +94,8 @@ ckmc_cert_list_s *_toNewCkmCertList(const CKM::CertificateShPtrVector &certVecto
     int ret;
     ckmc_cert_list_s *start = NULL;
     ckmc_cert_list_s *plist = NULL;
-    CKM::CertificateShPtrVector::const_iterator it;
-    for(it = certVector.begin(); it != certVector.end(); it++) {
-        CKM::RawBuffer rawBuffer = (*it)->getDER();
+    for(const auto &e : certVector) {
+        CKM::RawBuffer rawBuffer = e->getDER();
         ckmc_cert_s *pcert = NULL;
         ret = ckmc_cert_new(rawBuffer.data(), rawBuffer.size(), CKMC_FORM_DER, &pcert);
         if(pcert == NULL) {
@@ -821,12 +820,11 @@ int ckmc_ocsp_check(const ckmc_cert_list_s *pcert_chain_list, ckmc_ocsp_status_e
         return CKMC_ERROR_INVALID_PARAMETER;
     }
 
-    int ret = CKMC_ERROR_UNKNOWN;
     int tmpOcspStatus = -1;
     CKM::ManagerShPtr mgr = CKM::Manager::create();
     CKM::CertificateShPtrVector ckmCertChain = _toCkmCertificateVector(pcert_chain_list);
 
-    ret = mgr->ocspCheck(ckmCertChain, tmpOcspStatus);
+    int ret = mgr->ocspCheck(ckmCertChain, tmpOcspStatus);
     *ocsp_status = to_ckmc_ocsp_status(tmpOcspStatus);
     return to_ckmc_error(ret);
 }

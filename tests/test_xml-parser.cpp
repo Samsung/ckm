@@ -143,7 +143,7 @@ public:
     class MathHandler : public XML::Parser::ElementHandler
     {
         public:
-            MathHandler() : m_valueSet(false), m_powerFactor(1) {}
+            MathHandler() : m_valueSet(false), m_value(0), m_powerFactor(1) {}
 
             virtual void Start(const XML::Parser::Attributes &attr) {
                 const auto & it = attr.find("powerFactor");

@@ -63,9 +63,9 @@ RawBuffer Base64Encoder::get()
         LogWarning("Not finalized");
         ThrowMsg(Exception::NotFinalized, "Not finalized");
     }
-    BUF_MEM *bptr = 0;
+    BUF_MEM *bptr = nullptr;
     BIO_get_mem_ptr(m_b64, &bptr);
-    if (bptr == 0) {
+    if (!bptr) {
         LogError("Bio internal error");
         ThrowMsg(Exception::InternalError, "Bio internal error");
     }

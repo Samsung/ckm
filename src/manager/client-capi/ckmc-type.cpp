@@ -75,7 +75,7 @@ int ckmc_key_new(unsigned char *raw_key, size_t key_size, ckmc_key_type_e key_ty
 {
     ckmc_key_s *pkey;
 
-    if(raw_key == NULL || key_size <= 0 || ppkey == NULL) {
+    if(raw_key == NULL || key_size == 0 || ppkey == NULL) {
         return CKMC_ERROR_INVALID_PARAMETER;
     }
 
@@ -132,7 +132,7 @@ int ckmc_buffer_new(unsigned char *data, size_t size,ckmc_raw_buffer_s **ppbuffe
 {
     ckmc_raw_buffer_s *pbuff;
 
-    if(data == NULL || size <= 0 || ppbuffer == NULL) {
+    if(data == NULL || size == 0 || ppbuffer == NULL) {
         return CKMC_ERROR_INVALID_PARAMETER;
     }
 
@@ -171,7 +171,7 @@ int ckmc_cert_new(unsigned char *raw_cert, size_t cert_size, ckmc_data_format_e 
 {
     ckmc_cert_s *pcert;
 
-    if(raw_cert == NULL || cert_size <= 0 || ppcert == NULL) {
+    if(raw_cert == NULL || cert_size == 0 || ppcert == NULL) {
         return CKMC_ERROR_INVALID_PARAMETER;
     }
 

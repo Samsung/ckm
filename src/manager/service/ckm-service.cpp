@@ -170,7 +170,6 @@ RawBuffer CKMService::ProcessStorage(Credentials &cred, MessageBuffer &buffer)
     int tmpDataType = 0;
     Name name;
     Label label, accessorLabel;
-    std::string user;
 
     buffer.Deserialize(command);
     buffer.Deserialize(msgID);

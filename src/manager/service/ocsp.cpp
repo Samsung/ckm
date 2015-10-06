@@ -128,7 +128,7 @@ int OCSPModule::ocsp_verify(X509 *cert, X509 *issuer, STACK_OF(X509) *trustedCer
     ASN1_GENERALIZEDTIME *nextupd = NULL;
     int use_ssl = 0;
     int ocspStatus = -1;
-    int i = 0 ,tmpIdx = 0;
+    int i = 0;
     long nsec = MAX_VALIDITY_PERIOD, maxage = -1;
     char subj_buf[256];
     int reason = 0;
@@ -290,7 +290,7 @@ int OCSPModule::ocsp_verify(X509 *cert, X509 *issuer, STACK_OF(X509) *trustedCer
 
     if(trustedCerts != NULL) {
         trustedStore = X509_STORE_new();
-        for(tmpIdx=0; tmpIdx<sk_X509_num(trustedCerts); tmpIdx++) {
+        for(int tmpIdx=0; tmpIdx<sk_X509_num(trustedCerts); tmpIdx++) {
             X509_STORE_add_cert(trustedStore, sk_X509_value(trustedCerts, tmpIdx));
         }
         X509_STORE_add_cert(trustedStore, issuer);

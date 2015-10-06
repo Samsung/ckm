@@ -53,9 +53,9 @@ int main(int argc, char* argv[])
     // simple input arg parser
     for (int i=1; i<argc-1; i++)
     {
-        long int uid;
         if(!strcmp(argv[i], "-d"))
         {
+            long int uid;
             if(parseLong(argv[i+1], uid) || uid<0) {
                 cerr << "parameter error: invalid UID provided to the -d option" << endl;
                 exit(-2);

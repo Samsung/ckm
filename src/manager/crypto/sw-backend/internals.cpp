@@ -293,7 +293,7 @@ InitCipherFn selectCipher(AlgoType type, size_t key_len = 32, bool encryption = 
 
 
 RawBuffer asymmetricHelper(int (*cryptoFn)(int, const unsigned char*, unsigned char*, RSA*, int),
-                           const std::string logPrefix,
+                           const std::string &logPrefix,
                            const EvpShPtr &pkey,
                            const CryptoAlgorithm &alg,
                            const RawBuffer &data)
@@ -748,16 +748,13 @@ RawBuffer sign(EVP_PKEY *pkey,
 {
     validateParams<IsSignVerify>(alg);
 
-    int rsa_padding = NOT_DEFINED;
-    const EVP_MD *md_algo = NULL;
-
     HashAlgorithm hashTmp = HashAlgorithm::NONE;
     alg.getParam(ParamName::SV_HASH_ALGO, hashTmp);
-    md_algo = getMdAlgo(hashTmp);
+    const EVP_MD *md_algo = getMdAlgo(hashTmp);
 
     RSAPaddingAlgorithm rsaPad = RSAPaddingAlgorithm::NONE;
     alg.getParam(ParamName::SV_RSA_PADDING, rsaPad);
-    rsa_padding = getRsaPadding(rsaPad);
+    int rsa_padding = getRsaPadding(rsaPad);
 
 //
 //    if((privateKey.getType() != KeyType::KEY_RSA_PRIVATE) &&
