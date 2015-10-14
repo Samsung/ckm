@@ -61,21 +61,6 @@ extern "C" {
 KEY_MANAGER_CAPI extern char const * const ckmc_label_name_separator;
 
 /**
- * This is deprecated: Tizen 3.0 does not use smack labels directly.
- *                     You should use pkgId instead.
- *
- * @brief Shared owner label
- * @since_tizen 3.0
- * @remarks Shared database label - user may be given permission to access shared
- *          database items. In such case, the alias should contain shared database
- *          label.
- *
- * @see #ckmc_label_name_separator
- * @see key-manager_doc.h
- */
-KEY_MANAGER_CAPI extern char const * const ckmc_label_shared_owner;
-
-/**
  * @brief Separator between alias and owner id.
  * @since_tizen 3.0
  * @remarks Alias can be provided as an alias alone, or together with owner id.

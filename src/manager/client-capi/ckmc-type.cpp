@@ -67,7 +67,6 @@ int _ckmc_load_cert_from_x509(X509 *xCert, ckmc_cert_s **cert)
 
 
 const char * const ckmc_label_name_separator    = CKM::LABEL_NAME_SEPARATOR;
-const char * const ckmc_label_shared_owner      = CKM::OWNER_ID_SYSTEM;
 const char * const ckmc_owner_id_separator      = CKM::LABEL_NAME_SEPARATOR;
 const char * const ckmc_owner_id_system         = CKM::OWNER_ID_SYSTEM;
 
