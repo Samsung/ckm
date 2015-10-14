@@ -765,7 +765,7 @@ void ckmc_cert_list_all_free(ckmc_cert_list_s *first);
 int ckmc_param_list_new(ckmc_param_list_h *pparams);
 
 /**
- * @brief Set integer parameter to the list.
+ * @brief Sets integer parameter to the list.
  *
  * @since_tizen 3.0
  *
@@ -799,7 +799,7 @@ int ckmc_param_list_set_integer(ckmc_param_list_h params,
                                 uint64_t value);
 
 /**
- * @brief Set buffer parameter to the list.
+ * @brief Sets buffer parameter to the list.
  *
  * @since_tizen 3.0
  *
