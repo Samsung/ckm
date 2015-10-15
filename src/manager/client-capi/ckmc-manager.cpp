@@ -777,39 +777,6 @@ int ckmc_get_cert_chain_with_trustedcert(const ckmc_cert_s* cert,
 }
 
 KEY_MANAGER_CAPI
-int  ckmc_get_cert_chain_with_trustedcert_alias(const ckmc_cert_s* cert,
-                                                const ckmc_alias_list_s* untrustedcerts,
-                                                const ckmc_alias_list_s* trustedcerts,
-                                                const bool sys_certs,
-                                                ckmc_cert_list_s** ppcert_chain_list)
-{
-    int ret;
-    CKM::ManagerShPtr mgr = CKM::Manager::create();
-    CKM::CertificateShPtrVector ckm_cert_chain;
-
-    if(cert == NULL || cert->raw_cert == NULL || cert->cert_size <= 0 || ppcert_chain_list == NULL) {
-        return CKMC_ERROR_INVALID_PARAMETER;
-    }
-
-    CKM::CertificateShPtr ckm_cert = _toCkmCertificate(cert);
-    if(ckm_cert.get() == NULL) {
-        return CKMC_ERROR_INVALID_PARAMETER;
-    }
-
-    CKM::AliasVector ckm_untrusted = _toCkmAliasVector(untrustedcerts);
-    CKM::AliasVector ckm_trusted = _toCkmAliasVector(trustedcerts);
-
-    ret = mgr->getCertificateChain(ckm_cert, ckm_untrusted, ckm_trusted, sys_certs, ckm_cert_chain);
-    if( ret != CKM_API_SUCCESS) {
-        return to_ckmc_error(ret);
-    }
-
-    *ppcert_chain_list = _toNewCkmCertList(ckm_cert_chain);
-
-    return CKMC_ERROR_NONE;
-}
-
-KEY_MANAGER_CAPI
 int ckmc_ocsp_check(const ckmc_cert_list_s *pcert_chain_list, ckmc_ocsp_status_e *ocsp_status)
 {
     if (pcert_chain_list == NULL

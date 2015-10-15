@@ -839,7 +839,6 @@ int ckmc_verify_signature(const char *public_key_alias,
  *
  * @pre User is already logged in and the user key is already loaded into memory in plain text form.
  *
- * @see ckmc_get_cert_chain_with_alias())
  * @see ckmc_cert_list_all_free()
  */
 int ckmc_get_cert_chain(const ckmc_cert_s *cert,
@@ -847,6 +846,7 @@ int ckmc_get_cert_chain(const ckmc_cert_s *cert,
                         ckmc_cert_list_s **ppcert_chain_list);
 
 /**
+ * @deprecated Deprecated since 2.4. [Use ckmc_get_cert_chain() instead]
  * @brief Verifies a certificate chain using an alias list of untrusted certificates and return that
  *        chain.
  *
@@ -858,6 +858,7 @@ int ckmc_get_cert_chain(const ckmc_cert_s *cert,
  *          storage.
  * @remarks You must destroy the newly created @a ppcert_chain_list by calling
  *          ckmc_cert_list_all_free() if it is no longer needed.
+ * @remarks @a untrustedcerts shouldn't be protected with optional password.
  *
  * @param[in] cert               The certificate to be verified
  * @param[in] untrustedcerts     The alias list of untrusted CA certificates stored in key manager
@@ -927,7 +928,6 @@ int ckmc_get_cert_chain_with_alias(const ckmc_cert_s *cert,
  *
  * @pre User is already logged in and the user key is already loaded into memory in plain text form.
  *
- * @see ckmc_get_cert_chain_with_trustedcert_alias()
  * @see ckmc_cert_list_all_free()
  */
 int ckmc_get_cert_chain_with_trustedcert(const ckmc_cert_s *cert,
@@ -935,56 +935,6 @@ int ckmc_get_cert_chain_with_trustedcert(const ckmc_cert_s *cert,
                                          const ckmc_cert_list_s *trustedcerts,
                                          const bool use_trustedsystemcerts,
                                          ckmc_cert_list_s **ppcert_chain_list);
-
-/**
- * @brief Verifies a certificate chain and returns that chain using alias lists of untrusted and
- *        trusted certificates.
- *
- * @since_tizen 2.4
- * @remarks %http://tizen.org/privilege/keymanager (public level privilege) is no longer
- *          required to use this API since 3.0.
- *
- * @remarks If the alias list of trusted root certificates is provided as a user input, these
- *          certificates do not need to exist in the system's certificate storage.
- * @remarks You must destroy the newly created @a ppcert_chain_list by calling
- *          ckmc_cert_list_all_free() if it is no longer needed.
- *
- * @param[in] cert                    The certificate to be verified
- * @param[in] untrustedcerts          The alias list of untrusted CA certificates stored in key
- *                                    manager to be used in verifying a certificate chain
- * @param[in] trustedcerts            The alias list of trusted CA certificates stored in key
- *                                    manager to be used in verifying a certificate chain
- * @param[in] use_trustedsystemcerts  The flag indicating the use of the trusted root certificates
- *                                    in the system's certificate storage
- * @param[out] ppcert_chain_list      The pointer to a newly created certificate chain's handle \n
- *                                    If an error occurs, @a *ppcert_chain_list will be null
- *
- * @return @c 0 on success and the signature is valid,
- *         otherwise a negative error value
- *
- * @retval #CKMC_ERROR_NONE                 Successful
- * @retval #CKMC_ERROR_VERIFICATION_FAILED  The certificate chain is not valid
- * @retval #CKMC_ERROR_INVALID_PARAMETER    Input parameter is invalid
- * @retval #CKMC_ERROR_DB_LOCKED            A user key is not loaded in memory (a user is not logged
- *                                          in)
- * @retval #CKMC_ERROR_DB_ERROR             Failed due to the error with unknown reason
- * @retval #CKMC_ERROR_DB_ALIAS_UNKNOWN     Alias does not exist
- * @retval #CKMC_ERROR_INVALID_FORMAT       The format of certificate is not valid
- * @retval #CKMC_ERROR_PERMISSION_DENIED    Failed to access key manager
- * @retval #CKMC_ERROR_AUTHENTICATION_FAILED
- *                                          Some certificates were encrypted with password and could not
- *                                          be used
- *
- * @pre User is already logged in and the user key is already loaded into memory in plain text form.
- *
- * @see ckmc_get_cert_chain_with_trustedcert() 
- * @see ckmc_cert_list_all_free()
- */
-int ckmc_get_cert_chain_with_trustedcert_alias(const ckmc_cert_s *cert,
-                                               const ckmc_alias_list_s *untrustedcerts,
-                                               const ckmc_alias_list_s *trustedcerts,
-                                               const bool use_trustedsystemcerts,
-                                               ckmc_cert_list_s **ppcert_chain_list);
 
 /**
  * @brief Perform OCSP which checks certificate is whether revoked or not.
