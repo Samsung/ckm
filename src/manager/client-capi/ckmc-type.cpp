@@ -573,7 +573,7 @@ void ckmc_cert_list_all_free(ckmc_cert_list_s *first)
 KEY_MANAGER_CAPI
 int ckmc_param_list_new(ckmc_param_list_h *pparams)
 {
-    if (!pparams || *pparams)
+    if (!pparams)
         return CKMC_ERROR_INVALID_PARAMETER;
 
     *pparams = reinterpret_cast<ckmc_param_list_h>(new(std::nothrow)(CKM::CryptoAlgorithm));
@@ -650,7 +650,7 @@ void ckmc_param_list_free(ckmc_param_list_h params)
 KEY_MANAGER_CAPI
 int ckmc_generate_new_params(ckmc_algo_type_e type, ckmc_param_list_h *pparams)
 {
-    if (!pparams || *pparams)
+    if (!pparams)
         return CKMC_ERROR_INVALID_PARAMETER;
 
     ckmc_param_list_h params = NULL;
