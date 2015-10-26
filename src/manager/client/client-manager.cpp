@@ -174,12 +174,14 @@ int Manager::createSignature(
     const RSAPaddingAlgorithm padding,
     RawBuffer &signature)
 {
+    CryptoAlgorithm cAlg;
+    cAlg.setParam(ParamName::SV_HASH_ALGO, hash);
+    cAlg.setParam(ParamName::SV_RSA_PADDING, padding);
     return m_impl->createSignature(
         privateKeyAlias,
         password,
         message,
-        hash,
-        padding,
+        cAlg,
         signature);
 }
 
@@ -191,13 +193,15 @@ int Manager::verifySignature(
     const HashAlgorithm hash,
     const RSAPaddingAlgorithm padding)
 {
+    CryptoAlgorithm cAlg;
+    cAlg.setParam(ParamName::SV_HASH_ALGO, hash);
+    cAlg.setParam(ParamName::SV_RSA_PADDING, padding);
     return m_impl->verifySignature(
         publicKeyOrCertAlias,
         password,
         message,
         signature,
-        hash,
-        padding);
+        cAlg);
 }
 
 int Manager::ocspCheck(const CertificateShPtrVector &certificateChainVector, int &ocspStatus) {

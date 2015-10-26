@@ -230,7 +230,10 @@ void ManagerAsync::createSignature(const ObserverPtr& observer,
                                    const HashAlgorithm hash,
                                    const RSAPaddingAlgorithm padding)
 {
-    m_impl->createSignature(observer, privateKeyAlias, password, message, hash, padding);
+    CryptoAlgorithm cAlg;
+    cAlg.setParam(ParamName::SV_HASH_ALGO, hash);
+    cAlg.setParam(ParamName::SV_RSA_PADDING, padding);
+    m_impl->createSignature(observer, privateKeyAlias, password, message, cAlg);
 }
 
 void ManagerAsync::verifySignature(const ObserverPtr& observer,
@@ -241,7 +244,10 @@ void ManagerAsync::verifySignature(const ObserverPtr& observer,
                                    const HashAlgorithm hash,
                                    const RSAPaddingAlgorithm padding)
 {
-    m_impl->verifySignature(observer, publicKeyOrCertAlias, password, message, signature, hash, padding);
+    CryptoAlgorithm cAlg;
+    cAlg.setParam(ParamName::SV_HASH_ALGO, hash);
+    cAlg.setParam(ParamName::SV_RSA_PADDING, padding);
+    m_impl->verifySignature(observer, publicKeyOrCertAlias, password, message, signature, cAlg);
 }
 
 void ManagerAsync::ocspCheck(const ObserverPtr& observer,

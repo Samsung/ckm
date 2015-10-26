@@ -162,8 +162,7 @@ public:
         const Label & ownerLabel,
         const Password &password,           // password for private_key
         const RawBuffer &message,
-        const HashAlgorithm hash,
-        const RSAPaddingAlgorithm padding);
+        const CryptoAlgorithm &cryptoAlgorithm);
 
     RawBuffer verifySignature(
         const Credentials &cred,
@@ -173,8 +172,7 @@ public:
         const Password &password,           // password for public_key (optional)
         const RawBuffer &message,
         const RawBuffer &signature,
-        const HashAlgorithm hash,
-        const RSAPaddingAlgorithm padding);
+        const CryptoAlgorithm &cryptoAlgorithm);
 
     RawBuffer updateCCMode();
 

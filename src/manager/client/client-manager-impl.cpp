@@ -631,8 +631,7 @@ int Manager::Impl::createSignature(
     const Alias &privateKeyAlias,
     const Password &password,           // password for private_key
     const RawBuffer &message,
-    const HashAlgorithm hash,
-    const RSAPaddingAlgorithm padding,
+    const CryptoAlgorithm &cAlgorithm,
     RawBuffer &signature)
 {
     int my_counter = ++m_counter;
@@ -647,8 +646,7 @@ int Manager::Impl::createSignature(
                                              helper.getLabel(),
                                              password,
                                              message,
-                                             static_cast<int>(hash),
-                                             static_cast<int>(padding));
+                                             CryptoAlgorithmSerializable(cAlgorithm));
 
         int retCode = m_storageConnection.processRequest(send.Pop(), recv);
         if (CKM_API_SUCCESS != retCode)
@@ -673,8 +671,7 @@ int Manager::Impl::verifySignature(
     const Password &password,           // password for public_key (optional)
     const RawBuffer &message,
     const RawBuffer &signature,
-    const HashAlgorithm hash,
-    const RSAPaddingAlgorithm padding)
+    const CryptoAlgorithm &cAlg)
 {
     int my_counter = ++m_counter;
 
@@ -688,8 +685,7 @@ int Manager::Impl::verifySignature(
                                              password,
                                              message,
                                              signature,
-                                             static_cast<int>(hash),
-                                             static_cast<int>(padding));
+                                             CryptoAlgorithmSerializable(cAlg));
 
         int retCode = m_storageConnection.processRequest(send.Pop(), recv);
         if (CKM_API_SUCCESS != retCode)

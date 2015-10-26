@@ -187,8 +187,7 @@ void ManagerAsync::Impl::createSignature(const ObserverPtr& observer,
                                          const Alias& privateKeyAlias,
                                          const Password& password,
                                          const RawBuffer& message,
-                                         const HashAlgorithm hash,
-                                         const RSAPaddingAlgorithm padding)
+                                         const CryptoAlgorithm &cAlg)
 {
     observerCheck(observer);
     if (privateKeyAlias.empty() || message.empty()) {
@@ -204,8 +203,7 @@ void ManagerAsync::Impl::createSignature(const ObserverPtr& observer,
                       helper.getLabel(),
                       password,
                       message,
-                      static_cast<int>(hash),
-                      static_cast<int>(padding));
+                      CryptoAlgorithmSerializable(cAlg));
     }, [&observer](int error) {observer->ReceivedError(error);});
 }
 
@@ -214,8 +212,7 @@ void ManagerAsync::Impl::verifySignature(const ObserverPtr& observer,
                                          const Password& password,
                                          const RawBuffer& message,
                                          const RawBuffer& signature,
-                                         const HashAlgorithm hash,
-                                         const RSAPaddingAlgorithm padding)
+                                         const CryptoAlgorithm &cAlg)
 {
     observerCheck(observer);
     if (publicKeyOrCertAlias.empty() || message.empty() || signature.empty()) {
@@ -232,8 +229,7 @@ void ManagerAsync::Impl::verifySignature(const ObserverPtr& observer,
                       password,
                       message,
                       signature,
-                      static_cast<int>(hash),
-                      static_cast<int>(padding));
+                      CryptoAlgorithmSerializable(cAlg));
     }, [&observer](int error){ observer->ReceivedError(error); } );
 }
 

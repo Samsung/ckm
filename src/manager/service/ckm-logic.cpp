@@ -1574,14 +1574,10 @@ RawBuffer CKMLogic::createSignature(
         const Label & ownerLabel,
         const Password &password,           // password for private_key
         const RawBuffer &message,
-        const HashAlgorithm hash,
-        const RSAPaddingAlgorithm padding)
+        const CryptoAlgorithm &cryptoAlg)
 {
     DB::Row row;
     RawBuffer signature;
-    CryptoAlgorithm cryptoAlg;
-    cryptoAlg.setParam(ParamName::SV_HASH_ALGO, hash);
-    cryptoAlg.setParam(ParamName::SV_RSA_PADDING, padding);
 
     int retCode = CKM_API_SUCCESS;
 
@@ -1616,17 +1612,12 @@ RawBuffer CKMLogic::verifySignature(
         const Password &password,           // password for public_key (optional)
         const RawBuffer &message,
         const RawBuffer &signature,
-        const HashAlgorithm hash,
-        const RSAPaddingAlgorithm padding)
+        const CryptoAlgorithm &params)
 {
     int retCode = CKM_API_ERROR_VERIFICATION_FAILED;
 
     try {
         DB::Row row;
-
-        CryptoAlgorithm params;
-        params.setParam(ParamName::SV_HASH_ALGO, hash);
-        params.setParam(ParamName::SV_RSA_PADDING, padding);
 
         // try certificate first - looking for a public key.
         // in case of PKCS, pub key from certificate will be found first
