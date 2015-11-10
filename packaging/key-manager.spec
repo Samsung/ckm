@@ -17,7 +17,6 @@ BuildRequires: pkgconfig(openssl)
 BuildRequires: libattr-devel
 BuildRequires: pkgconfig(libsmack)
 BuildRequires: pkgconfig(libsystemd-daemon)
-BuildRequires: pkgconfig(vconf)
 BuildRequires: pkgconfig(libsystemd-journal)
 BuildRequires: pkgconfig(libxml-2.0)
 BuildRequires: pkgconfig(capi-system-info)
@@ -36,8 +35,8 @@ application to sign and verify (DSA/RSA/ECDSA) signatures.
 %package -n key-manager-listener
 Summary:    Package with listener daemon
 Group:      System/Security
-BuildRequires: pkgconfig(vconf)
 BuildRequires: pkgconfig(glib-2.0)
+BuildRequires: pkgconfig(dlog)
 BuildRequires: pkgconfig(capi-appfw-package-manager)
 Requires:   libkey-manager-client = %{version}-%{release}
 
@@ -120,9 +119,6 @@ export LDFLAGS+="-Wl,--rpath=%{_libdir},-Bsymbolic-functions "
 %cmake . -DVERSION=%{version} \
         -DCMAKE_BUILD_TYPE=%{?build_type:%build_type}%{!?build_type:RELEASE} \
         -DCMAKE_VERBOSE_MAKEFILE=ON \
-%if "%{sec_product_feature_security_mdfpp_enable}" == "1"
-        -DSECURITY_MDFPP_STATE_ENABLE=1 \
-%endif
         -DSYSTEMD_UNIT_DIR=%{_unitdir} \
         -DSYSTEMD_ENV_FILE="/etc/sysconfig/central-key-manager" \
         -DMOCKUP_SM=%{?mockup_sm:%mockup_sm}%{!?mockup_sm:OFF}

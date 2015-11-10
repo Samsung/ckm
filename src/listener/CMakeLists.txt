@@ -3,8 +3,6 @@ PKG_CHECK_MODULES(LISTENER_DEP
     dlog
     glib-2.0
     capi-appfw-package-manager
-    libsystemd-daemon
-    vconf
     )
 
 SET(LISTENER_SOURCES ${PROJECT_SOURCE_DIR}/src/listener/listener-daemon.cpp)

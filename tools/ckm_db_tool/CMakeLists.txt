@@ -8,7 +8,6 @@ PKG_CHECK_MODULES(CKM_DB_TOOL_DEP
     libcrypto
     capi-base-common
     capi-system-info
-    vconf
     libxml-2.0
     cynara-client-async
     cynara-creds-socket

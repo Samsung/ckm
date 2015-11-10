@@ -25,58 +25,28 @@
 #include <ckm/ckm-type.h>
 #include <openssl/crypto.h>
 
-#ifdef SECURITY_MDFPP_STATE_ENABLE
-#include <vconf/vconf.h>
-#endif
-
-#if defined(SECURITY_MDFPP_STATE_ENABLE) && !defined(VCONFKEY_SECURITY_MDPP_STATE)
-#define VCONFKEY_SECURITY_MDPP_STATE "file/security_mdpp/security_mdpp_state"
-#endif
-
 namespace {
-const char* const MDPP_MODE_ENFORCING = "Enforcing";
-const char* const MDPP_MODE_ENABLED = "Enabled";
-const char* const MDPP_MODE_DISABLED = "Disabled";
-const uid_t       SYSTEM_SVC_MAX_UID = (5000 - 1);
+const uid_t SYSTEM_SVC_MAX_UID = (5000 - 1);
 } // anonymous namespace
 
 namespace CKM {
 
-void AccessControl::updateCCMode() {
-    int fipsModeStatus = 0;
-    int rc = 0;
-    bool newMode;
+void AccessControl::updateCCMode()
+{
+    /* newMode should be extracted from global property like buxton in product */
+    bool newMode = false;
 
-#ifdef SECURITY_MDFPP_STATE_ENABLE
-    char *mdppState = vconf_get_str(VCONFKEY_SECURITY_MDPP_STATE);
-#else
-    char *mdppState = NULL;
-#endif
-    newMode = ( mdppState && (!strcmp(mdppState, MDPP_MODE_ENABLED) ||
-                              !strcmp(mdppState, MDPP_MODE_ENFORCING) ||
-                              !strcmp(mdppState, MDPP_MODE_DISABLED)));
     if (newMode == m_ccMode)
         return;
 
-    m_ccMode = newMode;
+    int iNewMode = newMode ? 1 : 0;
 
-    fipsModeStatus = FIPS_mode();
-
-    if(m_ccMode) {
-        if(fipsModeStatus == 0) { // If FIPS mode off
-            rc = FIPS_mode_set(1); // Change FIPS_mode from off to on
-            if(rc == 0) {
-                LogError("Error in FIPS_mode_set function");
-            }
-        }
-    } else {
-        if(fipsModeStatus == 1) { // If FIPS mode on
-            rc = FIPS_mode_set(0); // Change FIPS_mode from on to off
-            if(rc == 0) {
-                LogError("Error in FIPS_mode_set function");
-            }
-        }
+    if (FIPS_mode_set(iNewMode) == 0) {
+        LogError("Error to FIPS_mode_set with param " << iNewMode);
+        return;
     }
+
+    m_ccMode = newMode;
 }
 
 bool AccessControl::isCCMode() const

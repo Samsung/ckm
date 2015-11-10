@@ -7,7 +7,6 @@ PKG_CHECK_MODULES(KEY_MANAGER_DEP
     libsystemd-daemon
     capi-base-common
     capi-system-info
-    vconf
     libxml-2.0
     security-manager
     cynara-client-async

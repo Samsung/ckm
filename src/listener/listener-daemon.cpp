@@ -29,15 +29,10 @@
 #include <ckm/ckm-type.h>
 #include <dlog.h>
 
-#ifdef SECURITY_MDFPP_STATE_ENABLE
-#include <vconf/vconf.h>
+#ifdef LOG_TAG
+#undef LOG_TAG
 #endif
-
-#define CKM_LISTENER_TAG "CKM_LISTENER"
-
-#if defined(SECURITY_MDFPP_STATE_ENABLE) && !defined(VCONFKEY_SECURITY_MDPP_STATE)
-#define VCONFKEY_SECURITY_MDPP_STATE "file/security_mdpp/security_mdpp_state"
-#endif
+#define LOG_TAG "CKM_LISTENER"
 
 namespace {
 const char* const CKM_LOCK = "/var/run/key-manager.pid";
@@ -56,30 +51,6 @@ bool isCkmRunning()
     return (0 != ret);
 }
 
-#ifdef SECURITY_MDFPP_STATE_ENABLE
-void callUpdateCCMode()
-{
-    if(!isCkmRunning())
-        return;
-
-    auto control = CKM::Control::create();
-    int ret = control->updateCCMode();
-
-    SLOG(LOG_DEBUG, CKM_LISTENER_TAG, "Callback caller process id : %d\n", getpid());
-
-    if ( ret != CKM_API_SUCCESS )
-        SLOG(LOG_ERROR, CKM_LISTENER_TAG, "CKM::Control::updateCCMode error. ret : %d\n", ret);
-    else
-        SLOG(LOG_DEBUG, CKM_LISTENER_TAG, "CKM::Control::updateCCMode success.\n");
-}
-
-void ccModeChangedEventCallback(keynode_t*, void*)
-{
-    callUpdateCCMode();
-}
-#endif
-
-
 void packageUninstalledEventCallback(
     const char *type,
     const char *package,
@@ -96,59 +67,41 @@ void packageUninstalledEventCallback(
 
     if (eventType != PACKAGE_MANAGER_EVENT_TYPE_UNINSTALL ||
             eventState != PACKAGE_MANAGER_EVENT_STATE_STARTED ||
-            package == NULL) {
-        SLOG(LOG_DEBUG, CKM_LISTENER_TAG, "PackageUninstalled Callback error of Invalid Param");
+            package == NULL)
+		return;
+
+    SLOGD("PackageUninstalled Callback. Uninstalation of: %s", package);
+
+    if (!isCkmRunning()) {
+        SLOGE("package uninstall event recieved but ckm isn't running!");
+        return;
     }
-    else {
-        SLOG(LOG_DEBUG, CKM_LISTENER_TAG, "PackageUninstalled Callback. Uninstalation of: %s", package);
-        auto control = CKM::Control::create();
-        int ret = 0;
-        if ( CKM_API_SUCCESS != (ret = control->removeApplicationData(std::string(package))) ) {
-            SLOG(LOG_ERROR, CKM_LISTENER_TAG, "CKM::Control::removeApplicationData error. ret : %d\n", ret);
-        }
-        else {
-            SLOG(LOG_DEBUG, CKM_LISTENER_TAG,
-                "CKM::Control::removeApplicationData success. Uninstallation package : %s\n", package);
-        }
-    }
+
+    auto control = CKM::Control::create();
+    int ret = control->removeApplicationData(std::string(package));
+    if (ret != CKM_API_SUCCESS)
+        SLOGE("CKM::Control::removeApplicationData error. ret : %d", ret);
+    else
+        SLOGD("CKM::Control::removeApplicationData success. Uninstallation package : %s", package);
 }
 
-int main(void) {
-    SLOG(LOG_DEBUG, CKM_LISTENER_TAG, "%s", "Start!");
+int main(void)
+{
+    SLOGD("Start!");
 
-    // Let's start to listen
     GMainLoop *main_loop = g_main_loop_new(NULL, FALSE);
 
     package_manager_h request;
     package_manager_create(&request);
 
-    SLOG(LOG_DEBUG, CKM_LISTENER_TAG, "register uninstalledApp event callback start");
+    SLOGD("register uninstalledApp event callback start");
     if (0 != package_manager_set_event_cb(request, packageUninstalledEventCallback, NULL)) {
-        SLOG(LOG_ERROR, CKM_LISTENER_TAG, "%s", "Error in package_manager_set_event_cb");
+        SLOGE("Error in package_manager_set_event_cb");
         exit(-1);
     }
-    SLOG(LOG_DEBUG, CKM_LISTENER_TAG, "register uninstalledApp event callback success");
-
-#ifdef SECURITY_MDFPP_STATE_ENABLE
-    int ret = 0;
-    char *mdpp_state = vconf_get_str(VCONFKEY_SECURITY_MDPP_STATE);
-    if ( mdpp_state ) { // Update cc mode and register event callback only when mdpp vconf key exists
-        callUpdateCCMode();
-
-        SLOG(LOG_DEBUG, CKM_LISTENER_TAG, "register vconfCCModeChanged event callback start");
-        if ( 0 != (ret = vconf_notify_key_changed(VCONFKEY_SECURITY_MDPP_STATE, ccModeChangedEventCallback, NULL)) ) {
-            SLOG(LOG_ERROR, CKM_LISTENER_TAG, "Error in vconf_notify_key_changed. ret : %d", ret);
-            exit(-1);
-        }
-        SLOG(LOG_DEBUG, CKM_LISTENER_TAG, "register vconfCCModeChanged event callback success");
-    }
-    else
-        SLOG(LOG_DEBUG, CKM_LISTENER_TAG,
-            "vconfCCModeChanged event callback is not registered. No vconf key exists : %s", VCONFKEY_SECURITY_MDPP_STATE);
-#endif
-
-    SLOG(LOG_DEBUG, CKM_LISTENER_TAG, "%s", "Ready to listen!");
+    SLOGD("Ready to listen!");
     g_main_loop_run(main_loop);
+
     return 0;
 }
 
