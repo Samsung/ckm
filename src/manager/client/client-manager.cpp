@@ -239,12 +239,10 @@ int Manager::decrypt(
 ManagerShPtr Manager::create() {
     try {
         return std::make_shared<Manager>();
-    } catch (const std::bad_alloc &) {
-        LogDebug("Bad alloc was caught during Manager::Impl creation.");
     } catch (...) {
-        LogError("Critical error: Unknown exception was caught during Manager::Impl creation!");
+        LogError("Exception occured in Manager::create");
+        throw;
     }
-    return ManagerShPtr();
 }
 
 } // namespace CKM
