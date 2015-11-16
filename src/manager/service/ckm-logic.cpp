@@ -1098,12 +1098,16 @@ int CKMLogic::importInitialData(
     const Crypto::DataEncryption &enc,
     const Policy &policy)
 {
-    if (CKM_API_SUCCESS != unlockSystemDB() )
-        ThrowErr(Exc::DatabaseLocked, "can not unlock system database");
-    auto &handler = m_userDataMap[SYSTEM_DB_UID];
+    // Inital values are always imported with root credentials. Label is not important.
+    Credentials rootCred(0,"");
 
-    if (!isNameValid(name))
-        return CKM_API_ERROR_INPUT_PARAM;
+    auto &handler = selectDatabase(rootCred, OWNER_ID_SYSTEM);
+
+    // check if save is possible
+    DB::Crypto::Transaction transaction(&handler.database);
+    int retCode = checkSaveConditions(rootCred, handler, name, OWNER_ID_SYSTEM);
+    if(retCode != CKM_API_SUCCESS)
+        return retCode;
 
     Crypto::GStore& store =
         m_decider.getStore(data.type, policy.extractable, !enc.encryptedKey.empty());
@@ -1117,7 +1121,6 @@ int CKMLogic::importInitialData(
     DB::Row row(std::move(token), name, OWNER_ID_SYSTEM, static_cast<int>(policy.extractable));
     handler.crypto.encryptRow(row);
 
-    DB::Crypto::Transaction transaction(&handler.database);
     handler.database.saveRow(row);
     transaction.commit();
 
