@@ -23,13 +23,14 @@
 #ifndef PERMISSIONHANDLER_H_
 #define PERMISSIONHANDLER_H_
 
+#include <NoCharactersHandler.h>
 #include <parser.h>
 #include <ckm/ckm-type.h>
 
 namespace CKM {
 namespace InitialValues {
 
-class PermissionHandler : public XML::Parser::ElementHandler
+class PermissionHandler : public NoCharactersHandler
 {
 public:
     typedef std::shared_ptr<PermissionHandler> PermissionHandlerPtr;
@@ -37,7 +38,6 @@ public:
     virtual ~PermissionHandler();
 
     virtual void Start(const XML::Parser::Attributes &);
-    virtual void Characters(const std::string &);
     virtual void End();
 
     const Label & getAccessor() const {

@@ -204,7 +204,7 @@ void Parser::EndElement(const xmlChar *name)
 
 void Parser::Characters(const xmlChar *ch, size_t chLen)
 {
-    std::string chars = trim(std::string(reinterpret_cast<const char*>(ch), chLen));
+    std::string chars(reinterpret_cast<const char*>(ch), chLen);
     if(chars.empty())
         return;
 

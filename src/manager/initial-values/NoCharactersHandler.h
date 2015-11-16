@@ -12,37 +12,28 @@
  *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *  See the License for the specific language governing permissions and
  *  limitations under the License
- *
- *
- * @file        PermissionHandler.cpp
- * @author      Maciej Karpiuk (m.karpiuk2@samsung.com)
- * @version     1.0
- * @brief       PermissionHandler class implementation.
+ */
+/*
+ * @file       NoCharactersHandler.h
+ * @author     Krzysztof Jackiewicz (k.jackiewicz@samsung.com)
+ * @version    1.0
  */
 
-#include <ckm/ckm-type.h>
-#include <PermissionHandler.h>
+#pragma once
 
-namespace
-{
-const char * const XML_ATTR_ACCESSOR    = "accessor";
-}
+#include <parser.h>
+#include <ckm/ckm-type.h>
 
 namespace CKM {
 namespace InitialValues {
 
-PermissionHandler::~PermissionHandler() {}
-
-void PermissionHandler::Start(const XML::Parser::Attributes & attr)
+class NoCharactersHandler : public XML::Parser::ElementHandler
 {
-    // get accessor label
-    if(attr.find(XML_ATTR_ACCESSOR) != attr.end())
-        m_accessor = Label(attr.at(XML_ATTR_ACCESSOR));
-}
+public:
+    void Characters(const std::string & data);
 
-void PermissionHandler::End()
-{
-}
+    virtual ~NoCharactersHandler();
+};
 
-}
-}
+} // namespace InitialValues
+} // namespace CKM

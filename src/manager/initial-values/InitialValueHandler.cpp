@@ -58,11 +58,6 @@ void InitialValueHandler::Start(const XML::Parser::Attributes &attr)
     }
 }
 
-void InitialValueHandler::Characters(const std::string &)
-{
-    throw std::runtime_error("error: value handler detected raw data outside data-specific tag");
-}
-
 void InitialValueHandler::End()
 {
     if(m_bufferHandler)

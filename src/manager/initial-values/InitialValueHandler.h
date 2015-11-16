@@ -26,6 +26,7 @@
 #include <parser.h>
 #include <BufferHandler.h>
 #include <PermissionHandler.h>
+#include <NoCharactersHandler.h>
 #include <EncodingType.h>
 #include <ckm/ckm-type.h>
 #include <ckm-logic.h>
@@ -34,7 +35,7 @@
 namespace CKM {
 namespace InitialValues {
 
-class InitialValueHandler : public XML::Parser::ElementHandler
+class InitialValueHandler : public NoCharactersHandler
 {
 public:
     typedef std::shared_ptr<InitialValueHandler> InitialValueHandlerPtr;
@@ -46,7 +47,6 @@ public:
     BufferHandler::BufferHandlerPtr CreateBufferHandler(EncodingType type);
     PermissionHandler::PermissionHandlerPtr CreatePermissionHandler();
     virtual void Start(const XML::Parser::Attributes &);
-    virtual void Characters(const std::string & data);
     virtual void End();
 
 protected:

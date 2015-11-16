@@ -12,37 +12,33 @@
  *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *  See the License for the specific language governing permissions and
  *  limitations under the License
- *
- *
- * @file        PermissionHandler.cpp
- * @author      Maciej Karpiuk (m.karpiuk2@samsung.com)
- * @version     1.0
- * @brief       PermissionHandler class implementation.
+ */
+/*
+ * @file       NoCharactersHandler.cpp
+ * @author     Krzysztof Jackiewicz (k.jackiewicz@samsung.com)
+ * @version    1.0
  */
 
-#include <ckm/ckm-type.h>
-#include <PermissionHandler.h>
+#include <NoCharactersHandler.h>
 
-namespace
-{
-const char * const XML_ATTR_ACCESSOR    = "accessor";
-}
+#include <cctype>
+#include <algorithm>
+#include <exception>
 
 namespace CKM {
 namespace InitialValues {
 
-PermissionHandler::~PermissionHandler() {}
-
-void PermissionHandler::Start(const XML::Parser::Attributes & attr)
+void NoCharactersHandler::Characters(const std::string & data)
 {
-    // get accessor label
-    if(attr.find(XML_ATTR_ACCESSOR) != attr.end())
-        m_accessor = Label(attr.at(XML_ATTR_ACCESSOR));
+    auto f = find_if(data.begin(), data.end(), [](char c){ return std::isspace(c) == 0;});
+    if(f != data.end())
+        throw std::runtime_error(
+                "error: value handler detected raw data outside data-specific tag");
 }
 
-void PermissionHandler::End()
+NoCharactersHandler::~NoCharactersHandler()
 {
 }
 
-}
-}
+} // namespace InitialValues
+} // namespace CKM
