@@ -34,6 +34,14 @@
 namespace CKM {
 namespace XML {
 
+namespace {
+
+struct LibXmlCleanup {
+    ~LibXmlCleanup() { xmlCleanupParser(); }
+} cleanup;
+
+} // namespace anonymous
+
 Parser::Parser(const std::string &XML_filename)
     : m_errorCb(0)
 {
@@ -47,7 +55,6 @@ Parser::Parser(const std::string &XML_filename)
 }
 Parser::~Parser()
 {
-    xmlCleanupParser();
 }
 
 int Parser::Validate(const std::string &XSD_schema)
