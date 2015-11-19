@@ -794,11 +794,11 @@ int Manager::Impl::crypt(EncryptionCommand command,
         if (CKM_API_SUCCESS != retCode)
             return retCode;
 
-        int command;
+        int retCommand;
         int counter;
-        recv.Deserialize(command, counter, retCode, output);
+        recv.Deserialize(retCommand, counter, retCode, output);
 
-        if (my_counter != counter) {
+        if (my_counter != counter || retCommand != static_cast<int>(command)) {
             return CKM_API_ERROR_UNKNOWN;
         }
 
