@@ -169,6 +169,7 @@ private:
         const char *user,
         const char *password);
 
+    static const char* getConvertedStr(const Password &password);
 };
 
 } // namespace CKM

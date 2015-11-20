@@ -140,7 +140,7 @@ KeyProvider::KeyProvider(
 
     concat_user_pass = concat_password_user(
         wkmcDKEK.getWrappedKeyAndInfo().keyInfo.label,
-        password.c_str());
+        getConvertedStr(password));
 
     if (!PKCS5_PBKDF2_HMAC_SHA1(
         concat_user_pass,
@@ -223,7 +223,7 @@ RawBuffer KeyProvider::getWrappedDomainKEK(const Password &password)
 
     concat_user_pass = concat_password_user(
         m_kmcDKEK->getKeyAndInfo().keyInfo.label,
-        password.c_str());
+        getConvertedStr(password));
 
     if (!PKCS5_PBKDF2_HMAC_SHA1(
         concat_user_pass,
@@ -393,7 +393,7 @@ RawBuffer KeyProvider::reencrypt(
 
     concat_user_pass = concat_password_user(
         wkmcOldDKEK.getWrappedKeyAndInfo().keyInfo.label,
-        oldPass.c_str());
+        getConvertedStr(oldPass));
 
     if (!PKCS5_PBKDF2_HMAC_SHA1(
         concat_user_pass,
@@ -425,7 +425,7 @@ RawBuffer KeyProvider::reencrypt(
 
     concat_user_pass = concat_password_user(
         kmcDKEK.getKeyAndInfo().keyInfo.label,
-        newPass.c_str());
+        getConvertedStr(newPass));
 
     if (!PKCS5_PBKDF2_HMAC_SHA1(
         concat_user_pass,
@@ -477,7 +477,7 @@ RawBuffer KeyProvider::generateDomainKEK(
 
     int wrappedKeyLength;
     char *concat_user_pass = NULL;
-    concat_user_pass = concat_password_user(user.c_str(), userPassword.c_str());
+    concat_user_pass = concat_password_user(user.c_str(), getConvertedStr(userPassword));
     if (!PKCS5_PBKDF2_HMAC_SHA1(
         concat_user_pass,
         strlen(concat_user_pass),
@@ -644,4 +644,14 @@ char * KeyProvider::concat_password_user(const char *user, const char *password)
 
     delete[] resized_user;
     return concat_user_pass;
+}
+
+const char* KeyProvider::getConvertedStr(const Password &password)
+{
+#ifdef PASSWORD_PROTECTION_DISABLE
+    (void ) password;
+    return "";
+#else
+    return password.c_str();
+#endif
 }
