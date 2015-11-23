@@ -27,6 +27,7 @@
 
 #include <ckm-service.h>
 #include <ckm-logic.h>
+#include <initial-value-loader.h>
 
 namespace {
 const CKM::InterfaceID SOCKET_ID_CONTROL = 0;
@@ -37,7 +38,9 @@ namespace CKM {
 
 CKMService::CKMService()
   : m_logic(new CKMLogic)
-{}
+{
+    InitialValues::LoadFiles(*m_logic);
+}
 
 CKMService::~CKMService() {
     delete m_logic;

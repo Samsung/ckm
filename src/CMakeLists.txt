@@ -62,6 +62,7 @@ SET(KEY_MANAGER_SOURCES
     ${KEY_MANAGER_PATH}/initial-values/InitialValuesFile.cpp
     ${KEY_MANAGER_PATH}/initial-values/NoCharactersHandler.cpp
     ${KEY_MANAGER_PATH}/initial-values/xml-utils.cpp
+    ${KEY_MANAGER_PATH}/initial-values/initial-value-loader.cpp
     ${KEY_MANAGER_PATH}/dpl/core/src/assert.cpp
     ${KEY_MANAGER_PATH}/dpl/db/src/sql_connection.cpp
     ${KEY_MANAGER_PATH}/dpl/db/src/naive_synchronization_object.cpp
