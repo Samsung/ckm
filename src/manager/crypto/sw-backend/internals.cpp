@@ -788,7 +788,7 @@ RawBuffer signMessage(EVP_PKEY *privKey,
         const int rsa_padding)
 {
     EvpPkeyCtxUPtr pctx(EVP_PKEY_CTX_new(privKey, NULL), EVP_PKEY_CTX_free);
- 
+
     if(!pctx.get()) {
         ThrowErr(Exc::Crypto::InternalError, "Error in EVP_PKEY_CTX_new function");
     }
@@ -836,7 +836,7 @@ RawBuffer digestSignMessage(EVP_PKEY *privKey,
         const int rsa_padding)
 {
     EvpMdCtxUPtr mdctx(EVP_MD_CTX_create(), EVP_MD_CTX_destroy);
- 
+
     EVP_PKEY_CTX *pctx = NULL;
 
     // Create the Message Digest Context
@@ -948,7 +948,7 @@ int verifyMessage(EVP_PKEY *pubKey,
 
     if(EVP_SUCCESS == EVP_PKEY_verify(pctx.get(), signature.data(), signature.size(), message.data(), message.size())) {
         return CKM_API_SUCCESS;
-    } 
+    }
 
     LogError("EVP_PKEY_verify Failed");
     return CKM_API_ERROR_VERIFICATION_FAILED;
@@ -990,7 +990,37 @@ int digestVerifyMessage(EVP_PKEY *pubKey,
     return CKM_API_ERROR_VERIFICATION_FAILED;
 }
 
+RawBuffer toBinaryData(DataType dataType, const RawBuffer &buffer)
+{
+    // verify the data integrity
+    if (dataType.isKey())
+    {
+        KeyShPtr output_key;
+        if(dataType.isSKey())
+            output_key = CKM::Key::createAES(buffer);
+        else
+            output_key = CKM::Key::create(buffer);
+        if(output_key.get() == NULL)
+            ThrowErr(Exc::Crypto::InputParam, "Provided data is not valid key data");
+
+        return output_key->getDER();
+    }
+    else if (dataType.isCertificate() || dataType.isChainCert())
+    {
+        CertificateShPtr cert = CKM::Certificate::create(buffer, DataFormat::FORM_DER);
+
+        if(cert.get() == NULL)
+            ThrowErr(Exc::Crypto::InputParam, "Provided data is not valid certificate");
+
+        return cert->getDER();
+    }
+
+    // TODO: add here BINARY_DATA verification, i.e: max size etc.
+    return buffer;
+}
+
 } // namespace Internals
 } // namespace SW
 } // namespace Crypto
 } // namespace CKM
+

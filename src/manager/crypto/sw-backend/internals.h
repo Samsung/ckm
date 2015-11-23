@@ -122,6 +122,8 @@ int digestVerifyMessage(EVP_PKEY *pubKey,
     const EVP_MD *md_algo,
     const int rsa_padding);
 
+RawBuffer toBinaryData(DataType dataType, const RawBuffer &buffer);
+
 } // namespace Internals
 } // namespace SW
 } // namespace Crypto
