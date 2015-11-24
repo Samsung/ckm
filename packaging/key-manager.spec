@@ -113,8 +113,6 @@ cp -a %{SOURCE1005} .
     export FFLAGS="$FFLAGS -DTIZEN_DEBUG_ENABLE"
 %endif
 
-# password protection enabled
-%define ckm_password_protection_disable 1
 
 export LDFLAGS+="-Wl,--rpath=%{_libdir},-Bsymbolic-functions "
 
@@ -123,9 +121,6 @@ export LDFLAGS+="-Wl,--rpath=%{_libdir},-Bsymbolic-functions "
         -DCMAKE_VERBOSE_MAKEFILE=ON \
         -DSYSTEMD_UNIT_DIR=%{_unitdir} \
         -DSYSTEMD_ENV_FILE="/etc/sysconfig/central-key-manager" \
-%if 0%{?ckm_password_protection_disable}
-        -DPASSWORD_PROTECTION_DISABLE=1 \
-%endif
         -DMOCKUP_SM=%{?mockup_sm:%mockup_sm}%{!?mockup_sm:OFF}
 
 make %{?jobs:-j%jobs}
