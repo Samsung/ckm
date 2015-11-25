@@ -20,8 +20,6 @@
  */
 #pragma once
 
-#include <key-impl.h>
-#include <certificate-impl.h>
 #include <ckm/ckm-type.h>
 #include <openssl/evp.h>
 #include <sw-backend/obj.h>
@@ -122,7 +120,7 @@ int digestVerifyMessage(EVP_PKEY *pubKey,
     const EVP_MD *md_algo,
     const int rsa_padding);
 
-RawBuffer toBinaryData(DataType dataType, const RawBuffer &buffer);
+bool verifyBinaryData(DataType dataType, const RawBuffer &buffer);
 
 } // namespace Internals
 } // namespace SW

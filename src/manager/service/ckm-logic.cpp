@@ -1098,31 +1098,46 @@ int CKMLogic::importInitialData(
     const Crypto::DataEncryption &enc,
     const Policy &policy)
 {
-    // Inital values are always imported with root credentials. Label is not important.
-    Credentials rootCred(0,"");
+    try {
+        // Inital values are always imported with root credentials. Label is not important.
+        Credentials rootCred(0,"");
 
-    auto &handler = selectDatabase(rootCred, OWNER_ID_SYSTEM);
+        auto &handler = selectDatabase(rootCred, OWNER_ID_SYSTEM);
 
-    // check if save is possible
-    DB::Crypto::Transaction transaction(&handler.database);
-    int retCode = checkSaveConditions(rootCred, handler, name, OWNER_ID_SYSTEM);
-    if(retCode != CKM_API_SUCCESS)
-        return retCode;
+        // check if save is possible
+        DB::Crypto::Transaction transaction(&handler.database);
+        int retCode = checkSaveConditions(rootCred, handler, name, OWNER_ID_SYSTEM);
+        if(retCode != CKM_API_SUCCESS)
+            return retCode;
 
-    Crypto::GStore& store =
-        m_decider.getStore(data.type, policy.extractable, !enc.encryptedKey.empty());
+        Crypto::GStore& store =
+          m_decider.getStore(data.type, policy.extractable, !enc.encryptedKey.empty());
 
-    Token token;
-    if (enc.encryptedKey.empty())
-        token = store.import(data, m_accessControl.isCCMode() ? "" : policy.password);
-    else
-        token = store.importEncrypted(data, m_accessControl.isCCMode() ? "" : policy.password, enc);
+        Token token;
 
-    DB::Row row(std::move(token), name, OWNER_ID_SYSTEM, static_cast<int>(policy.extractable));
-    handler.crypto.encryptRow(row);
+        if (enc.encryptedKey.empty()) {
+            Crypto::Data binaryData;
+            if (CKM_API_SUCCESS != (retCode = toBinaryData(data, binaryData)))
+                return retCode;
+            token = store.import(binaryData, m_accessControl.isCCMode() ? "" : policy.password);
+        } else {
+            token = store.importEncrypted(data, m_accessControl.isCCMode() ? "" : policy.password, enc);
+        }
 
-    handler.database.saveRow(row);
-    transaction.commit();
+        DB::Row row(std::move(token), name, OWNER_ID_SYSTEM, static_cast<int>(policy.extractable));
+        handler.crypto.encryptRow(row);
+
+        handler.database.saveRow(row);
+        transaction.commit();
+    } catch (const Exc::Exception &e) {
+        return e.error();
+    } catch (const CKM::Exception &e) {
+        LogError("CKM::Exception: " << e.GetMessage());
+        return CKM_API_ERROR_SERVER_ERROR;
+    } catch (const std::exception &e) {
+        LogError("Std::exception: " << e.what());
+        return CKM_API_ERROR_SERVER_ERROR;
+    }
 
     return CKM_API_SUCCESS;
 }

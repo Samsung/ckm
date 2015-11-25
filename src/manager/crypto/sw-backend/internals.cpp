@@ -990,33 +990,65 @@ int digestVerifyMessage(EVP_PKEY *pubKey,
     return CKM_API_ERROR_VERIFICATION_FAILED;
 }
 
-RawBuffer toBinaryData(DataType dataType, const RawBuffer &buffer)
+bool verifyBinaryData(DataType dataType, const RawBuffer &buffer)
 {
-    // verify the data integrity
-    if (dataType.isKey())
-    {
-        KeyShPtr output_key;
-        if(dataType.isSKey())
-            output_key = CKM::Key::createAES(buffer);
-        else
-            output_key = CKM::Key::create(buffer);
-        if(output_key.get() == NULL)
-            ThrowErr(Exc::Crypto::InputParam, "Provided data is not valid key data");
-
-        return output_key->getDER();
-    }
-    else if (dataType.isCertificate() || dataType.isChainCert())
-    {
-        CertificateShPtr cert = CKM::Certificate::create(buffer, DataFormat::FORM_DER);
-
-        if(cert.get() == NULL)
-            ThrowErr(Exc::Crypto::InputParam, "Provided data is not valid certificate");
-
-        return cert->getDER();
+    if (dataType.isSKey()) {
+        switch (buffer.size()) {
+            default:
+                LogError("AES key have wrong size.");
+                return false;
+            case 128:
+            case 192:
+            case 256:
+                LogDebug("AES key verified.");
+                return true;
+        }
     }
 
-    // TODO: add here BINARY_DATA verification, i.e: max size etc.
-    return buffer;
+    if (dataType.isKeyPublic()) {
+        BioUniquePtr bio(BIO_new(BIO_s_mem()), BIO_free_all);
+
+        BIO_write(bio.get(), buffer.data(), buffer.size());
+        EVP_PKEY *pkey = d2i_PUBKEY_bio(bio.get(), NULL);
+        if (pkey) {
+            EVP_PKEY_free(pkey);
+            LogDebug("Verified with d2i_PUBKEY_bio.");
+            return true;
+        }
+        LogError("Key was not verified. Unsupported format.");
+        return false;
+    }
+
+    if (dataType.isKeyPrivate()) {
+        BioUniquePtr bio(BIO_new(BIO_s_mem()), BIO_free_all);
+
+        BIO_write(bio.get(), buffer.data(), buffer.size());
+        EVP_PKEY *pkey = d2i_PrivateKey_bio(bio.get(), NULL);
+        if (pkey) {
+            EVP_PKEY_free(pkey);
+            LogDebug("Key verified with d2i_PrivateKey_bio." << (void*)pkey);
+            return true;
+        }
+        LogError("Key was not verified. Unsupported format.");
+        return false;
+    }
+
+    if (dataType.isCertificate() || dataType.isChainCert())
+    {
+        const unsigned char *ptr = reinterpret_cast<const unsigned char*>(buffer.data());
+        int size = static_cast<int>(buffer.size());
+        X509 *x509 = d2i_X509(NULL, &ptr, size);
+        if (x509) {
+            LogDebug("Cerificate verified with d2i_X509");
+            X509_free(x509);
+            return true;
+        }
+        LogError("Certificate was not verified. Unsupported format.");
+        return false;
+    }
+
+    LogDebug("Importing binary data...");
+    return true;
 }
 
 } // namespace Internals

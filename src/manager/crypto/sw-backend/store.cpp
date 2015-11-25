@@ -215,8 +215,7 @@ Token Store::generateSKey(const CryptoAlgorithm &algorithm, const Password &pass
 }
 
 Token Store::import(const Data &data, const Password &pass) {
-    RawBuffer converted = Internals::toBinaryData(data.type, data.data);
-    return Token(m_backendId, data.type, pack(converted, pass));
+    return Token(m_backendId, data.type, pack(data.data, pass));
 }
 
 Token Store::importEncrypted(const Data &data, const Password &pass, const DataEncryption &enc) {
@@ -233,8 +232,10 @@ Token Store::importEncrypted(const Data &data, const Password &pass, const DataE
     algorithmAESCBC.setParam(ParamName::ALGO_TYPE, AlgoType::AES_CBC);
     algorithmAESCBC.setParam(ParamName::ED_IV, enc.iv);
     RawBuffer rawData = aesKey.decrypt(algorithmAESCBC, data.data);
-    RawBuffer converted = Internals::toBinaryData(data.type, rawData);
-    return Token(m_backendId, data.type, pack(converted, pass));
+    if (!Internals::verifyBinaryData(data.type, rawData))
+        ThrowErr(Exc::Crypto::InputParam, "Verification failed. Data could not be imported!");
+
+    return Token(m_backendId, data.type, pack(rawData, pass));
 }
 
 } // namespace SW
