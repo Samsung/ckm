@@ -264,6 +264,19 @@ typedef enum __ckmc_param_name {
 /**
  * @brief Handle for algorithm parameter list.
  * @since_tizen 3.0
+ *
+ * Each parameter list must have at least one CKMC_PARAM_ALGO_TYPE parameter that identifies the
+ * algorithm. See #ckmc_algo_type_e for available algorithms and additional parameters they support.
+ *
+ * @see ckmc_generate_new_params()
+ * @see ckmc_param_list_new()
+ * @see ckmc_param_list_set_integer()
+ * @see ckmc_param_list_set_buffer()
+ * @see ckmc_param_list_get_integer()
+ * @see ckmc_param_list_get_buffer()
+ * @see ckmc_param_list_free()
+ * @see #ckmc_algo_type_e
+ * @see #ckmc_param_name_e
  */
 typedef struct __ckmc_param_list *ckmc_param_list_h;
 
@@ -276,31 +289,35 @@ typedef struct __ckmc_param_list *ckmc_param_list_h;
 typedef enum __ckmc_algo_type {
     CKMC_ALGO_AES_CTR = 1,   /**< AES-CTR algorithm
                                   Supported parameters:
-                                  - CKMC_PARAM_ALGO_TYPE,
-                                  - CKMC_PARAM_ED_IV
-                                  - CKMC_PARAM_ED_CTR_LEN (128 only) */
+                                  - CKMC_PARAM_ALGO_TYPE = CKMC_ALGO_AES_CTR(mandatory),
+                                  - CKMC_PARAM_ED_IV = 16-byte initialization vector(mandatory)
+                                  - CKMC_PARAM_ED_CTR_LEN = length of counter block in bits
+                                    (optional, only 128b is supported at the moment) */
 
     CKMC_ALGO_AES_CBC,       /**< AES-CBC algorithm
                                   Supported parameters:
-                                  - CKMC_PARAM_ALGO_TYPE,
-                                  - CKMC_PARAM_ED_IV */
+                                  - CKMC_PARAM_ALGO_TYPE = CKMC_ALGO_AES_CBC(mandatory),
+                                  - CKMC_PARAM_ED_IV = 16-byte initialization vector(mandatory) */
 
     CKMC_ALGO_AES_GCM,       /**< AES-GCM algorithm
                                   Supported parameters:
-                                  - CKMC_PARAM_ALGO_TYPE,
-                                  - CKMC_PARAM_ED_IV
-                                  - CKMC_PARAM_ED_TAG_LEN
-                                  - CKMC_PARAM_ED_AAD */
+                                  - CKMC_PARAM_ALGO_TYPE = CKMC_ALGO_AES_GCM(mandatory),
+                                  - CKMC_PARAM_ED_IV = initialization vector(mandatory)
+                                  - CKMC_PARAM_ED_TAG_LEN = GCM tag length in bits. One of
+                                    {32, 64, 96, 104, 112, 120, 128} (optional, if not present the
+                                    length 128 is used)
+                                  - CKMC_PARAM_ED_AAD = additional authentication data(optional) */
 
     CKMC_ALGO_AES_CFB,       /**< AES-CFB algorithm
                                   Supported parameters:
-                                  - CKMC_PARAM_ALGO_TYPE,
-                                  - CKMC_PARAM_ED_IV */
+                                  - CKMC_PARAM_ALGO_TYPE = CKMC_ALGO_AES_CFB(mandatory),
+                                  - CKMC_PARAM_ED_IV = 16-byte initialization vector(mandatory) */
 
     CKMC_ALGO_RSA_OAEP       /**< RSA-OAEP algorithm
                                   Supported parameters:
-                                  - CKMC_PARAM_ALGO_TYPE,
-                                  - CKMC_PARAM_ED_LABEL */
+                                  - CKMC_PARAM_ALGO_TYPE = CKMC_ALGO_RSA_OAEP(required),
+                                  - CKMC_PARAM_ED_LABEL = label to be associated with the message
+                                    (optional, not supported at the moment) */
 } ckmc_algo_type_e;
 
 /**
@@ -746,6 +763,7 @@ void ckmc_cert_list_all_free(ckmc_cert_list_s *first);
  * @see ckmc_generate_new_params()
  * @see #ckmc_param_list_h
  * @see #ckmc_param_name_e
+ * @see #ckmc_algo_type_e
  */
 int ckmc_param_list_new(ckmc_param_list_h *pparams);
 
@@ -778,6 +796,7 @@ int ckmc_param_list_new(ckmc_param_list_h *pparams);
  * @see ckmc_generate_new_params()
  * @see #ckmc_param_list_h
  * @see #ckmc_param_name_e
+ * @see #ckmc_algo_type_e
  */
 int ckmc_param_list_set_integer(ckmc_param_list_h params,
                                 ckmc_param_name_e name,
@@ -813,6 +832,7 @@ int ckmc_param_list_set_integer(ckmc_param_list_h params,
  * @see ckmc_generate_new_params()
  * @see #ckmc_param_list_h
  * @see #ckmc_param_name_e
+ * @see #ckmc_algo_type_e
  */
 int ckmc_param_list_set_buffer(ckmc_param_list_h params,
                                ckmc_param_name_e name,
@@ -845,6 +865,7 @@ int ckmc_param_list_set_buffer(ckmc_param_list_h params,
  * @see ckmc_generate_new_params()
  * @see #ckmc_param_list_h
  * @see #ckmc_param_name_e
+ * @see #ckmc_algo_type_e
  */
 
 int ckmc_param_list_get_integer(ckmc_param_list_h params,
@@ -880,6 +901,7 @@ int ckmc_param_list_get_integer(ckmc_param_list_h params,
  * @see ckmc_buffer_free()
  * @see #ckmc_param_list_h
  * @see #ckmc_param_name_e
+ * @see #ckmc_algo_type_e
  */
 int ckmc_param_list_get_buffer(ckmc_param_list_h params,
                                ckmc_param_name_e name,
@@ -900,6 +922,7 @@ int ckmc_param_list_get_buffer(ckmc_param_list_h params,
  * @see ckmc_generate_new_params()
  * @see #ckmc_param_list_h
  * @see #ckmc_param_name_e
+ * @see #ckmc_algo_type_e
  */
 void ckmc_param_list_free(ckmc_param_list_h params);
 
@@ -931,6 +954,7 @@ void ckmc_param_list_free(ckmc_param_list_h params);
  * @see ckmc_param_list_free()
  * @see #ckmc_param_list_h
  * @see #ckmc_param_name_e
+ * @see #ckmc_algo_type_e
  */
 int ckmc_generate_new_params(ckmc_algo_type_e type, ckmc_param_list_h *pparams);
 

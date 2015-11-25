@@ -1095,12 +1095,16 @@ int ckmc_remove_alias(const char *alias);
  *
  * @remarks Key identified by @a key_alias should exist.
  *
- * @param[in] params            Algorithm parameter list handle
+ * @param[in] params            Algorithm parameter list handle. See #ckmc_param_list_h and
+ *                              #ckmc_algo_type_e for details
  * @param[in] key_alias         Alias of the key to be used for encryption
  * @param[in] password          The password used in decrypting a key value \n
  *                              If password of policy is provided in ckmc_save_key(), the same
  *                              password should be provided
- * @param[in] decrypted         Data to be encrypted
+ * @param[in] decrypted         Data to be encrypted. In case of AES algorithm there are no
+ *                              restrictions on the size of data. For RSA the size must be smaller
+ *                              or equal to <key_size_in bytes> - 42. Example: for 1024 RSA key the
+ *                              maximum data size is 1024/8 - 42 = 86.
  * @param[out] ppencrypted      Encrypted data (some algorithms may return additional information
  *                              embedded in encrypted data. AES GCM is an example) \n
  *                              The caller is responsible for freeing @a encrypted with
@@ -1109,7 +1113,9 @@ int ckmc_remove_alias(const char *alias);
  * @return @c 0 on success, otherwise a negative error value
  *
  * @retval #CKMC_ERROR_NONE                 Successful
- * @retval #CKMC_ERROR_INVALID_PARAMETER    Input parameter is invalid
+ * @retval #CKMC_ERROR_INVALID_PARAMETER    Input parameter is invalid (missing or invalid
+ *                                          mandatory algorithm parameter, decrypted = NULL,
+ *                                          ppencrypted = NULL)
  * @retval #CKMC_ERROR_DB_LOCKED            A user key is not loaded in memory (a user is not logged
  *                                          in)
  * @retval #CKMC_ERROR_DB_ERROR             Failed due to the error with unknown reason
@@ -1128,6 +1134,7 @@ int ckmc_remove_alias(const char *alias);
  * @see ckmc_generate_new_params()
  * @see #ckmc_param_list_h
  * @see #ckmc_param_name_e
+ * @see #ckmc_algo_type_e
  */
 int ckmc_encrypt_data(ckmc_param_list_h params,
                       const char *key_alias,
@@ -1142,7 +1149,9 @@ int ckmc_encrypt_data(ckmc_param_list_h params,
  *
  * @remarks Key identified by @a key_alias should exist.
  *
- * @param[in] params            Algorithm parameter list handle
+ * @param[in] params            Algorithm parameter list handle. You should use the same parameters
+ *                              that were used for encryption. See #ckmc_param_list_h and
+ *                              #ckmc_algo_type_e for details
  * @param[in] key_alias         Alias of the key to be used for encryption
  * @param[in] password          The password used in decrypting a key value \n
  *                              If password of policy is provided in ckmc_save_key(), the same
@@ -1156,7 +1165,9 @@ int ckmc_encrypt_data(ckmc_param_list_h params,
  * @return @c 0 on success, otherwise a negative error value
  *
  * @retval #CKMC_ERROR_NONE                 Successful
- * @retval #CKMC_ERROR_INVALID_PARAMETER    Input parameter is invalid
+ * @retval #CKMC_ERROR_INVALID_PARAMETER    Input parameter is invalid (missing or invalid
+ *                                          mandatory algorithm parameter, encrypted = NULL,
+ *                                          ppdecrypted = NULL)
  * @retval #CKMC_ERROR_DB_LOCKED            A user key is not loaded in memory (a user is not logged
  *                                          in)
  * @retval #CKMC_ERROR_DB_ERROR             Failed due to the error with unknown reason
@@ -1175,6 +1186,7 @@ int ckmc_encrypt_data(ckmc_param_list_h params,
  * @see ckmc_generate_new_params()
  * @see #ckmc_param_list_h
  * @see #ckmc_param_name_e
+ * @see #ckmc_algo_type_e
  */
 int ckmc_decrypt_data(ckmc_param_list_h params,
                       const char *key_alias,
