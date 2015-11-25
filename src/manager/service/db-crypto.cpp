@@ -25,6 +25,7 @@
 #include <dpl/db/sql_connection.h>
 #include <dpl/log/log.h>
 #include <ckm/ckm-error.h>
+#include <exception.h>
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic warning "-Wdeprecated-declarations"
@@ -157,17 +158,13 @@ namespace DB {
             initDatabase();
             m_connection->ExecCommand("VACUUM;");
         } Catch(SqlConnection::Exception::ConnectionBroken) {
-            LogError("Couldn't connect to database: " << path);
-            ReThrow(Crypto::Exception::InternalError);
+            ThrowErr(Exc::DatabaseFailed, "Couldn't connect to database: ", path, _rethrown_exception.GetMessage());
         } Catch(SqlConnection::Exception::InvalidArguments) {
-            LogError("Couldn't set the key for database");
-            ReThrow(Crypto::Exception::InternalError);
+            ThrowErr(Exc::DatabaseFailed, "Couldn't set the key for database. ", _rethrown_exception.GetMessage());
         } Catch(SqlConnection::Exception::SyntaxError) {
-            LogError("Couldn't initiate the database");
-            ReThrow(Crypto::Exception::InternalError);
+            ThrowErr(Exc::DatabaseFailed, "Couldn't initiate the database. ", _rethrown_exception.GetMessage());
         } Catch(SqlConnection::Exception::InternalError) {
-            LogError("Couldn't create the database");
-            ReThrow(Crypto::Exception::InternalError);
+            ThrowErr(Exc::DatabaseFailed, "Couldn't create the database. ", _rethrown_exception.GetMessage());
         }
     }
 
@@ -314,9 +311,7 @@ namespace DB {
         ScriptOptional script = getScript(SCRIPT_CREATE_SCHEMA);
         if(!script)
         {
-            std::string errmsg = "Can not create the database schema: no initialization script";
-            LogError(errmsg);
-            ThrowMsg(Exception::InternalError, errmsg);
+            ThrowErr(Exc::DatabaseFailed, "Can not create the database schema: no initialization script");
         }
 
         m_connection->ExecCommand((*script).c_str());
@@ -330,9 +325,7 @@ namespace DB {
         ScriptOptional script = getScript(SCRIPT_DROP_ALL_ITEMS);
         if(!script)
         {
-            std::string errmsg = "Can not clear the database: no clearing script";
-            LogError(errmsg);
-            ThrowMsg(Exception::InternalError, errmsg);
+            ThrowErr(Exc::DatabaseFailed, "Can not clear the database: no clearing script");
         }
 
         m_connection->ExecCommand((*script).c_str());
@@ -349,8 +342,7 @@ namespace DB {
         } Catch(SqlConnection::Exception::InternalError) {
             LogError("Couldn't execute insert statement");
         }
-        ThrowMsg(Crypto::Exception::InternalError,
-                "Couldn't check if name and label pair is present");
+        ThrowErr(Exc::DatabaseFailed, "Couldn't check if name and label pair is present");
     }
 
     void Crypto::saveRows(const Name &name, const Label &owner, const RowVector &rows)
@@ -373,8 +365,7 @@ namespace DB {
         } Catch(SqlConnection::Exception::InternalError) {
             LogError("Couldn't execute insert statement: " << _rethrown_exception.GetMessage());
         }
-        ThrowMsg(Crypto::Exception::InternalError,
-                "Couldn't save Row");
+        ThrowErr(Exc::DatabaseFailed, "Couldn't save Row");
     }
 
     void Crypto::saveRow(const Row &row) {
@@ -395,8 +386,7 @@ namespace DB {
         } Catch(SqlConnection::Exception::InternalError) {
             LogError("Couldn't execute insert statement");
         }
-        ThrowMsg(Crypto::Exception::InternalError,
-                "Couldn't save Row");
+        ThrowErr(Exc::DatabaseFailed, "Couldn't save Row");
     }
 
     void Crypto::updateRow(const Row &row) {
@@ -410,8 +400,7 @@ namespace DB {
         } Catch(SqlConnection::Exception::InternalError) {
             LogError("Couldn't execute update statement");
         }
-        ThrowMsg(Crypto::Exception::InternalError,
-                "Couldn't update Row");
+        ThrowErr(Exc::DatabaseFailed, "Couldn't update Row");
     }
 
     bool Crypto::deleteRow(
@@ -432,8 +421,8 @@ namespace DB {
         } Catch (SqlConnection::Exception::InternalError) {
             LogError("Couldn't execute delete statement");
         }
-        ThrowMsg(Crypto::Exception::InternalError,
-                "Couldn't delete Row for name " << name << " using ownerLabel " << ownerLabel);
+        ThrowErr(Exc::DatabaseFailed,
+                "Couldn't delete Row for name ", name, " using ownerLabel ", ownerLabel);
     }
 
     Row Crypto::getRow(
@@ -512,11 +501,11 @@ namespace DB {
         } Catch (SqlConnection::Exception::InternalError) {
             LogError("Couldn't execute select statement");
         }
-        ThrowMsg(Crypto::Exception::InternalError,
-                "Couldn't get row of type <" <<
-                static_cast<int>(typeRangeStart) << "," <<
-                static_cast<int>(typeRangeStop)  << ">" <<
-                " name " << name << " with owner label " << ownerLabel);
+        ThrowErr(Exc::DatabaseFailed,
+                "Couldn't get row of type <",
+                static_cast<int>(typeRangeStart), ",",
+                static_cast<int>(typeRangeStop), ">",
+                " name ", name, " with owner label ", ownerLabel);
     }
 
     void Crypto::getRows(
@@ -558,11 +547,11 @@ namespace DB {
         } Catch (SqlConnection::Exception::InternalError) {
             LogError("Couldn't execute select statement");
         }
-        ThrowMsg(Crypto::Exception::InternalError,
-                "Couldn't get row of type <" <<
-                static_cast<int>(typeRangeStart) << "," <<
-                static_cast<int>(typeRangeStop)  << ">" <<
-                " name " << name << " with owner label " << ownerLabel);
+        ThrowErr(Exc::DatabaseFailed,
+                "Couldn't get row of type <",
+                static_cast<int>(typeRangeStart), ",",
+                static_cast<int>(typeRangeStop), ">",
+                " name ", name, " with owner label ", ownerLabel);
     }
 
     void Crypto::listNames(
@@ -601,11 +590,11 @@ namespace DB {
         } Catch (SqlConnection::Exception::InternalError) {
             LogError("Couldn't execute select statement");
         }
-        ThrowMsg(Crypto::Exception::InternalError,
-                "Couldn't list names of type <" <<
-                static_cast<int>(typeRangeStart) << "," <<
-                static_cast<int>(typeRangeStop)  << ">" <<
-                " accessible to client label " << smackLabel);
+        ThrowErr(Exc::DatabaseFailed,
+                "Couldn't list names of type <",
+                static_cast<int>(typeRangeStart), ",",
+                static_cast<int>(typeRangeStop), ">",
+                " accessible to client label ", smackLabel);
     }
 
 
@@ -626,8 +615,7 @@ namespace DB {
         } Catch (SqlConnection::Exception::InternalError) {
             LogError("Couldn't execute insert statement");
         }
-        ThrowMsg(Crypto::Exception::InternalError,
-                "Couldn't save key for label " << label);
+        ThrowErr(Exc::DatabaseFailed, "Couldn't save key for label ", label);
     }
 
     Crypto::RawBufferOptional Crypto::getKey(const Label& label)
@@ -651,8 +639,7 @@ namespace DB {
         } Catch (SqlConnection::Exception::InternalError) {
             LogError("Couldn't execute insert statement");
         }
-        ThrowMsg(Crypto::Exception::InternalError,
-                "Couldn't get key for label " << label);
+        ThrowErr(Exc::DatabaseFailed, "Couldn't get key for label ", label);
     }
 
     void Crypto::deleteKey(const Label& label) {
@@ -674,8 +661,7 @@ namespace DB {
         } Catch (SqlConnection::Exception::InternalError) {
             LogError("Couldn't execute insert statement");
         }
-        ThrowMsg(Crypto::Exception::InternalError,
-                "Couldn't delete key for label " << label);
+        ThrowErr(Exc::DatabaseFailed, "Couldn't delete key for label ", label);
     }
 
     void Crypto::setPermission(
@@ -693,8 +679,7 @@ namespace DB {
         } Catch (SqlConnection::Exception::InternalError) {
             LogError("Couldn't execute set statement");
         }
-        ThrowMsg(Crypto::Exception::InternalError,
-                "Couldn't set permissions for name " << name );
+        ThrowErr(Exc::DatabaseFailed, "Couldn't set permissions for name ", name);
     }
 
 

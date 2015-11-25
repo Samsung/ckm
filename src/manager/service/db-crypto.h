@@ -29,6 +29,7 @@
 #include <dpl/db/sql_connection.h>
 
 #include <ckm/ckm-type.h>
+#include <exception.h>
 #include <db-row.h>
 #include <permission.h>
 #include <protocols.h>
@@ -42,14 +43,6 @@ namespace DB {
          public:
             typedef boost::optional<Row> RowOptional;
             typedef boost::optional<RawBuffer> RawBufferOptional;
-            class Exception
-            {
-            public:
-                DECLARE_EXCEPTION_TYPE(CKM::Exception, Base)
-                DECLARE_EXCEPTION_TYPE(Base, InternalError)
-                DECLARE_EXCEPTION_TYPE(Base, TransactionError)
-                DECLARE_EXCEPTION_TYPE(Base, InvalidArgs)
-            };
             Crypto() :
                 m_connection(NULL),
                 m_inUserTransaction(false)
@@ -153,11 +146,9 @@ namespace DB {
                             m_db->m_inUserTransaction = true;
                             m_inTransaction = true;
                         } Catch (SqlConnection::Exception::InternalError) {
-                            LogError("sqlite got into infinite busy state");
-                            ReThrow(Crypto::Exception::TransactionError);
+                            ThrowErr(Exc::TransactionFailed, "sqlite got into infinite busy state");
                         } Catch (SqlConnection::Exception::Base) {
-                            LogError("Couldn't begin transaction");
-                            ReThrow(Crypto::Exception::TransactionError);
+                            ThrowErr(Exc::TransactionFailed, "Couldn't begin transaction");
                         }
                     }
                 }
@@ -168,11 +159,9 @@ namespace DB {
                             m_db->m_inUserTransaction = false;
                             m_inTransaction = false;
                         } Catch (SqlConnection::Exception::InternalError) {
-                            LogError("sqlite got into infinite busy state");
-                            ReThrow(Crypto::Exception::TransactionError);
+                            ThrowErr(Exc::TransactionFailed, "sqlite got into infinite busy state");
                         } Catch (SqlConnection::Exception::Base) {
-                            LogError("Couldn't commit transaction");
-                            ReThrow(Crypto::Exception::TransactionError);
+                            ThrowErr(Exc::TransactionFailed, "Couldn't commit transaction");
                         }
                     }
                 }
@@ -183,11 +172,9 @@ namespace DB {
                             m_db->m_inUserTransaction = false;
                             m_inTransaction = false;
                         } Catch (SqlConnection::Exception::InternalError) {
-                            LogError("sqlite got into infinite busy state");
-                            ReThrow(Crypto::Exception::TransactionError);
+                            ThrowErr(Exc::TransactionFailed, "sqlite got into infinite busy state");
                         } Catch (SqlConnection::Exception::Base) {
-                            LogError("Couldn't rollback transaction");
-                            ReThrow(Crypto::Exception::TransactionError);
+                            ThrowErr(Exc::TransactionFailed, "Couldn't rollback transaction");
                         }
                     }
                 }
@@ -198,8 +185,7 @@ namespace DB {
                             m_db->m_connection->RollbackTransaction();
                         }
                     } Catch (SqlConnection::Exception::InternalError) {
-                        LogError("sqlite got into infinite busy state");
-                        ReThrow(Crypto::Exception::TransactionError);
+                        ThrowErr(Exc::TransactionFailed, "sqlite got into infinite busy state");
                     } Catch (SqlConnection::Exception::Base) {
                         LogError("Transaction rollback failed!");
                     }

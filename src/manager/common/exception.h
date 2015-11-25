@@ -118,6 +118,16 @@ typedef DefineException<CKM_API_ERROR_FILE_SYSTEM,
         Stringify, PrintError> FileSystemFailed;
 typedef DefineException<CKM_API_ERROR_AUTHENTICATION_FAILED,
         StringifyDebug, PrintDebug> AuthenticationFailed;
+typedef DefineException<CKM_API_ERROR_DB_ERROR,
+        StringifyError, PrintError> DatabaseFailed;
+
+
+struct TransactionFailed : public DatabaseFailed {
+    template<typename... Args>
+    TransactionFailed(const char *path, const char *function, int line, const Args&... args)
+      : DatabaseFailed(path, function, line, args...)
+    {}
+};
 
 } // namespace Exc
 } // namespace CKM
