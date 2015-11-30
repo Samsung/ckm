@@ -79,7 +79,6 @@ private:
 
     void decBase64(RawBuffer &data);
     void encBase64(RawBuffer &data);
-    bool equalDigests(RawBuffer &dig1, RawBuffer &dig2);
 };
 
 } // namespace CKM

@@ -43,7 +43,6 @@ SET(CKM_DB_TOOL_SOURCES
     ${KEY_MANAGER_PATH}/main/socket-2-id.cpp
     ${KEY_MANAGER_PATH}/service/certificate-store.cpp
     ${KEY_MANAGER_PATH}/service/certificate-config.cpp
-    ${KEY_MANAGER_PATH}/service/digest.cpp
     ${KEY_MANAGER_PATH}/service/file-lock.cpp
     ${KEY_MANAGER_PATH}/service/access-control.cpp
     ${KEY_MANAGER_PATH}/service/ckm-logic.cpp

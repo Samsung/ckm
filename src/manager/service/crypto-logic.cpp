@@ -36,7 +36,6 @@
 #include <dpl/log/log.h>
 
 #include <base64.h>
-#include <digest.h>
 #include <crypto-logic.h>
 
 #include <generic-backend/exception.h>
@@ -296,15 +295,6 @@ void CryptoLogic::decBase64(RawBuffer &data)
     }
 
     data = std::move(decdata);
-}
-
-bool CryptoLogic::equalDigests(RawBuffer &dig1, RawBuffer &dig2)
-{
-    unsigned int dlen = Digest().length();
-
-    if ((dig1.size() != dlen) || (dig2.size() != dlen))
-        return false;
-    return (dig1 == dig2);
 }
 
 } // namespace CKM
