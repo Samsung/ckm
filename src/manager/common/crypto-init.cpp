@@ -105,7 +105,7 @@ void initOpenSsl() {
 
     // enable FIPS mode by default
     if(0 == FIPS_mode_set(1)) {
-        LogError("Failed to set FIPS mode");
+        LogWarning("Failed to set FIPS mode. Key-manager will be operated in non FIPS mode.");
     }
 
     /*
