@@ -56,6 +56,8 @@ RawBuffer TEST_DATA(TEST_DATA_STR.begin(), TEST_DATA_STR.end());
 const Password TEST_PASS = "custom user password";
 const size_t IV_LEN = 16;
 const size_t CHAIN_LEN = 3;
+const uid_t CKM_UID = 0;
+const gid_t CKM_GID = 0;
 
 enum {
     NO_PASS = 0,
@@ -255,27 +257,40 @@ void restoreFile(const string& filename) {
     string sourcePath = "/usr/share/ckm-db-test/" + filename;
     string targetPath = "/opt/data/ckm/" + filename;
 
-    int ret;
+    int err, ret;
 
     int sourceFd = TEMP_FAILURE_RETRY(open(sourcePath.c_str(), O_RDONLY));
-    BOOST_REQUIRE_MESSAGE(sourceFd > 0, "Opening " << sourcePath << " failed.");
+    err = errno;
+    BOOST_REQUIRE_MESSAGE(sourceFd > 0, "Opening " << sourcePath << " failed: " << strerror(err));
 
     FdPtr sourceFdPtr(&sourceFd);
 
-    int targetFd = TEMP_FAILURE_RETRY(creat(targetPath.c_str(), 666));
-    BOOST_REQUIRE_MESSAGE(targetFd > 0, "Creating " << targetPath << " failed.");
+    int targetFd = TEMP_FAILURE_RETRY(creat(targetPath.c_str(), 0644));
+    err = errno;
+    BOOST_REQUIRE_MESSAGE(targetFd > 0, "Creating " << targetPath << " failed: " << strerror(err));
+
+    ret = fchown(targetFd, CKM_UID, CKM_GID);
+    err = errno;
+    BOOST_REQUIRE_MESSAGE(ret != -1, "fchown() failed: " << strerror(err));
 
     FdPtr targetFdPtr(&targetFd);
 
     struct stat sourceStat;
     ret = fstat(sourceFd, &sourceStat);
-    BOOST_REQUIRE_MESSAGE(ret != -1, "fstat() failed: " << ret);
+    err = errno;
+    BOOST_REQUIRE_MESSAGE(ret != -1, "fstat() failed: " << strerror(err));
 
     ret = sendfile(targetFd, sourceFd, 0, sourceStat.st_size);
-    BOOST_REQUIRE_MESSAGE(ret != -1, "sendfile failed: " << ret);
+    err = errno;
+    BOOST_REQUIRE_MESSAGE(ret != -1, "sendfile() failed: " << strerror(err));
 
     ret = fsync(targetFd);
-    BOOST_REQUIRE_MESSAGE(ret != -1, "fsync failed: " << ret);
+    err = errno;
+    BOOST_REQUIRE_MESSAGE(ret != -1, "fsync() failed: " << strerror(err));
+
+    // TODO scoped close
+    close(targetFd);
+    close(sourceFd);
 }
 
 void generateRandom(size_t random_bytes, unsigned char *output)
