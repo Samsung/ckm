@@ -103,10 +103,13 @@ struct GenericSocketService {
         bool allowed;
     };
 
-    virtual void SetSocketManager(GenericSocketManager *manager) {
+    virtual void SetSocketManager(GenericSocketManager *manager)
+    {
         m_serviceManager = manager;
     }
-    virtual void SetCommManager(CommMgr *manager) {
+
+    virtual void SetCommManager(CommMgr *manager)
+    {
         m_commMgr = manager;
     }
 
@@ -121,7 +124,8 @@ struct GenericSocketService {
     virtual void Stop() = 0;
 
     GenericSocketService() : m_serviceManager(NULL), m_commMgr(NULL) {}
-    virtual ~GenericSocketService(){}
+    virtual ~GenericSocketService() {}
+
 protected:
     GenericSocketManager *m_serviceManager;
     CommMgr *m_commMgr;

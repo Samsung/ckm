@@ -29,8 +29,7 @@
 namespace CKM {
 namespace InitialValues {
 
-class CertHandler : public InitialValueHandler
-{
+class CertHandler : public InitialValueHandler {
 public:
     explicit CertHandler(CKMLogic & db_logic, const CKM::RawBuffer &encryptedKey)
         : InitialValueHandler(db_logic, encryptedKey) {}

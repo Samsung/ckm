@@ -38,11 +38,11 @@ public:
     ControlImpl& operator=(const ControlImpl &) = delete;
     ControlImpl& operator=(ControlImpl &&) = delete;
 
-    virtual int unlockUserKey(uid_t user, const Password &password) {
+    virtual int unlockUserKey(uid_t user, const Password &password)
+    {
         return try_catch([&] {
-            if((int)user < 0) {
+            if ((int)user < 0)
                 return CKM_API_ERROR_INPUT_PARAM;
-            }
 
             MessageBuffer recv;
             auto send = MessageBuffer::Serialize(static_cast<int>(ControlCommand::UNLOCK_USER_KEY),
@@ -59,11 +59,11 @@ public:
         });
     }
 
-    virtual int lockUserKey(uid_t user) {
+    virtual int lockUserKey(uid_t user)
+    {
         return try_catch([&] {
-            if((int)user < 0) {
+            if ((int)user < 0)
                 return CKM_API_ERROR_INPUT_PARAM;
-            }
 
             MessageBuffer recv;
             auto send = MessageBuffer::Serialize(static_cast<int>(ControlCommand::LOCK_USER_KEY), user);
@@ -78,11 +78,11 @@ public:
         });
     }
 
-    virtual int removeUserData(uid_t user) {
+    virtual int removeUserData(uid_t user)
+    {
         return try_catch([&] {
-            if((int)user < 0) {
+            if ((int)user < 0)
                 return CKM_API_ERROR_INPUT_PARAM;
-            }
 
             MessageBuffer recv;
             auto send = MessageBuffer::Serialize(static_cast<int>(ControlCommand::REMOVE_USER_DATA), user);
@@ -97,11 +97,11 @@ public:
         });
     }
 
-    virtual int changeUserPassword(uid_t user, const Password &oldPassword, const Password &newPassword) {
+    virtual int changeUserPassword(uid_t user, const Password &oldPassword, const Password &newPassword)
+    {
         return try_catch([&] {
-            if((int)user < 0) {
+            if ((int)user < 0)
                 return CKM_API_ERROR_INPUT_PARAM;
-            }
 
             MessageBuffer recv;
             auto send = MessageBuffer::Serialize(
@@ -120,11 +120,11 @@ public:
         });
     }
 
-    virtual int resetUserPassword(uid_t user, const Password &newPassword) {
+    virtual int resetUserPassword(uid_t user, const Password &newPassword)
+    {
         return try_catch([&] {
-            if((int)user < 0) {
+            if ((int)user < 0)
                 return CKM_API_ERROR_INPUT_PARAM;
-            }
 
             MessageBuffer recv;
             auto send = MessageBuffer::Serialize(
@@ -142,11 +142,11 @@ public:
         });
     }
 
-    virtual int removeApplicationData(const Label &smackLabel) {
+    virtual int removeApplicationData(const Label &smackLabel)
+    {
         return try_catch([&] {
-            if (smackLabel.empty()) {
+            if (smackLabel.empty())
                 return CKM_API_ERROR_INPUT_PARAM;
-            }
 
             MessageBuffer recv;
             auto send = MessageBuffer::Serialize(static_cast<int>(ControlCommand::REMOVE_APP_DATA), smackLabel);
@@ -161,7 +161,8 @@ public:
         });
     }
 
-    virtual int updateCCMode() {
+    virtual int updateCCMode()
+    {
         return try_catch([&] {
             MessageBuffer recv;
             auto send = MessageBuffer::Serialize(static_cast<int>(ControlCommand::UPDATE_CC_MODE));
@@ -203,12 +204,16 @@ public:
         });
     }
 
-    virtual ~ControlImpl(){}
+    virtual ~ControlImpl()
+    {
+    }
+
 private:
     CKM::ServiceConnection m_controlConnection;
 };
 
-ControlShPtr Control::create() {
+ControlShPtr Control::create()
+{
     try {
         return std::make_shared<ControlImpl>();
     } catch (const std::bad_alloc &) {

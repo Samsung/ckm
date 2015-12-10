@@ -32,7 +32,8 @@ namespace CKM {
 namespace Crypto {
 
 namespace {
-CryptoBackend chooseCryptoBackend(DataType dataType, bool exportable, bool encrypted) {
+CryptoBackend chooseCryptoBackend(DataType dataType, bool exportable, bool encrypted)
+{
 // Only software backend supports device encyption key
     if (encrypted)
         return CryptoBackend::OpenSSL;
@@ -61,13 +62,16 @@ CryptoBackend chooseCryptoBackend(DataType dataType, bool exportable, bool encry
 Decider::Decider()
   : m_swStore(new SW::Store(CryptoBackend::OpenSSL))
   , m_tzStore(new TZ::Store(CryptoBackend::TrustZone))
-{}
+{
+}
 
-GStore& Decider::getStore(const Token &token) const {
+GStore& Decider::getStore(const Token &token) const
+{
     return getStore(token.backendId);
 };
 
-GStore& Decider::getStore(CryptoBackend cryptoBackend) const {
+GStore& Decider::getStore(CryptoBackend cryptoBackend) const
+{
     GStore *gStore = NULL;
     if (cryptoBackend == CryptoBackend::OpenSSL)
         gStore = m_swStore.get();
@@ -81,7 +85,8 @@ GStore& Decider::getStore(CryptoBackend cryptoBackend) const {
              "Backend not available. BackendId: ", (int)cryptoBackend);
 }
 
-GStore& Decider::getStore(DataType data, bool exportable, bool encrypted) const {
+GStore& Decider::getStore(DataType data, bool exportable, bool encrypted) const
+{
     return getStore(chooseCryptoBackend(data, exportable, encrypted));
 }
 

@@ -21,12 +21,12 @@
 
 #include <data-type.h>
 
-namespace CKM
-{
+namespace CKM {
 
-DataType::DataType()
-  : m_dataType(BINARY_DATA)
-{}
+DataType::DataType() :
+    m_dataType(BINARY_DATA)
+{
+}
 
 DataType::DataType(Type data)
   : m_dataType(data)
@@ -37,7 +37,7 @@ DataType::DataType(Type data)
 }
 
 DataType::DataType(KeyType key) {
-    switch(key) {
+    switch (key) {
     case KeyType::KEY_RSA_PUBLIC:    m_dataType = DataType::KEY_RSA_PUBLIC;    break;
     case KeyType::KEY_RSA_PRIVATE:   m_dataType = DataType::KEY_RSA_PRIVATE;   break;
     case KeyType::KEY_DSA_PUBLIC:    m_dataType = DataType::KEY_DSA_PUBLIC;    break;
@@ -51,8 +51,9 @@ DataType::DataType(KeyType key) {
     }
 }
 
-DataType::DataType(AlgoType algorithmType) {
-    switch(algorithmType) {
+DataType::DataType(AlgoType algorithmType)
+{
+    switch (algorithmType) {
     case AlgoType::AES_CTR:
     case AlgoType::AES_CBC:
     case AlgoType::AES_GCM:
@@ -72,19 +73,21 @@ DataType::DataType(AlgoType algorithmType) {
     }
 }
 
-DataType::DataType(int data)
-  : m_dataType(static_cast<Type>(data))
+DataType::DataType(int data) :
+    m_dataType(static_cast<Type>(data))
 {
     if (!isInRange(data))
         ThrowMsg(Exception::OutOfRange, "Invalid conversion from int=" << data << " to DBDataType");
 }
 
-DataType::operator int () const {
+DataType::operator int () const
+{
     return static_cast<int>(m_dataType);
 }
 
-DataType::operator KeyType () const {
-    switch(m_dataType) {
+DataType::operator KeyType () const
+{
+    switch (m_dataType) {
     case DataType::KEY_RSA_PUBLIC: return KeyType::KEY_RSA_PUBLIC;
     case DataType::KEY_RSA_PRIVATE: return KeyType::KEY_RSA_PRIVATE;
     case DataType::KEY_DSA_PUBLIC: return KeyType::KEY_DSA_PUBLIC;
@@ -95,31 +98,36 @@ DataType::operator KeyType () const {
     default:
         ThrowMsg(Exception::OutOfRange,
                  "Invalid conversion from DBDataType=" << static_cast<int>(m_dataType) <<
-                 " to KeyType" );
+                 " to KeyType");
     }
 }
 
-bool DataType::operator==(const DataType &second) const {
+bool DataType::operator==(const DataType &second) const
+{
     return m_dataType == second.m_dataType;
 }
 
-bool DataType::isKey() const {
+bool DataType::isKey() const
+{
     if (DB_KEY_FIRST <= m_dataType && DB_KEY_LAST >= m_dataType)
         return true;
     return false;
 }
 
-bool DataType::isSKey() const {
+bool DataType::isSKey() const
+{
     return (KEY_AES == m_dataType);
 }
 
-bool DataType::isChainCert() const {
+bool DataType::isChainCert() const
+{
     if (DB_CHAIN_FIRST <= m_dataType && DB_CHAIN_LAST >= m_dataType)
         return true;
     return false;
 }
 
-bool DataType::isKeyPrivate() const {
+bool DataType::isKeyPrivate() const
+{
     switch (m_dataType) {
     case KEY_RSA_PRIVATE:
     case KEY_DSA_PRIVATE:
@@ -130,7 +138,8 @@ bool DataType::isKeyPrivate() const {
     }
 }
 
-bool DataType::isKeyPublic() const {
+bool DataType::isKeyPublic() const
+{
     switch (m_dataType) {
     case KEY_RSA_PUBLIC:
     case KEY_DSA_PUBLIC:
@@ -141,15 +150,18 @@ bool DataType::isKeyPublic() const {
     }
 }
 
-bool DataType::isCertificate() const {
+bool DataType::isCertificate() const
+{
     return m_dataType == CERTIFICATE;
 }
 
-bool DataType::isBinaryData() const {
+bool DataType::isBinaryData() const
+{
     return m_dataType == BINARY_DATA;
 }
 
-bool DataType::isInRange(int data) {
+bool DataType::isInRange(int data)
+{
     if (data < static_cast<int>(DB_FIRST))
         return false;
     if (data > static_cast<int>(DB_LAST))

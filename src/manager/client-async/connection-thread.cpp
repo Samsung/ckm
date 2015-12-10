@@ -44,7 +44,7 @@ ConnectionThread::Pipe::~Pipe()
 
 void ConnectionThread::Pipe::notify()
 {
-    if (-1 == TEMP_FAILURE_RETRY(write(m_pipe[1],"j",1)))
+    if (-1 == TEMP_FAILURE_RETRY(write(m_pipe[1], "j", 1)))
         ThrowMsg(PipeError, "Writing pipe failed " << GetErrnoString(errno));
 }
 
@@ -54,17 +54,20 @@ ConnectionThread::ConnectionThread() :
 {
 }
 
-ConnectionThread::~ConnectionThread() {
+ConnectionThread::~ConnectionThread()
+{
     m_join = true;
     m_pipe.notify();
     m_thread.join();
 }
 
-void ConnectionThread::run() {
+void ConnectionThread::run()
+{
     m_thread = std::thread(&ConnectionThread::threadLoop, this);
 }
 
-void ConnectionThread::sendMessage(AsyncRequest&& req) {
+void ConnectionThread::sendMessage(AsyncRequest&& req)
+{
     std::unique_lock<std::mutex> lock(m_mutex);
     m_waitingReqs.push(std::move(req));
     lock.unlock();
@@ -93,7 +96,7 @@ void ConnectionThread::threadLoop()
     }
 
     // cleanup services
-    for(auto& it: m_services)
+    for (auto& it: m_services)
         it.second.serviceError(CKM_API_ERROR_UNKNOWN);
     m_services.clear();
 
@@ -102,7 +105,7 @@ void ConnectionThread::threadLoop()
 
     // remove waiting requests and notify about error
     std::unique_lock<std::mutex> lock(m_mutex);
-    while(!m_waitingReqs.empty()) {
+    while (!m_waitingReqs.empty()) {
         m_waitingReqs.front().observer->ReceivedError(CKM_API_ERROR_UNKNOWN);
         m_waitingReqs.pop();
     }
@@ -118,7 +121,7 @@ void ConnectionThread::readPipe(int pipe, short revents)
     if ((revents & POLLIN) == 0)
         ThrowMsg(PipeError, "Unexpected event: " << revents << "!=" << POLLIN);
 
-    if(1 != TEMP_FAILURE_RETRY(read(pipe,buffer, 1))) {
+    if (1 != TEMP_FAILURE_RETRY(read(pipe, buffer, 1))) {
         int err = errno;
         ThrowMsg(PipeError, "Failed to read pipe: " << GetErrnoString(err));
     }
@@ -132,7 +135,7 @@ Service& ConnectionThread::getService(const std::string& interface)
 
     // create new service, insert it and return
     return m_services.insert(
-            std::make_pair(interface,Service(m_descriptors, interface))).first->second;
+            std::make_pair(interface, Service(m_descriptors, interface))).first->second;
 }
 
 void ConnectionThread::newRequest(int pipe, short revents)
@@ -142,7 +145,7 @@ void ConnectionThread::newRequest(int pipe, short revents)
     std::unique_lock<std::mutex> lock(m_mutex);
 
     // nothing to do?
-    if(m_waitingReqs.empty()) {
+    if (m_waitingReqs.empty()) {
         LogWarning("Empty request queue. Are we exiting?");
         return;
     }

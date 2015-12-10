@@ -37,17 +37,21 @@ char const * const SERVICE_SOCKET_ENCRYPTION = "/tmp/.central-key-manager-api-en
 char const * const LABEL_NAME_SEPARATOR = " ";
 char const * const OWNER_ID_SYSTEM = "/System";
 
-PKCS12Serializable::PKCS12Serializable() {}
+PKCS12Serializable::PKCS12Serializable()
+{
+}
+
 PKCS12Serializable::PKCS12Serializable(const PKCS12 &pkcs)
     : PKCS12Impl(pkcs)
-{}
+{
+}
 
 PKCS12Serializable::PKCS12Serializable(IStream &stream)
 {
     // key
     size_t numKeys;
     Deserialization::Deserialize(stream, numKeys);
-    if(numKeys > 0) {
+    if (numKeys > 0) {
         int keyType;
         RawBuffer keyData;
         Deserialization::Deserialize(stream, keyType);
@@ -58,7 +62,7 @@ PKCS12Serializable::PKCS12Serializable(IStream &stream)
     // cert
     size_t numCerts;
     Deserialization::Deserialize(stream, numCerts);
-    if(numCerts > 0) {
+    if (numCerts > 0) {
         RawBuffer certData;
         Deserialization::Deserialize(stream, certData);
         m_cert = CKM::Certificate::create(certData, DataFormat::FORM_DER);
@@ -67,13 +71,13 @@ PKCS12Serializable::PKCS12Serializable(IStream &stream)
     // CA chain
     size_t num_CA;
     Deserialization::Deserialize(stream, num_CA);
-    for(size_t i=0; i<num_CA; i++)
-    {
+    for (size_t i=0; i < num_CA; i++) {
         RawBuffer CAcertData;
         Deserialization::Deserialize(stream, CAcertData);
         m_ca.push_back(CKM::Certificate::create(CAcertData, DataFormat::FORM_DER));
     }
 }
+
 PKCS12Serializable::PKCS12Serializable(const KeyShPtr &privKey, const CertificateShPtr &cert, const CertificateShPtrVector &chainCerts)
 {
     m_pkey = privKey;
@@ -85,34 +89,36 @@ void PKCS12Serializable::Serialize(IStream &stream) const
 {
     // key
     Key *keyPtr = getKey().get();
-    bool isAnyKeyPresent = (getKey().get()!=NULL);
+    bool isAnyKeyPresent = (getKey().get() != NULL);
 
     // logics if PKCS is correct or not is on the service side.
     // sending number of keys and certificates to allow proper parsing on the service side.
     // (what if no key or cert present? attempt to deserialize a not present key/cert would
     // throw an error and close the connection).
     Serialization::Serialize(stream, static_cast<size_t>(isAnyKeyPresent?1:0));
-    if(keyPtr) {
+    if (keyPtr) {
         Serialization::Serialize(stream, DataType(keyPtr->getType()));
         Serialization::Serialize(stream, keyPtr->getDER());
     }
 
-    bool isAnyCertPresent = (getCertificate().get()!=NULL);
+    bool isAnyCertPresent = (getCertificate().get() != NULL);
     Serialization::Serialize(stream, static_cast<size_t>(isAnyCertPresent?1:0));
-    if(isAnyCertPresent) {
+    if (isAnyCertPresent)
         Serialization::Serialize(stream, getCertificate().get()->getDER());
-    }
 
     // CA chain
     Serialization::Serialize(stream, getCaCertificateShPtrVector().size());
-    for(auto it : getCaCertificateShPtrVector())
+    for (auto it : getCaCertificateShPtrVector())
         Serialization::Serialize(stream, it->getDER());
 };
 
 
-CryptoAlgorithmSerializable::CryptoAlgorithmSerializable() {}
+CryptoAlgorithmSerializable::CryptoAlgorithmSerializable()
+{
+}
+
 CryptoAlgorithmSerializable::CryptoAlgorithmSerializable(const CryptoAlgorithm &algo) :
-        CryptoAlgorithm(algo)
+    CryptoAlgorithm(algo)
 {
 }
 
@@ -120,7 +126,7 @@ CryptoAlgorithmSerializable::CryptoAlgorithmSerializable(IStream &stream)
 {
     size_t plen = 0;
     Deserializer<size_t>::Deserialize(stream, plen);
-    while(plen) {
+    while (plen) {
         ParamName name;
         uint64_t integer;
         RawBuffer buffer;
@@ -156,7 +162,7 @@ CryptoAlgorithmSerializable::CryptoAlgorithmSerializable(IStream &stream)
 void CryptoAlgorithmSerializable::Serialize(IStream &stream) const
 {
     Serializer<size_t>::Serialize(stream, m_params.size());
-    for(const auto& it : m_params) {
+    for (const auto& it : m_params) {
         Serializer<int>::Serialize(stream, static_cast<int>(it.first));
         uint64_t integer;
         RawBuffer buffer;
@@ -167,7 +173,6 @@ void CryptoAlgorithmSerializable::Serialize(IStream &stream) const
         else
             ThrowMsg(UnsupportedParam, "Unsupported param type");
     }
-
 }
 
 } // namespace CKM

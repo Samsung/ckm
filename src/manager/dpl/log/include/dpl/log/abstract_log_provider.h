@@ -24,8 +24,7 @@
 
 namespace CKM {
 namespace Log {
-class AbstractLogProvider
-{
+class AbstractLogProvider {
   public:
     enum class LogLevel {
         None,

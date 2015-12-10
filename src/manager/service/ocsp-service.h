@@ -28,8 +28,7 @@ namespace CKM {
 
 class OCSPLogic;
 
-class OCSPService : public CKM::ThreadService
-{
+class OCSPService : public CKM::ThreadService {
 public:
     OCSPService();
     OCSPService(const OCSPService &) = delete;

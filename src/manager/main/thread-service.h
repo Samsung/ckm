@@ -28,8 +28,7 @@
 
 namespace CKM {
 
-class ThreadService: public GenericSocketService, public ServiceThread
-{
+class ThreadService: public GenericSocketService, public ServiceThread {
 public:
     ThreadService();
     virtual ~ThreadService();
@@ -47,7 +46,8 @@ protected:
                             bool allowed) = 0;
 
     template <typename E>
-    void ThreadEvent(const E& event) {
+    void ThreadEvent(const E& event)
+    {
         CreateEvent([this, event]() { this->Handle(event); });
     }
 

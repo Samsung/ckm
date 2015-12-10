@@ -30,8 +30,7 @@
 
 namespace CKM {
 
-class AccessControl
-{
+class AccessControl {
 public:
     /**
      * return true if client uid is from the system services uid space
@@ -77,6 +76,7 @@ public:
 
     void updateCCMode();
     bool isCCMode() const;
+
 private:
     bool m_ccMode;
 };

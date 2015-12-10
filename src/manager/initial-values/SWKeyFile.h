@@ -37,26 +37,25 @@ namespace CKM {
 namespace InitialValues {
 
 
-class SWKeyFile
-{
+class SWKeyFile {
 public:
     explicit SWKeyFile(const std::string &XML_filename);
 
     int Validate(const std::string &XSD_file);
     int Parse();
 
-    Crypto::GObjShPtr getPrivKey() {
+    Crypto::GObjShPtr getPrivKey()
+    {
         return m_deviceKey;
     }
 
 private:
-    class HeaderHandler : public XML::Parser::ElementHandler
-    {
+    class HeaderHandler : public XML::Parser::ElementHandler {
     public:
         explicit HeaderHandler(SWKeyFile & parent);
         virtual void Start(const XML::Parser::Attributes & attr);
-        virtual void Characters(const std::string &) {};
-        virtual void End() {};
+        virtual void Characters(const std::string &) {}
+        virtual void End() {}
 
         bool isCorrectVersion() const;
 
@@ -65,15 +64,15 @@ private:
         SWKeyFile & m_parent;
     };
 
-    class RSAKeyHandler : public XML::Parser::ElementHandler
-    {
+    class RSAKeyHandler : public XML::Parser::ElementHandler {
     public:
         explicit RSAKeyHandler(SWKeyFile & parent);
-        virtual void Start(const XML::Parser::Attributes &) {};
+        virtual void Start(const XML::Parser::Attributes &) {}
         virtual void Characters(const std::string &data);
         virtual void End();
 
         Crypto::GObjShPtr getPrivKey();
+
     private:
         CKM::RawBuffer m_encryptedKey;
         SWKeyFile & m_parent;
@@ -90,7 +89,6 @@ private:
     void registerElementListeners();
     static void Error(const XML::Parser::ErrorType errorType,
                       const std::string & logMsg);
-
 };
 
 }

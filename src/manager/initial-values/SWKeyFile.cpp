@@ -40,10 +40,10 @@ const char * const XML_ATTR_VERSION             = "version";
 namespace CKM {
 namespace InitialValues {
 
-SWKeyFile::SWKeyFile(const std::string &XML_filename)
-        : m_parser(XML_filename),
-          m_header(std::make_shared<HeaderHandler>(*this)),
-          m_RSAKeyHandler(std::make_shared<RSAKeyHandler>(*this))
+SWKeyFile::SWKeyFile(const std::string &XML_filename) :
+    m_parser(XML_filename),
+    m_header(std::make_shared<HeaderHandler>(*this)),
+    m_RSAKeyHandler(std::make_shared<RSAKeyHandler>(*this))
 {
     m_parser.RegisterErrorCb(SWKeyFile::Error);
     m_parser.RegisterElementCb(XML_TAG_DEVICE_KEY,
@@ -70,17 +70,16 @@ void SWKeyFile::registerElementListeners()
 void SWKeyFile::Error(const XML::Parser::ErrorType errorType,
                       const std::string & log_msg)
 {
-    switch(errorType)
-    {
-        case XML::Parser::VALIDATION_ERROR:
-            LogWarning("validating error: " << log_msg);
-            break;
-        case XML::Parser::PARSE_WARNING:
-            LogWarning("parsing warning: " << log_msg);
-            break;
-        case XML::Parser::PARSE_ERROR:
-            LogWarning("parsing error: " << log_msg);
-            break;
+    switch (errorType) {
+    case XML::Parser::VALIDATION_ERROR:
+        LogWarning("validating error: " << log_msg);
+        break;
+    case XML::Parser::PARSE_WARNING:
+        LogWarning("parsing warning: " << log_msg);
+        break;
+    case XML::Parser::PARSE_ERROR:
+        LogWarning("parsing error: " << log_msg);
+        break;
     }
 }
 
@@ -92,7 +91,7 @@ int SWKeyFile::Validate(const std::string &XSD_file)
 int SWKeyFile::Parse()
 {
     int ec = m_parser.Parse();
-    if(!m_header || !m_header->isCorrectVersion()) {
+    if (!m_header || !m_header->isCorrectVersion()) {
         LogError("bypassing XML file: " << m_filename << " - wrong file version!");
         ec = XML::Parser::ERROR_INVALID_VERSION;
     }
@@ -103,15 +102,18 @@ int SWKeyFile::Parse()
 
 SWKeyFile::RSAKeyHandler::RSAKeyHandler(SWKeyFile & parent)
   : m_parent(parent)
-{}
+{
+}
 
-void SWKeyFile::RSAKeyHandler::Characters(const std::string &data) {
+void SWKeyFile::RSAKeyHandler::Characters(const std::string &data)
+{
     //m_encryptedKey.reserve(m_encryptedKey.size() + data.size());
     //m_encryptedKey.insert(m_encryptedKey.end(), data.begin(), data.end());
     std::copy(data.begin(), data.end(), std::back_inserter(m_encryptedKey));
 }
 
-void SWKeyFile::RSAKeyHandler::End() {
+void SWKeyFile::RSAKeyHandler::End()
+{
 //    std::string trimmed = XML::trimEachLine(std::string(m_encryptedKey.begin(), m_encryptedKey.end()));
 
     Base64Decoder base64;
@@ -121,24 +123,29 @@ void SWKeyFile::RSAKeyHandler::End() {
     m_encryptedKey = base64.get();
 };
 
-Crypto::GObjShPtr SWKeyFile::RSAKeyHandler::getPrivKey() {
+Crypto::GObjShPtr SWKeyFile::RSAKeyHandler::getPrivKey()
+{
     return std::make_shared<Crypto::SW::AKey>(m_encryptedKey, DataType::KEY_RSA_PRIVATE);
 }
 
-SWKeyFile::HeaderHandler::HeaderHandler(SWKeyFile & parent)
-    : m_version(-1), m_parent(parent) {}
+SWKeyFile::HeaderHandler::HeaderHandler(SWKeyFile & parent) :
+    m_version(-1), m_parent(parent)
+{
+}
+
 void SWKeyFile::HeaderHandler::Start(const XML::Parser::Attributes & attr)
 {
     // get key type
-    if(attr.find(XML_ATTR_VERSION) != attr.end())
-    {
+    if (attr.find(XML_ATTR_VERSION) != attr.end()) {
         m_version = atoi(attr.at(XML_ATTR_VERSION).c_str());
 
-        if(isCorrectVersion())
+        if (isCorrectVersion())
             m_parent.registerElementListeners();
     }
 }
-bool SWKeyFile::HeaderHandler::isCorrectVersion() const {
+
+bool SWKeyFile::HeaderHandler::isCorrectVersion() const
+{
     return m_version == XML_SW_KEY_CURRENT_VERSION;
 }
 

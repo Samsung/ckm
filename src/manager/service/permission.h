@@ -33,13 +33,14 @@ struct PermissionForLabel {
     PermissionForLabel(const Label & accessor, const PermissionMaskOptional mask)
     {
         accessorLabel = accessor;
-        if(mask)
+        if (mask)
             permissionMask = *mask;
         else
             permissionMask = Permission::NONE;
     }
 
-    int operator&(const Permission &bit) const {
+    int operator&(const Permission &bit) const
+    {
         return permissionMask & bit;
     }
 };

@@ -27,7 +27,8 @@
 
 namespace CKM {
 struct free_deleter{
-    void operator()(char *p) {
+    void operator()(char *p)
+    {
         free(p);
     }
 };

@@ -49,11 +49,13 @@ enum EncryptionScheme {
 };
 
 template <typename T, typename ...Args>
-std::unique_ptr<T> make_unique(Args&& ...args) {
+std::unique_ptr<T> make_unique(Args&& ...args)
+{
     return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
 }
 
-RawBuffer generateRandIV() {
+RawBuffer generateRandIV()
+{
     RawBuffer civ(EVP_MAX_IV_LENGTH);
 
     if (1 != RAND_bytes(civ.data(), civ.size()))
@@ -73,9 +75,7 @@ RawBuffer passwordToKey(const Password &password, const RawBuffer &salt, size_t 
                 ITERATIONS,
                 result.size(),
                 result.data()))
-    {
         ThrowErr(Exc::InternalError, "PCKS5_PKKDF2_HMAC_SHA1 failed.");
-    }
 
     return result;
 }
@@ -156,43 +156,36 @@ Store::Store(CryptoBackend backendId)
     // get the device key if present
     InitialValues::SWKeyFile keyFile(DEVICE_KEY_SW_FILE);
     int rc = keyFile.Validate(DEVICE_KEY_XSD);
-    if(rc == XML::Parser::PARSE_SUCCESS)
-    {
+    if (rc == XML::Parser::PARSE_SUCCESS) {
         rc = keyFile.Parse();
-        if(rc == XML::Parser::PARSE_SUCCESS)
+        if (rc == XML::Parser::PARSE_SUCCESS)
             m_deviceKey = keyFile.getPrivKey();
         else
-        {
             // do nothing, bypass encrypted elements
             LogWarning("invalid SW key file: " << DEVICE_KEY_SW_FILE << ", parsing code: " << rc);
-        }
-    }
-    else
+    } else {
         LogWarning("invalid SW key file: " << DEVICE_KEY_SW_FILE << ", validation code: " << rc);
+    }
 }
 
-GObjUPtr Store::getObject(const Token &token, const Password &pass) {
-    if (token.backendId != m_backendId) {
+GObjUPtr Store::getObject(const Token &token, const Password &pass)
+{
+    if (token.backendId != m_backendId)
         ThrowErr(Exc::Crypto::WrongBackend, "Decider choose wrong backend!");
-    }
 
     RawBuffer data = unpack(token.data, pass);
 
-    if (token.dataType.isKeyPrivate() || token.dataType.isKeyPublic()) {
+    if (token.dataType.isKeyPrivate() || token.dataType.isKeyPublic())
          return make_unique<AKey>(data, token.dataType);
-    }
 
-    if (token.dataType == DataType(DataType::KEY_AES)) {
+    if (token.dataType == DataType(DataType::KEY_AES))
          return make_unique<SKey>(data, token.dataType);
-    }
 
-    if (token.dataType.isCertificate() || token.dataType.isChainCert()) {
+    if (token.dataType.isCertificate() || token.dataType.isChainCert())
         return make_unique<Cert>(data, token.dataType);
-    }
 
-    if (token.dataType.isBinaryData()) {
+    if (token.dataType.isBinaryData())
         return make_unique<BData>(data, token.dataType);
-    }
 
     ThrowErr(Exc::Crypto::DataTypeNotSupported,
         "This type of data is not supported by openssl backend: ", (int)token.dataType);
@@ -203,7 +196,7 @@ TokenPair Store::generateAKey(const CryptoAlgorithm &algorithm,
                               const Password &pubPass)
 {
     Internals::DataPair ret = Internals::generateAKey(algorithm);
-    return std::make_pair<Token,Token>(
+    return std::make_pair<Token, Token>(
             Token(m_backendId, ret.first.type, pack(ret.first.buffer, prvPass)),
             Token(m_backendId, ret.second.type, pack(ret.second.buffer, pubPass)));
 }
@@ -214,12 +207,14 @@ Token Store::generateSKey(const CryptoAlgorithm &algorithm, const Password &pass
     return Token(m_backendId, ret.type, pack(ret.buffer, pass));
 }
 
-Token Store::import(const Data &data, const Password &pass) {
+Token Store::import(const Data &data, const Password &pass)
+{
     return Token(m_backendId, data.type, pack(data.data, pass));
 }
 
-Token Store::importEncrypted(const Data &data, const Password &pass, const DataEncryption &enc) {
-    if(!m_deviceKey)
+Token Store::importEncrypted(const Data &data, const Password &pass, const DataEncryption &enc)
+{
+    if (!m_deviceKey)
         ThrowErr(Exc::Crypto::InternalError, "No device key present");
 
     // decrypt the AES key using device key

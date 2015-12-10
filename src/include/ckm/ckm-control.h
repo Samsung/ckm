@@ -34,8 +34,7 @@ class Control;
 typedef std::shared_ptr<Control> ControlShPtr;
 
 // used by login manager to unlock user data with global password
-class KEY_MANAGER_API Control
-{
+class KEY_MANAGER_API Control {
 public:
     // decrypt user key with password
     virtual int unlockUserKey(uid_t user, const Password &password) = 0;
@@ -68,7 +67,7 @@ public:
                               const Label &accessor,
                               PermissionMask permissionMask) = 0;
 
-    virtual ~Control(){}
+    virtual ~Control() {}
 
     static ControlShPtr create();
 };

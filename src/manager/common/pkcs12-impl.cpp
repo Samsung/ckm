@@ -83,8 +83,7 @@ PKCS12Impl::PKCS12Impl(const RawBuffer &buffer, const Password &password)
 
     if (pkey) {
         KeyImpl::EvpShPtr ptr(pkey, EVP_PKEY_free);
-        switch(EVP_PKEY_type(pkey->type))
-        {
+        switch (EVP_PKEY_type(pkey->type)) {
             case EVP_PKEY_RSA:
                 m_pkey = std::make_shared<KeyImpl>(ptr, KeyType::KEY_RSA_PRIVATE);
                 break;
@@ -104,9 +103,8 @@ PKCS12Impl::PKCS12Impl(const RawBuffer &buffer, const Password &password)
         }
     }
 
-    if (cert) {
+    if (cert)
         m_cert = std::make_shared<CertificateImpl>(cert, false);
-    }
 
     if (ca) {
         while (sk_X509_num(ca) > 0) {
@@ -118,31 +116,30 @@ PKCS12Impl::PKCS12Impl(const RawBuffer &buffer, const Password &password)
     }
 }
 
-PKCS12Impl::PKCS12Impl(const PKCS12 &other)
-    : m_pkey(other.getKey()),
-      m_cert(other.getCertificate()),
-      m_ca(other.getCaCertificateShPtrVector())
+PKCS12Impl::PKCS12Impl(const PKCS12 &other) :
+    m_pkey(other.getKey()),
+    m_cert(other.getCertificate()),
+    m_ca(other.getCaCertificateShPtrVector())
 {
 }
 
-PKCS12Impl::PKCS12Impl(PKCS12Impl &&other)
-    : m_pkey(std::move(other.m_pkey)),
-      m_cert(std::move(other.m_cert)),
-      m_ca(std::move(other.m_ca))
+PKCS12Impl::PKCS12Impl(PKCS12Impl &&other) :
+    m_pkey(std::move(other.m_pkey)),
+    m_cert(std::move(other.m_cert)),
+    m_ca(std::move(other.m_ca))
 {
 }
 
-PKCS12Impl::PKCS12Impl(const PKCS12Impl &other)
-    : m_pkey(other.getKey()),
-      m_cert(other.getCertificate()),
-      m_ca(other.getCaCertificateShPtrVector())
+PKCS12Impl::PKCS12Impl(const PKCS12Impl &other) :
+    m_pkey(other.getKey()),
+    m_cert(other.getCertificate()),
+    m_ca(other.getCaCertificateShPtrVector())
 {
 }
 
 PKCS12Impl& PKCS12Impl::operator=(const PKCS12Impl &other)
 {
-    if(this != &other)
-    {
+    if (this != &other) {
         m_pkey = other.getKey();
         m_cert = other.getCertificate();
         m_ca = other.getCaCertificateShPtrVector();
@@ -150,26 +147,32 @@ PKCS12Impl& PKCS12Impl::operator=(const PKCS12Impl &other)
     return *this;
 }
 
-KeyShPtr PKCS12Impl::getKey() const {
+KeyShPtr PKCS12Impl::getKey() const
+{
     return m_pkey;
 }
 
-CertificateShPtr PKCS12Impl::getCertificate() const {
+CertificateShPtr PKCS12Impl::getCertificate() const
+{
     return m_cert;
 }
 
-CertificateShPtrVector PKCS12Impl::getCaCertificateShPtrVector() const {
+CertificateShPtrVector PKCS12Impl::getCaCertificateShPtrVector() const
+{
     return m_ca;
 }
 
-bool PKCS12Impl::empty() const {
+bool PKCS12Impl::empty() const
+{
     return m_pkey.get() == NULL && m_cert.get() == NULL && m_ca.empty();
 }
 
 PKCS12Impl::~PKCS12Impl()
-{}
+{
+}
 
-PKCS12ShPtr PKCS12::create(const RawBuffer &rawBuffer, const Password &password) {
+PKCS12ShPtr PKCS12::create(const RawBuffer &rawBuffer, const Password &password)
+{
     try {
         auto output = std::make_shared<PKCS12Impl>(rawBuffer, password);
         if (output->empty())

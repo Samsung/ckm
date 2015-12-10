@@ -36,6 +36,7 @@ public:
     // all error code from project will be defined in public client api
     // OK, UNKNOWN, REVOKED, NO_NETWORK, TIMEOUT
     int verify(const CertificateImplVector &certificateChain);
+
 private:
     int ocsp_verify(X509 *cert, X509 *issuer, STACK_OF(X509) *trustedCerts, const std::string &url);
 };

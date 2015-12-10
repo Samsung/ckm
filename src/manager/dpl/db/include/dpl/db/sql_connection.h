@@ -38,14 +38,12 @@ namespace DB {
 /**
  * SQL connection class
  */
-class SqlConnection
-{
+class SqlConnection {
   public:
     /**
      * SQL Exception classes
      */
-    class Exception
-    {
+    class Exception {
       public:
         DECLARE_EXCEPTION_TYPE(CKM::Exception, Base)
         DECLARE_EXCEPTION_TYPE(Base, SyntaxError)
@@ -63,7 +61,7 @@ class SqlConnection
         typedef std::vector<std::string> Row;
         typedef std::vector<Row> Rows;
 
-        static int Callback(void*,int,char**,char**);
+        static int Callback(void*, int, char**, char**);
         const Row& GetNames() const { return m_names; }
         const Rows& GetValues() const { return m_values; }
     private:
@@ -79,8 +77,7 @@ class SqlConnection
     /*
      * SQL processed data command
      */
-    class DataCommand
-    {
+    class DataCommand {
       private:
         SqlConnection *m_masterConnection;
         sqlcipher3_stmt *m_stmt;
@@ -392,13 +389,11 @@ class SqlConnection
     typedef std::unique_ptr<DataCommand> DataCommandUniquePtr;
 
     // Open flags
-    class Flag
-    {
+    class Flag {
       public:
-        enum Option
-        {
+        enum Option {
             RO = SQLCIPHER_OPEN_NOMUTEX | SQLCIPHER_OPEN_READONLY,
-            RW = SQLCIPHER_OPEN_NOMUTEX | SQLCIPHER_OPEN_READWRITE, 
+            RW = SQLCIPHER_OPEN_NOMUTEX | SQLCIPHER_OPEN_READWRITE,
             CRW = RW | SQLCIPHER_OPEN_CREATE
         };
     };
@@ -410,8 +405,7 @@ class SqlConnection
      * Synchronization object used to synchronize SQL connection
      * to the same database across different threads and processes
      */
-    class SynchronizationObject
-    {
+    class SynchronizationObject {
       public:
         virtual ~SynchronizationObject() {}
 

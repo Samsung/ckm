@@ -83,7 +83,8 @@ int SockRAII::connect(const char * interface)
     return CKM_API_SUCCESS;
 }
 
-int SockRAII::connectWrapper(int sock, const char *interface) {
+int SockRAII::connectWrapper(int sock, const char *interface)
+{
     int flags;
 
     // we need to be sure that socket is in blocking mode
@@ -108,8 +109,7 @@ int SockRAII::connectWrapper(int sock, const char *interface) {
     int retval = TEMP_FAILURE_RETRY(::connect(sock, (struct sockaddr*)&clientAddr, SUN_LEN(&clientAddr)));
 
     // we don't need to support EINPROGRESS because the socket is in blocking mode
-    if(-1 == retval)
-    {
+    if (-1 == retval) {
         if (errno == EACCES) {
             LogError("Access denied to interface: " << interface);
             return CKM_API_ERROR_ACCESS_DENIED;
@@ -127,11 +127,13 @@ int SockRAII::connectWrapper(int sock, const char *interface) {
     return CKM_API_SUCCESS;
 }
 
-bool SockRAII::isConnected() const {
+bool SockRAII::isConnected() const
+{
     return (m_sock > -1);
 }
 
-void SockRAII::disconnect() {
+void SockRAII::disconnect()
+{
     if (isConnected())
         close(m_sock);
     m_sock = -1;
@@ -144,32 +146,28 @@ int SockRAII::waitForSocket(int event, int timeout)
     desc[0].fd = m_sock;
     desc[0].events = event;
 
-    while((-1 == (retval = poll(desc, 1, timeout))) && (errno == EINTR)) {
+    while ((-1 == (retval = poll(desc, 1, timeout))) && (errno == EINTR)) {
         timeout >>= 1;
         errno = 0;
     }
 
-    if (0 == retval) {
+    if (0 == retval)
         LogDebug("Poll timeout");
-    } else if(-1 == retval) {
+    else if (-1 == retval)
         LogError("Error in poll: " << CKM::GetErrnoString(errno));
-    }
+
     return retval;
 }
 
-int SockRAII::get() const {
+int SockRAII::get() const
+{
     return m_sock;
 }
-
-} // namespace anonymous
-
-namespace CKM {
 
 AliasSupport::AliasSupport(const Alias &alias)
 {
     std::size_t separator_pos = alias.rfind(CKM::LABEL_NAME_SEPARATOR);
-    if(separator_pos == Alias::npos)
-    {
+    if (separator_pos == Alias::npos) {
         m_label.clear();
         m_name = alias;
     } else {
@@ -180,7 +178,7 @@ AliasSupport::AliasSupport(const Alias &alias)
 
 Alias AliasSupport::merge(const Label &label, const Name &name)
 {
-    if(label.empty())
+    if (label.empty())
         return name;
 
     std::stringstream output;
@@ -188,20 +186,24 @@ Alias AliasSupport::merge(const Label &label, const Name &name)
     return output.str();
 }
 
-const Name & AliasSupport::getName() const {
+const Name & AliasSupport::getName() const
+{
     return m_name;
 }
 
-const Label & AliasSupport::getLabel() const {
+const Label & AliasSupport::getLabel() const
+{
     return m_label;
 }
 
-bool AliasSupport::isLabelEmpty() const {
+bool AliasSupport::isLabelEmpty() const
+{
     return m_label.empty();
 }
 
-ServiceConnection::ServiceConnection(const char *service_interface) {
-    if(service_interface)
+ServiceConnection::ServiceConnection(const char *service_interface)
+{
+    if (service_interface)
         m_serviceInterface = std::string(service_interface);
 }
 
@@ -210,7 +212,7 @@ int ServiceConnection::processRequest(
     CKM::MessageBuffer &recv_buf)
 {
     int ec;
-    if(CKM_API_SUCCESS != (ec = send(send_buf)))
+    if (CKM_API_SUCCESS != (ec = send(send_buf)))
         return ec;
 
     return receive(recv_buf);
@@ -262,8 +264,7 @@ int ServiceConnection::send(const CKM::RawBuffer &send_buf)
 
 int ServiceConnection::receive(CKM::MessageBuffer &recv_buf)
 {
-    if (!m_socket.isConnected())
-    {
+    if (!m_socket.isConnected()) {
         LogError("Not connected!");
         return CKM_API_ERROR_SOCKET;
     }
@@ -271,9 +272,8 @@ int ServiceConnection::receive(CKM::MessageBuffer &recv_buf)
     int ec = CKM_API_SUCCESS;
     const size_t c_recv_buf_len = 2048;
     char buffer[c_recv_buf_len];
-    do
-    {
-        if( 0 >= m_socket.waitForSocket(POLLIN, POLL_TIMEOUT)) {
+    do {
+        if (0 >= m_socket.waitForSocket(POLLIN, POLL_TIMEOUT)) {
             LogError("Error in WaitForSocket.");
             ec = CKM_API_ERROR_SOCKET;
             break;
@@ -283,7 +283,7 @@ int ServiceConnection::receive(CKM::MessageBuffer &recv_buf)
                                                  buffer,
                                                  sizeof(buffer),
                                                  0));
-        if(-1 == temp) {
+        if (-1 == temp) {
             LogError("Error in read: " << CKM::GetErrnoString(errno));
             ec = CKM_API_ERROR_SOCKET;
             break;
@@ -297,10 +297,9 @@ int ServiceConnection::receive(CKM::MessageBuffer &recv_buf)
 
         CKM::RawBuffer raw(buffer, buffer+temp);
         recv_buf.Push(raw);
-    }
-    while(!recv_buf.Ready());
+    } while (!recv_buf.Ready());
 
-    if(ec != CKM_API_SUCCESS)
+    if (ec != CKM_API_SUCCESS)
         m_socket.disconnect();
 
     return ec;
@@ -327,7 +326,8 @@ int try_catch(const std::function<int()>& func)
     return retval;
 }
 
-void try_catch_async(const std::function<void()>& func, const std::function<void(int)>& error)
+void try_catch_async(const std::function<void()>& func,
+                     const std::function<void(int)>& error)
 {
     try {
         func();
@@ -348,15 +348,14 @@ void try_catch_async(const std::function<void()>& func, const std::function<void
 
 } // namespace CKM
 
-static void init_lib(void) __attribute__ ((constructor));
+static void init_lib(void) __attribute__((constructor));
 static void init_lib(void)
 {
     CKM::SetupClientLogSystem();
 }
 
-static void fini_lib(void) __attribute__ ((destructor));
+static void fini_lib(void) __attribute__((destructor));
 static void fini_lib(void)
 {
-
 }
 

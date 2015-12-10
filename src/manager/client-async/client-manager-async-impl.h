@@ -149,7 +149,7 @@ public:
                           untrusted,
                           trusted,
                           useSystemTrustedCertificates);
-        }, [&observer](int error){ observer->ReceivedError(error); } );
+        }, [&observer](int error){ observer->ReceivedError(error);});
     }
 
     void crypt(
@@ -161,7 +161,6 @@ public:
             bool encryption);
 
 private:
-
     template <typename... Args>
     void sendToStorage(const ManagerAsync::ObserverPtr& observer, const Args&... args)
     {

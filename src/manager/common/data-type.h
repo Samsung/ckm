@@ -96,7 +96,7 @@ public:
     static DataType getChainDatatype(unsigned int index);
 
     // it's not virtual for a reason!
-    ~DataType(){}
+    ~DataType() {}
 
 private:
     Type m_dataType;

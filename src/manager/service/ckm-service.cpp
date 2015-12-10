@@ -36,21 +36,24 @@ const CKM::InterfaceID SOCKET_ID_STORAGE = 1;
 
 namespace CKM {
 
-CKMService::CKMService()
-  : m_logic(new CKMLogic)
+CKMService::CKMService() :
+    m_logic(new CKMLogic)
 {
     InitialValues::LoadFiles(*m_logic);
 }
 
-CKMService::~CKMService() {
+CKMService::~CKMService()
+{
     delete m_logic;
 }
 
-void CKMService::Start() {
+void CKMService::Start()
+{
     Create();
 }
 
-void CKMService::Stop() {
+void CKMService::Stop()
+{
     Join();
 }
 
@@ -75,7 +78,7 @@ bool CKMService::ProcessOne(
     ConnectionInfo &info,
     bool /*allowed*/)
 {
-    LogDebug ("process One");
+    LogDebug("process One");
     RawBuffer response;
 
     Try {
@@ -90,9 +93,9 @@ bool CKMService::ProcessOne(
         m_serviceManager->Write(conn, response);
 
         return true;
-    } Catch (MessageBuffer::Exception::Base) {
+    } Catch(MessageBuffer::Exception::Base) {
         LogError("Broken protocol. Closing socket.");
-    } Catch (Exception::BrokenProtocol) {
+    } Catch(Exception::BrokenProtocol) {
         LogError("Broken protocol. Closing socket.");
     } catch (const DataType::Exception::Base &e) {
         LogError("Closing socket. DBDataType::Exception: " << e.DumpToString());
@@ -108,7 +111,8 @@ bool CKMService::ProcessOne(
     return false;
 }
 
-RawBuffer CKMService::ProcessControl(MessageBuffer &buffer) {
+RawBuffer CKMService::ProcessControl(MessageBuffer &buffer)
+{
     int command = 0;
     uid_t user = 0;
     ControlCommand cc;
@@ -121,7 +125,7 @@ RawBuffer CKMService::ProcessControl(MessageBuffer &buffer) {
 
     cc = static_cast<ControlCommand>(command);
 
-    switch(cc) {
+    switch (cc) {
     case ControlCommand::UNLOCK_USER_KEY:
         buffer.Deserialize(user, newPass);
         return m_logic->unlockUserKey(user, newPass);
@@ -187,211 +191,213 @@ RawBuffer CKMService::ProcessStorage(Credentials &cred, MessageBuffer &buffer)
 
     LogDebug("Process storage. Command: " << command);
 
-    switch(static_cast<LogicCommand>(command)) {
-        case LogicCommand::SAVE:
-        {
-            RawBuffer rawData;
-            PolicySerializable policy;
-            buffer.Deserialize(tmpDataType, name, label, rawData, policy);
-            return m_logic->saveData(
-                cred,
-                msgID,
-                name,
-                label,
-                Crypto::Data(DataType(tmpDataType), std::move(rawData)),
-                policy);
-        }
-        case LogicCommand::SAVE_PKCS12:
-        {
-            RawBuffer rawData;
-            PKCS12Serializable pkcs;
-            PolicySerializable keyPolicy, certPolicy;
-            buffer.Deserialize(name, label, pkcs, keyPolicy, certPolicy);
-            return m_logic->savePKCS12(
-                cred,
-                msgID,
-                name,
-                label,
-                pkcs,
-                keyPolicy,
-                certPolicy);
-        }
-        case LogicCommand::REMOVE:
-        {
-            buffer.Deserialize(name, label);
-            return m_logic->removeData(
-                cred,
-                msgID,
-                name,
-                label);
-        }
-        case LogicCommand::GET:
-        {
-            Password password;
-            buffer.Deserialize(tmpDataType, name, label, password);
-            return m_logic->getData(
-                cred,
-                msgID,
-                DataType(tmpDataType),
-                name,
-                label,
-                password);
-        }
-        case LogicCommand::GET_PKCS12:
-        {
-            Password passKey;
-            Password passCert;
-            buffer.Deserialize(name,
-                               label,
-                               passKey,
-                               passCert);
-            return m_logic->getPKCS12(
-                cred,
-                msgID,
-                name,
-                label,
-                passKey,
-                passCert);
-        }
-        case LogicCommand::GET_LIST:
-        {
-            buffer.Deserialize(tmpDataType);
-            return m_logic->getDataList(
-                cred,
-                msgID,
-                DataType(tmpDataType));
-        }
-        case LogicCommand::CREATE_KEY_AES:
-        {
-            int size = 0;
-            Name keyName;
-            Label keyLabel;
-            PolicySerializable policyKey;
-            buffer.Deserialize(size,
-                               policyKey,
-                               keyName,
-                               keyLabel);
-            return m_logic->createKeyAES(
-                cred,
-                msgID,
-                size,
-                keyName,
-                keyLabel,
-                policyKey);
-        }
-        case LogicCommand::CREATE_KEY_PAIR:
-        {
-            CryptoAlgorithmSerializable keyGenAlgorithm;
-            Name privateKeyName;
-            Label privateKeyLabel;
-            Name publicKeyName;
-            Label publicKeyLabel;
-            PolicySerializable policyPrivateKey;
-            PolicySerializable policyPublicKey;
-            buffer.Deserialize(keyGenAlgorithm,
-                               policyPrivateKey,
-                               policyPublicKey,
-                               privateKeyName,
-                               privateKeyLabel,
-                               publicKeyName,
-                               publicKeyLabel);
-            return m_logic->createKeyPair(
-                cred,
-                msgID,
-                keyGenAlgorithm,
-                privateKeyName,
-                privateKeyLabel,
-                publicKeyName,
-                publicKeyLabel,
-                policyPrivateKey,
-                policyPublicKey);
-        }
-        case LogicCommand::GET_CHAIN_CERT:
-        {
-            RawBuffer certificate;
-            RawBufferVector untrustedVector;
-            RawBufferVector trustedVector;
-            bool systemCerts = false;
-            buffer.Deserialize(certificate, untrustedVector, trustedVector, systemCerts);
-            return m_logic->getCertificateChain(
-                cred,
-                msgID,
-                certificate,
-                untrustedVector,
-                trustedVector,
-                systemCerts);
-        }
-        case LogicCommand::GET_CHAIN_ALIAS:
-        {
-            RawBuffer certificate;
-            LabelNameVector untrustedVector;
-            LabelNameVector trustedVector;
-            bool systemCerts = false;
-            buffer.Deserialize(certificate, untrustedVector, trustedVector, systemCerts);
-            return m_logic->getCertificateChain(
-                cred,
-                msgID,
-                certificate,
-                untrustedVector,
-                trustedVector,
-                systemCerts);
-        }
-        case LogicCommand::CREATE_SIGNATURE:
-        {
-            Password password;        // password for private_key
-            RawBuffer message;
+    switch (static_cast<LogicCommand>(command)) {
+    case LogicCommand::SAVE:
+    {
+        RawBuffer rawData;
+        PolicySerializable policy;
+        buffer.Deserialize(tmpDataType, name, label, rawData, policy);
+        return m_logic->saveData(
+            cred,
+            msgID,
+            name,
+            label,
+            Crypto::Data(DataType(tmpDataType), std::move(rawData)),
+            policy);
+    }
+    case LogicCommand::SAVE_PKCS12:
+    {
+        RawBuffer rawData;
+        PKCS12Serializable pkcs;
+        PolicySerializable keyPolicy, certPolicy;
+        buffer.Deserialize(name, label, pkcs, keyPolicy, certPolicy);
+        return m_logic->savePKCS12(
+            cred,
+            msgID,
+            name,
+            label,
+            pkcs,
+            keyPolicy,
+            certPolicy);
+    }
+    case LogicCommand::REMOVE:
+    {
+        buffer.Deserialize(name, label);
+        return m_logic->removeData(
+            cred,
+            msgID,
+            name,
+            label);
+    }
+    case LogicCommand::GET:
+    {
+        Password password;
+        buffer.Deserialize(tmpDataType, name, label, password);
+        return m_logic->getData(
+            cred,
+            msgID,
+            DataType(tmpDataType),
+            name,
+            label,
+            password);
+    }
+    case LogicCommand::GET_PKCS12:
+    {
+        Password passKey;
+        Password passCert;
+        buffer.Deserialize(
+            name,
+            label,
+            passKey,
+            passCert);
+        return m_logic->getPKCS12(
+            cred,
+            msgID,
+            name,
+            label,
+            passKey,
+            passCert);
+    }
+    case LogicCommand::GET_LIST:
+    {
+        buffer.Deserialize(tmpDataType);
+        return m_logic->getDataList(
+            cred,
+            msgID,
+            DataType(tmpDataType));
+    }
+    case LogicCommand::CREATE_KEY_AES:
+    {
+        int size = 0;
+        Name keyName;
+        Label keyLabel;
+        PolicySerializable policyKey;
+        buffer.Deserialize(
+            size,
+            policyKey,
+            keyName,
+            keyLabel);
+        return m_logic->createKeyAES(
+            cred,
+            msgID,
+            size,
+            keyName,
+            keyLabel,
+            policyKey);
+    }
+    case LogicCommand::CREATE_KEY_PAIR:
+    {
+        CryptoAlgorithmSerializable keyGenAlgorithm;
+        Name privateKeyName;
+        Label privateKeyLabel;
+        Name publicKeyName;
+        Label publicKeyLabel;
+        PolicySerializable policyPrivateKey;
+        PolicySerializable policyPublicKey;
+        buffer.Deserialize(keyGenAlgorithm,
+                           policyPrivateKey,
+                           policyPublicKey,
+                           privateKeyName,
+                           privateKeyLabel,
+                           publicKeyName,
+                           publicKeyLabel);
+        return m_logic->createKeyPair(
+            cred,
+            msgID,
+            keyGenAlgorithm,
+            privateKeyName,
+            privateKeyLabel,
+            publicKeyName,
+            publicKeyLabel,
+            policyPrivateKey,
+            policyPublicKey);
+    }
+    case LogicCommand::GET_CHAIN_CERT:
+    {
+        RawBuffer certificate;
+        RawBufferVector untrustedVector;
+        RawBufferVector trustedVector;
+        bool systemCerts = false;
+        buffer.Deserialize(certificate, untrustedVector, trustedVector, systemCerts);
+        return m_logic->getCertificateChain(
+            cred,
+            msgID,
+            certificate,
+            untrustedVector,
+            trustedVector,
+            systemCerts);
+    }
+    case LogicCommand::GET_CHAIN_ALIAS:
+    {
+        RawBuffer certificate;
+        LabelNameVector untrustedVector;
+        LabelNameVector trustedVector;
+        bool systemCerts = false;
+        buffer.Deserialize(certificate, untrustedVector, trustedVector, systemCerts);
+        return m_logic->getCertificateChain(
+            cred,
+            msgID,
+            certificate,
+            untrustedVector,
+            trustedVector,
+            systemCerts);
+    }
+    case LogicCommand::CREATE_SIGNATURE:
+    {
+        Password password;        // password for private_key
+        RawBuffer message;
 
-            CryptoAlgorithmSerializable cAlgorithm;
-            buffer.Deserialize(name, label, password, message, cAlgorithm);
+        CryptoAlgorithmSerializable cAlgorithm;
+        buffer.Deserialize(name, label, password, message, cAlgorithm);
 
-            return m_logic->createSignature(
-                  cred,
-                  msgID,
-                  name,
-                  label,
-                  password,           // password for private_key
-                  message,
-                  cAlgorithm);
-        }
-        case LogicCommand::VERIFY_SIGNATURE:
-        {
-            Password password;           // password for public_key (optional)
-            RawBuffer message;
-            RawBuffer signature;
-            CryptoAlgorithmSerializable cAlg;
+        return m_logic->createSignature(
+              cred,
+              msgID,
+              name,
+              label,
+              password,           // password for private_key
+              message,
+              cAlgorithm);
+    }
+    case LogicCommand::VERIFY_SIGNATURE:
+    {
+        Password password;           // password for public_key (optional)
+        RawBuffer message;
+        RawBuffer signature;
+        CryptoAlgorithmSerializable cAlg;
 
-            buffer.Deserialize(name,
-                               label,
-                               password,
-                               message,
-                               signature,
-                               cAlg);
+        buffer.Deserialize(name,
+                           label,
+                           password,
+                           message,
+                           signature,
+                           cAlg);
 
-            return m_logic->verifySignature(
-                cred,
-                msgID,
-                name,
-                label,
-                password,           // password for public_key (optional)
-                message,
-                signature,
-                cAlg);
-        }
-        case LogicCommand::SET_PERMISSION:
-        {
-            PermissionMask permissionMask = 0;
-            buffer.Deserialize(name, label, accessorLabel, permissionMask);
-            return m_logic->setPermission(
-                cred,
-                command,
-                msgID,
-                name,
-                label,
-                accessorLabel,
-                permissionMask);
-        }
-        default:
-            Throw(Exception::BrokenProtocol);
+        return m_logic->verifySignature(
+            cred,
+            msgID,
+            name,
+            label,
+            password,           // password for public_key (optional)
+            message,
+            signature,
+            cAlg);
+    }
+    case LogicCommand::SET_PERMISSION:
+    {
+        PermissionMask permissionMask = 0;
+        buffer.Deserialize(name, label, accessorLabel, permissionMask);
+        return m_logic->setPermission(
+            cred,
+            command,
+            msgID,
+            name,
+            label,
+            accessorLabel,
+            permissionMask);
+    }
+    default:
+        Throw(Exception::BrokenProtocol);
     }
 }
 
@@ -412,14 +418,16 @@ void CKMService::ProcessMessage(MsgKeyRequest msg)
     }
 }
 
-void CKMService::CustomHandle(const ReadEvent &event) {
+void CKMService::CustomHandle(const ReadEvent &event)
+{
     LogDebug("Read event");
     auto &info = m_connectionInfoMap[event.connectionID.counter];
     info.buffer.Push(event.rawBuffer);
-    while(ProcessOne(event.connectionID, info, true));
+    while (ProcessOne(event.connectionID, info, true));
 }
 
-void CKMService::CustomHandle(const SecurityEvent & /*event*/) {
+void CKMService::CustomHandle(const SecurityEvent & /*event*/)
+{
     LogError("This should not happend! SecurityEvent was called on CKMService!");
 }
 

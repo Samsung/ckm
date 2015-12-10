@@ -26,8 +26,7 @@
 namespace CKM {
 namespace Log {
 
-class JournalLogProvider: public AbstractLogProvider
-{
+class JournalLogProvider: public AbstractLogProvider {
 public:
     JournalLogProvider();
     virtual ~JournalLogProvider();

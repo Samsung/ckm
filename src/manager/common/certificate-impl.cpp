@@ -65,8 +65,8 @@ CertificateImpl::CertificateImpl(const RawBuffer &der, DataFormat format)
     if (!m_x509) {
         // TODO
         LogError("Certificate could not be parsed.");
-//        ThrowMsg(Exception::OpensslInternalError,
-//          "Internal Openssl error in d2i_X509 function.");
+//      ThrowMsg(Exception::OpensslInternalError,
+//         "Internal Openssl error in d2i_X509 function.");
     }
 }
 
@@ -78,20 +78,23 @@ CertificateImpl::CertificateImpl(X509 *x509, bool duplicate)
         m_x509 = x509;
 }
 
-CertificateImpl::CertificateImpl(const CertificateImpl &second){
+CertificateImpl::CertificateImpl(const CertificateImpl &second)
+{
     m_x509 = X509_dup(second.m_x509);
 }
 
-CertificateImpl::CertificateImpl(CertificateImpl &&second) {
+CertificateImpl::CertificateImpl(CertificateImpl &&second)
+{
     m_x509 = second.m_x509;
     second.m_x509 = NULL;
     LogDebug("Certificate moved: " << (void*)m_x509);
 }
 
-CertificateImpl& CertificateImpl::operator=(CertificateImpl &&second) {
+CertificateImpl& CertificateImpl::operator=(CertificateImpl &&second)
+{
     if (this == &second)
         return *this;
-    if(m_x509)
+    if (m_x509)
         X509_free(m_x509);
     m_x509 = second.m_x509;
     second.m_x509 = NULL;
@@ -99,20 +102,23 @@ CertificateImpl& CertificateImpl::operator=(CertificateImpl &&second) {
     return *this;
 }
 
-CertificateImpl& CertificateImpl::operator=(const CertificateImpl &second) {
+CertificateImpl& CertificateImpl::operator=(const CertificateImpl &second)
+{
     if (this == &second)
         return *this;
-    if(m_x509)
+    if (m_x509)
         X509_free(m_x509);
     m_x509 = X509_dup(second.m_x509);
     return *this;
 }
 
-X509* CertificateImpl::getX509() const {
+X509* CertificateImpl::getX509() const
+{
     return m_x509;
 }
 
-RawBuffer CertificateImpl::getDER(void) const {
+RawBuffer CertificateImpl::getDER(void) const
+{
     unsigned char *rawDer = NULL;
     int size = i2d_X509(m_x509, &rawDer);
     if (!rawDer || size <= 0) {
@@ -127,18 +133,20 @@ RawBuffer CertificateImpl::getDER(void) const {
     return output;
 }
 
-bool CertificateImpl::empty() const {
+bool CertificateImpl::empty() const
+{
     return m_x509 == NULL;
 }
 
-KeyImpl::EvpShPtr CertificateImpl::getEvpShPtr() const {
+KeyImpl::EvpShPtr CertificateImpl::getEvpShPtr() const
+{
     return KeyImpl::EvpShPtr(X509_get_pubkey(m_x509), EVP_PKEY_free);
 }
 
-KeyImpl CertificateImpl::getKeyImpl() const {
+KeyImpl CertificateImpl::getKeyImpl() const
+{
     KeyImpl::EvpShPtr evp(X509_get_pubkey(m_x509), EVP_PKEY_free);
-    switch(EVP_PKEY_type(evp->type))
-    {
+    switch (EVP_PKEY_type(evp->type)) {
         case EVP_PKEY_RSA:
             return KeyImpl(evp, KeyType::KEY_RSA_PUBLIC);
         case EVP_PKEY_DSA:
@@ -152,7 +160,8 @@ KeyImpl CertificateImpl::getKeyImpl() const {
     return KeyImpl();
 }
 
-X509_NAME *getX509Name(X509 *x509, CertificateFieldId type) {
+X509_NAME *getX509Name(X509 *x509, CertificateFieldId type)
+{
     if (!x509)
         return NULL;
 
@@ -176,7 +185,8 @@ std::string CertificateImpl::getOneLine(CertificateFieldId type) const
     return std::string(buffer);
 }
 
-std::string CertificateImpl::getField(CertificateFieldId type, int fieldNid) const {
+std::string CertificateImpl::getField(CertificateFieldId type, int fieldNid) const
+{
     X509_NAME *subjectName = getX509Name(m_x509, type);
     X509_NAME_ENTRY *subjectEntry = NULL;
 
@@ -188,17 +198,15 @@ std::string CertificateImpl::getField(CertificateFieldId type, int fieldNid) con
     for (int i = 0; i < entryCount; ++i) {
         subjectEntry = X509_NAME_get_entry(subjectName, i);
 
-        if (!subjectEntry) {
+        if (!subjectEntry)
             continue;
-        }
 
         int nid = OBJ_obj2nid(
             static_cast<ASN1_OBJECT*>(
                     X509_NAME_ENTRY_get_object(subjectEntry)));
 
-        if (nid != fieldNid) {
+        if (nid != fieldNid)
             continue;
-        }
 
         ASN1_STRING* pASN1Str = subjectEntry->value;
 
@@ -217,35 +225,43 @@ std::string CertificateImpl::getField(CertificateFieldId type, int fieldNid) con
     return std::string();
 }
 
-std::string CertificateImpl::getCommonName(CertificateFieldId type) const {
+std::string CertificateImpl::getCommonName(CertificateFieldId type) const
+{
     return getField(type, NID_commonName);
 }
 
-std::string CertificateImpl::getCountryName(CertificateFieldId type) const {
+std::string CertificateImpl::getCountryName(CertificateFieldId type) const
+{
     return getField(type, NID_countryName);
 }
 
-std::string CertificateImpl::getStateOrProvinceName(CertificateFieldId type) const {
+std::string CertificateImpl::getStateOrProvinceName(CertificateFieldId type) const
+{
     return getField(type, NID_stateOrProvinceName);
 }
 
-std::string CertificateImpl::getLocalityName(CertificateFieldId type) const {
+std::string CertificateImpl::getLocalityName(CertificateFieldId type) const
+{
     return getField(type, NID_localityName);
 }
 
-std::string CertificateImpl::getOrganizationName(CertificateFieldId type) const {
+std::string CertificateImpl::getOrganizationName(CertificateFieldId type) const
+{
     return getField(type, NID_organizationName);
 }
 
-std::string CertificateImpl::getOrganizationalUnitName(CertificateFieldId type) const {
+std::string CertificateImpl::getOrganizationalUnitName(CertificateFieldId type) const
+{
     return getField(type, NID_organizationalUnitName);
 }
 
-std::string CertificateImpl::getEmailAddres(CertificateFieldId type) const {
+std::string CertificateImpl::getEmailAddres(CertificateFieldId type) const
+{
     return getField(type, NID_pkcs9_emailAddress);
 }
 
-std::string CertificateImpl::getOCSPURL() const {
+std::string CertificateImpl::getOCSPURL() const
+{
     if (!m_x509)
         return std::string();
 
@@ -259,12 +275,14 @@ std::string CertificateImpl::getOCSPURL() const {
     return result;
 }
 
-CertificateImpl::~CertificateImpl() {
-    if(m_x509)
+CertificateImpl::~CertificateImpl()
+{
+    if (m_x509)
         X509_free(m_x509);
 }
 
-CertificateShPtr Certificate::create(const RawBuffer &rawBuffer, DataFormat format) {
+CertificateShPtr Certificate::create(const RawBuffer &rawBuffer, DataFormat format)
+{
     try {
         CertificateShPtr output = std::make_shared<CertificateImpl>(rawBuffer, format);
         if (output->empty())

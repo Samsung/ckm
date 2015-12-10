@@ -41,13 +41,11 @@ typedef std::auto_ptr<BinaryQueue> BinaryQueueAutoPtr;
  *
  * @todo Add optimized implementation for FlattenConsume
  */
-class COMMON_API BinaryQueue
+class COMMON_API BinaryQueue {
 //  : public AbstractInputOutput
-{
-  public:
-    class Exception
-    {
-      public:
+public:
+    class Exception {
+    public:
         DECLARE_EXCEPTION_TYPE(CKM::Exception, Base)
         DECLARE_EXCEPTION_TYPE(Base, OutOfData)
     };
@@ -58,9 +56,8 @@ class COMMON_API BinaryQueue
                                   size_t bufferSize,
                                   void *userParam);
 
-    class BucketVisitor
-    {
-      public:
+    class BucketVisitor {
+    public:
         /**
          * Destructor
          */
@@ -76,9 +73,8 @@ class COMMON_API BinaryQueue
         virtual void OnVisitBucket(const void *buffer, size_t bufferSize) = 0;
     };
 
-  private:
-    struct Bucket
-    {
+private:
+    struct Bucket {
         NONCOPYABLE(Bucket);
 
         const void *buffer;
@@ -102,12 +98,11 @@ class COMMON_API BinaryQueue
 
     static void DeleteBucket(Bucket *bucket);
 
-    class BucketVisitorCall
-    {
-      private:
+    class BucketVisitorCall {
+    private:
         BucketVisitor *m_visitor;
 
-      public:
+    public:
         BucketVisitorCall(BucketVisitor *visitor);
         virtual ~BucketVisitorCall();
 

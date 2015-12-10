@@ -55,15 +55,18 @@ public:
     ServiceThread()
       : m_state(State::NoThread)
       , m_quit(false)
-    {}
+    {
+    }
 
-    void Create() {
+    void Create()
+    {
         assert(m_state == State::NoThread);
         m_thread = std::thread(ThreadLoopStatic, this);
         m_state = State::Work;
     }
 
-    void Join() {
+    void Join()
+    {
         assert(m_state != State::NoThread);
         {
             std::lock_guard<std::mutex> lock(m_eventQueueMutex);
@@ -95,14 +98,16 @@ protected:
         m_waitCondition.notify_one();
     }
 
-    static void ThreadLoopStatic(ServiceThread *ptr) {
+    static void ThreadLoopStatic(ServiceThread *ptr)
+    {
         ptr->ThreadLoop();
 
         // cleanup openssl in every thread
         deinitOpenSslThread();
     }
 
-    void ThreadLoop(){
+    void ThreadLoop()
+    {
         for (;;) {
             EventDescription description;
             {

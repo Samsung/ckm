@@ -30,13 +30,15 @@ Manager::Manager()
   : m_impl(new Impl())
 {}
 
-Manager::~Manager(){}
+Manager::~Manager() {}
 
-int Manager::saveKey(const Alias &alias, const KeyShPtr &key, const Policy &policy) {
+int Manager::saveKey(const Alias &alias, const KeyShPtr &key, const Policy &policy)
+{
     return m_impl->saveKey(alias, key, policy);
 }
 
-int Manager::saveCertificate(const Alias &alias, const CertificateShPtr &cert, const Policy &policy) {
+int Manager::saveCertificate(const Alias &alias, const CertificateShPtr &cert, const Policy &policy)
+{
     return m_impl->saveCertificate(alias, cert, policy);
 }
 
@@ -49,15 +51,18 @@ int Manager::savePKCS12(
     return m_impl->savePKCS12(alias, pkcs, keyPolicy, certPolicy);
 }
 
-int Manager::saveData(const Alias &alias, const RawBuffer &data, const Policy &policy) {
+int Manager::saveData(const Alias &alias, const RawBuffer &data, const Policy &policy)
+{
     return m_impl->saveData(alias, data, policy);
 }
 
-int Manager::removeAlias(const Alias &alias) {
+int Manager::removeAlias(const Alias &alias)
+{
     return m_impl->removeAlias(alias);
 }
 
-int Manager::getKey(const Alias &alias, const Password &password, KeyShPtr &key) {
+int Manager::getKey(const Alias &alias, const Password &password, KeyShPtr &key)
+{
     return m_impl->getKey(alias, password, key);
 }
 
@@ -69,11 +74,13 @@ int Manager::getCertificate(
     return m_impl->getCertificate(alias, password, certificate);
 }
 
-int Manager::getData(const Alias &alias, const Password &password, RawBuffer &data) {
+int Manager::getData(const Alias &alias, const Password &password, RawBuffer &data)
+{
     return m_impl->getData(alias, password, data);
 }
 
-int Manager::getPKCS12(const Alias &alias, PKCS12ShPtr &pkcs) {
+int Manager::getPKCS12(const Alias &alias, PKCS12ShPtr &pkcs)
+{
     return m_impl->getPKCS12(alias, pkcs);
 }
 
@@ -86,15 +93,18 @@ int Manager::getPKCS12(
     return m_impl->getPKCS12(alias, keyPass, certPass, pkcs);
 }
 
-int Manager::getKeyAliasVector(AliasVector &aliasVector) {
+int Manager::getKeyAliasVector(AliasVector &aliasVector)
+{
     return m_impl->getKeyAliasVector(aliasVector);
 }
 
-int Manager::getCertificateAliasVector(AliasVector &aliasVector) {
+int Manager::getCertificateAliasVector(AliasVector &aliasVector)
+{
     return m_impl->getCertificateAliasVector(aliasVector);
 }
 
-int Manager::getDataAliasVector(AliasVector &aliasVector) {
+int Manager::getDataAliasVector(AliasVector &aliasVector)
+{
     return m_impl->getDataAliasVector(aliasVector);
 }
 
@@ -204,7 +214,8 @@ int Manager::verifySignature(
         cAlg);
 }
 
-int Manager::ocspCheck(const CertificateShPtrVector &certificateChainVector, int &ocspStatus) {
+int Manager::ocspCheck(const CertificateShPtrVector &certificateChainVector, int &ocspStatus)
+{
     return m_impl->ocspCheck(certificateChainVector, ocspStatus);
 }
 
@@ -236,7 +247,8 @@ int Manager::decrypt(
     return m_impl->decrypt(algo, keyAlias, password, encrypted, decrypted);
 }
 
-ManagerShPtr Manager::create() {
+ManagerShPtr Manager::create()
+{
     try {
         return std::make_shared<Manager>();
     } catch (...) {

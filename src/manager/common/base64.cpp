@@ -41,9 +41,9 @@ void Base64Encoder::append(const RawBuffer &data)
         ThrowMsg(Exception::AlreadyFinalized, "Already finalized");
     }
 
-    if (!m_b64) {
+    if (!m_b64)
         reset();
-    }
+
     BIO_write(m_b64, data.data(), data.size());
 }
 
@@ -70,9 +70,9 @@ RawBuffer Base64Encoder::get()
         ThrowMsg(Exception::InternalError, "Bio internal error");
     }
 
-    if (bptr->length > 0) {
+    if (bptr->length > 0)
         return RawBuffer(bptr->data, bptr->data + bptr->length);
-    }
+
     return RawBuffer();
 }
 
@@ -129,14 +129,13 @@ bool Base64Decoder::finalize()
                                  whiteCharacter),
                   m_input.end());
 
-    for (size_t i = 0; i<m_input.size(); ++i) {
+    for (size_t i = 0; i < m_input.size(); ++i) {
         if (isalnum(m_input[i])
             || m_input[i] == '+'
             || m_input[i] == '/'
             || m_input[i] == '=')
-        {
             continue;
-        }
+
         LogError("Base64 input contains illegal chars: " << m_input[i]);
         return false;
     }

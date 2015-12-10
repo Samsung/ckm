@@ -184,17 +184,16 @@ void InitialValuesFile::registerElementListeners()
 void InitialValuesFile::Error(const XML::Parser::ErrorType errorType,
                               const std::string & log_msg)
 {
-    switch(errorType)
-    {
-        case XML::Parser::VALIDATION_ERROR:
-            LogWarning("validating error: " << log_msg);
-            break;
-        case XML::Parser::PARSE_WARNING:
-            LogWarning("parsing warning: " << log_msg);
-            break;
-        case XML::Parser::PARSE_ERROR:
-            LogWarning("parsing error: " << log_msg);
-            break;
+    switch (errorType) {
+    case XML::Parser::VALIDATION_ERROR:
+        LogWarning("validating error: " << log_msg);
+        break;
+    case XML::Parser::PARSE_WARNING:
+        LogWarning("parsing warning: " << log_msg);
+        break;
+    case XML::Parser::PARSE_ERROR:
+        LogWarning("parsing error: " << log_msg);
+        break;
     }
 }
 
@@ -206,7 +205,7 @@ int InitialValuesFile::Validate(const std::string &XSD_file)
 int InitialValuesFile::Parse()
 {
     int ec = m_parser.Parse();
-    if(!m_header || !m_header->isCorrectVersion()) {
+    if (!m_header || !m_header->isCorrectVersion()) {
         LogError("bypassing XML file: " << m_filename << " - wrong file version!");
         ec = XML::Parser::ERROR_INVALID_VERSION;
     }
@@ -216,23 +215,22 @@ int InitialValuesFile::Parse()
 XML::Parser::ElementHandlerPtr InitialValuesFile::GetObjectHandler(ObjectType type,
                                                                    const CKM::RawBuffer &encryptedKey)
 {
-    switch(type)
-    {
-        case KEY:
-            m_currentHandler = std::make_shared<KeyHandler>(m_db_logic, encryptedKey);
-            break;
+    switch (type) {
+    case KEY:
+        m_currentHandler = std::make_shared<KeyHandler>(m_db_logic, encryptedKey);
+        break;
 
-        case CERT:
-            m_currentHandler = std::make_shared<CertHandler>(m_db_logic, encryptedKey);
-            break;
+    case CERT:
+        m_currentHandler = std::make_shared<CertHandler>(m_db_logic, encryptedKey);
+        break;
 
-        case DATA:
-            m_currentHandler = std::make_shared<DataHandler>(m_db_logic, encryptedKey);
-            break;
+    case DATA:
+        m_currentHandler = std::make_shared<DataHandler>(m_db_logic, encryptedKey);
+        break;
 
-        default:
-            m_currentHandler.reset();
-            break;
+    default:
+        m_currentHandler.reset();
+        break;
     }
 
     return m_currentHandler;
@@ -248,7 +246,7 @@ void InitialValuesFile::ReleaseObjectHandler(ObjectType /*type*/)
 
 XML::Parser::ElementHandlerPtr InitialValuesFile::GetBufferHandler(EncodingType type)
 {
-    if( !m_currentHandler )
+    if ( !m_currentHandler )
         return XML::Parser::ElementHandlerPtr();
 
     return m_currentHandler->CreateBufferHandler(type);
@@ -260,7 +258,7 @@ void InitialValuesFile::ReleaseBufferHandler(EncodingType /*type*/)
 
 XML::Parser::ElementHandlerPtr InitialValuesFile::GetPermissionHandler()
 {
-    if( !m_currentHandler )
+    if ( !m_currentHandler )
         return XML::Parser::ElementHandlerPtr();
 
     return m_currentHandler->CreatePermissionHandler();
@@ -271,11 +269,14 @@ void InitialValuesFile::ReleasePermissionHandler()
 
 
 InitialValuesFile::EncryptionKeyHandler::EncryptionKeyHandler(InitialValuesFile & parent) : m_parent(parent) {}
-void InitialValuesFile::EncryptionKeyHandler::Characters(const std::string &data) {
+void InitialValuesFile::EncryptionKeyHandler::Characters(const std::string &data)
+{
     m_encryptedKey.reserve(m_encryptedKey.size() + data.size());
     m_encryptedKey.insert(m_encryptedKey.end(), data.begin(), data.end());
 };
-void InitialValuesFile::EncryptionKeyHandler::End() {
+
+void InitialValuesFile::EncryptionKeyHandler::End()
+{
     std::string trimmed = XML::trimEachLine(std::string(m_encryptedKey.begin(), m_encryptedKey.end()));
     Base64Decoder base64;
     base64.reset();
@@ -284,24 +285,28 @@ void InitialValuesFile::EncryptionKeyHandler::End() {
     m_encryptedKey = base64.get();
 };
 
-CKM::RawBuffer InitialValuesFile::EncryptionKeyHandler::getEncryptedKey() const {
+CKM::RawBuffer InitialValuesFile::EncryptionKeyHandler::getEncryptedKey() const
+{
     return m_encryptedKey;
 }
 
-InitialValuesFile::HeaderHandler::HeaderHandler(InitialValuesFile & parent)
-    : m_version(-1), m_parent(parent) {}
+InitialValuesFile::HeaderHandler::HeaderHandler(InitialValuesFile & parent) :
+    m_version(-1), m_parent(parent)
+{
+}
+
 void InitialValuesFile::HeaderHandler::Start(const XML::Parser::Attributes & attr)
 {
     // get key type
-    if(attr.find(XML_ATTR_VERSION) != attr.end())
-    {
+    if (attr.find(XML_ATTR_VERSION) != attr.end()) {
         m_version = atoi(attr.at(XML_ATTR_VERSION).c_str());
 
-        if(isCorrectVersion())
+        if (isCorrectVersion())
             m_parent.registerElementListeners();
     }
 }
-bool InitialValuesFile::HeaderHandler::isCorrectVersion() const {
+bool InitialValuesFile::HeaderHandler::isCorrectVersion() const
+{
     return m_version == XML_CURRENT_VERSION;
 }
 

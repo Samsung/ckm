@@ -50,9 +50,8 @@ FileLock::FileLock(const char* const file)
 {
     // Open lock file
     m_lockFd = TEMP_FAILURE_RETRY(creat(file, 0644));
-    if (m_lockFd == -1) {
+    if (m_lockFd == -1)
         throw io_exception("Cannot open lock file. Errno: ", strerror(errno));
-    }
 
     if (-1 == lockf(m_lockFd, F_TLOCK, 0)) {
         if (errno == EACCES || errno == EAGAIN)
@@ -69,7 +68,7 @@ FileLock::FileLock(const char* const file)
 
     int ret = fsync(m_lockFd);
     if (-1 == ret)
-        throw io_exception("Fsync failed. Errno: ",strerror(errno));
+        throw io_exception("Fsync failed. Errno: ", strerror(errno));
 }
 
 FileLock::~FileLock()

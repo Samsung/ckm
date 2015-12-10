@@ -43,7 +43,8 @@ struct Row : public Token {
       , algorithmType(DBCMAlgType::NONE)
       , encryptionScheme(0)
       , dataSize(data.size())
-    {}
+    {
+    }
 
     Name name;
     Label ownerLabel;

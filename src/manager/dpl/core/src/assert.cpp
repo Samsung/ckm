@@ -33,20 +33,17 @@ void AssertProc(const char *condition,
                 const char *function)
 {
 #define INTERNAL_LOG(message)                                          \
-    do                                                                 \
-    {                                                                  \
+    do {                                                               \
         std::ostringstream platformLog;                                \
         platformLog << message;                                        \
         CKM::Log::LogSystemSingleton::Instance().Log(                  \
             CKM::Log::AbstractLogProvider::LogLevel::Pedantic,         \
             platformLog.str().c_str(),                                 \
             __FILE__, __LINE__, __FUNCTION__);                         \
-    } \
-    while (0)
+    } while (0)
 
     // Try to log failed assertion to log system
-    Try
-    {
+    Try {
         INTERNAL_LOG(
             "################################################################################");
         INTERNAL_LOG(

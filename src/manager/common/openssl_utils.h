@@ -31,13 +31,14 @@ namespace CKM
 typedef std::unique_ptr<X509_STORE_CTX, void(*)(X509_STORE_CTX*)> X509_STORE_CTX_PTR;
 typedef std::unique_ptr<STACK_OF(X509), void(*)(STACK_OF(X509)*)> X509_STACK_PTR;
 
-inline X509_STACK_PTR create_x509_stack() {
+inline X509_STACK_PTR create_x509_stack()
+{
     return X509_STACK_PTR(sk_X509_new_null(), [](STACK_OF(X509)* stack) { sk_X509_free(stack); });
 }
-inline X509_STORE_CTX_PTR create_x509_store_ctx() {
-    return X509_STORE_CTX_PTR(X509_STORE_CTX_new(),X509_STORE_CTX_free);
+inline X509_STORE_CTX_PTR create_x509_store_ctx()
+{
+    return X509_STORE_CTX_PTR(X509_STORE_CTX_new(), X509_STORE_CTX_free);
 }
 
 } // namespace CKM
-
 

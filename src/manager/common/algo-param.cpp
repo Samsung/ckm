@@ -22,8 +22,7 @@
 #include <ckm/ckm-type.h>
 #include <cassert>
 
-namespace CKM
-{
+namespace CKM {
 
 bool CryptoAlgorithm::BufferParam::getBuffer(RawBuffer& buffer) const
 {

@@ -44,7 +44,7 @@ public:
 
     virtual bool empty() const = 0;
 
-    virtual ~PKCS12(){}
+    virtual ~PKCS12() {}
 
     static PKCS12ShPtr create(const RawBuffer &rawData, const Password &password = Password());
 };

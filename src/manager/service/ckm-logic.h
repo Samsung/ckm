@@ -215,7 +215,6 @@ protected:
     int unlockSystemDB();
 
 private:
-
     // select private/system database depending on asking uid and owner label.
     // output: database handler and effective label
     UserData & selectDatabase(const Credentials &incoming_cred,

@@ -29,8 +29,7 @@
 
 namespace CKM {
 
-class EncryptionService : public ThreadMessageService<MsgKeyResponse>, public IEncryptionService
-{
+class EncryptionService : public ThreadMessageService<MsgKeyResponse>, public IEncryptionService {
 public:
     EncryptionService();
     virtual ~EncryptionService();
@@ -41,11 +40,13 @@ public:
 
     // Custom add custom support for ReadEvent and SecurityEvent
     // because we want to bypass security check in EncryptionService
-    virtual void Event(const ReadEvent &event) {
+    virtual void Event(const ReadEvent &event)
+    {
         CreateEvent([this, event]() { this->CustomHandle(event); });
     }
 
-    virtual void Event(const SecurityEvent &event) {
+    virtual void Event(const SecurityEvent &event)
+    {
         CreateEvent([this, event]() { this->CustomHandle(event); });
     }
 

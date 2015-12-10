@@ -30,8 +30,7 @@
 #include <generic-socket-manager.h>
 #include <message-buffer.h>
 
-namespace CKM
-{
+namespace CKM {
     struct ConnectionInfo {
         InterfaceID interfaceID;
         MessageBuffer buffer;

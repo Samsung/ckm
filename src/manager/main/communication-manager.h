@@ -31,8 +31,7 @@ namespace CKM {
  * class responsible for keeping a list of listeners for given M type of message and notifying them
  */
 template <typename M>
-class MessageManager
-{
+class MessageManager {
 public:
     NONCOPYABLE(MessageManager);
 
@@ -47,10 +46,11 @@ public:
     // Returns the number of listeners called
     size_t SendMessage(const M& msg) const
     {
-        for(auto& it : m_listeners)
+        for (auto& it : m_listeners)
             it(msg);
         return m_listeners.size();
     }
+
 protected:
     MessageManager() {}
     // No one is going to destroy this class directly (only via inherited class). Hence no 'virtual'
@@ -70,8 +70,7 @@ struct CommunicationManager;
  */
 template <typename First, typename... Args>
 struct CommunicationManager<First, Args...> :
-    public MessageManager<First>, public CommunicationManager<Args...>
-{
+    public MessageManager<First>, public CommunicationManager<Args...> {
 public:
     CommunicationManager() {}
     NONCOPYABLE(CommunicationManager);

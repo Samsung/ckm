@@ -52,9 +52,8 @@ void NanoSleep(uint64_t nanoseconds)
     timespec remainingTime;
 
     for (;;) {
-        if (nanosleep(&requestedTime, &remainingTime) == 0) {
+        if (nanosleep(&requestedTime, &remainingTime) == 0)
             break;
-        }
 
         int error = errno;
         Assert(error == EINTR);

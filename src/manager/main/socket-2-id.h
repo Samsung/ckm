@@ -33,6 +33,7 @@ public:
     void resetCache();
 
     virtual ~Socket2Id() {}
+
 private:
     int getCredentialsFromSocket(int sock, std::string &res);
     int getPkgIdFromSmack(const std::string &smack, std::string &pkgId);

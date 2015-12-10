@@ -42,8 +42,7 @@ extern "C" {
 
 namespace CKM {
 
-class AliasSupport
-{
+class AliasSupport {
     public:
         AliasSupport(const Alias &alias);
 
@@ -52,6 +51,7 @@ class AliasSupport
         bool isLabelEmpty() const;
 
         static Alias merge(const Label &label, const Name &alias);
+
     private:
         Name m_name;
         Label m_label;
@@ -89,6 +89,7 @@ class ServiceConnection {
         int receive(CKM::MessageBuffer &recv_buf);
 
         virtual ~ServiceConnection();
+
     protected:
         int prepareConnection();
 

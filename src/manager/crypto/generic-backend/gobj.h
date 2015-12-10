@@ -32,29 +32,37 @@ namespace Crypto {
 
 class GObj {
 protected:
-    GObj(){}
+    GObj() {}
+
 public:
-    virtual RawBuffer getBinary() const {
+    virtual RawBuffer getBinary() const
+    {
         ThrowErr(Exc::Crypto::OperationNotSupported);
     }
 
-    virtual RawBuffer encrypt(const CryptoAlgorithm &, const RawBuffer &) {
+    virtual RawBuffer encrypt(const CryptoAlgorithm &, const RawBuffer &)
+    {
         ThrowErr(Exc::Crypto::OperationNotSupported);
     }
 
-    virtual RawBuffer decrypt(const CryptoAlgorithm &, const RawBuffer &) {
+    virtual RawBuffer decrypt(const CryptoAlgorithm &, const RawBuffer &)
+    {
         ThrowErr(Exc::Crypto::OperationNotSupported);
     }
 
-    virtual RawBuffer sign(const CryptoAlgorithm &, const RawBuffer &) {
+    virtual RawBuffer sign(const CryptoAlgorithm &, const RawBuffer &)
+    {
         ThrowErr(Exc::Crypto::OperationNotSupported);
     }
 
-    virtual int verify(const CryptoAlgorithm &, const RawBuffer &, const RawBuffer &) {
+    virtual int verify(const CryptoAlgorithm &, const RawBuffer &, const RawBuffer &)
+    {
         ThrowErr(Exc::Crypto::OperationNotSupported);
     }
 
-    virtual ~GObj () {}
+    virtual ~GObj()
+    {
+    }
 };
 
 typedef std::unique_ptr<GObj> GObjUPtr;

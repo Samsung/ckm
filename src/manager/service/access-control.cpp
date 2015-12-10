@@ -69,9 +69,9 @@ int AccessControl::canSave(
         const CKM::Credentials &accessorCred,
         const Label & ownerLabel) const
 {
-    if(isSystemService(accessorCred))
+    if (isSystemService(accessorCred))
         return CKM_API_SUCCESS;
-    if(ownerLabel != accessorCred.smackLabel)
+    if (ownerLabel != accessorCred.smackLabel)
         return CKM_API_ERROR_ACCESS_DENIED;
 
     return CKM_API_SUCCESS;
@@ -88,9 +88,9 @@ int AccessControl::canRead(
         const CKM::Credentials &accessorCred,
         const PermissionForLabel & permissionLabel) const
 {
-    if(isSystemService(accessorCred))
+    if (isSystemService(accessorCred))
         return CKM_API_SUCCESS;
-    if(permissionLabel & Permission::READ)
+    if (permissionLabel & Permission::READ)
         return CKM_API_SUCCESS;
 
     return CKM_API_ERROR_DB_ALIAS_UNKNOWN;
@@ -102,11 +102,11 @@ int AccessControl::canExport(
         const PermissionForLabel & permissionLabel) const
 {
     int ec;
-    if(CKM_API_SUCCESS != (ec = canRead(accessorCred, permissionLabel)))
+    if (CKM_API_SUCCESS != (ec = canRead(accessorCred, permissionLabel)))
         return ec;
 
     // check if can export
-    if(row.exportable == 0)
+    if (row.exportable == 0)
         return CKM_API_ERROR_NOT_EXPORTABLE;
 
     // prevent extracting private keys during cc-mode on
@@ -120,11 +120,11 @@ int AccessControl::canDelete(
         const CKM::Credentials &accessorCred,
         const PermissionForLabel & permissionLabel) const
 {
-    if(isSystemService(accessorCred))
+    if (isSystemService(accessorCred))
         return CKM_API_SUCCESS;
-    if(permissionLabel & Permission::REMOVE)
+    if (permissionLabel & Permission::REMOVE)
         return CKM_API_SUCCESS;
-    if(permissionLabel & Permission::READ)
+    if (permissionLabel & Permission::READ)
         return CKM_API_ERROR_ACCESS_DENIED;
 
     return CKM_API_ERROR_DB_ALIAS_UNKNOWN;

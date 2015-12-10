@@ -84,12 +84,18 @@ class IStream;
 
 struct COMMON_API PolicySerializable : public Policy, ISerializable {
     PolicySerializable() {};
-    explicit PolicySerializable(const Policy &policy) : Policy(policy) {}
-    explicit PolicySerializable(IStream &stream) {
+    explicit PolicySerializable(const Policy &policy) : Policy(policy)
+    {
+    }
+
+    explicit PolicySerializable(IStream &stream)
+    {
         Deserialization::Deserialize(stream, password);
         Deserialization::Deserialize(stream, extractable);
     }
-    void Serialize(IStream &stream) const {
+
+    void Serialize(IStream &stream) const
+    {
         Serialization::Serialize(stream, password);
         Serialization::Serialize(stream, extractable);
     }

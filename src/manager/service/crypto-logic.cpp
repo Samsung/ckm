@@ -72,11 +72,13 @@ const int ENCR_ORDER_V2 = CryptoLogic::ENCRYPTION_V2 << ENCR_ORDER_OFFSET;
 
 CryptoLogic::CryptoLogic() {}
 
-CryptoLogic::CryptoLogic(CryptoLogic &&second) {
+CryptoLogic::CryptoLogic(CryptoLogic &&second)
+{
     m_keyMap = std::move(second.m_keyMap);
 }
 
-CryptoLogic& CryptoLogic::operator=(CryptoLogic &&second) {
+CryptoLogic& CryptoLogic::operator=(CryptoLogic &&second)
+{
     if (this == &second)
         return *this;
     m_keyMap = std::move(second.m_keyMap);
@@ -91,16 +93,15 @@ bool CryptoLogic::haveKey(const Label &smackLabel)
 void CryptoLogic::pushKey(const Label &smackLabel,
                           const RawBuffer &applicationKey)
 {
-    if (smackLabel.length() == 0) {
+    if (smackLabel.length() == 0)
         ThrowErr(Exc::InternalError, "Empty smack label.");
-    }
-    if (applicationKey.size() == 0) {
+
+    if (applicationKey.size() == 0)
         ThrowErr(Exc::InternalError, "Empty application key.");
-    }
-    if (haveKey(smackLabel)) {
+
+    if (haveKey(smackLabel))
         ThrowErr(Exc::InternalError, "Application key for ", smackLabel,
             "label already exists.");
-    }
 
     m_keyMap[smackLabel] = applicationKey;
 }
@@ -125,19 +126,17 @@ RawBuffer CryptoLogic::passwordToKey(
                 1024,
                 result.size(),
                 result.data()))
-    {
         ThrowErr(Exc::InternalError, "PCKS5_PKKDF_HMAC_SHA1 failed.");
-    }
 
     return result;
 }
 
-RawBuffer CryptoLogic::generateRandIV() const {
+RawBuffer CryptoLogic::generateRandIV() const
+{
     RawBuffer civ(EVP_MAX_IV_LENGTH);
 
-    if (1 != RAND_bytes(civ.data(), civ.size())) {
+    if (1 != RAND_bytes(civ.data(), civ.size()))
         ThrowErr(Exc::InternalError, "RAND_bytes failed to generate IV.");
-    }
 
     return civ;
 }
@@ -153,18 +152,15 @@ void CryptoLogic::encryptRow(DB::Row &row)
         crow.algorithmType = DBCMAlgType::AES_GCM_256;
         crow.dataSize = crow.data.size();
 
-        if (crow.dataSize <= 0) {
+        if (crow.dataSize <= 0)
             ThrowErr(Exc::InternalError, "Invalid dataSize.");
-        }
 
-        if (!haveKey(row.ownerLabel)) {
+        if (!haveKey(row.ownerLabel))
             ThrowErr(Exc::InternalError, "Missing application key for ",
               row.ownerLabel, " label.");
-        }
 
-        if (crow.iv.empty()) {
+        if (crow.iv.empty())
             crow.iv = generateRandIV();
-        }
 
         key = m_keyMap[row.ownerLabel];
         crow.encryptionScheme = ENCR_APPKEY;
@@ -201,33 +197,28 @@ void CryptoLogic::decryptRow(const Password &password, DB::Row &row)
         RawBuffer key;
         RawBuffer digest, dataDigest;
 
-        if (row.algorithmType != DBCMAlgType::AES_GCM_256) {
+        if (row.algorithmType != DBCMAlgType::AES_GCM_256)
             ThrowErr(Exc::AuthenticationFailed, "Invalid algorithm type.");
-        }
 
-        if ((row.encryptionScheme & ENCR_PASSWORD) && password.empty()) {
+        if ((row.encryptionScheme & ENCR_PASSWORD) && password.empty())
             ThrowErr(Exc::AuthenticationFailed,
                      "DB row is password protected, but given password is empty.");
-        }
 
-        if(!(row.encryptionScheme & ENCR_PASSWORD) && !password.empty()) {
+        if (!(row.encryptionScheme & ENCR_PASSWORD) && !password.empty())
             ThrowErr(Exc::AuthenticationFailed,
                      "DB row is not password protected, but given password is not empty.");
-        }
 
-        if ((row.encryptionScheme & ENCR_APPKEY) && !haveKey(row.ownerLabel)) {
+        if ((row.encryptionScheme & ENCR_APPKEY) && !haveKey(row.ownerLabel))
             ThrowErr(Exc::AuthenticationFailed,
                      "Missing application key for ",
                      row.ownerLabel,
                      " label.");
-        }
 
         decBase64(crow.iv);
-        if (crow.encryptionScheme & ENCR_BASE64) {
+        if (crow.encryptionScheme & ENCR_BASE64)
             decBase64(crow.data);
-        }
 
-        if((crow.encryptionScheme >> ENCR_ORDER_OFFSET) == ENCR_ORDER_V2) {
+        if ((crow.encryptionScheme >> ENCR_ORDER_OFFSET) == ENCR_ORDER_V2) {
             if (crow.encryptionScheme & ENCR_APPKEY) {
                 key = m_keyMap[crow.ownerLabel];
                 crow.data = Crypto::SW::Internals::decryptDataAesGcm(key, crow.data, crow.iv, crow.tag);
@@ -243,13 +234,12 @@ void CryptoLogic::decryptRow(const Password &password, DB::Row &row)
                 crow.data = Crypto::SW::Internals::decryptDataAesGcm(key, crow.data, crow.iv, crow.tag);
             }
         }
-        if (static_cast<int>(crow.data.size()) < crow.dataSize) {
-            ThrowErr(Exc::AuthenticationFailed, "Decrypted row size mismatch");
-        }
 
-        if (static_cast<int>(crow.data.size()) > crow.dataSize) {
+        if (static_cast<int>(crow.data.size()) < crow.dataSize)
+            ThrowErr(Exc::AuthenticationFailed, "Decrypted row size mismatch");
+
+        if (static_cast<int>(crow.data.size()) > crow.dataSize)
             crow.data.resize(crow.dataSize);
-        }
 
         row = std::move(crow);
     } catch(const CKM::Base64Encoder::Exception::Base &e) {
@@ -270,9 +260,8 @@ void CryptoLogic::encBase64(RawBuffer &data)
     benc.finalize();
     encdata = benc.get();
 
-    if (encdata.size() == 0) {
+    if (encdata.size() == 0)
         ThrowErr(Exc::InternalError, "Base64Encoder returned empty data.");
-    }
 
     data = std::move(encdata);
 }
@@ -284,15 +273,13 @@ void CryptoLogic::decBase64(RawBuffer &data)
 
     bdec.reset();
     bdec.append(data);
-    if (!bdec.finalize()) {
+    if (!bdec.finalize())
         ThrowErr(Exc::InternalError, "Failed in Base64Decoder.finalize.");
-    }
 
     decdata = bdec.get();
 
-    if (decdata.size() == 0) {
+    if (decdata.size() == 0)
         ThrowErr(Exc::InternalError, "Base64Decoder returned empty data.");
-    }
 
     data = std::move(decdata);
 }

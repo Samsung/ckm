@@ -79,12 +79,12 @@ int ckmc_reset_user_password(uid_t user, const char *newPassword)
 KEY_MANAGER_CAPI
 int ckmc_allow_access_by_adm(uid_t user, const char* owner, const char *alias, const char *accessor, ckmc_access_right_e granted)
 {
-    if(!owner || !alias)
+    if (!owner || !alias)
         return CKMC_ERROR_INVALID_PARAMETER;
 
     int ec, permissionMask;
     ec = access_to_permission_mask(granted, permissionMask);
-    if(ec != CKMC_ERROR_NONE)
+    if (ec != CKMC_ERROR_NONE)
         return ec;
 
     // if label given twice, service will return an error
@@ -104,7 +104,7 @@ int ckmc_set_permission_by_adm(uid_t user, const char *alias, const char *access
 KEY_MANAGER_CAPI
 int ckmc_deny_access_by_adm(uid_t user, const char* owner, const char *alias, const char *accessor)
 {
-    if(!owner || !alias)
+    if (!owner || !alias)
         return CKMC_ERROR_INVALID_PARAMETER;
 
     // if label given twice, service will return an error

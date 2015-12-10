@@ -30,14 +30,14 @@
 
 namespace CKM {
 
-class EncryptionLogic
-{
+class EncryptionLogic {
 public:
     EncryptionLogic(IEncryptionService& service) : m_service(service) {}
     virtual ~EncryptionLogic() {}
 
     void Crypt(const CryptoRequest& request);
     void KeyRetrieved(MsgKeyResponse response);
+
 private:
     IEncryptionService& m_service;
 

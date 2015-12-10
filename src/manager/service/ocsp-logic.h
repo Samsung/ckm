@@ -34,13 +34,11 @@ public:
     OCSPLogic& operator=(OCSPLogic &&) = delete;
 
     RawBuffer ocspCheck(int commandId, const RawBufferVector &rawChain, bool allowed);
-    virtual ~OCSPLogic(){}
+    virtual ~OCSPLogic() {}
+
 private:
     void setNetAvailable();
     bool m_isNetAvailable;
 };
-
-
-
 } // namespace CKM
 

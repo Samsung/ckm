@@ -38,8 +38,7 @@ bool logSystemReady = false;
  * Reads central-key-manager service environment file. This configuration may be later applied to
  * client so that it uses the same logging method.
  */
-class EnvFileParser
-{
+class EnvFileParser {
 public:
     EnvFileParser();
     virtual ~EnvFileParser() {}
@@ -58,7 +57,7 @@ EnvFileParser::EnvFileParser()
     std::ifstream is(SYSTEMD_ENV_FILE);
     LogDebug("Reading env file: " SYSTEMD_ENV_FILE);
 
-    while(is.good()) {
+    while (is.good()) {
         std::string line;
 
         std::getline(is, line);
@@ -66,8 +65,7 @@ EnvFileParser::EnvFileParser()
         if (0 == line.compare(0, PROVIDER_MATCH.size(), PROVIDER_MATCH)) {
             m_provider = line.substr(PROVIDER_MATCH.size());
             LogDebug("Log provider: " << m_provider);
-        }
-        else if (0 == line.compare(0, LEVEL_MATCH.size(), LEVEL_MATCH)) {
+        } else if (0 == line.compare(0, LEVEL_MATCH.size(), LEVEL_MATCH)) {
             m_level = line.substr(LEVEL_MATCH.size());
             LogDebug("Log level: " << m_level);
         }

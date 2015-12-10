@@ -29,8 +29,7 @@
 namespace CKM {
 
 template <typename T>
-struct std_erase_on_dealloc
-{
+struct std_erase_on_dealloc {
     // MJK: if re-factoring, remember not to inherit from the std::allocator !
     // MJK: to be replaced with much shorter version once std::allocator_traits
     // becomes supported in STL containers (i.e. list, vector and string)
@@ -47,42 +46,48 @@ struct std_erase_on_dealloc
     template <typename U>
     std_erase_on_dealloc(const std_erase_on_dealloc<U>&) {}
 
-    T* allocate(std::size_t n) {
+    T* allocate(std::size_t n)
+    {
         return static_cast<T*>(::operator new(n*sizeof(T)));
     }
 
-    void deallocate(T* ptr, std::size_t n) {
+    void deallocate(T* ptr, std::size_t n)
+    {
         // clear the memory before deleting
-        memset(ptr, 0 ,n * sizeof(T));
+        memset(ptr, 0 , n * sizeof(T));
         ::operator delete(ptr);
     }
 
     template<typename _Tp1>
-    struct rebind
-    {
+    struct rebind {
         typedef std_erase_on_dealloc<_Tp1> other;
     };
 
-    void construct(pointer p, const T& val) {
+    void construct(pointer p, const T& val)
+    {
         new (p) T(val);
     }
 
-    void destroy(pointer p) {
+    void destroy(pointer p)
+    {
         p->~T();
     }
 
-    size_type max_size() const {
+    size_type max_size() const
+    {
         return size_type(-1);
     }
 };
 
 template <typename T, typename U>
-inline bool operator == (const std_erase_on_dealloc<T>&, const std_erase_on_dealloc<U>&) {
+inline bool operator == (const std_erase_on_dealloc<T>&, const std_erase_on_dealloc<U>&)
+{
     return true;
 }
 
 template <typename T, typename U>
-inline bool operator != (const std_erase_on_dealloc<T>& a, const std_erase_on_dealloc<U>& b) {
+inline bool operator != (const std_erase_on_dealloc<T>& a, const std_erase_on_dealloc<U>& b)
+{
     return !(a == b);
 }
 

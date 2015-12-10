@@ -28,7 +28,6 @@
 #include <client-manager-async-impl.h>
 
 namespace CKM {
-
 int ManagerAsync::Impl::m_counter = 0;
 
 ManagerAsync::Impl::Impl()
@@ -117,7 +116,6 @@ void ManagerAsync::Impl::savePKCS12(const ManagerAsync::ObserverPtr& observer,
                       PKCS12Serializable(*pkcs.get()),
                       PolicySerializable(keyPolicy),
                       PolicySerializable(certPolicy));
-
     }, [&observer](int error){ observer->ReceivedError(error); } );
 }
 
@@ -204,7 +202,7 @@ void ManagerAsync::Impl::createSignature(const ObserverPtr& observer,
                       password,
                       message,
                       CryptoAlgorithmSerializable(cAlg));
-    }, [&observer](int error) {observer->ReceivedError(error);});
+    }, [&observer](int error) {observer->ReceivedError(error);} );
 }
 
 void ManagerAsync::Impl::verifySignature(const ObserverPtr& observer,
@@ -244,7 +242,7 @@ void ManagerAsync::Impl::ocspCheck(const ObserverPtr& observer,
     try_catch_async([&] {
         RawBufferVector rawCertChain;
         for (auto &e: certificateChainVector) {
-            if(!e || e->empty())
+            if (!e || e->empty())
                 return observer->ReceivedError(CKM_API_ERROR_INPUT_PARAM);
             rawCertChain.push_back(e->getDER());
         }
@@ -308,8 +306,7 @@ void ManagerAsync::Impl::createKeyPair(const ManagerAsync::ObserverPtr& observer
     }
     // input type check
     CryptoAlgorithm keyGenAlgorithm;
-    switch(key_type)
-    {
+    switch (key_type) {
         case KeyType::KEY_RSA_PUBLIC:
         case KeyType::KEY_RSA_PRIVATE:
             keyGenAlgorithm.setParam(ParamName::ALGO_TYPE, AlgoType::RSA_GEN);
@@ -374,7 +371,7 @@ void ManagerAsync::Impl::createKeyAES(const ManagerAsync::ObserverPtr& observer,
 
 void ManagerAsync::Impl::observerCheck(const ManagerAsync::ObserverPtr& observer)
 {
-    if(!observer)
+    if (!observer)
         throw std::invalid_argument("Empty observer");
 }
 

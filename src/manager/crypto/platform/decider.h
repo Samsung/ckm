@@ -38,7 +38,8 @@ public:
     GStore& getStore(const Token &token) const;
     GStore& getStore(DataType data, bool exportable, bool encrypted = false) const;
 
-    virtual ~Decider(){}
+    virtual ~Decider() {}
+
 protected:
     GStore& getStore(CryptoBackend id) const;
 

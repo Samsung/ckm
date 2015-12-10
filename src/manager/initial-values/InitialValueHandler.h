@@ -35,14 +35,13 @@
 namespace CKM {
 namespace InitialValues {
 
-class InitialValueHandler : public NoCharactersHandler
-{
+class InitialValueHandler : public NoCharactersHandler {
 public:
     typedef std::shared_ptr<InitialValueHandler> InitialValueHandlerPtr;
 
     explicit InitialValueHandler(CKMLogic & db_logic, const CKM::RawBuffer &encryptedKey)
         : m_exportable(false), m_db_logic(db_logic), m_encryptedKey(encryptedKey) {}
-    virtual ~InitialValueHandler() {};
+    virtual ~InitialValueHandler() {}
 
     BufferHandler::BufferHandlerPtr CreateBufferHandler(EncodingType type);
     PermissionHandler::PermissionHandlerPtr CreatePermissionHandler();

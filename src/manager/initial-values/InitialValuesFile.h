@@ -36,8 +36,7 @@ namespace CKM {
 namespace InitialValues {
 
 
-class InitialValuesFile
-{
+class InitialValuesFile {
 public:
     InitialValuesFile(const std::string &XML_filename,
                       CKMLogic & db_logic);
@@ -62,13 +61,12 @@ protected:
     void ReleasePermissionHandler();
 
 private:
-    class HeaderHandler : public XML::Parser::ElementHandler
-    {
+    class HeaderHandler : public XML::Parser::ElementHandler {
     public:
         explicit HeaderHandler(InitialValuesFile & parent);
         virtual void Start(const XML::Parser::Attributes & attr);
-        virtual void Characters(const std::string &) {};
-        virtual void End() {};
+        virtual void Characters(const std::string &) {}
+        virtual void End() {}
 
         bool isCorrectVersion() const;
 
@@ -77,15 +75,15 @@ private:
         InitialValuesFile & m_parent;
     };
 
-    class EncryptionKeyHandler : public XML::Parser::ElementHandler
-    {
+    class EncryptionKeyHandler : public XML::Parser::ElementHandler {
     public:
         explicit EncryptionKeyHandler(InitialValuesFile & parent);
-        virtual void Start(const XML::Parser::Attributes &) {};
+        virtual void Start(const XML::Parser::Attributes &) {}
         virtual void Characters(const std::string &data);
         virtual void End();
 
         CKM::RawBuffer getEncryptedKey() const;
+
     private:
         CKM::RawBuffer m_encryptedKey;
         InitialValuesFile & m_parent;
@@ -104,7 +102,6 @@ private:
     void registerElementListeners();
     static void Error(const XML::Parser::ErrorType errorType,
                       const std::string & logMsg);
-
 };
 
 }

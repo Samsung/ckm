@@ -68,7 +68,7 @@ void packageUninstalledEventCallback(
     if (eventType != PACKAGE_MANAGER_EVENT_TYPE_UNINSTALL ||
             eventState != PACKAGE_MANAGER_EVENT_STATE_STARTED ||
             package == NULL)
-		return;
+        return;
 
     SLOGD("PackageUninstalled Callback. Uninstalation of: %s", package);
 

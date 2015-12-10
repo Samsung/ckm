@@ -48,9 +48,8 @@ class COMMON_API Exception
 
     static void AddRef(Exception* exception)
     {
-        if (!m_exceptionCount) {
+        if (!m_exceptionCount)
             m_terminateHandler = std::set_terminate(&TerminateHandler);
-        }
 
         ++m_exceptionCount;
         m_lastException = exception;
@@ -58,9 +57,8 @@ class COMMON_API Exception
 
     static void UnRef(Exception* e)
     {
-        if (m_lastException == e) {
+        if (m_lastException == e)
             m_lastException = NULL;
-        }
 
         --m_exceptionCount;
 
@@ -126,11 +124,10 @@ class COMMON_API Exception
     Exception(const Exception &other)
     {
         // Deep copy
-        if (other.m_reason != NULL) {
+        if (other.m_reason != NULL)
             m_reason = new Exception(*other.m_reason);
-        } else {
+        else
             m_reason = NULL;
-        }
 
         m_message = other.m_message;
         m_path = other.m_path;
@@ -144,16 +141,14 @@ class COMMON_API Exception
 
     const Exception &operator =(const Exception &other)
     {
-        if (this == &other) {
+        if (this == &other)
             return *this;
-        }
 
         // Deep copy
-        if (other.m_reason != NULL) {
+        if (other.m_reason != NULL)
             m_reason = new Exception(*other.m_reason);
-        } else {
+        else
             m_reason = NULL;
-        }
 
         m_message = other.m_message;
         m_path = other.m_path;
@@ -207,18 +202,16 @@ class COMMON_API Exception
     void Dump() const
     {
         // Show reason first
-        if (m_reason != NULL) {
+        if (m_reason != NULL)
             m_reason->Dump();
-        }
 
         // Afterward, dump exception
         const char *file = strchr(m_path.c_str(), '/');
 
-        if (file == NULL) {
+        if (file == NULL)
             file = m_path.c_str();
-        } else {
+        else
             ++file;
-        }
 
         printf("\033[0;36m[%s:%i]\033[m %s() \033[4;35m%s\033[m: %s\033[m\n",
                file, m_line,
@@ -230,17 +223,15 @@ class COMMON_API Exception
     std::string DumpToString() const
     {
         std::string ret;
-        if (m_reason != NULL) {
+        if (m_reason != NULL)
             ret = m_reason->DumpToString();
-        }
 
         const char *file = strchr(m_path.c_str(), '/');
 
-        if (file == NULL) {
+        if (file == NULL)
             file = m_path.c_str();
-        } else {
+        else
             ++file;
-        }
 
         char buf[1024];
         snprintf(buf,
@@ -296,8 +287,7 @@ class COMMON_API Exception
     throw ClassName(__FILE__, __FUNCTION__, __LINE__)
 
 #define ThrowMsg(ClassName, Message)                                                 \
-    do                                                                               \
-    {                                                                                \
+    do {                                                                             \
         std::ostringstream dplLoggingStream;                                         \
         dplLoggingStream << Message;                                                 \
         throw ClassName(__FILE__, __FUNCTION__, __LINE__, dplLoggingStream.str());   \

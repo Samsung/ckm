@@ -40,7 +40,8 @@ namespace {
 
 typedef std::unique_ptr<BIO, std::function<void(BIO*)>> BioUniquePtr;
 
-int passcb(char *buff, int size, int rwflag, void *userdata) {
+int passcb(char *buff, int size, int rwflag, void *userdata)
+{
     (void) rwflag;
     Password *ptr = static_cast<Password*>(userdata);
     if (ptr == NULL)
@@ -55,7 +56,8 @@ int passcb(char *buff, int size, int rwflag, void *userdata) {
 
 typedef int(*I2D_CONV)(BIO*, EVP_PKEY*);
 
-CKM::RawBuffer i2d(I2D_CONV fun, EVP_PKEY* pkey) {
+CKM::RawBuffer i2d(I2D_CONV fun, EVP_PKEY* pkey)
+{
     BioUniquePtr bio(BIO_new(BIO_s_mem()), BIO_free_all);
 
     if (NULL == pkey) {
@@ -91,16 +93,18 @@ CKM::RawBuffer i2d(I2D_CONV fun, EVP_PKEY* pkey) {
 KeyImpl::KeyImpl()
   : m_pkey(NULL, EVP_PKEY_free)
   , m_type(KeyType::KEY_NONE)
-{}
+{
+}
 
-KeyImpl::KeyImpl(const KeyImpl &second) {
+KeyImpl::KeyImpl(const KeyImpl &second)
+{
     m_pkey = second.m_pkey;
     m_type = second.m_type;
 }
 
-KeyImpl::KeyImpl(const RawBuffer &buf, const Password &password)
-  : m_pkey(NULL, EVP_PKEY_free)
-  , m_type(KeyType::KEY_NONE)
+KeyImpl::KeyImpl(const RawBuffer &buf, const Password &password) :
+    m_pkey(NULL, EVP_PKEY_free),
+    m_type(KeyType::KEY_NONE)
 {
     bool isPrivate = false;
     EVP_PKEY *pkey = NULL;
@@ -147,8 +151,7 @@ KeyImpl::KeyImpl(const RawBuffer &buf, const Password &password)
 
     m_pkey.reset(pkey, EVP_PKEY_free);
 
-    switch(EVP_PKEY_type(pkey->type))
-    {
+    switch (EVP_PKEY_type(pkey->type)) {
         case EVP_PKEY_RSA:
             m_type = isPrivate ? KeyType::KEY_RSA_PRIVATE : KeyType::KEY_RSA_PUBLIC;
             break;
@@ -164,11 +167,12 @@ KeyImpl::KeyImpl(const RawBuffer &buf, const Password &password)
     LogDebug("KeyType is: " << (int)m_type << " isPrivate: " << isPrivate);
 }
 
-KeyImpl::KeyImpl(EvpShPtr pkey, KeyType type) : m_pkey(pkey), m_type(type)
+KeyImpl::KeyImpl(EvpShPtr pkey, KeyType type) :
+    m_pkey(pkey),
+    m_type(type)
 {
     int expected_type = EVP_PKEY_NONE;
-    switch(type)
-    {
+    switch (type) {
         case KeyType::KEY_RSA_PRIVATE:
         case KeyType::KEY_RSA_PUBLIC:
             expected_type = EVP_PKEY_RSA;
@@ -195,36 +199,40 @@ KeyImpl::KeyImpl(EvpShPtr pkey, KeyType type) : m_pkey(pkey), m_type(type)
 
     // verify if actual key type matches the expected tpe
     int given_key_type = EVP_PKEY_type(pkey->type);
-    if(given_key_type==EVP_PKEY_NONE || expected_type!=given_key_type)
-    {
+    if (given_key_type == EVP_PKEY_NONE || expected_type != given_key_type) {
         m_pkey.reset();
         m_type = KeyType::KEY_NONE;
     }
 }
 
-bool KeyImpl::empty() const {
+bool KeyImpl::empty() const
+{
     return m_pkey.get() == NULL;
 }
 
-KeyImpl::EvpShPtr KeyImpl::getEvpShPtr() const {
+KeyImpl::EvpShPtr KeyImpl::getEvpShPtr() const
+{
     return m_pkey;
 }
 
-KeyType KeyImpl::getType() const {
+KeyType KeyImpl::getType() const
+{
     return m_type;
 }
 
-RawBuffer KeyImpl::getDERPRV() const {
+RawBuffer KeyImpl::getDERPRV() const
+{
     return i2d(i2d_PrivateKey_bio, m_pkey.get());
 }
 
-RawBuffer KeyImpl::getDERPUB() const {
+RawBuffer KeyImpl::getDERPUB() const
+{
     return i2d(i2d_PUBKEY_bio, m_pkey.get());
 }
 
-RawBuffer KeyImpl::getDER() const {
-    switch(m_type)
-    {
+RawBuffer KeyImpl::getDER() const
+{
+    switch (m_type) {
         case KeyType::KEY_RSA_PRIVATE:
         case KeyType::KEY_DSA_PRIVATE:
         case KeyType::KEY_ECDSA_PRIVATE:
@@ -241,7 +249,8 @@ RawBuffer KeyImpl::getDER() const {
     return RawBuffer();
 }
 
-KeyShPtr Key::create(const RawBuffer &raw, const Password &password) {
+KeyShPtr Key::create(const RawBuffer &raw, const Password &password)
+{
     try {
         KeyShPtr output = std::make_shared<KeyImpl>(raw, password);
         if (output->empty())

@@ -75,7 +75,7 @@ struct Policy {
       : password(pass)
       , extractable(extract)
     {}
-    virtual ~Policy(){}
+    virtual ~Policy() {}
     Password password;  // byte array used to encrypt data inside CKM
     bool extractable;   // if true key may be extracted from storage
 };
@@ -197,7 +197,8 @@ protected:
 };
 
 template <typename T>
-bool CryptoAlgorithm::getParam(ParamName name, T& value) const {
+bool CryptoAlgorithm::getParam(ParamName name, T& value) const
+{
     auto param = m_params.find(name);
     if (param == m_params.end())
         return false;
@@ -216,7 +217,8 @@ template <>
 bool CryptoAlgorithm::getParam(ParamName name, RawBuffer& value) const;
 
 template <typename T>
-bool CryptoAlgorithm::setParam(ParamName name, const T& value) {
+bool CryptoAlgorithm::setParam(ParamName name, const T& value)
+{
     if (name < ParamName::FIRST || name > ParamName::LAST)
         return false;
     m_params[name] = IntParam::create(static_cast<uint64_t>(value));

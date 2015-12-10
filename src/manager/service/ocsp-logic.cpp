@@ -76,7 +76,8 @@ void OCSPLogic::setNetAvailable()
     m_isNetAvailable = false;
 }
 
-RawBuffer OCSPLogic::ocspCheck(int commandId, const RawBufferVector &rawChain, bool allowed) {
+RawBuffer OCSPLogic::ocspCheck(int commandId, const RawBufferVector &rawChain, bool allowed)
+{
     CertificateImplVector certChain;
     OCSPModule ocsp;
     int retCode = CKM_API_SUCCESS;
@@ -91,7 +92,7 @@ RawBuffer OCSPLogic::ocspCheck(int commandId, const RawBufferVector &rawChain, b
         retCode = CKM_API_ERROR_NOT_SUPPORTED;
     } else if (!allowed) {
         retCode = CKM_API_ERROR_ACCESS_DENIED;
-    } else if(rawChain.size() < 2) {
+    } else if (rawChain.size() < 2) {
         LogError("Certificate chain should contain at least 2 certificates");
         retCode = CKM_API_ERROR_INPUT_PARAM;
     } else {

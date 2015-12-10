@@ -32,18 +32,21 @@ ThreadService::~ThreadService()
 {
 }
 
-void ThreadService::Handle(const AcceptEvent &event) {
+void ThreadService::Handle(const AcceptEvent &event)
+{
     LogDebug("Accept event");
     auto &info = m_connectionInfoMap[event.connectionID.counter];
     info.interfaceID = event.interfaceID;
     info.credentials = event.credentials;
 }
 
-void ThreadService::Handle(const WriteEvent &event) {
+void ThreadService::Handle(const WriteEvent &event)
+{
     LogDebug("Write event (" << event.size << " bytes )");
 }
 
-void ThreadService::Handle(const ReadEvent &event) {
+void ThreadService::Handle(const ReadEvent &event)
+{
     LogDebug("Read event");
     auto &info = m_connectionInfoMap[event.connectionID.counter];
     info.buffer.Push(event.rawBuffer);
@@ -58,12 +61,14 @@ void ThreadService::Handle(const ReadEvent &event) {
     m_serviceManager->SecurityCheck(event.connectionID);
 }
 
-void ThreadService::Handle(const CloseEvent &event) {
+void ThreadService::Handle(const CloseEvent &event)
+{
     LogDebug("Close event");
     m_connectionInfoMap.erase(event.connectionID.counter);
 }
 
-void ThreadService::Handle(const SecurityEvent &event) {
+void ThreadService::Handle(const SecurityEvent &event)
+{
     LogDebug("Security event");
     auto it = m_connectionInfoMap.find(event.connectionID.counter);
 

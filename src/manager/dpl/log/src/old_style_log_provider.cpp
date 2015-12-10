@@ -33,8 +33,8 @@
 
 namespace CKM {
 namespace Log {
-namespace // anonymous
-{
+namespace { // anonymous
+
 using namespace CKM::Colors::Text;
 const char *DEBUG_BEGIN = GREEN_BEGIN;
 const char *DEBUG_END = GREEN_END;
@@ -82,7 +82,8 @@ std::map<AbstractLogProvider::LogLevel, ColorMark> consoleLevel = {
 } // namespace anonymous
 
 OldStyleLogProvider::OldStyleLogProvider()
-{}
+{
+}
 
 void OldStyleLogProvider::Log(AbstractLogProvider::LogLevel level,
                               const char *message,
@@ -102,7 +103,6 @@ void OldStyleLogProvider::Log(AbstractLogProvider::LogLevel level,
     } catch (const std::out_of_range&) {
         fprintf(stdout, "Unsupported log level: %d\n", level);
     }
-
 }
 
 }

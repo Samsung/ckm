@@ -34,19 +34,24 @@ namespace {
 typedef void (*dlogMacro)(const char*, const char*);
 
 // I can't map LOG_ values because SLOG uses token concatenation
-void error(const char* tag, const char* msg) {
+void error(const char* tag, const char* msg)
+{
     SLOG(LOG_ERROR, tag, "%s", msg);
 }
-void warning(const char* tag, const char* msg) {
+void warning(const char* tag, const char* msg)
+{
     SLOG(LOG_WARN, tag, "%s", msg);
 }
-void info(const char* tag, const char* msg) {
+void info(const char* tag, const char* msg)
+{
     SLOG(LOG_INFO, tag, "%s", msg);
 }
-void debug(const char* tag, const char* msg) {
+void debug(const char* tag, const char* msg)
+{
     SLOG(LOG_DEBUG, tag, "%s", msg);
 }
-void pedantic(const char* tag, const char* msg) {
+void pedantic(const char* tag, const char* msg)
+{
     SLOG(LOG_VERBOSE, tag, "%s", msg);
 }
 std::map<AbstractLogProvider::LogLevel, dlogMacro> dlogMacros = {
@@ -62,10 +67,12 @@ std::map<AbstractLogProvider::LogLevel, dlogMacro> dlogMacros = {
 
 
 DLOGLogProvider::DLOGLogProvider()
-{}
+{
+}
 
 DLOGLogProvider::~DLOGLogProvider()
-{}
+{
+}
 
 void DLOGLogProvider::SetTag(const char *tag)
 {

@@ -27,8 +27,7 @@
 #include <xml-utils.h>
 #include <base64.h>
 
-namespace
-{
+namespace {
 const char * const XML_ATTR_IV  = "IV";
 }
 
@@ -41,7 +40,7 @@ BufferHandler::~BufferHandler() {}
 void BufferHandler::Start(const XML::Parser::Attributes &attr)
 {
     // get key type
-    if(attr.find(XML_ATTR_IV) != attr.end()) {
+    if (attr.find(XML_ATTR_IV) != attr.end()) {
         std::string IVstring = attr.at(XML_ATTR_IV);
         Base64Decoder base64;
         base64.reset();
@@ -61,32 +60,31 @@ void BufferHandler::Characters(const std::string & data)
 void BufferHandler::End()
 {
     // decoding section
-    switch(m_encoding)
+    switch (m_encoding) {
+    // PEM requires that "----- END" section comes right after "\n" character
+    case PEM:
     {
-        // PEM requires that "----- END" section comes right after "\n" character
-        case PEM:
-        {
-            std::string trimmed = XML::trimEachLine(std::string(m_data.begin(), m_data.end()));
-            m_data = RawBuffer(trimmed.begin(), trimmed.end());
-            break;
-        }
+        std::string trimmed = XML::trimEachLine(std::string(m_data.begin(), m_data.end()));
+        m_data = RawBuffer(trimmed.begin(), trimmed.end());
+        break;
+    }
 
-        // Base64 decoder also does not accept any whitespaces
-        case DER:
-        case BASE64:
-        case ENCRYPTED:
-        {
-            std::string trimmed = XML::trimEachLine(std::string(m_data.begin(), m_data.end()));
-            Base64Decoder base64;
-            base64.reset();
-            base64.append(RawBuffer(trimmed.begin(), trimmed.end()));
-            base64.finalize();
-            m_data = base64.get();
-            break;
-        }
+    // Base64 decoder also does not accept any whitespaces
+    case DER:
+    case BASE64:
+    case ENCRYPTED:
+    {
+        std::string trimmed = XML::trimEachLine(std::string(m_data.begin(), m_data.end()));
+        Base64Decoder base64;
+        base64.reset();
+        base64.append(RawBuffer(trimmed.begin(), trimmed.end()));
+        base64.finalize();
+        m_data = base64.get();
+        break;
+    }
 
-        default:
-            break;
+    default:
+        break;
     }
 }
 

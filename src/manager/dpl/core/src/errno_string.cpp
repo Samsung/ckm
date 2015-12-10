@@ -34,8 +34,7 @@
 #include <memory>
 
 namespace CKM {
-namespace // anonymous
-{
+namespace { // anonymous
 const size_t DEFAULT_ERRNO_STRING_SIZE = 32;
 } // namespace anonymous
 

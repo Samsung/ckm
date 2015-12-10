@@ -48,16 +48,19 @@ struct Base {
 
     // Low level api.
     // Allows various cipher specific parameters to be determined and set.
-    int Control(int type, int arg, void *ptr) {
+    int Control(int type, int arg, void *ptr)
+    {
         return EVP_CIPHER_CTX_ctrl(m_ctx, type, arg, ptr);
     }
 
     virtual void AppendAAD(const T&) = 0;
     virtual T Append(const T&) = 0;
     virtual T Finalize() = 0;
-    virtual ~Base(){
+    virtual ~Base()
+    {
         EVP_CIPHER_CTX_free(m_ctx);
     }
+
 protected:
     EVP_CIPHER_CTX *m_ctx;
 };
@@ -69,46 +72,45 @@ public:
 
     EvpCipherWrapper(const EVP_CIPHER *type, const T &key, const T &iv, bool encryption)
     {
-        if (static_cast<int>(key.size()) != EVP_CIPHER_key_length(type)) {
-            ThrowErr(Exc::Crypto::InternalError, "Wrong key size! Expected: ", EVP_CIPHER_key_length(type) ," Get: ", key.size());
-        }
+        if (static_cast<int>(key.size()) != EVP_CIPHER_key_length(type))
+            ThrowErr(Exc::Crypto::InternalError, "Wrong key size! Expected: ", EVP_CIPHER_key_length(type), " Get: ", key.size());
 
-        if (static_cast<int>(iv.size()) < EVP_CIPHER_iv_length(type)) {
-            ThrowErr(Exc::Crypto::InternalError, "Wrong iv size! Expected: ", EVP_CIPHER_iv_length(type) , " Get: ", iv.size());
-        }
+        if (static_cast<int>(iv.size()) < EVP_CIPHER_iv_length(type))
+            ThrowErr(Exc::Crypto::InternalError, "Wrong iv size! Expected: ", EVP_CIPHER_iv_length(type), " Get: ", iv.size());
 
-        if (1 != EVP_CipherInit_ex(m_ctx, type, NULL, key.data(), iv.data(), encryption ? 1 : 0)) {
+        if (1 != EVP_CipherInit_ex(m_ctx, type, NULL, key.data(), iv.data(), encryption ? 1 : 0))
             ThrowErr(Exc::Crypto::InternalError, "Failed in EVP_CipherInit");
-        }
 
         EVP_CIPHER_CTX_set_padding(m_ctx, 1);
     }
 
-    void AppendAAD(const T& data) {
+    void AppendAAD(const T& data)
+    {
         static_assert(sizeof(typename T::value_type) == 1, "Unsupported type inside container.");
         int bytesLen;
-        if (1 != EVP_CipherUpdate(m_ctx, NULL, &bytesLen, data.data(), data.size())) {
+        if (1 != EVP_CipherUpdate(m_ctx, NULL, &bytesLen, data.data(), data.size()))
             ThrowErr(Exc::Crypto::InternalError, "AppendAAD(): Failed in EVP_CipherUpdate");
-        }
     }
 
-    T Append(const T& data) {
+    T Append(const T& data)
+    {
         static_assert(sizeof(typename T::value_type) == 1, "Unsupported type inside container.");
         int bytesLen = static_cast<int>(data.size() + EVP_CIPHER_CTX_block_size(m_ctx));
         T output(bytesLen);
-        if (1 != EVP_CipherUpdate(m_ctx, output.data(), &bytesLen, data.data(), data.size())) {
+        if (1 != EVP_CipherUpdate(m_ctx, output.data(), &bytesLen, data.data(), data.size()))
             ThrowErr(Exc::Crypto::InternalError, "Append(): Failed in EVP_CipherUpdate");
-        }
+
         output.resize(bytesLen);
         return output;
     }
 
-    T Finalize() {
+    T Finalize()
+    {
         int bytesLen = EVP_CIPHER_CTX_block_size(m_ctx);
         T output(bytesLen);
-        if (1 != EVP_CipherFinal_ex(m_ctx, output.data(), &bytesLen)) {
+        if (1 != EVP_CipherFinal_ex(m_ctx, output.data(), &bytesLen))
             ThrowErr(Exc::Crypto::InternalError, "Failed in EVP_CipherFinal");
-        }
+
         output.resize(bytesLen);
         return output;
     }

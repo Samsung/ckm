@@ -29,8 +29,7 @@
 
 namespace CKM {
 
-class IDescriptorSet
-{
+class IDescriptorSet {
 public:
     // int is for descriptor, short is for revents,
     typedef std::function<void(int, short)> Callback;
@@ -46,8 +45,7 @@ protected:
 /**
  * @brief Wrapper for poll()
  */
-class DescriptorSet : public IDescriptorSet
-{
+class DescriptorSet : public IDescriptorSet {
 public:
     DescriptorSet();
     virtual ~DescriptorSet();
@@ -94,8 +92,7 @@ protected:
     bool rebuildPollfd();
     void notify(int descCount);
 
-    struct DescriptorData
-    {
+    struct DescriptorData {
         DescriptorData(short e, Callback&& c) : events(e), callback(std::move(c)) {}
 
         short events;

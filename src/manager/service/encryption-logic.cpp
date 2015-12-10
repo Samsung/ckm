@@ -28,7 +28,7 @@ namespace CKM {
 void EncryptionLogic::Crypt(const CryptoRequest& request)
 {
     // check arguments
-    if(request.input.empty()) {
+    if (request.input.empty()) {
         LogError("No input data");
         m_service.RespondToClient(request, CKM_API_ERROR_INPUT_PARAM);
         return;

@@ -30,8 +30,8 @@
 #include <sw-backend/obj.h>
 #include <sw-backend/internals.h>
 
-#define EVP_SUCCESS 1	// DO NOTCHANGE THIS VALUE
-#define EVP_FAIL    0	// DO NOTCHANGE THIS VALUE
+#define EVP_SUCCESS 1    // DO NOTCHANGE THIS VALUE
+#define EVP_FAIL    0    // DO NOTCHANGE THIS VALUE
 
 namespace CKM {
 namespace Crypto {
@@ -39,8 +39,9 @@ namespace SW {
 
 namespace {
 
-AlgoType key2algo(DataType type) {
-    switch(static_cast<int>(type)) {
+AlgoType key2algo(DataType type)
+{
+    switch (static_cast<int>(type)) {
     case DataType::Type::KEY_RSA_PRIVATE:
     case DataType::Type::KEY_RSA_PUBLIC:
         return AlgoType::RSA_SV;
@@ -77,15 +78,16 @@ RawBuffer AKey::sign(
     return Internals::sign(getEvpShPtr().get(), algWithType, message);
 }
 
-int AKey::verify(const CryptoAlgorithm &alg, const RawBuffer &message, const RawBuffer &sign) {
+int AKey::verify(const CryptoAlgorithm &alg, const RawBuffer &message, const RawBuffer &sign)
+{
     CryptoAlgorithm algWithType(alg);
     EVP_PKEY* evp = getEvpShPtr().get();
     AlgoType type;
 
     // setup algorithm type basing on evp key type if it doesn't exist
-    if(!algWithType.getParam(ParamName::ALGO_TYPE, type)) {
+    if (!algWithType.getParam(ParamName::ALGO_TYPE, type)) {
         int subType = EVP_PKEY_type(evp->type);
-        switch(subType) {
+        switch (subType) {
         case EVP_PKEY_RSA:
             type = AlgoType::RSA_SV; break;
         case EVP_PKEY_DSA:
@@ -110,7 +112,8 @@ RawBuffer AKey::decrypt(const CryptoAlgorithm &alg, const RawBuffer &data)
     return Internals::asymmetricDecrypt(getEvpShPtr(), alg, data);
 }
 
-EvpShPtr AKey::getEvpShPtr() {
+EvpShPtr AKey::getEvpShPtr()
+{
     if (m_evp)
         return m_evp;
 
@@ -133,15 +136,15 @@ EvpShPtr AKey::getEvpShPtr() {
         LogDebug("Trying d2i_PUBKEY_bio Status: " << (void*)pkey);
     }
 
-    if (!pkey) {
+    if (!pkey)
         ThrowErr(Exc::Crypto::InternalError, "Failed to parse key");
-    }
 
     m_evp.reset(pkey, EVP_PKEY_free);
     return m_evp;
 }
 
-EvpShPtr Cert::getEvpShPtr() {
+EvpShPtr Cert::getEvpShPtr()
+{
     if (m_evp)
         return m_evp;
 
@@ -150,9 +153,8 @@ EvpShPtr Cert::getEvpShPtr() {
 
     X509 *x509 = d2i_X509(NULL, &ptr, size);
 
-    if (!x509) {
+    if (!x509)
         ThrowErr(Exc::Crypto::InternalError, "Failed to parse certificate.");
-    }
 
     m_evp.reset(X509_get_pubkey(x509), EVP_PKEY_free);
     X509_free(x509);
@@ -162,4 +164,3 @@ EvpShPtr Cert::getEvpShPtr() {
 } // namespace SW
 } // namespace Crypto
 } // namespace CKM
-

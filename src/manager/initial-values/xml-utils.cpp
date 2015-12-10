@@ -25,8 +25,7 @@
 #include <algorithm>
 #include <xml-utils.h>
 
-namespace
-{
+namespace {
 const char * const WHITESPACE       = " \n\r\t\v";
 const char * const LINE_WHITESPACE  = " \r\t\v";
 
@@ -69,16 +68,18 @@ T removeChars(const T& input, const char *what)
     return out;
 }
 
-RawBuffer removeWhiteChars(const RawBuffer &buffer) {
+RawBuffer removeWhiteChars(const RawBuffer &buffer)
+{
     return removeChars(buffer, WHITESPACE);
 }
 
-std::string trimEachLine(const std::string& input) {
+std::string trimEachLine(const std::string& input)
+{
     std::stringstream ss(input);
     std::stringstream output;
     std::string line;
 
-    while(std::getline(ss, line, '\n')) {
+    while (std::getline(ss, line, '\n')) {
         auto afterTrim = ::trim(line, LINE_WHITESPACE);
         if (!afterTrim.empty())
             output << afterTrim << std::endl;
@@ -87,7 +88,8 @@ std::string trimEachLine(const std::string& input) {
     return output.str();
 }
 
-std::string trim(const std::string &s) {
+std::string trim(const std::string &s)
+{
     return removeChars(s, WHITESPACE);
 }
 

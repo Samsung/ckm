@@ -26,23 +26,28 @@ namespace CKM {
 namespace Crypto {
 namespace TZ {
 
-Store::Store(CryptoBackend backendId)
-  : GStore(backendId)
-{}
+Store::Store(CryptoBackend backendId) :
+    GStore(backendId)
+{
+}
 
-GObjUPtr Store::getObject(const Token &, const  Password &) {
+GObjUPtr Store::getObject(const Token &, const  Password &)
+{
     ThrowErr(Exc::Crypto::OperationNotSupported, "Trust zone backend is not implemented!");
 }
 
-TokenPair Store::generateAKey(const CryptoAlgorithm &, const Password &, const Password &) {
+TokenPair Store::generateAKey(const CryptoAlgorithm &, const Password &, const Password &)
+{
     ThrowErr(Exc::Crypto::OperationNotSupported, "Trust zone backend is not implemented!");
 }
 
-Token Store::import(const Data &, const Password &) {
+Token Store::import(const Data &, const Password &)
+{
     ThrowErr(Exc::Crypto::OperationNotSupported, "Trust zone backend is not implemented!");
 }
 
-Token Store::importEncrypted(const Data &, const Password &, const DataEncryption &) {
+Token Store::importEncrypted(const Data &, const Password &, const DataEncryption &)
+{
     ThrowErr(Exc::Crypto::OperationNotSupported, "Trust zone backend is not implemented!");
 }
 

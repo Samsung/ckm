@@ -54,7 +54,8 @@ public:
     static UidVector getUIDsFromDBFile();
     static FileLock lock();
 
-    virtual ~FileSystem(){}
+    virtual ~FileSystem() {}
+
 protected:
     std::string getDKEKPath() const;
     std::string getDBDEKPath() const;

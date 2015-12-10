@@ -33,12 +33,14 @@ template <>
 class StringifyBasic<false> {
     StringifyBasic() = delete;
 public:
-    static std::string Merge() {
+    static std::string Merge()
+    {
         return std::string();
     }
 
     template <typename... Args>
-    static std::string Merge(const Args&...){
+    static std::string Merge(const Args&...)
+    {
         return std::string();
     }
 };
@@ -47,20 +49,26 @@ template <>
 class StringifyBasic<true> {
     StringifyBasic() = delete;
 
-    static void Concatenate(std::ostringstream&) {}
+    static void Concatenate(std::ostringstream&)
+    {
+    }
 
     template <typename t, typename... Args>
-    static void Concatenate(std::ostringstream& stream, const t& arg1, const Args&... args) {
+    static void Concatenate(std::ostringstream& stream, const t& arg1, const Args&... args)
+    {
         stream << arg1;
         Concatenate(stream, args...);
     }
+
 public:
-    static std::string Merge() {
+    static std::string Merge()
+    {
         return std::string();
     }
 
     template <typename T, typename... Args>
-    static std::string Merge(const T& arg1, const Args&... args) {
+    static std::string Merge(const T& arg1, const Args&... args)
+    {
         std::ostringstream stream;
         Concatenate(stream, arg1, args...);
         return stream.str();

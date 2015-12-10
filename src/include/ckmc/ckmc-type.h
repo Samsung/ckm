@@ -111,11 +111,11 @@ typedef enum __ckmc_data_format {
  * @since_tizen 2.3
  */
 typedef enum __ckmc_ec_type {
-    CKMC_EC_PRIME192V1 = 0, /**< Elliptic curve domain "secp192r1" listed in "SEC 2" recommended
+    CKMC_EC_PRIME192V1 = 0,     /**< Elliptic curve domain "secp192r1" listed in "SEC 2" recommended
                                  elliptic curve domain  */
-    CKMC_EC_PRIME256V1,     /**< "SEC 2" recommended elliptic curve domain - secp256r1 */
-    CKMC_EC_SECP384R1       /**< NIST curve P-384 (covers "secp384r1", the elliptic curve domain
-                                 listed in See SEC 2 */
+    CKMC_EC_PRIME256V1,         /**< "SEC 2" recommended elliptic curve domain - secp256r1 */
+    CKMC_EC_SECP384R1           /**< NIST curve P-384(covers "secp384r1", the elliptic curve domain
+                                     listed in See SEC 2 */
 } ckmc_ec_type_e;
 
 /**
@@ -145,7 +145,7 @@ typedef enum __ckmc_rsa_padding_algo {
  * @brief Enumeration for database access rights.
  * @since_tizen 2.3
  */
-typedef enum __ckmc_access_right{
+typedef enum __ckmc_access_right {
     CKMC_AR_READ = 0,       /**< Access right for read*/
     CKMC_AR_READ_REMOVE     /**< Access right for read and remove*/
 } ckmc_access_right_e;
@@ -154,7 +154,7 @@ typedef enum __ckmc_access_right{
  * @brief Enumeration for permissions to access/modify alias.
  * @since_tizen 2.4
  */
-typedef enum __ckmc_permission{
+typedef enum __ckmc_permission {
     CKMC_PERMISSION_NONE        = 0x00, /**< Clear permissions */
     CKMC_PERMISSION_READ        = 0x01, /**< Eead allowed */
     CKMC_PERMISSION_REMOVE      = 0x02  /**< Remove allowed */

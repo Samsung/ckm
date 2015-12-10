@@ -35,7 +35,7 @@ public:
     CryptoLogic& operator=(CryptoLogic &&second);
     CryptoLogic& operator=(const CryptoLogic &second) = delete;
 
-    virtual ~CryptoLogic(){}
+    virtual ~CryptoLogic() {}
 
     void decryptRow(const Password &password, DB::Row &row);
     void encryptRow(DB::Row &row);

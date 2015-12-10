@@ -59,9 +59,8 @@ void BinaryQueue::AppendCopyFrom(const BinaryQueue &other)
     // To speed things up, always copy as one bucket
     void *bufferCopy = malloc(other.m_size);
 
-    if (bufferCopy == NULL) {
+    if (bufferCopy == NULL)
         throw std::bad_alloc();
-    }
 
     try {
         other.Flatten(bufferCopy, other.m_size);
@@ -108,9 +107,8 @@ void BinaryQueue::AppendCopy(const void* buffer, size_t bufferSize)
     void *bufferCopy = malloc(bufferSize);
 
     // Check if allocation succeded
-    if (bufferCopy == NULL) {
+    if (bufferCopy == NULL)
         throw std::bad_alloc();
-    }
 
     // Copy user data
     memcpy(bufferCopy, buffer, bufferSize);
@@ -162,9 +160,8 @@ bool BinaryQueue::Empty() const
 void BinaryQueue::Consume(size_t size)
 {
     // Check parameters
-    if (size > m_size) {
+    if (size > m_size)
         Throw(Exception::OutOfData);
-    }
 
     size_t bytesLeft = size;
 
@@ -189,13 +186,11 @@ void BinaryQueue::Consume(size_t size)
 void BinaryQueue::Flatten(void *buffer, size_t bufferSize) const
 {
     // Check parameters
-    if (bufferSize == 0) {
+    if (bufferSize == 0)
         return;
-    }
 
-    if (bufferSize > m_size) {
+    if (bufferSize > m_size)
         Throw(Exception::OutOfData);
-    }
 
     size_t bytesLeft = bufferSize;
     void *ptr = buffer;
@@ -264,14 +259,17 @@ BinaryQueue::Bucket::~Bucket()
 }
 
 BinaryQueue::BucketVisitor::~BucketVisitor()
-{}
+{
+}
 
 BinaryQueue::BucketVisitorCall::BucketVisitorCall(BucketVisitor *visitor) :
     m_visitor(visitor)
-{}
+{
+}
 
 BinaryQueue::BucketVisitorCall::~BucketVisitorCall()
-{}
+{
+}
 
 void BinaryQueue::BucketVisitorCall::operator()(Bucket *bucket) const
 {
@@ -294,9 +292,8 @@ BinaryQueueAutoPtr BinaryQueue::Read(size_t size)
     std::unique_ptr<void, std::function<void(void*)>>
         bufferCopy(malloc(available), free);
 
-    if (!bufferCopy.get()) {
+    if (!bufferCopy.get())
         throw std::bad_alloc();
-    }
 
     BinaryQueueAutoPtr result(new BinaryQueue());
 

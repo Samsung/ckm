@@ -35,8 +35,7 @@
 namespace CKM {
 namespace XML {
 
-class Parser
-{
+class Parser {
 public:
     enum ErrorCode {
         PARSE_SUCCESS                  =   0,
@@ -66,17 +65,16 @@ public:
     int RegisterErrorCb(const ErrorCb newCb);
 
     typedef std::map<std::string, std::string> Attributes;
-    class ElementHandler
-    {
-        public:
-            virtual ~ElementHandler() {}
+    class ElementHandler {
+    public:
+        virtual ~ElementHandler() {}
 
-            // methods below may throw std::exception to invalidate the parsing process
-            // and remove all element listeners.
-            // In this case, parsing error code returned to the user after std::exception.
-            virtual void Start(const Attributes &) = 0;
-            virtual void Characters(const std::string & data) = 0;
-            virtual void End() = 0;
+        // methods below may throw std::exception to invalidate the parsing process
+        // and remove all element listeners.
+        // In this case, parsing error code returned to the user after std::exception.
+        virtual void Start(const Attributes &) = 0;
+        virtual void Characters(const std::string & data) = 0;
+        virtual void End() = 0;
     };
     typedef std::shared_ptr<ElementHandler> ElementHandlerPtr;
 
@@ -117,15 +115,14 @@ private:
     std::string             m_XMLfile;
     ErrorCb                 m_errorCb;
 
-    struct ElementListener
-    {
+    struct ElementListener {
         StartCb     startCb;
         EndCb       endCb;
     };
     std::map<std::string, ElementListener> m_elementListenerMap;
     std::stack<ElementHandlerPtr> m_elementHandlerStack;
 
-    void CallbackHelper(std::function<void (void)> func);
+    void CallbackHelper(std::function<void(void)> func);
 };
 
 }

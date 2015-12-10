@@ -29,11 +29,13 @@
 
 namespace CKM {
 
-void MessageBuffer::Push(const RawBuffer &data) {
+void MessageBuffer::Push(const RawBuffer &data)
+{
     m_buffer.AppendCopy(&data[0], data.size());
 }
 
-RawBuffer MessageBuffer::Pop() {
+RawBuffer MessageBuffer::Pop()
+{
     size_t size = m_buffer.Size();
     RawBuffer buffer;
     buffer.resize(size + sizeof(size_t));
@@ -42,7 +44,8 @@ RawBuffer MessageBuffer::Pop() {
     return buffer;
 }
 
-bool MessageBuffer::Ready() {
+bool MessageBuffer::Ready()
+{
     CountBytesLeft();
     if (m_bytesLeft == 0)
         return false;
@@ -51,7 +54,8 @@ bool MessageBuffer::Ready() {
     return true;
 }
 
-void MessageBuffer::Read(size_t num, void *bytes) {
+void MessageBuffer::Read(size_t num, void *bytes)
+{
     CountBytesLeft();
     if (num > m_bytesLeft) {
         LogDebug("Protocol broken. OutOfData. Asked for: " << num << " Ready: " << m_bytesLeft << " Buffer.size(): " << m_buffer.Size());
@@ -62,7 +66,8 @@ void MessageBuffer::Read(size_t num, void *bytes) {
     m_bytesLeft -= num;
 }
 
-void MessageBuffer::Write(size_t num, const void *bytes) {
+void MessageBuffer::Write(size_t num, const void *bytes)
+{
     m_buffer.AppendCopy(bytes, num);
 }
 

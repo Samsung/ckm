@@ -36,16 +36,16 @@ namespace CKM {
 
 class COMMON_API MessageBuffer : public CKM::IStream {
 public:
-    class Exception
-    {
+    class Exception {
     public:
         DECLARE_EXCEPTION_TYPE(CKM::Exception, Base)
         DECLARE_EXCEPTION_TYPE(Base, OutOfData)
     };
 
-    MessageBuffer()
-      : m_bytesLeft(0)
-    {}
+    MessageBuffer() :
+        m_bytesLeft(0)
+    {
+    }
 
     MessageBuffer(MessageBuffer&&) = default;
     MessageBuffer& operator=(MessageBuffer&&) = default;
@@ -62,7 +62,8 @@ public:
 
     // generic serialization
     template <typename... Args>
-    static MessageBuffer Serialize( const Args&... args) {
+    static MessageBuffer Serialize(const Args&... args)
+    {
         MessageBuffer buffer;
         Serializer<Args...>::Serialize(buffer, args...);
         return buffer;
@@ -70,13 +71,14 @@ public:
 
     // generic deserialization
     template <typename... Args>
-    void Deserialize(Args&... args) {
+    void Deserialize(Args&... args)
+    {
         Deserializer<Args...>::Deserialize(*this, args...);
     }
 
 protected:
-
-    inline void CountBytesLeft() {
+    inline void CountBytesLeft()
+    {
         if (m_bytesLeft > 0)
             return;  // we already counted m_bytesLeft nothing to do
 

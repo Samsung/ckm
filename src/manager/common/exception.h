@@ -44,11 +44,13 @@ public:
 
     virtual ~Exception() noexcept {}
 
-    virtual const char *what(void) const noexcept {
+    virtual const char *what(void) const noexcept
+    {
         return m_message.c_str();
     }
 
-    virtual std::string message(void) const {
+    virtual std::string message(void) const
+    {
         std::ostringstream msg;
         msg << "[" << m_path << ":" << m_line << " " << m_function << "()] " << m_message;
         return msg.str();
@@ -80,12 +82,14 @@ public:
     DefineException(const char *path, const char *function, int line, const Args&... args)
       : Exception(path, function, line, Stringify::Merge(args...))
     {
-        Before(m_path, m_function, m_line, DefineException<Error,Stringify,Before,After>::error(), m_message);
+        Before(m_path, m_function, m_line, DefineException<Error, Stringify, Before, After>::error(), m_message);
     }
-    ~DefineException() noexcept {
-        After(m_path, m_function, m_line, DefineException<Error,Stringify,Before,After>::error(), m_message);
+    ~DefineException() noexcept
+    {
+        After(m_path, m_function, m_line, DefineException<Error, Stringify, Before, After>::error(), m_message);
     }
-    virtual int error(void) const {
+    virtual int error(void) const
+    {
         return Error;
     }
 };

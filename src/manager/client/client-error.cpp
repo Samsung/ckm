@@ -24,9 +24,11 @@
 #define ERRORDESCRIBE(name) case name: return #name
 
 namespace CKM {
-__attribute__ ((visibility ("default")))
-const char * ErrorToString(int error) {
-    switch(error) {
+__attribute__((visibility("default")))
+
+const char * ErrorToString(int error)
+{
+    switch (error) {
         ERRORDESCRIBE(CKM_API_SUCCESS);
         ERRORDESCRIBE(CKM_API_ERROR_SOCKET);
         ERRORDESCRIBE(CKM_API_ERROR_BAD_REQUEST);

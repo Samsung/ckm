@@ -27,8 +27,7 @@
 
 namespace CKM {
 
-struct CryptoRequest
-{
+struct CryptoRequest {
     ConnectionID conn;
     Credentials cred;
     EncryptionCommand command;

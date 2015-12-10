@@ -149,8 +149,8 @@ void StorageReceiver::parseGetListCommand()
     }
 
     AliasVector aliasVector;
-    for(const auto &it : labelNameVector)
-        aliasVector.push_back( AliasSupport::merge(it.first, it.second) );
+    for (const auto &it : labelNameVector)
+        aliasVector.push_back(AliasSupport::merge(it.first, it.second));
 
     DataType type(dataType);
 

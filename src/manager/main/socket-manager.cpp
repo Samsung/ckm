@@ -52,13 +52,13 @@ namespace {
 
 const time_t SOCKET_TIMEOUT = 1000;
 
-int getCredentialsFromSocket(int sock, CKM::Credentials &cred) {
+int getCredentialsFromSocket(int sock, CKM::Credentials &cred)
+{
     static CKM::Socket2Id sock2id;
     std::string ownerId;
 
-    if (0 > sock2id.translate(sock, ownerId)) {
+    if (0 > sock2id.translate(sock, ownerId))
         return -1;
-    }
 
     ucred peerCred;
     socklen_t length = sizeof(ucred);
@@ -77,7 +77,8 @@ int getCredentialsFromSocket(int sock, CKM::Credentials &cred) {
 namespace CKM {
 
 struct DummyService : public GenericSocketService {
-    ServiceDescriptionVector GetServiceDescription() {
+    ServiceDescriptionVector GetServiceDescription()
+    {
         return ServiceDescriptionVector();
     }
 
@@ -92,7 +93,8 @@ struct DummyService : public GenericSocketService {
 };
 
 struct SignalService : public GenericSocketService {
-    int GetDescriptor() {
+    int GetDescriptor()
+    {
         LogInfo("set up");
         sigset_t mask;
         sigemptyset(&mask);
@@ -102,7 +104,8 @@ struct SignalService : public GenericSocketService {
         return signalfd(-1, &mask, 0);
     }
 
-    ServiceDescriptionVector GetServiceDescription() {
+    ServiceDescriptionVector GetServiceDescription()
+    {
         return ServiceDescriptionVector();
     }
 
@@ -114,10 +117,11 @@ struct SignalService : public GenericSocketService {
     void Event(const CloseEvent &) {}  // not supported
     void Event(const SecurityEvent &) {} // not supported
 
-    void Event(const ReadEvent &event) {
+    void Event(const ReadEvent &event)
+    {
         LogDebug("Get signal information");
 
-        if(sizeof(struct signalfd_siginfo) != event.rawBuffer.size()) {
+        if (sizeof(struct signalfd_siginfo) != event.rawBuffer.size()) {
             LogError("Wrong size of signalfd_siginfo struct. Expected: "
                 << sizeof(signalfd_siginfo) << " Get: "
                 << event.rawBuffer.size());
@@ -165,16 +169,18 @@ SocketManager::CreateDefaultReadSocketDescription(int sock, bool timeout)
     return desc;
 }
 
-SocketManager::SocketManager()
-  : m_maxDesc(0)
-  , m_counter(0)
+SocketManager::SocketManager() :
+    m_maxDesc(0),
+    m_counter(0)
 {
     FD_ZERO(&m_readSet);
     FD_ZERO(&m_writeSet);
+
     if (-1 == pipe(m_notifyMe)) {
         int err = errno;
         ThrowMsg(Exception::InitFailed, "Error in pipe: " << GetErrnoString(err));
     }
+
     LogInfo("Pipe: Read desc: " << m_notifyMe[0] << " Write desc: " << m_notifyMe[1]);
 
     auto &desc = CreateDefaultReadSocketDescription(m_notifyMe[0], false);
@@ -190,6 +196,7 @@ SocketManager::SocketManager()
     auto *signalService = new SignalService;
     signalService->SetSocketManager(this);
     int filefd = signalService->GetDescriptor();
+
     if (-1 == filefd) {
         LogError("Error in SignalService.GetDescriptor()");
         delete signalService;
@@ -203,7 +210,8 @@ SocketManager::SocketManager()
     m_cynara.reset(new Cynara(this));
 }
 
-SocketManager::~SocketManager() {
+SocketManager::~SocketManager()
+{
     m_cynara.reset(nullptr);
     std::set<GenericSocketService*> serviceMap;
 
@@ -229,10 +237,12 @@ SocketManager::~SocketManager() {
     close(m_notifyMe[1]);
 }
 
-void SocketManager::ReadyForAccept(int sock) {
+void SocketManager::ReadyForAccept(int sock)
+{
     struct sockaddr_un clientAddr;
     unsigned int clientLen = sizeof(clientAddr);
     int client = accept4(sock, (struct sockaddr*) &clientAddr, &clientLen, SOCK_NONBLOCK);
+
     if (-1 == client) {
         int err = errno;
         LogDebug("Error in accept: " << GetErrnoString(err));
@@ -245,8 +255,7 @@ void SocketManager::ReadyForAccept(int sock) {
 
     if (0 > getCredentialsFromSocket(client, peerCred)
         || !Cynara::GetUserFromSocket(client, user)
-        || !Cynara::GetClientFromSocket(client, smack))
-    {
+        || !Cynara::GetClientFromSocket(client, smack)) {
         LogDebug("Error in getting credentials from socket.");
         TEMP_FAILURE_RETRY(close(client));
         return;
@@ -267,7 +276,8 @@ void SocketManager::ReadyForAccept(int sock) {
     desc.service->Event(event);
 }
 
-void SocketManager::SecurityStatus(int sock, int counter, bool allowed) {
+void SocketManager::SecurityStatus(int sock, int counter, bool allowed)
+{
     auto &desc = m_socketDescriptionVector[sock];
     if (!desc.isOpen()) {
         LogDebug("Client from socket " << sock <<
@@ -288,7 +298,8 @@ void SocketManager::SecurityStatus(int sock, int counter, bool allowed) {
     desc.service->Event(event);
 }
 
-void SocketManager::ReadyForRead(int sock) {
+void SocketManager::ReadyForRead(int sock)
+{
     if (m_socketDescriptionVector[sock].isListen()) {
         ReadyForAccept(sock);
         return;
@@ -316,18 +327,19 @@ void SocketManager::ReadyForRead(int sock) {
         desc.service->Event(event);
     } else if (size == -1) {
         int err = errno;
-        switch(err) {
-            case EAGAIN:
-            case EINTR:
-                break;
-            default:
-                LogDebug("Reading sock error: " << GetErrnoString(err));
-                CloseSocket(sock);
+        switch (err) {
+        case EAGAIN:
+        case EINTR:
+            break;
+        default:
+            LogDebug("Reading sock error: " << GetErrnoString(err));
+            CloseSocket(sock);
         }
     }
 }
 
-void SocketManager::ReadyForWrite(int sock) {
+void SocketManager::ReadyForWrite(int sock)
+{
     if (m_socketDescriptionVector[sock].isCynara()) {
         m_cynara->ProcessSocket();
         return;
@@ -336,9 +348,10 @@ void SocketManager::ReadyForWrite(int sock) {
     auto &desc = m_socketDescriptionVector[sock];
     size_t size = desc.rawBuffer.size();
     ssize_t result = write(sock, &desc.rawBuffer[0], size);
+
     if (result == -1) {
         int err = errno;
-        switch(err) {
+        switch (err) {
         case EAGAIN:
         case EINTR:
             // select will trigger write once again, nothing to do
@@ -368,7 +381,8 @@ void SocketManager::ReadyForWrite(int sock) {
     desc.service->Event(event);
 }
 
-void SocketManager::MainLoop() {
+void SocketManager::MainLoop()
+{
     // remove evironment values passed by systemd
     sd_listen_fds(1);
 
@@ -376,7 +390,7 @@ void SocketManager::MainLoop() {
     sd_notify(0, "READY=1");
 
     m_working = true;
-    while(m_working) {
+    while (m_working) {
         fd_set readSet = m_readSet;
         fd_set writeSet = m_writeSet;
 
@@ -386,7 +400,7 @@ void SocketManager::MainLoop() {
         // I need to extract timeout from priority_queue.
         // Timeout in priority_queue may be deprecated.
         // I need to find some actual one.
-        while(!m_timeoutQueue.empty()) {
+        while (!m_timeoutQueue.empty()) {
             auto &top = m_timeoutQueue.top();
             auto &desc = m_socketDescriptionVector[top.sock];
 
@@ -451,7 +465,7 @@ void SocketManager::MainLoop() {
         }
 
         if (-1 == ret) {
-            switch(errno) {
+            switch (errno) {
             case EINTR:
                 LogDebug("EINTR in select");
                 break;
@@ -462,7 +476,7 @@ void SocketManager::MainLoop() {
             }
             continue;
         }
-        for(int i = 0; i<m_maxDesc+1 && ret; ++i) {
+        for (int i = 0; i < m_maxDesc+1 && ret; ++i) {
             if (FD_ISSET(i, &readSet)) {
                 ReadyForRead(i);
                 --ret;
@@ -498,10 +512,9 @@ int SocketManager::GetSocketFromSystemD(
         ThrowMsg(Exception::InitFailed, "Error in sd_listend_fds");
     }
 
-    for(fd = SD_LISTEN_FDS_START; fd < SD_LISTEN_FDS_START+n; ++fd) {
+    for (fd = SD_LISTEN_FDS_START; fd < SD_LISTEN_FDS_START+n; ++fd) {
         if (0 < sd_is_socket_unix(fd, SOCK_STREAM, 1,
-                                  desc.serviceHandlerPath.c_str(), 0))
-        {
+                                  desc.serviceHandlerPath.c_str(), 0)) {
             LogInfo("Useable socket " << desc.serviceHandlerPath <<
                 " was passed by SystemD under descriptor " << fd);
             return fd;
@@ -516,9 +529,8 @@ int SocketManager::CreateDomainSocketHelp(
 {
     int sockfd;
 
-    if(desc.serviceHandlerPath.size()*sizeof(decltype(desc.serviceHandlerPath)::value_type) >=
-         sizeof(static_cast<sockaddr_un*>(0)->sun_path))
-    {
+    if (desc.serviceHandlerPath.size()*sizeof(decltype(desc.serviceHandlerPath)::value_type) >=
+         sizeof(static_cast<sockaddr_un*>(0)->sun_path)) {
         LogError("Service handler path too long: " << desc.serviceHandlerPath.size());
         ThrowMsg(Exception::InitFailed,
                  "Service handler path too long: " << desc.serviceHandlerPath.size());
@@ -599,16 +611,16 @@ void SocketManager::CreateDomainSocket(
         " Handler: " << desc.serviceHandlerPath.c_str());
 }
 
-void SocketManager::RegisterSocketService(GenericSocketService *service) {
+void SocketManager::RegisterSocketService(GenericSocketService *service)
+{
     service->SetSocketManager(this);
     service->SetCommManager(&m_commMgr);
     auto serviceVector = service->GetServiceDescription();
     Try {
         for (auto iter = serviceVector.begin(); iter != serviceVector.end(); ++iter)
             CreateDomainSocket(service, *iter);
-    } Catch (Exception::Base) {
-        for (int i =0; i < (int)m_socketDescriptionVector.size(); ++i)
-        {
+    } Catch(Exception::Base) {
+        for (int i =0; i < (int)m_socketDescriptionVector.size(); ++i) {
             auto &desc = m_socketDescriptionVector[i];
             if (desc.service == service && desc.isOpen()) {
                 close(i);
@@ -619,26 +631,30 @@ void SocketManager::RegisterSocketService(GenericSocketService *service) {
     }
 }
 
-void SocketManager::Close(ConnectionID connectionID) {
+void SocketManager::Close(ConnectionID connectionID)
+{
     CloseEvent event;
     event.sock = connectionID.sock;
     event.counter = connectionID.counter;
     AddEvent(event);
 }
 
-void SocketManager::Write(ConnectionID connectionID, const RawBuffer &rawBuffer) {
+void SocketManager::Write(ConnectionID connectionID, const RawBuffer &rawBuffer)
+{
     WriteEvent event{connectionID, rawBuffer};
     AddEvent(event);
 }
 
-void SocketManager::SecurityCheck(ConnectionID connectionID) {
+void SocketManager::SecurityCheck(ConnectionID connectionID)
+{
     SecurityEvent event;
     event.sock = connectionID.sock;
     event.counter = connectionID.counter;
     AddEvent(event);
 }
 
-void SocketManager::CreateEvent(EventFunction fun) {
+void SocketManager::CreateEvent(EventFunction fun)
+{
     {
         std::lock_guard<std::mutex> ulock(m_eventQueueMutex);
         m_eventQueue.push(std::move(fun));
@@ -646,12 +662,14 @@ void SocketManager::CreateEvent(EventFunction fun) {
     NotifyMe();
 }
 
-void SocketManager::NotifyMe() {
+void SocketManager::NotifyMe()
+{
     TEMP_FAILURE_RETRY(write(m_notifyMe[1], "You have message ;-)", 1));
 }
 
-void SocketManager::ProcessQueue() {
-    while(1) {
+void SocketManager::ProcessQueue()
+{
+    while (1) {
         EventFunction fun;
         {
             std::lock_guard<std::mutex> ulock(m_eventQueueMutex);
@@ -664,7 +682,8 @@ void SocketManager::ProcessQueue() {
     }
 }
 
-void SocketManager::Handle(const WriteEvent &event) {
+void SocketManager::Handle(const WriteEvent &event)
+{
     auto &desc = m_socketDescriptionVector[event.connectionID.sock];
 
     if (!desc.isOpen()) {
@@ -672,8 +691,7 @@ void SocketManager::Handle(const WriteEvent &event) {
         return;
     }
 
-    if (desc.counter != event.connectionID.counter)
-    {
+    if (desc.counter != event.connectionID.counter) {
         LogDebug("Received packet for write but counter is broken. Packet ignored!");
         return;
     }
@@ -686,7 +704,8 @@ void SocketManager::Handle(const WriteEvent &event) {
     FD_SET(event.connectionID.sock, &m_writeSet);
 }
 
-void SocketManager::Handle(const CloseEvent &event) {
+void SocketManager::Handle(const CloseEvent &event)
+{
     if (!m_socketDescriptionVector[event.sock].isOpen())
         return;
 
@@ -696,7 +715,8 @@ void SocketManager::Handle(const CloseEvent &event) {
     CloseSocket(event.sock);
 }
 
-void SocketManager::Handle(const SecurityEvent &event) {
+void SocketManager::Handle(const SecurityEvent &event)
+{
     auto& desc = m_socketDescriptionVector[event.sock];
     if (!desc.isOpen())
         return;
@@ -715,7 +735,8 @@ void SocketManager::Handle(const SecurityEvent &event) {
                       });
 }
 
-void SocketManager::CloseSocket(int sock) {
+void SocketManager::CloseSocket(int sock)
+{
     auto &desc = m_socketDescriptionVector[sock];
 
     if (!(desc.isOpen())) {
@@ -745,7 +766,8 @@ void SocketManager::CloseSocket(int sock) {
     FD_CLR(sock, &m_writeSet);
 }
 
-void SocketManager::CynaraSocket(int oldFd, int newFd, bool isRW) {
+void SocketManager::CynaraSocket(int oldFd, int newFd, bool isRW)
+{
     if (newFd != oldFd) {
         if (newFd >= 0) {
             auto &desc = CreateDefaultReadSocketDescription(newFd, false);

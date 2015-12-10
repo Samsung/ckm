@@ -39,10 +39,12 @@ std::map<AbstractLogProvider::LogLevel, int> journalLevel = {
 } // namespace anonymous
 
 JournalLogProvider::JournalLogProvider()
-{}
+{
+}
 
 JournalLogProvider::~JournalLogProvider()
-{}
+{
+}
 
 void JournalLogProvider::Log(AbstractLogProvider::LogLevel level,
                              const char *message,

@@ -43,17 +43,20 @@ public:
     virtual RawBuffer getDERPUB() const;
     virtual RawBuffer getDERPRV() const;
     virtual EvpShPtr getEvpShPtr() const;
-    virtual ElipticCurve getCurve() const {
+    virtual ElipticCurve getCurve() const
+    {
         // TODO
         return ElipticCurve::prime192v1;
     }
-    virtual int getSize() const {
+    virtual int getSize() const
+    {
         // TODO
         return 0;
     }
 
     virtual bool empty() const;
-    virtual ~KeyImpl(){}
+    virtual ~KeyImpl() {}
+
 protected:
     EvpShPtr m_pkey;
     KeyType m_type;

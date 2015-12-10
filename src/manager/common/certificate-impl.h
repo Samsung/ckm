@@ -60,6 +60,7 @@ public:
     std::string getOCSPURL() const;
 
     virtual ~CertificateImpl();
+
 protected:
     X509* m_x509;
 };

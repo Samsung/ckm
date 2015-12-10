@@ -26,8 +26,7 @@
 #include <string>
 #include <ckm/ckm-raw-buffer.h>
 namespace CKM {
-namespace XML
-{
+namespace XML {
 
 RawBuffer removeWhiteChars(const RawBuffer &buffer);
 std::string trim(const std::string& s);

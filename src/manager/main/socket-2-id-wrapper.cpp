@@ -28,7 +28,8 @@
 
 namespace CKM {
 
-int Socket2Id::getPkgIdFromSmack(const std::string &smack, std::string &pkgId) {
+int Socket2Id::getPkgIdFromSmack(const std::string &smack, std::string &pkgId)
+{
     // TODO
     // Conversion from smack label to pkgId should be done
     // by security-manager. Current version of security-manager
@@ -67,12 +68,12 @@ int Socket2Id::getPkgIdFromSmack(const std::string &smack, std::string &pkgId) {
     return 0;
 }
 
-int Socket2Id::translate(int sock, std::string &result) {
+int Socket2Id::translate(int sock, std::string &result)
+{
     std::string smack;
 
-    if (0 > getCredentialsFromSocket(sock, smack)) {
+    if (0 > getCredentialsFromSocket(sock, smack))
         return -1;
-    }
 
     StringMap::iterator it = m_stringMap.find(smack);
 
@@ -82,9 +83,8 @@ int Socket2Id::translate(int sock, std::string &result) {
     }
 
     std::string pkgId;
-    if (0 > getPkgIdFromSmack(smack, pkgId)) {
+    if (0 > getPkgIdFromSmack(smack, pkgId))
         return -1;
-    }
 
     result = pkgId;
     m_stringMap.emplace(std::move(smack), std::move(pkgId));

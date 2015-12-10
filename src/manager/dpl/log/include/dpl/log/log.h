@@ -38,8 +38,7 @@ namespace Log {
 /**
  * CKM log system
  */
-class COMMON_API LogSystem
-{
+class COMMON_API LogSystem {
   public:
     NONCOPYABLE(LogSystem)
 
@@ -101,8 +100,7 @@ class COMMON_API LogSystem
 /*
  * Replacement low overhead null logging class
  */
-class NullStream
-{
+class NullStream {
   public:
     NullStream() {}
 
@@ -133,11 +131,9 @@ typedef Singleton<LogSystem> LogSystemSingleton;
     } while (0)
 
 #define DPL_MACRO_FOR_LOGGING(message, level)                                   \
-do                                                                              \
-{                                                                               \
+do {                                                                            \
     if (level > CKM::Log::AbstractLogProvider::LogLevel::None &&                \
-        CKM::Log::LogSystemSingleton::Instance().GetLogLevel() >= level)        \
-    {                                                                           \
+        CKM::Log::LogSystemSingleton::Instance().GetLogLevel() >= level) {      \
         std::ostringstream platformLog;                                         \
         platformLog << message;                                                 \
         CKM::Log::LogSystemSingleton::Instance().Log(level,                     \
@@ -149,11 +145,9 @@ do                                                                              
 } while (0)
 
 #define DPL_MACRO_FOR_LOGGING_POSITION(message, level, file, line, function)    \
-do                                                                              \
-{                                                                               \
+do {                                                                            \
     if (level > CKM::Log::AbstractLogProvider::LogLevel::None &&                \
-        CKM::Log::LogSystemSingleton::Instance().GetLogLevel() >= level)        \
-    {                                                                           \
+        CKM::Log::LogSystemSingleton::Instance().GetLogLevel() >= level) {      \
         std::ostringstream platformLog;                                         \
         platformLog << message;                                                 \
         CKM::Log::LogSystemSingleton::Instance().Log(level,                     \
@@ -194,7 +188,7 @@ do                                                                              
         do {                                                                                   \
             (void) file; (void) line; (void) function;                                         \
             DPL_MACRO_DUMMY_LOGGING(message, CKM::Log::AbstractLogProvider::LogLevel::Debug);  \
-        } while(0)
+        } while (0)
 #endif // BUILD_TYPE_DEBUG
 
 #endif // CENT_KEY_LOG_H

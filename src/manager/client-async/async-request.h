@@ -30,8 +30,7 @@
 
 namespace CKM {
 
-struct AsyncRequest
-{
+struct AsyncRequest {
     typedef std::map<int, AsyncRequest> Map;
     typedef std::queue<AsyncRequest, std::list<AsyncRequest> > Queue;
 

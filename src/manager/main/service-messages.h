@@ -33,8 +33,7 @@
 namespace CKM {
 
 // inter-service communication message base class
-struct MsgBase
-{
+struct MsgBase {
     explicit MsgBase(int id) : id(id) {}
     virtual ~MsgBase() {}
 
@@ -42,8 +41,7 @@ struct MsgBase
 };
 
 // key request
-struct MsgKeyRequest : public MsgBase
-{
+struct MsgKeyRequest : public MsgBase {
     MsgKeyRequest(int id,
                   const Credentials& cred,
                   const Name& name,
@@ -54,7 +52,9 @@ struct MsgKeyRequest : public MsgBase
         name(name),
         label(label),
         password(password)
-    {}
+    {
+    }
+
     Credentials cred;
     Name name;
     Label label;
@@ -62,13 +62,14 @@ struct MsgKeyRequest : public MsgBase
 };
 
 // key response
-struct MsgKeyResponse : public MsgBase
-{
+struct MsgKeyResponse : public MsgBase {
     MsgKeyResponse(int id, const Crypto::GObjShPtr& key, int errorCode = CKM_API_SUCCESS) :
         MsgBase(id),
         key(key),
         error(errorCode)
-    {}
+    {
+    }
+
     Crypto::GObjShPtr key;
     int error;
 };

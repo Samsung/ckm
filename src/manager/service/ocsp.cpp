@@ -41,7 +41,8 @@ namespace CKM {
 namespace {
 typedef std::unique_ptr<BIO, std::function<void(BIO*)>> BioUniquePtr;
 
-void BIO_write_and_free(BIO* bio) {
+void BIO_write_and_free(BIO* bio)
+{
     if (!bio)
         return;
 
@@ -57,23 +58,25 @@ void BIO_write_and_free(BIO* bio) {
 
 } // namespace anonymous
 
-OCSPModule::OCSPModule() {
+OCSPModule::OCSPModule()
+{
     // Do nothing.
 }
 
-OCSPModule::~OCSPModule(){
+OCSPModule::~OCSPModule()
+{
     // Do nothing.
 }
 
-int OCSPModule::verify(const CertificateImplVector &certificateChain) {
+int OCSPModule::verify(const CertificateImplVector &certificateChain)
+{
     bool unsupported = false; // ocsp is unsupported in certificate in chain (except root CA)
 
     // create trusted store
     X509_STACK_PTR trustedCerts = create_x509_stack();
 
     // skip first 2 certificates
-    for (auto it=certificateChain.cbegin()+2; it < certificateChain.cend(); it++)
-    {
+    for (auto it = certificateChain.cbegin() + 2; it < certificateChain.cend(); it++) {
         if (it->empty()) {
             LogError("Error. Broken certificate chain.");
             return CKM_API_OCSP_STATUS_INTERNAL_ERROR;
@@ -81,7 +84,7 @@ int OCSPModule::verify(const CertificateImplVector &certificateChain) {
         sk_X509_push(trustedCerts.get(), it->getX509());
     }
 
-    for (int i=0; i < static_cast<int>(certificateChain.size())-1; i++) {// except root certificate
+    for (int i = 0; i < static_cast<int>(certificateChain.size()) - 1; i++) {// except root certificate
         if (certificateChain[i].empty() || certificateChain[i+1].empty()) {
             LogError("Error. Broken certificate chain.");
             return CKM_API_OCSP_STATUS_INTERNAL_ERROR;
@@ -102,7 +105,7 @@ int OCSPModule::verify(const CertificateImplVector &certificateChain) {
         // remove first element from trustedCerts store
         sk_X509_delete(trustedCerts.get(), 0);
 
-        if(result != CKM_API_OCSP_STATUS_GOOD) {
+        if (result != CKM_API_OCSP_STATUS_GOOD) {
             LogError("Fail to OCSP certification check. Errorcode=[" << result <<
                 "], on certChain[" << i << "]");
             return result;
@@ -115,7 +118,8 @@ int OCSPModule::verify(const CertificateImplVector &certificateChain) {
     return CKM_API_OCSP_STATUS_GOOD;
 }
 
-int OCSPModule::ocsp_verify(X509 *cert, X509 *issuer, STACK_OF(X509) *trustedCerts, const std::string &constUrl) {
+int OCSPModule::ocsp_verify(X509 *cert, X509 *issuer, STACK_OF(X509) *trustedCerts, const std::string &constUrl)
+{
     OCSP_REQUEST *req = NULL;
     OCSP_RESPONSE *resp = NULL;
     OCSP_BASICRESP *bs = NULL;
@@ -133,16 +137,15 @@ int OCSPModule::ocsp_verify(X509 *cert, X509 *issuer, STACK_OF(X509) *trustedCer
     char subj_buf[256];
     int reason = 0;
     //    const char *reason_str = NULL;0
-    X509_STORE *trustedStore=NULL;
+    X509_STORE *trustedStore = NULL;
     BioUniquePtr bioLogger(BIO_new(BIO_s_mem()), BIO_write_and_free);
 
     std::vector<char> url(constUrl.begin(), constUrl.end());
     url.push_back(0);
 
-    if (!OCSP_parse_url(url.data(), &host, &port, &path, &use_ssl)) {
+    if (!OCSP_parse_url(url.data(), &host, &port, &path, &use_ssl))
         /* report error */
         return CKM_API_OCSP_STATUS_INVALID_URL;
-    }
 
     LogDebug("Host: " << host);
     LogDebug("Port: " << port);
@@ -156,9 +159,8 @@ int OCSPModule::ocsp_verify(X509 *cert, X509 *issuer, STACK_OF(X509) *trustedCer
         return CKM_API_OCSP_STATUS_INTERNAL_ERROR;
     }
 
-	if (port != NULL) {
-		BIO_set_conn_port(cbio, port);
-    }
+    if (port != NULL)
+        BIO_set_conn_port(cbio, port);
 
     if (use_ssl == 1) {
         BIO *sbio = NULL;
@@ -188,73 +190,68 @@ int OCSPModule::ocsp_verify(X509 *cert, X509 *issuer, STACK_OF(X509) *trustedCer
         /* report error */
 
         /* free stuff */
-        if (host != NULL) {
+        if (host != NULL)
             OPENSSL_free(host);
-        }
 
-        if (port != NULL) {
+        if (port != NULL)
             OPENSSL_free(port);
-        }
 
-        if (path != NULL) {
+        if (path != NULL)
             OPENSSL_free(path);
-        }
+
         host = port = path = NULL;
 
-        if (use_ssl && use_ssl_ctx) {
+        if (use_ssl && use_ssl_ctx)
             SSL_CTX_free(use_ssl_ctx);
-        }
+
         use_ssl_ctx = NULL;
 
-        if (cbio != NULL) {
+        if (cbio != NULL)
             BIO_free_all(cbio);
-        }
+
         cbio = NULL;
 
         return CKM_API_OCSP_STATUS_NET_ERROR;
     }
 
     req = OCSP_REQUEST_new();
-
-    if(req == NULL) {
+    if (req == NULL) {
         LogDebug("Error in OCPS_REQUEST_new");
         return CKM_API_OCSP_STATUS_INTERNAL_ERROR;
     }
+
     certid = OCSP_cert_to_id(NULL, cert, issuer);
-    if(certid == NULL)  {
+    if (certid == NULL) {
         LogDebug("Error in OCSP_cert_to_id");
         return CKM_API_OCSP_STATUS_INTERNAL_ERROR;
     }
 
-    if(OCSP_request_add0_id(req, certid) == NULL) {
+    if (OCSP_request_add0_id(req, certid) == NULL) {
         LogDebug("Error in OCSP_request_add0_id");
         return CKM_API_OCSP_STATUS_INTERNAL_ERROR;
     }
 
     resp = OCSP_sendreq_bio(cbio, path, req);
-
     /* free some stuff we no longer need */
-    if (host != NULL) {
+    if (host != NULL)
         OPENSSL_free(host);
-    }
 
-    if (port != NULL) {
+    if (port != NULL)
         OPENSSL_free(port);
-    }
 
-    if (path != NULL) {
+    if (path != NULL)
         OPENSSL_free(path);
-    }
+
     host = port = path = NULL;
 
-    if (use_ssl && use_ssl_ctx) {
+    if (use_ssl && use_ssl_ctx)
         SSL_CTX_free(use_ssl_ctx);
-    }
+
     use_ssl_ctx = NULL;
 
-    if (cbio != NULL) {
+    if (cbio != NULL)
         BIO_free_all(cbio);
-    }
+
     cbio = NULL;
 
     if (!resp) {
@@ -288,11 +285,12 @@ int OCSPModule::ocsp_verify(X509 *cert, X509 *issuer, STACK_OF(X509) *trustedCer
         return CKM_API_OCSP_STATUS_INVALID_RESPONSE;
     }
 
-    if(trustedCerts != NULL) {
+    if (trustedCerts != NULL) {
         trustedStore = X509_STORE_new();
-        for(int tmpIdx=0; tmpIdx<sk_X509_num(trustedCerts); tmpIdx++) {
+
+        for (int tmpIdx = 0; tmpIdx < sk_X509_num(trustedCerts); tmpIdx++)
             X509_STORE_add_cert(trustedStore, sk_X509_value(trustedCerts, tmpIdx));
-        }
+
         X509_STORE_add_cert(trustedStore, issuer);
     }
 
@@ -323,7 +321,7 @@ int OCSPModule::ocsp_verify(X509 *cert, X509 *issuer, STACK_OF(X509) *trustedCer
     }
 
     (void)X509_NAME_oneline(X509_get_subject_name(cert), subj_buf, 255);
-    if(!OCSP_resp_find_status(bs, certid, &ocspStatus, &reason,
+    if (!OCSP_resp_find_status(bs, certid, &ocspStatus, &reason,
           &rev, &thisupd, &nextupd)) {
         /* report error */
         ERR_print_errors(bioLogger.get());
@@ -369,12 +367,12 @@ int OCSPModule::ocsp_verify(X509 *cert, X509 *issuer, STACK_OF(X509) *trustedCer
         bs = NULL;
     }
 
-    if(trustedStore != NULL) {
+    if (trustedStore != NULL) {
         X509_STORE_free(trustedStore);
         trustedStore = NULL;
     }
 
-    switch(ocspStatus) {
+    switch (ocspStatus) {
     case V_OCSP_CERTSTATUS_GOOD:
         return CKM_API_OCSP_STATUS_GOOD;
     case V_OCSP_CERTSTATUS_REVOKED:

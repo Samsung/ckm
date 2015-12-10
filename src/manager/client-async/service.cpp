@@ -45,7 +45,7 @@ Service::Service(IDescriptorSet& descriptors, const std::string& interface) :
 
 void Service::addRequest(AsyncRequest&& req)
 {
-    if(!m_socket) {
+    if (!m_socket) {
         m_socket.reset(new SockRAII());
         int ret;
         if (CKM_API_SUCCESS != (ret = m_socket->connect(m_interface.c_str()))) {
@@ -64,8 +64,7 @@ void Service::addRequest(AsyncRequest&& req)
 
 void Service::serviceError(int error)
 {
-    if (m_socket)
-    {
+    if (m_socket) {
         // stop listening on socket
         m_descriptors.remove(m_socket->get(), false);
         // close the socket
@@ -73,13 +72,13 @@ void Service::serviceError(int error)
     }
 
     // notify observers waiting for response
-    for(const auto& it: m_responseMap) {
+    for (const auto& it: m_responseMap)
         it.second.observer->ReceivedError(error);
-    }
+
     m_responseMap.clear();
 
     // notify observers waiting for send
-    while(!m_sendQueue.empty()) {
+    while (!m_sendQueue.empty()) {
         m_sendQueue.front().observer->ReceivedError(error);
         m_sendQueue.pop();
     }
@@ -145,15 +144,15 @@ void Service::sendData()
         req.written += temp;
 
         // finished? -> move request to response map
-        if(req.written == req.buffer.size()) {
+        if (req.written == req.buffer.size()) {
             AsyncRequest finished = std::move(m_sendQueue.front());
             m_sendQueue.pop();
 
             // update poll flags if necessary
-            if(m_sendQueue.empty() || m_responseMap.empty())
+            if (m_sendQueue.empty() || m_responseMap.empty())
                 watch((m_sendQueue.empty()? 0 : POLLOUT) | POLLIN);
 
-            m_responseMap.insert(std::make_pair(finished.id,finished));
+            m_responseMap.insert(std::make_pair(finished.id, finished));
         }
     }
 }
@@ -162,7 +161,7 @@ void Service::receiveData()
 {
     char buffer[RECV_BUFFER_SIZE];
 
-    ssize_t temp = TEMP_FAILURE_RETRY(::recv(m_socket->get(), buffer, RECV_BUFFER_SIZE,0));
+    ssize_t temp = TEMP_FAILURE_RETRY(::recv(m_socket->get(), buffer, RECV_BUFFER_SIZE, 0));
     if (-1 == temp) {
         int err = errno;
         LogError("Error in recv: " << GetErrnoString(err));
@@ -183,8 +182,7 @@ void Service::receiveData()
     m_responseBuffer->Push(raw);
 
     // parse while you can
-    while(m_responseBuffer->Ready())
-    {
+    while (m_responseBuffer->Ready()) {
         std::unique_ptr<IReceiver> receiver;
         if (m_interface == SERVICE_SOCKET_CKM_STORAGE)
             receiver.reset(new StorageReceiver(*m_responseBuffer, m_responseMap));

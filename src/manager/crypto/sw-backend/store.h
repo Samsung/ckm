@@ -36,7 +36,7 @@ public:
     virtual Token generateSKey(const CryptoAlgorithm &, const Password &);
     virtual Token import(const Data &data, const Password &);
     virtual Token importEncrypted(const Data &, const Password &, const DataEncryption &);
-    virtual void destroy(const Token &){}
+    virtual void destroy(const Token &) {}
 
 private:
     Crypto::GObjShPtr m_deviceKey;

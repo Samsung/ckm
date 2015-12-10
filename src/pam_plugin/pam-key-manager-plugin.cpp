@@ -36,8 +36,7 @@
 #include <shadow.h>
 #include <ckm/ckm-control.h>
 
-namespace
-{
+namespace {
 #define PASSWORD_SHADOWED   "x"
 std::string old_password;
 
@@ -50,15 +49,14 @@ bool identify_user_pwd(pam_handle_t *pamh, uid_t & uid, std::string & passwd)
     struct passwd *pwd;
     if ((pwd = getpwnam(user)) == NULL)
         return true;
-    if(strcmp(pwd->pw_passwd, PASSWORD_SHADOWED)==0)
-    {
+    if (strcmp(pwd->pw_passwd, PASSWORD_SHADOWED) == 0) {
         struct spwd *pwd_sh;
         if ((pwd_sh = getspnam(user)) == NULL)
             return true;
         passwd = std::string(pwd_sh->sp_pwdp);
-    }
-    else
+    } else {
         passwd = std::string(pwd->pw_passwd);
+    }
     uid = pwd->pw_uid;
     return false;
 }
@@ -70,25 +68,24 @@ pam_sm_open_session(pam_handle_t *pamh, int /*flags*/, int /*argc*/, const char 
     // identify user
     uid_t uid = -1;
     std::string passwd;
-    if(identify_user_pwd(pamh, uid, passwd))
+    if (identify_user_pwd(pamh, uid, passwd))
         return PAM_SESSION_ERR;
 
     auto control = CKM::Control::create();
     int ec = control->unlockUserKey(uid, passwd.c_str());
-    if(ec == CKM_API_SUCCESS)
+    if (ec == CKM_API_SUCCESS)
         return PAM_SUCCESS;
 
-    if(ec == CKM_API_ERROR_AUTHENTICATION_FAILED)
-    {
+    if (ec == CKM_API_ERROR_AUTHENTICATION_FAILED) {
         pam_syslog(pamh, LOG_ERR, "key-manager and system password desynchronized,"
                                   "removing key-manager database for user: %d\n", uid);
 
         // key-manager<->system password desync
         // remove the user content
         ec = control->removeUserData(uid);
-        if(ec == CKM_API_SUCCESS) {
+        if (ec == CKM_API_SUCCESS) {
             ec = CKM::Control::create()->unlockUserKey(uid, passwd.c_str());
-            if(ec == CKM_API_SUCCESS)
+            if (ec == CKM_API_SUCCESS)
                 return PAM_SUCCESS;
             pam_syslog(pamh, LOG_ERR, "key-manager and system password desynchronized,"
                                       "attempt to create new database failed: %d\n", ec);
@@ -107,10 +104,10 @@ pam_sm_close_session(pam_handle_t *pamh, int /*flags*/, int /*argc*/, const char
     // identify user
     uid_t uid = -1;
     std::string passwd;
-    if(identify_user_pwd(pamh, uid, passwd))
+    if (identify_user_pwd(pamh, uid, passwd))
         return PAM_SESSION_ERR;
 
-    if(CKM::Control::create()->lockUserKey(uid) == CKM_API_SUCCESS)
+    if (CKM::Control::create()->lockUserKey(uid) == CKM_API_SUCCESS)
         return PAM_SUCCESS;
 
     return PAM_SESSION_ERR;
@@ -119,7 +116,7 @@ pam_sm_close_session(pam_handle_t *pamh, int /*flags*/, int /*argc*/, const char
 COMMON_API PAM_EXTERN int
 pam_sm_chauthtok(pam_handle_t *pamh, int flags, int argc, const char **argv)
 {
-    if(argc==0) {
+    if (argc == 0) {
         pam_syslog(pamh, LOG_ERR, "key-manager plugin called with inappropriate arguments\n");
         return PAM_SERVICE_ERR;
     }
@@ -127,25 +124,21 @@ pam_sm_chauthtok(pam_handle_t *pamh, int flags, int argc, const char **argv)
     // identify user
     uid_t uid = -1;
     std::string passwd;
-    if(identify_user_pwd(pamh, uid, passwd))
+    if (identify_user_pwd(pamh, uid, passwd))
         return PAM_USER_UNKNOWN;
 
     // attention: argv[0] is the argument, not the binary/so name
     // args are in arg_name=value format
-    if(strstr(argv[0], "change_step"))
-    {
-        if(strstr(argv[0], "before"))
-        {
-            if( ! (flags & PAM_PRELIM_CHECK))
+    if (strstr(argv[0], "change_step")) {
+        if (strstr(argv[0], "before")) {
+            if (!(flags & PAM_PRELIM_CHECK))
                 old_password = passwd;
             return PAM_SUCCESS;
-        }
-        else if(strstr(argv[0], "after"))
-        {
-            if(flags & PAM_PRELIM_CHECK)
+        } else if (strstr(argv[0], "after")) {
+            if (flags & PAM_PRELIM_CHECK)
                 return PAM_SUCCESS;
 
-            if(old_password.size() == 0) {
+            if (old_password.size() == 0) {
                 pam_syslog(pamh, LOG_ERR, "attempt to change key-manager password w/o old password\n");
                 return PAM_SERVICE_ERR;
             }

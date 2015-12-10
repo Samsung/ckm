@@ -25,10 +25,11 @@
 
 namespace CKM {
 
-Cynara::Cynara(GenericSocketManager *socketManager)
-  : m_socketManager(socketManager)
-  , m_cynara(nullptr)
-{}
+Cynara::Cynara(GenericSocketManager *socketManager) :
+    m_socketManager(socketManager),
+    m_cynara(nullptr)
+{
+}
 
 void Cynara::Request(
     const std::string &,
@@ -42,19 +43,21 @@ void Cynara::Request(
 
 void Cynara::ProcessSocket() {}
 
-Cynara::~Cynara(){}
+Cynara::~Cynara() {}
 
 void Cynara::ChangeStatus(
     int,
     int,
     cynara_async_status)
-{}
+{
+}
 
 void Cynara::ProcessResponse(
     cynara_check_id,
     cynara_async_call_cause,
     int)
-{}
+{
+}
 
 void Cynara::SendRequest(
     const std::string &,
@@ -62,21 +65,24 @@ void Cynara::SendRequest(
     const std::string &,
     const std::string &,
     StatusCallback)
-{}
+{
+}
 
 void Cynara::ChangeStatusCallback(
     int,
     int,
     cynara_async_status,
     void *)
-{}
+{
+}
 
 void Cynara::ProcessResponseCallback(
     cynara_check_id,
     cynara_async_call_cause,
     int,
     void *)
-{}
+{
+}
 
 bool Cynara::GetUserFromSocket(
     int,

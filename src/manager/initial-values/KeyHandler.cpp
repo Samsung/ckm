@@ -27,8 +27,7 @@
 #include <InitialValueHandler.h>
 #include <ckm/ckm-type.h>
 
-namespace
-{
+namespace {
 const char * const XML_ATTR_TYPE    = "type";
 const char * const XML_ATTR_TYPE_VAL_RSA_PRV    =   "RSA_PRV";
 const char * const XML_ATTR_TYPE_VAL_RSA_PUB    =   "RSA_PUB";
@@ -49,19 +48,19 @@ void KeyHandler::Start(const XML::Parser::Attributes &attr)
     InitialValueHandler::Start(attr);
 
     // get key type
-    if(attr.find(XML_ATTR_TYPE) != attr.end())
+    if (attr.find(XML_ATTR_TYPE) != attr.end())
         m_keyType = KeyHandler::parseType(attr.at(XML_ATTR_TYPE));
 }
 
 KeyType KeyHandler::parseType(const std::string & typeStr)
 {
-    if     (typeStr == XML_ATTR_TYPE_VAL_RSA_PRV)      return KeyType::KEY_RSA_PRIVATE;
-    else if(typeStr == XML_ATTR_TYPE_VAL_RSA_PUB)      return KeyType::KEY_RSA_PUBLIC;
-    else if(typeStr == XML_ATTR_TYPE_VAL_DSA_PRV)      return KeyType::KEY_DSA_PRIVATE;
-    else if(typeStr == XML_ATTR_TYPE_VAL_DSA_PUB)      return KeyType::KEY_DSA_PUBLIC;
-    else if(typeStr == XML_ATTR_TYPE_VAL_ECDSA_PRV)    return KeyType::KEY_ECDSA_PRIVATE;
-    else if(typeStr == XML_ATTR_TYPE_VAL_ECDSA_PUB)    return KeyType::KEY_ECDSA_PUBLIC;
-    else if(typeStr == XML_ATTR_TYPE_VAL_AES)          return KeyType::KEY_AES;
+    if      (typeStr == XML_ATTR_TYPE_VAL_RSA_PRV)      return KeyType::KEY_RSA_PRIVATE;
+    else if (typeStr == XML_ATTR_TYPE_VAL_RSA_PUB)      return KeyType::KEY_RSA_PUBLIC;
+    else if (typeStr == XML_ATTR_TYPE_VAL_DSA_PRV)      return KeyType::KEY_DSA_PRIVATE;
+    else if (typeStr == XML_ATTR_TYPE_VAL_DSA_PUB)      return KeyType::KEY_DSA_PUBLIC;
+    else if (typeStr == XML_ATTR_TYPE_VAL_ECDSA_PRV)    return KeyType::KEY_ECDSA_PRIVATE;
+    else if (typeStr == XML_ATTR_TYPE_VAL_ECDSA_PUB)    return KeyType::KEY_ECDSA_PUBLIC;
+    else if (typeStr == XML_ATTR_TYPE_VAL_AES)          return KeyType::KEY_AES;
     else // should not happen
         throw std::runtime_error("error: invalid value discovered as key type");
 }

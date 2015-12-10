@@ -52,28 +52,37 @@ struct DataEncryption {
 
 class GStore {
 public:
-    virtual GObjUPtr getObject(const Token &, const Password &) {
+    virtual GObjUPtr getObject(const Token &, const Password &)
+    {
         ThrowErr(Exc::Crypto::OperationNotSupported);
     }
-    virtual TokenPair generateAKey(const CryptoAlgorithm &, const Password &, const Password &) {
+    virtual TokenPair generateAKey(const CryptoAlgorithm &, const Password &, const Password &)
+    {
         ThrowErr(Exc::Crypto::OperationNotSupported);
     }
-    virtual Token generateSKey(const CryptoAlgorithm &, const Password &) {
+    virtual Token generateSKey(const CryptoAlgorithm &, const Password &)
+    {
         ThrowErr(Exc::Crypto::OperationNotSupported);
     }
-    virtual Token import(const Data &, const Password &) {
+    virtual Token import(const Data &, const Password &)
+    {
         ThrowErr(Exc::Crypto::OperationNotSupported);
     }
-    virtual Token importEncrypted(const Data &, const Password &, const DataEncryption &) {
+    virtual Token importEncrypted(const Data &, const Password &, const DataEncryption &)
+    {
         ThrowErr(Exc::Crypto::OperationNotSupported);
     }
-    virtual void destroy(const Token &) {
+    virtual void destroy(const Token &)
+    {
         ThrowErr(Exc::Crypto::OperationNotSupported);
     }
     virtual ~GStore() {}
 
 protected:
-    explicit GStore(CryptoBackend backendId) : m_backendId(backendId) {}
+    explicit GStore(CryptoBackend backendId) :
+        m_backendId(backendId)
+    {
+    }
 
     CryptoBackend m_backendId;
 };

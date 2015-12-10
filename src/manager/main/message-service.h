@@ -44,17 +44,19 @@ class MessageService;
 
 // aggregating template
 template <typename Msg, typename ...Msgs>
-class MessageService<Msg, Msgs...> : public MessageService<Msg>, public MessageService<Msgs...>
-{
+class MessageService<Msg, Msgs...> : public MessageService<Msg>, public MessageService<Msgs...> {
 protected:
     // RECEIVER THREAD
     template <typename Mgr>
-    void Register(Mgr& mgr) {
+    void Register(Mgr& mgr)
+    {
         MessageService<Msg>::Register(mgr);
         MessageService<Msgs...>::Register(mgr);
     }
+
     // RECEIVER THREAD
-    void CheckMessages() {
+    void CheckMessages()
+    {
         MessageService<Msg>::CheckMessages();
         MessageService<Msgs...>::CheckMessages();
     }
@@ -63,8 +65,7 @@ protected:
 
 // single Message type (Msg) handler
 template <typename Msg>
-class MessageService<Msg>
-{
+class MessageService<Msg> {
 public:
     MessageService() {}
     virtual ~MessageService() {}
@@ -111,7 +112,7 @@ void MessageService<Msg>::AddMessage(const Msg& msg)
 template <typename Msg>
 void MessageService<Msg>::CheckMessages()
 {
-    while(true) {
+    while (true) {
         m_messagesMutex.lock();
         if (m_messages.empty()) {
             m_messagesMutex.unlock();
@@ -133,8 +134,7 @@ void MessageService<Msg>::CheckMessages()
 
 // thread based service with messages support
 template <typename ...Msgs>
-class ThreadMessageService : public ThreadService, public MessageService<Msgs...>
-{
+class ThreadMessageService : public ThreadService, public MessageService<Msgs...> {
 public:
     ThreadMessageService() {}
     virtual ~ThreadMessageService() {}
@@ -142,18 +142,21 @@ public:
 
     // RECEIVER THREAD: register as a listener of all supported messages
     template <typename Mgr>
-    void Register(Mgr& mgr) {
+    void Register(Mgr& mgr)
+    {
         MessageService<Msgs...>::Register(mgr);
     }
 
 private:
     // SENDER THREAD: adds callback to RECEIVER THREAD event queue and wakes it
-    virtual void Notify() {
+    virtual void Notify()
+    {
         CreateEvent([this]() { this->CheckMessages(); });
     }
 
     // RECEIVER THREAD
-    void CheckMessages() {
+    void CheckMessages()
+    {
         MessageService<Msgs...>::CheckMessages();
     }
 };

@@ -43,7 +43,8 @@ WrappedKeyAndInfo& WrappedKeyAndInfoContainer::getWrappedKeyAndInfo()
     return *wrappedKeyAndInfo;
 }
 
-void WrappedKeyAndInfoContainer::setKeyInfoKeyLength(const unsigned int length){
+void WrappedKeyAndInfoContainer::setKeyInfoKeyLength(const unsigned int length)
+{
     wrappedKeyAndInfo->keyInfo.keyLength = length;
 }
 
@@ -104,29 +105,28 @@ KeyAndInfoContainer::~KeyAndInfoContainer()
     memset(ptr, 0, sizeof(KeyAndInfo));
     // verification
     for (size_t size = 0; size < sizeof(KeyAndInfo); ++size) {
-        if (ptr[size]) {
+        if (ptr[size])
             LogError("Write momory error! Memory used by key was not owerwritten.");
-        }
     }
     delete keyAndInfo;
 }
 
-KeyProvider::KeyProvider()
-    : m_kmcDKEK(NULL)
-    , m_isInitialized(false)
+KeyProvider::KeyProvider() :
+    m_kmcDKEK(NULL),
+    m_isInitialized(false)
 {
     LogDebug("Created empty KeyProvider");
 }
 
 KeyProvider::KeyProvider(
     const RawBuffer &domainKEKInWrapForm,
-    const Password &password)
-    : m_kmcDKEK(new KeyAndInfoContainer())
-    , m_isInitialized(true)
+    const Password &password) :
+        m_kmcDKEK(new KeyAndInfoContainer()),
+        m_isInitialized(true)
 {
-    if (!m_isInitialized) {
+    if (!m_isInitialized)
         ThrowErr(Exc::InternalError, "Object not initialized!. Should not happened");
-    }
+
     if (domainKEKInWrapForm.size() != sizeof(WrappedKeyAndInfo)) {
         LogError("input size:" << domainKEKInWrapForm.size()
             << " Expected: " << sizeof(WrappedKeyAndInfo));
@@ -150,7 +150,6 @@ KeyProvider::KeyProvider(
         PBKDF2_ITERATIONS,
         MAX_KEY_SIZE,
         PKEK1)) {
-
         delete[] concat_user_pass;
         ThrowErr(Exc::InternalError, "OPENSSL_ENGINE_ERROR");
     }
@@ -166,7 +165,6 @@ KeyProvider::KeyProvider(
         PKEK1,
         wkmcDKEK.getWrappedKeyAndInfo().keyInfo.iv,
         m_kmcDKEK->getKeyAndInfo().key))) {
-
         ThrowErr(Exc::AuthenticationFailed, "VerifyDomainKEK failed in KeyProvider Constructor");
     }
 
@@ -202,9 +200,8 @@ bool KeyProvider::isInitialized()
 
 RawBuffer KeyProvider::getPureDomainKEK()
 {
-    if (!m_isInitialized) {
+    if (!m_isInitialized)
         ThrowErr(Exc::InternalError, "Object not initialized!");
-    }
 
     // TODO secure
     return RawBuffer(m_kmcDKEK->getKeyAndInfo().key, (m_kmcDKEK->getKeyAndInfo().key) + m_kmcDKEK->getKeyAndInfo().keyInfo.keyLength);
@@ -212,9 +209,8 @@ RawBuffer KeyProvider::getPureDomainKEK()
 
 RawBuffer KeyProvider::getWrappedDomainKEK(const Password &password)
 {
-    if (!m_isInitialized) {
+    if (!m_isInitialized)
         ThrowErr(Exc::InternalError, "Object not initialized!");
-    }
 
     WrappedKeyAndInfoContainer wkmcDKEK = WrappedKeyAndInfoContainer();
 
@@ -233,7 +229,6 @@ RawBuffer KeyProvider::getWrappedDomainKEK(const Password &password)
         PBKDF2_ITERATIONS,
         MAX_KEY_SIZE,
         PKEK1)) {
-
         delete[] concat_user_pass;
         ThrowErr(Exc::InternalError, "OPENSSL_ENGINE_ERROR");
     }
@@ -245,15 +240,13 @@ RawBuffer KeyProvider::getWrappedDomainKEK(const Password &password)
     int wrappedKeyLength;
 
     if (0 > (wrappedKeyLength = encryptAes256Gcm(
-        m_kmcDKEK->getKeyAndInfo().key,
-        m_kmcDKEK->getKeyAndInfo().keyInfo.keyLength,
-        PKEK1,
-        m_kmcDKEK->getKeyAndInfo().keyInfo.iv,
-        wkmcDKEK.getWrappedKeyAndInfo().wrappedKey,
-        wkmcDKEK.getWrappedKeyAndInfo().keyInfo.tag))) {
-
+                                    m_kmcDKEK->getKeyAndInfo().key,
+                                    m_kmcDKEK->getKeyAndInfo().keyInfo.keyLength,
+                                    PKEK1,
+                                    m_kmcDKEK->getKeyAndInfo().keyInfo.iv,
+                                    wkmcDKEK.getWrappedKeyAndInfo().wrappedKey,
+                                    wkmcDKEK.getWrappedKeyAndInfo().keyInfo.tag)))
         ThrowErr(Exc::InternalError, "WrapDKEK Failed in KeyProvider::getDomainKEK");
-    }
 
     wkmcDKEK.setKeyInfoKeyLength((unsigned int)wrappedKeyLength);
 
@@ -264,11 +257,10 @@ RawBuffer KeyProvider::getWrappedDomainKEK(const Password &password)
 
 RawBuffer KeyProvider::getPureDEK(const RawBuffer &DEKInWrapForm)
 {
-    if (!m_isInitialized) {
+    if (!m_isInitialized)
         ThrowErr(Exc::InternalError, "Object not initialized!");
-    }
 
-    if (DEKInWrapForm.size() != sizeof(WrappedKeyAndInfo)){
+    if (DEKInWrapForm.size() != sizeof(WrappedKeyAndInfo)) {
         LogError("input size:" << DEKInWrapForm.size()
                   << " Expected: " << sizeof(WrappedKeyAndInfo));
         ThrowErr(Exc::InternalError,
@@ -283,28 +275,24 @@ RawBuffer KeyProvider::getPureDEK(const RawBuffer &DEKInWrapForm)
     int keyLength;
 
     if (!PKCS5_PBKDF2_HMAC_SHA1(
-        wkmcDEK.getWrappedKeyAndInfo().keyInfo.label,
-        strlen(wkmcDEK.getWrappedKeyAndInfo().keyInfo.label),
-        m_kmcDKEK->getKeyAndInfo().key,
-        MAX_SALT_SIZE,
-        PBKDF2_ITERATIONS,
-        MAX_KEY_SIZE,
-        PKEK2)) {
-
+                    wkmcDEK.getWrappedKeyAndInfo().keyInfo.label,
+                    strlen(wkmcDEK.getWrappedKeyAndInfo().keyInfo.label),
+                    m_kmcDKEK->getKeyAndInfo().key,
+                    MAX_SALT_SIZE,
+                    PBKDF2_ITERATIONS,
+                    MAX_KEY_SIZE,
+                    PKEK2))
         ThrowErr(Exc::InternalError, "OPENSSL_ENGINE_ERROR");
-    }
 
     if (0 > (keyLength = decryptAes256Gcm(
-        wkmcDEK.getWrappedKeyAndInfo().wrappedKey,
-        wkmcDEK.getWrappedKeyAndInfo().keyInfo.keyLength,
-        wkmcDEK.getWrappedKeyAndInfo().keyInfo.tag,
-        PKEK2,
-        wkmcDEK.getWrappedKeyAndInfo().keyInfo.iv,
-        kmcDEK.getKeyAndInfo().key))) {
-
+                    wkmcDEK.getWrappedKeyAndInfo().wrappedKey,
+                    wkmcDEK.getWrappedKeyAndInfo().keyInfo.keyLength,
+                    wkmcDEK.getWrappedKeyAndInfo().keyInfo.tag,
+                    PKEK2,
+                    wkmcDEK.getWrappedKeyAndInfo().keyInfo.iv,
+                    kmcDEK.getKeyAndInfo().key)))
         ThrowErr(Exc::InternalError,
             "UnwrapDEK Failed in KeyProvider::getPureDEK");
-    }
 
     kmcDEK.setKeyInfoKeyLength((unsigned int)keyLength);
 
@@ -316,9 +304,8 @@ RawBuffer KeyProvider::getPureDEK(const RawBuffer &DEKInWrapForm)
 
 RawBuffer KeyProvider::generateDEK(const std::string &smackLabel)
 {
-    if (!m_isInitialized) {
+    if (!m_isInitialized)
         ThrowErr(Exc::InternalError, "Object not initialized!");
-    }
 
     WrappedKeyAndInfoContainer wkmcDEK = WrappedKeyAndInfoContainer();
     std::string resized_smackLabel;
@@ -331,35 +318,29 @@ RawBuffer KeyProvider::generateDEK(const std::string &smackLabel)
     uint8_t key[MAX_KEY_SIZE], PKEK2[MAX_KEY_SIZE];
 
     if (!RAND_bytes(key, m_kmcDKEK->getKeyAndInfo().keyInfo.keyLength) ||
-        !RAND_bytes(wkmcDEK.getWrappedKeyAndInfo().keyInfo.iv, MAX_IV_SIZE)) {
-
+        !RAND_bytes(wkmcDEK.getWrappedKeyAndInfo().keyInfo.iv, MAX_IV_SIZE))
         ThrowErr(Exc::InternalError, "OPENSSL_ENGINE_ERROR");
-    }
 
     if (!PKCS5_PBKDF2_HMAC_SHA1(
-        resized_smackLabel.c_str(),
-        strlen(resized_smackLabel.c_str()),
-        m_kmcDKEK->getKeyAndInfo().key,
-        MAX_SALT_SIZE,
-        PBKDF2_ITERATIONS,
-        MAX_KEY_SIZE,
-        PKEK2)) {
-
+                    resized_smackLabel.c_str(),
+                    strlen(resized_smackLabel.c_str()),
+                    m_kmcDKEK->getKeyAndInfo().key,
+                    MAX_SALT_SIZE,
+                    PBKDF2_ITERATIONS,
+                    MAX_KEY_SIZE,
+                    PKEK2))
         ThrowErr(Exc::InternalError, "OPENSSL_ENGINE_ERROR");
-    }
 
     int wrappedKeyLength;
 
     if (0 > (wrappedKeyLength = encryptAes256Gcm(
-        key,
-        m_kmcDKEK->getKeyAndInfo().keyInfo.keyLength,
-        PKEK2,
-        wkmcDEK.getWrappedKeyAndInfo().keyInfo.iv,
-        wkmcDEK.getWrappedKeyAndInfo().wrappedKey,
-        wkmcDEK.getWrappedKeyAndInfo().keyInfo.tag))) {
-
+                    key,
+                    m_kmcDKEK->getKeyAndInfo().keyInfo.keyLength,
+                    PKEK2,
+                    wkmcDEK.getWrappedKeyAndInfo().keyInfo.iv,
+                    wkmcDEK.getWrappedKeyAndInfo().wrappedKey,
+                    wkmcDEK.getWrappedKeyAndInfo().keyInfo.tag)))
         ThrowErr(Exc::InternalError, "GenerateDEK Failed in KeyProvider::generateDEK");
-    }
 
     wkmcDEK.setKeyInfoKeyLength((unsigned int)wrappedKeyLength);
     wkmcDEK.setKeyInfoSalt(m_kmcDKEK->getKeyAndInfo().key, MAX_SALT_SIZE);
@@ -403,22 +384,19 @@ RawBuffer KeyProvider::reencrypt(
         PBKDF2_ITERATIONS,
         MAX_KEY_SIZE,
         PKEK1)) {
-
         delete[] concat_user_pass;
         ThrowErr(Exc::InternalError, "OPENSSL_ENGINE_ERROR");
     }
     delete[] concat_user_pass;
 
     if (0 > (keyLength = decryptAes256Gcm(
-        wkmcOldDKEK.getWrappedKeyAndInfo().wrappedKey,
-        wkmcOldDKEK.getWrappedKeyAndInfo().keyInfo.keyLength,
-        wkmcOldDKEK.getWrappedKeyAndInfo().keyInfo.tag,
-        PKEK1,
-        wkmcOldDKEK.getWrappedKeyAndInfo().keyInfo.iv,
-        kmcDKEK.getKeyAndInfo().key))) {
-
+                    wkmcOldDKEK.getWrappedKeyAndInfo().wrappedKey,
+                    wkmcOldDKEK.getWrappedKeyAndInfo().keyInfo.keyLength,
+                    wkmcOldDKEK.getWrappedKeyAndInfo().keyInfo.tag,
+                    PKEK1,
+                    wkmcOldDKEK.getWrappedKeyAndInfo().keyInfo.iv,
+                    kmcDKEK.getKeyAndInfo().key)))
         ThrowErr(Exc::AuthenticationFailed, "Incorrect Old Password ");
-    }
 
     kmcDKEK.setKeyInfo(&(wkmcOldDKEK.getWrappedKeyAndInfo().keyInfo));
     kmcDKEK.setKeyInfoKeyLength((unsigned int)keyLength);
@@ -428,14 +406,13 @@ RawBuffer KeyProvider::reencrypt(
         newPass.c_str());
 
     if (!PKCS5_PBKDF2_HMAC_SHA1(
-        concat_user_pass,
-        strlen(concat_user_pass),
-        kmcDKEK.getKeyAndInfo().keyInfo.salt,
-        MAX_SALT_SIZE,
-        PBKDF2_ITERATIONS,
-        MAX_KEY_SIZE,
-        PKEK1)) {
-
+                    concat_user_pass,
+                    strlen(concat_user_pass),
+                    kmcDKEK.getKeyAndInfo().keyInfo.salt,
+                    MAX_SALT_SIZE,
+                    PBKDF2_ITERATIONS,
+                    MAX_KEY_SIZE,
+                    PKEK1)) {
         delete[] concat_user_pass;
         ThrowErr(Exc::InternalError, "OPENSSL_ENGINE_ERROR");
     }
@@ -446,15 +423,13 @@ RawBuffer KeyProvider::reencrypt(
     wkmcNewDKEK.setKeyInfo(&(kmcDKEK.getKeyAndInfo().keyInfo));
 
     if (0 > (wrappedKeyLength = encryptAes256Gcm(
-        kmcDKEK.getKeyAndInfo().key,
-        kmcDKEK.getKeyAndInfo().keyInfo.keyLength,
-        PKEK1,
-        kmcDKEK.getKeyAndInfo().keyInfo.iv,
-        wkmcNewDKEK.getWrappedKeyAndInfo().wrappedKey,
-        wkmcNewDKEK.getWrappedKeyAndInfo().keyInfo.tag))) {
-
+                    kmcDKEK.getKeyAndInfo().key,
+                    kmcDKEK.getKeyAndInfo().keyInfo.keyLength,
+                    PKEK1,
+                    kmcDKEK.getKeyAndInfo().keyInfo.iv,
+                    wkmcNewDKEK.getWrappedKeyAndInfo().wrappedKey,
+                    wkmcNewDKEK.getWrappedKeyAndInfo().keyInfo.tag)))
         ThrowErr(Exc::InternalError, "UpdateDomainKEK in KeyProvider::reencrypt Failed");
-    }
 
     wkmcNewDKEK.setKeyInfoKeyLength((unsigned int)wrappedKeyLength);
 
@@ -471,22 +446,21 @@ RawBuffer KeyProvider::generateDomainKEK(
     uint8_t key[MAX_KEY_SIZE], PKEK1[MAX_KEY_SIZE];
 
     if (!RAND_bytes(wkmcDKEK.getWrappedKeyAndInfo().keyInfo.salt, MAX_SALT_SIZE) ||
-        !RAND_bytes(key, MAX_KEY_SIZE) ||
-        !RAND_bytes(wkmcDKEK.getWrappedKeyAndInfo().keyInfo.iv, MAX_IV_SIZE))
+                    !RAND_bytes(key, MAX_KEY_SIZE) ||
+                    !RAND_bytes(wkmcDKEK.getWrappedKeyAndInfo().keyInfo.iv, MAX_IV_SIZE))
         ThrowErr(Exc::InternalError, "OPENSSL_ENGINE_ERROR");
 
     int wrappedKeyLength;
     char *concat_user_pass = NULL;
     concat_user_pass = concat_password_user(user.c_str(), userPassword.c_str());
     if (!PKCS5_PBKDF2_HMAC_SHA1(
-        concat_user_pass,
-        strlen(concat_user_pass),
-        wkmcDKEK.getWrappedKeyAndInfo().keyInfo.salt,
-        MAX_SALT_SIZE,
-        PBKDF2_ITERATIONS,
-        MAX_KEY_SIZE,
-        PKEK1)) {
-
+                    concat_user_pass,
+                    strlen(concat_user_pass),
+                    wkmcDKEK.getWrappedKeyAndInfo().keyInfo.salt,
+                    MAX_SALT_SIZE,
+                    PBKDF2_ITERATIONS,
+                    MAX_KEY_SIZE,
+                    PKEK1)) {
         delete[] concat_user_pass;
         ThrowErr(Exc::InternalError, "OPENSSL_ENGINED_ERROR");
     }
@@ -494,16 +468,14 @@ RawBuffer KeyProvider::generateDomainKEK(
     delete[] concat_user_pass;
 
     if (0 > (wrappedKeyLength = encryptAes256Gcm(
-        key,
-        MAX_KEY_SIZE,
-        PKEK1,
-        wkmcDKEK.getWrappedKeyAndInfo().keyInfo.iv,
-        wkmcDKEK.getWrappedKeyAndInfo().wrappedKey,
-        wkmcDKEK.getWrappedKeyAndInfo().keyInfo.tag))) {
-
+                    key,
+                    MAX_KEY_SIZE,
+                    PKEK1,
+                    wkmcDKEK.getWrappedKeyAndInfo().keyInfo.iv,
+                    wkmcDKEK.getWrappedKeyAndInfo().wrappedKey,
+                    wkmcDKEK.getWrappedKeyAndInfo().keyInfo.tag)))
         ThrowErr(Exc::InternalError,
             "GenerateDomainKEK Failed in KeyProvider::generateDomainKEK");
-    }
 
     wkmcDKEK.setKeyInfoKeyLength((unsigned int)wrappedKeyLength);
     wkmcDKEK.setKeyInfoLabel(user);
@@ -531,40 +503,34 @@ KeyProvider::~KeyProvider()
 
 int KeyProvider::encryptAes256Gcm(const unsigned char *plaintext, int plaintext_len, const unsigned char *key, const unsigned char *iv, unsigned char *ciphertext, unsigned char *tag)
 {
-
     EVP_CIPHER_CTX *ctx;
     int len;
     int ciphertext_len = 0;
 
-    if (!(ctx = EVP_CIPHER_CTX_new())) {
+    if (!(ctx = EVP_CIPHER_CTX_new()))
         return OPENSSL_ENGINE_ERROR;
-    }
 
-    if (!EVP_EncryptInit_ex(ctx, EVP_aes_256_gcm(), NULL, NULL, NULL)) {
+    if (!EVP_EncryptInit_ex(ctx, EVP_aes_256_gcm(), NULL, NULL, NULL))
         return OPENSSL_ENGINE_ERROR;
-    }
 
-    if (!EVP_EncryptInit_ex(ctx, NULL, NULL, key, iv)) {
+    if (!EVP_EncryptInit_ex(ctx, NULL, NULL, key, iv))
         return OPENSSL_ENGINE_ERROR;
-    }
 
-    if (!EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, MAX_IV_SIZE, NULL)) {
+    if (!EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, MAX_IV_SIZE, NULL))
         return OPENSSL_ENGINE_ERROR;
-    }
 
-    if (!EVP_EncryptUpdate(ctx, ciphertext, &len, plaintext, plaintext_len)) {
+    if (!EVP_EncryptUpdate(ctx, ciphertext, &len, plaintext, plaintext_len))
         return OPENSSL_ENGINE_ERROR;
-    }
+
     ciphertext_len = len;
 
-    if (!EVP_EncryptFinal_ex(ctx, ciphertext + len, &len)) {
+    if (!EVP_EncryptFinal_ex(ctx, ciphertext + len, &len))
         return OPENSSL_ENGINE_ERROR;
-    }
+
     ciphertext_len += len;
 
-    if (!EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_GET_TAG, MAX_IV_SIZE, tag)) {
+    if (!EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_GET_TAG, MAX_IV_SIZE, tag))
         return OPENSSL_ENGINE_ERROR;
-    }
 
     EVP_CIPHER_CTX_free(ctx);
 
@@ -573,47 +539,40 @@ int KeyProvider::encryptAes256Gcm(const unsigned char *plaintext, int plaintext_
 
 int KeyProvider::decryptAes256Gcm(const unsigned char *ciphertext, int ciphertext_len, unsigned char *tag, const unsigned char *key, const unsigned char *iv, unsigned char *plaintext)
 {
-
     EVP_CIPHER_CTX *ctx;
     int len;
     int plaintext_len;
     int ret;
 
-    if (!(ctx = EVP_CIPHER_CTX_new())) {
+    if (!(ctx = EVP_CIPHER_CTX_new()))
         return OPENSSL_ENGINE_ERROR;
-    }
 
-    if (!EVP_DecryptInit_ex(ctx, EVP_aes_256_gcm(), NULL, NULL, NULL)) {
+    if (!EVP_DecryptInit_ex(ctx, EVP_aes_256_gcm(), NULL, NULL, NULL))
         return OPENSSL_ENGINE_ERROR;
-    }
-    if (!EVP_DecryptInit_ex(ctx, NULL, NULL, key, iv)) {
-        return OPENSSL_ENGINE_ERROR;
-    }
 
-    if (!EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, MAX_IV_SIZE, NULL)) {
+    if (!EVP_DecryptInit_ex(ctx, NULL, NULL, key, iv))
         return OPENSSL_ENGINE_ERROR;
-    }
 
-    if (!EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_TAG, MAX_IV_SIZE, tag)) {
+    if (!EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, MAX_IV_SIZE, NULL))
         return OPENSSL_ENGINE_ERROR;
-    }
 
-    if (!EVP_DecryptUpdate(ctx, plaintext, &len, ciphertext, ciphertext_len)) {
+    if (!EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_TAG, MAX_IV_SIZE, tag))
         return OPENSSL_ENGINE_ERROR;
-    }
+
+    if (!EVP_DecryptUpdate(ctx, plaintext, &len, ciphertext, ciphertext_len))
+        return OPENSSL_ENGINE_ERROR;
+
     plaintext_len = len;
 
-    if (!(ret = EVP_DecryptFinal_ex(ctx, plaintext + len, &len))) {
+    if (!(ret = EVP_DecryptFinal_ex(ctx, plaintext + len, &len)))
         return OPENSSL_ENGINE_ERROR;
-    }
 
     EVP_CIPHER_CTX_free(ctx);
 
     if (ret > 0) {
         plaintext_len += len;
         return plaintext_len;
-    }
-    else {
+    } else {
         return -1;
     }
 }
@@ -628,12 +587,12 @@ char * KeyProvider::concat_password_user(const char *user, const char *password)
         resized_user = new char[MAX_LABEL_SIZE];
         memcpy(resized_user, user, MAX_LABEL_SIZE-1);
         resized_user[MAX_LABEL_SIZE-1] = '\0';
-    }
-    else {
+    } else {
         resized_user = new char[strlen(user)+1];
         memcpy(resized_user, user, strlen(user));
         resized_user[strlen(user)] = '\0';
     }
+
     concat_user_pass_len = strlen(resized_user) + strlen(password) + 1;
     concat_user_pass = new char[concat_user_pass_len];
 

@@ -176,11 +176,13 @@ namespace DB {
         other.m_inUserTransaction = false;
     }
 
-    Crypto::~Crypto() {
+    Crypto::~Crypto()
+    {
         delete m_connection;
     }
 
-    Crypto& Crypto::operator=(Crypto&& other) {
+    Crypto& Crypto::operator=(Crypto&& other)
+    {
         if (this == &other)
             return *this;
         delete m_connection;
@@ -226,22 +228,20 @@ namespace DB {
     bool Crypto::getDBVersion(int & schemaVersion)
     {
         SchemaInfo SchemaInfo(this);
-        if(SchemaInfo.getVersionInfo(schemaVersion)) {
+        if (SchemaInfo.getVersionInfo(schemaVersion)) {
             LogDebug("Current DB version: " << schemaVersion);
             return true;
-        }
-        else
-        {
+        } else {
             LogDebug("No DB version known or DB not present");
 
             // special case: old CKM_TABLE exists
-            if(m_connection->CheckTableExist("CKM_TABLE")) {
+            if (m_connection->CheckTableExist("CKM_TABLE")) {
                 schemaVersion = DB_VERSION_1;
                 return true;
             }
 
             // special case: new scheme exists, but no SCHEMA_INFO table present
-            else if(m_connection->CheckTableExist("NAME_TABLE")) {
+            else if (m_connection->CheckTableExist("NAME_TABLE")) {
                 schemaVersion = DB_VERSION_2;
                 return true;
             }
@@ -254,22 +254,17 @@ namespace DB {
     {
         // run migration if old database is present
         int schemaVersion;
-        if( getDBVersion(schemaVersion)==false ||       // DB empty or corrupted
-            schemaVersion > DB_VERSION_CURRENT)         // or too new scheme
-        {
+        if ( getDBVersion(schemaVersion) == false ||       // DB empty or corrupted
+            schemaVersion > DB_VERSION_CURRENT) {          // or too new scheme
             LogDebug("no database or database corrupted, initializing the DB");
             resetDB();
-        }
-        else
-        {
+        } else {
             // migration needed
             LogDebug("DB migration from version " << schemaVersion << " to version " << DB_VERSION_CURRENT << " started.");
             Transaction transaction(this);
-            for(int vi=schemaVersion; vi<DB_VERSION_CURRENT; vi++)
-            {
+            for (int vi = schemaVersion; vi < DB_VERSION_CURRENT; vi++) {
                 ScriptOptional script = getMigrationScript(vi);
-                if(!script)
-                {
+                if (!script) {
                     LogError("Error, script to migrate database from version: " << vi <<
                              " to version: " << vi+1 << " not available, resetting the DB");
                     resetDB();
@@ -290,12 +285,11 @@ namespace DB {
     {
         std::string scriptPath = SCRIPTS_PATH + scriptName + std::string(".sql");
         std::ifstream is(scriptPath);
-        if(is.fail()) {
+        if (is.fail()) {
             LogError("Script " << scriptPath << " not found!");
             return ScriptOptional();
         }
-
-        std::istreambuf_iterator<char> begin(is),end;
+        std::istreambuf_iterator<char> begin(is), end;
         return ScriptOptional(std::string(begin, end));
     }
 
@@ -305,14 +299,14 @@ namespace DB {
         return getScript(scriptPath);
     }
 
-    void Crypto::createDBSchema() {
+    void Crypto::createDBSchema()
+    {
         Transaction transaction(this);
 
         ScriptOptional script = getScript(SCRIPT_CREATE_SCHEMA);
-        if(!script)
-        {
+
+        if (!script)
             ThrowErr(Exc::DatabaseFailed, "Can not create the database schema: no initialization script");
-        }
 
         m_connection->ExecCommand((*script).c_str());
         SchemaInfo SchemaInfo(this);
@@ -320,20 +314,20 @@ namespace DB {
         transaction.commit();
     }
 
-    void Crypto::resetDB() {
+    void Crypto::resetDB()
+    {
         Transaction transaction(this);
         ScriptOptional script = getScript(SCRIPT_DROP_ALL_ITEMS);
-        if(!script)
-        {
+        if (!script)
             ThrowErr(Exc::DatabaseFailed, "Can not clear the database: no clearing script");
-        }
 
         m_connection->ExecCommand((*script).c_str());
         createDBSchema();
         transaction.commit();
     }
 
-    bool Crypto::isNameLabelPresent(const Name &name, const Label &owner) const {
+    bool Crypto::isNameLabelPresent(const Name &name, const Label &owner) const
+    {
         Try {
             NameTable nameTable(this->m_connection);
             return nameTable.isPresent(name, owner);
@@ -368,7 +362,8 @@ namespace DB {
         ThrowErr(Exc::DatabaseFailed, "Couldn't save Row");
     }
 
-    void Crypto::saveRow(const Row &row) {
+    void Crypto::saveRow(const Row &row)
+    {
         Try {
             // transaction is present in the layer above
             NameTable nameTable(this->m_connection);
@@ -389,7 +384,8 @@ namespace DB {
         ThrowErr(Exc::DatabaseFailed, "Couldn't save Row");
     }
 
-    void Crypto::updateRow(const Row &row) {
+    void Crypto::updateRow(const Row &row)
+    {
         Try {
             // transaction is present in the layer above
             ObjectTable objectTable(this->m_connection);
@@ -410,15 +406,14 @@ namespace DB {
         Try {
             // transaction is present in the layer above
             NameTable nameTable(this->m_connection);
-            if(nameTable.isPresent(name, ownerLabel))
-            {
+            if (nameTable.isPresent(name, ownerLabel)) {
                 nameTable.deleteRow(name, ownerLabel);
                 return true;
             }
             return false;
-        } Catch (SqlConnection::Exception::SyntaxError) {
+        } Catch(SqlConnection::Exception::SyntaxError) {
             LogError("Couldn't prepare delete statement");
-        } Catch (SqlConnection::Exception::InternalError) {
+        } Catch(SqlConnection::Exception::InternalError) {
             LogError("Couldn't execute delete statement");
         }
         ThrowErr(Exc::DatabaseFailed,
@@ -426,7 +421,8 @@ namespace DB {
     }
 
     Row Crypto::getRow(
-            const SqlConnection::DataCommandUniquePtr &selectCommand) const {
+            const SqlConnection::DataCommandUniquePtr &selectCommand) const
+    {
         Row row;
         row.name = selectCommand->GetColumnString(0);
         row.ownerLabel = selectCommand->GetColumnString(1);
@@ -450,11 +446,11 @@ namespace DB {
         Try {
             PermissionTable permissionTable(this->m_connection);
             return permissionTable.getPermissionRow(name, ownerLabel, accessorLabel);
-        } Catch (SqlConnection::Exception::InvalidColumn) {
+        } Catch(SqlConnection::Exception::InvalidColumn) {
             LogError("Select statement invalid column error");
-        } Catch (SqlConnection::Exception::SyntaxError) {
+        } Catch(SqlConnection::Exception::SyntaxError) {
             LogError("Couldn't prepare select statement");
-        } Catch (SqlConnection::Exception::InternalError) {
+        } Catch(SqlConnection::Exception::InternalError) {
             LogError("Couldn't execute select statement");
         }
         return PermissionMaskOptional();
@@ -481,11 +477,10 @@ namespace DB {
             selectCommand->BindInteger(2, typeRangeStop);
 
             // name table reference
-            selectCommand->BindString (101, name.c_str());
-            selectCommand->BindString (102, ownerLabel.c_str());
+            selectCommand->BindString(101, name.c_str());
+            selectCommand->BindString(102, ownerLabel.c_str());
 
-            if(selectCommand->Step())
-            {
+            if (selectCommand->Step()) {
                 // extract data
                 Row current_row = getRow(selectCommand);
 
@@ -494,11 +489,11 @@ namespace DB {
             } else {
                 return RowOptional();
             }
-        } Catch (SqlConnection::Exception::InvalidColumn) {
+        } Catch(SqlConnection::Exception::InvalidColumn) {
             LogError("Select statement invalid column error");
-        } Catch (SqlConnection::Exception::SyntaxError) {
+        } Catch(SqlConnection::Exception::SyntaxError) {
             LogError("Couldn't prepare select statement");
-        } Catch (SqlConnection::Exception::InternalError) {
+        } Catch(SqlConnection::Exception::InternalError) {
             LogError("Couldn't execute select statement");
         }
         ThrowErr(Exc::DatabaseFailed,
@@ -531,20 +526,19 @@ namespace DB {
             selectCommand->BindInteger(2, typeRangeStop);
 
             // name table reference
-            selectCommand->BindString (101, name.c_str());
-            selectCommand->BindString (102, ownerLabel.c_str());
+            selectCommand->BindString(101, name.c_str());
+            selectCommand->BindString(102, ownerLabel.c_str());
 
-            while(selectCommand->Step())
-            {
+            while (selectCommand->Step()) {
                 // extract data
                 output.push_back(getRow(selectCommand));
             }
             return;
-        } Catch (SqlConnection::Exception::InvalidColumn) {
+        } Catch(SqlConnection::Exception::InvalidColumn) {
             LogError("Select statement invalid column error");
-        } Catch (SqlConnection::Exception::SyntaxError) {
+        } Catch(SqlConnection::Exception::SyntaxError) {
             LogError("Couldn't prepare select statement");
-        } Catch (SqlConnection::Exception::InternalError) {
+        } Catch(SqlConnection::Exception::InternalError) {
             LogError("Couldn't execute select statement");
         }
         ThrowErr(Exc::DatabaseFailed,
@@ -568,7 +562,7 @@ namespace DB {
         DataType typeRangeStart,
         DataType typeRangeStop)
     {
-        Try{
+        Try {
             Transaction transaction(this);
             SqlConnection::DataCommandUniquePtr selectCommand =
                             m_connection->PrepareDataCommand(DB_CMD_NAME_SELECT_BY_TYPE_AND_PERMISSION);
@@ -577,17 +571,17 @@ namespace DB {
             selectCommand->BindString(104, smackLabel.c_str());
             selectCommand->BindInteger(4, static_cast<int>(Permission::READ | Permission::REMOVE));
 
-            while(selectCommand->Step()) {
+            while (selectCommand->Step()) {
                 Label ownerLabel = selectCommand->GetColumnString(0);
                 Name name = selectCommand->GetColumnString(1);
                 labelNameVector.push_back(std::make_pair(ownerLabel, name));
             }
             return;
-        } Catch (SqlConnection::Exception::InvalidColumn) {
+        } Catch(SqlConnection::Exception::InvalidColumn) {
             LogError("Select statement invalid column error");
-        } Catch (SqlConnection::Exception::SyntaxError) {
+        } Catch(SqlConnection::Exception::SyntaxError) {
             LogError("Couldn't prepare select statement");
-        } Catch (SqlConnection::Exception::InternalError) {
+        } Catch(SqlConnection::Exception::InternalError) {
             LogError("Couldn't execute select statement");
         }
         ThrowErr(Exc::DatabaseFailed,
@@ -596,8 +590,6 @@ namespace DB {
                 static_cast<int>(typeRangeStop), ">",
                 " accessible to client label ", smackLabel);
     }
-
-
 
     void Crypto::saveKey(
             const Label& label,
@@ -610,9 +602,9 @@ namespace DB {
             insertCommand->BindBlob(2, key);
             insertCommand->Step();
             return;
-        } Catch (SqlConnection::Exception::SyntaxError) {
+        } Catch(SqlConnection::Exception::SyntaxError) {
             LogError("Couldn't prepare insert key statement");
-        } Catch (SqlConnection::Exception::InternalError) {
+        } Catch(SqlConnection::Exception::InternalError) {
             LogError("Couldn't execute insert statement");
         }
         ThrowErr(Exc::DatabaseFailed, "Couldn't save key for label ", label);
@@ -625,24 +617,23 @@ namespace DB {
                     m_connection->PrepareDataCommand(DB_CMD_KEY_SELECT);
             selectCommand->BindString(1, label.c_str());
 
-            if (selectCommand->Step()) {
+            if (selectCommand->Step())
                 return RawBufferOptional(
                         selectCommand->GetColumnBlob(0));
-            } else {
+            else
                 return RawBufferOptional();
-            }
-
-        } Catch (SqlConnection::Exception::InvalidColumn) {
+        } Catch(SqlConnection::Exception::InvalidColumn) {
             LogError("Select statement invalid column error");
-        } Catch (SqlConnection::Exception::SyntaxError) {
+        } Catch(SqlConnection::Exception::SyntaxError) {
             LogError("Couldn't prepare insert key statement");
-        } Catch (SqlConnection::Exception::InternalError) {
+        } Catch(SqlConnection::Exception::InternalError) {
             LogError("Couldn't execute insert statement");
         }
         ThrowErr(Exc::DatabaseFailed, "Couldn't get key for label ", label);
     }
 
-    void Crypto::deleteKey(const Label& label) {
+    void Crypto::deleteKey(const Label& label)
+    {
         Try {
             Transaction transaction(this);
 
@@ -656,9 +647,9 @@ namespace DB {
 
             transaction.commit();
             return;
-        } Catch (SqlConnection::Exception::SyntaxError) {
+        } Catch(SqlConnection::Exception::SyntaxError) {
             LogError("Couldn't prepare insert key statement");
-        } Catch (SqlConnection::Exception::InternalError) {
+        } Catch(SqlConnection::Exception::InternalError) {
             LogError("Couldn't execute insert statement");
         }
         ThrowErr(Exc::DatabaseFailed, "Couldn't delete key for label ", label);
@@ -674,16 +665,16 @@ namespace DB {
             PermissionTable permissionTable(this->m_connection);
             permissionTable.setPermission(name, ownerLabel, accessorLabel, permissionMask);
             return;
-        } Catch (SqlConnection::Exception::SyntaxError) {
+        } Catch(SqlConnection::Exception::SyntaxError) {
             LogError("Couldn't prepare set statement");
-        } Catch (SqlConnection::Exception::InternalError) {
+        } Catch(SqlConnection::Exception::InternalError) {
             LogError("Couldn't execute set statement");
         }
         ThrowErr(Exc::DatabaseFailed, "Couldn't set permissions for name ", name);
     }
 
-
-    void Crypto::SchemaInfo::setVersionInfo() {
+    void Crypto::SchemaInfo::setVersionInfo()
+    {
         SqlConnection::DataCommandUniquePtr insertContextCommand =
                 m_db->m_connection->PrepareDataCommand(DB_CMD_SCHEMA_SET);
         insertContextCommand->BindString(101, DB_SCHEMA_VERSION_FIELD);
@@ -700,15 +691,15 @@ namespace DB {
                     m_db->m_connection->PrepareDataCommand(DB_CMD_SCHEMA_GET);
             selectCommand->BindString(101, DB_SCHEMA_VERSION_FIELD);
 
-            if(selectCommand->Step()) {
+            if (selectCommand->Step()) {
                 version = static_cast<int>(atoi(selectCommand->GetColumnString(1).c_str()));
                 return true;
             }
-        } Catch (SqlConnection::Exception::InvalidColumn) {
+        } Catch(SqlConnection::Exception::InvalidColumn) {
             LogError("Select statement invalid column error");
-        } Catch (SqlConnection::Exception::SyntaxError) {
+        } Catch(SqlConnection::Exception::SyntaxError) {
             LogError("Couldn't prepare select statement");
-        } Catch (SqlConnection::Exception::InternalError) {
+        } Catch(SqlConnection::Exception::InternalError) {
             LogError("Couldn't execute select statement");
         }
         return false;
@@ -720,8 +711,7 @@ namespace DB {
             const Label& accessorLabel,
             const PermissionMask permissionMask)
     {
-        if(permissionMask == Permission::NONE)
-        {
+        if (permissionMask == Permission::NONE) {
             // clear permissions
             SqlConnection::DataCommandUniquePtr deletePermissionCommand =
                 m_connection->PrepareDataCommand(DB_CMD_PERMISSION_DELETE);
@@ -729,9 +719,7 @@ namespace DB {
             deletePermissionCommand->BindString(101, name.c_str());
             deletePermissionCommand->BindString(102, ownerLabel.c_str());
             deletePermissionCommand->Step();
-        }
-        else
-        {
+        } else {
             // add new permissions
             SqlConnection::DataCommandUniquePtr setPermissionCommand =
                 m_connection->PrepareDataCommand(DB_CMD_PERMISSION_SET);
@@ -756,8 +744,7 @@ namespace DB {
         selectCommand->BindString(101, name.c_str());
         selectCommand->BindString(102, ownerLabel.c_str());
 
-        if(selectCommand->Step())
-        {
+        if (selectCommand->Step()) {
             // there is entry for the <name, ownerLabel> pair
             return PermissionMaskOptional(PermissionMask(selectCommand->GetColumnInteger(0)));
         }
@@ -771,8 +758,8 @@ namespace DB {
         // insert NAMES item
         SqlConnection::DataCommandUniquePtr insertNameCommand =
                 m_connection->PrepareDataCommand(DB_CMD_NAME_INSERT);
-        insertNameCommand->BindString (101, name.c_str());
-        insertNameCommand->BindString (102, ownerLabel.c_str());
+        insertNameCommand->BindString(101, name.c_str());
+        insertNameCommand->BindString(102, ownerLabel.c_str());
         insertNameCommand->Step();
     }
 
@@ -807,11 +794,11 @@ namespace DB {
                 m_connection->PrepareDataCommand(DB_CMD_NAME_COUNT_ROWS);
         checkCmd->BindString(101, name.c_str());
         checkCmd->BindString(102, ownerLabel.c_str());
-        if(checkCmd->Step()) {
+        if (checkCmd->Step()) {
             int element_count = checkCmd->GetColumnInteger(0);
             LogDebug("Item name: " << name  << " ownerLabel: " << ownerLabel <<
                      " hit count: " << element_count);
-            if(element_count > 0)
+            if (element_count > 0)
                 return true;
         }
         return false;
@@ -825,15 +812,15 @@ namespace DB {
         insertObjectCommand->BindInteger(2, static_cast<int>(row.dataType));
         insertObjectCommand->BindInteger(3, static_cast<int>(row.algorithmType));
         insertObjectCommand->BindInteger(4, row.encryptionScheme);
-        insertObjectCommand->BindBlob   (5, row.iv);
+        insertObjectCommand->BindBlob(5, row.iv);
         insertObjectCommand->BindInteger(6, row.dataSize);
-        insertObjectCommand->BindBlob   (7, row.data);
-        insertObjectCommand->BindBlob   (8, row.tag);
+        insertObjectCommand->BindBlob(7, row.data);
+        insertObjectCommand->BindBlob(8, row.tag);
         insertObjectCommand->BindInteger(9, static_cast<int>(row.backendId));
 
         // name table reference
-        insertObjectCommand->BindString (101, row.name.c_str());
-        insertObjectCommand->BindString (102, row.ownerLabel.c_str());
+        insertObjectCommand->BindString(101, row.name.c_str());
+        insertObjectCommand->BindString(102, row.ownerLabel.c_str());
 
         insertObjectCommand->Step();
     }
@@ -845,14 +832,14 @@ namespace DB {
         updateObjectCommand->BindInteger(2, static_cast<int>(row.dataType));
         updateObjectCommand->BindInteger(3, static_cast<int>(row.algorithmType));
         updateObjectCommand->BindInteger(4, row.encryptionScheme);
-        updateObjectCommand->BindBlob   (5, row.iv);
+        updateObjectCommand->BindBlob(5, row.iv);
         updateObjectCommand->BindInteger(6, row.dataSize);
-        updateObjectCommand->BindBlob   (7, row.data);
-        updateObjectCommand->BindBlob   (8, row.tag);
+        updateObjectCommand->BindBlob(7, row.data);
+        updateObjectCommand->BindBlob(8, row.tag);
 
         // name table reference
-        updateObjectCommand->BindString (101, row.name.c_str());
-        updateObjectCommand->BindString (102, row.ownerLabel.c_str());
+        updateObjectCommand->BindString(101, row.name.c_str());
+        updateObjectCommand->BindString(102, row.ownerLabel.c_str());
 
         updateObjectCommand->Step();
     }

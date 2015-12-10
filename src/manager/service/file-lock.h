@@ -25,8 +25,7 @@
 
 namespace CKM {
 
-class FileLock
-{
+class FileLock {
 public:
     explicit FileLock(const char* const file);
     ~FileLock();

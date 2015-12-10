@@ -31,7 +31,7 @@ namespace CKM {
 class Manager::Impl {
 public:
     Impl();
-    virtual ~Impl(){}
+    virtual ~Impl() {}
 
     int saveKey(const Alias &alias, const KeyShPtr &key, const Policy &policy);
     int getKey(const Alias &alias, const Password &password, KeyShPtr &key);

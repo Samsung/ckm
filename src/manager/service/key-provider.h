@@ -65,7 +65,7 @@ typedef struct WrappedKeyAndInfo_ {
     uint8_t wrappedKey[MAX_WRAPPED_KEY_SIZE];
 } WrappedKeyAndInfo;
 
-class WrappedKeyAndInfoContainer{
+class WrappedKeyAndInfoContainer {
 public:
     WrappedKeyAndInfoContainer();
     WrappedKeyAndInfoContainer(const unsigned char*);
@@ -75,11 +75,12 @@ public:
     void setKeyInfoSalt(const unsigned char*, const int);
     void setKeyInfo(const KeyComponentsInfo*);
     ~WrappedKeyAndInfoContainer();
+
 private:
     WrappedKeyAndInfo *wrappedKeyAndInfo;
 };
 
-class KeyAndInfoContainer{
+class KeyAndInfoContainer {
 public:
     KeyAndInfoContainer();
     KeyAndInfoContainer(const unsigned char*);
@@ -87,6 +88,7 @@ public:
     void setKeyInfoKeyLength(const unsigned int);
     void setKeyInfo(const KeyComponentsInfo*);
     ~KeyAndInfoContainer();
+
 private:
     KeyAndInfo *keyAndInfo;
 };
@@ -144,6 +146,7 @@ public:
     static int closeLibrary();
 
     virtual ~KeyProvider();
+
 private:
     // KeyAndInfoContainer class
     std::shared_ptr<KeyAndInfoContainer> m_kmcDKEK;
@@ -168,7 +171,6 @@ private:
     static char * concat_password_user(
         const char *user,
         const char *password);
-
 };
 
 } // namespace CKM

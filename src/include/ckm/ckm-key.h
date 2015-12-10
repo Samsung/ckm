@@ -34,7 +34,7 @@ public:
     virtual KeyType getType() const = 0;
     virtual int getSize() const = 0;
     virtual RawBuffer getDER() const = 0;
-    virtual ~Key(){}
+    virtual ~Key() {}
 
     static KeyShPtr create(
         const RawBuffer &rawBuffer,

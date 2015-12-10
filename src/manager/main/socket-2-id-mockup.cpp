@@ -26,7 +26,8 @@
 
 namespace CKM {
 
-int Socket2Id::getPkgIdFromSmack(const std::string &smack, std::string &pkgId) {
+int Socket2Id::getPkgIdFromSmack(const std::string &smack, std::string &pkgId)
+{
     static const std::string SMACK_PREFIX_APPID  = "User::App::";
 
     if (smack.empty()) {
@@ -52,17 +53,16 @@ int Socket2Id::getPkgIdFromSmack(const std::string &smack, std::string &pkgId) {
     return 0;
 }
 
-int Socket2Id::translate(int sock, std::string &result) {
+int Socket2Id::translate(int sock, std::string &result)
+{
     std::string smack;
     std::string pkgId;
 
-    if (0 > getCredentialsFromSocket(sock, smack)) {
+    if (0 > getCredentialsFromSocket(sock, smack))
         return -1;
-    }
 
-    if (0 > getPkgIdFromSmack(smack, pkgId)) {
+    if (0 > getPkgIdFromSmack(smack, pkgId))
         return -1;
-    }
 
     result = std::move(pkgId);
     return 0;

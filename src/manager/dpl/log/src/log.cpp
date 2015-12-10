@@ -36,8 +36,7 @@ IMPLEMENT_SAFE_SINGLETON(CKM::Log::LogSystem);
 
 namespace CKM {
 namespace Log {
-namespace // anonymous
-{
+namespace { // anonymous
 /*
  * Set these variables to desired values in /etc/sysconfig/central-key-manager and restart
  * central-key-manager service to use them.
@@ -54,7 +53,8 @@ const char * const DLOG =     "DLOG";
 const char * const JOURNALD = "JOURNALD";
 } // namespace anonymous
 
-LogSystem::LogSystem() : m_providerCtor({
+LogSystem::LogSystem() :
+    m_providerCtor({
 #ifdef BUILD_TYPE_DEBUG
             { CONSOLE,  []{ return static_cast<AbstractLogProvider*>(new OldStyleLogProvider()); } },
 #endif // BUILD_TYPE_DEBUG

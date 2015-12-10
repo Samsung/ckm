@@ -47,7 +47,7 @@ std::mutex* g_mutexes = NULL;
 
 void lockingCallback(int mode, int type, const char*, int)
 {
-    if(!g_mutexes) {
+    if (!g_mutexes) {
         LogError("Openssl mutexes do not exist");
         return;
     }
@@ -58,7 +58,8 @@ void lockingCallback(int mode, int type, const char*, int)
         g_mutexes[type].unlock();
 }
 
-unsigned long threadIdCallback() {
+unsigned long threadIdCallback()
+{
     std::hash<std::thread::id> hasher;
     return hasher(std::this_thread::get_id());
 }
@@ -83,7 +84,8 @@ void opensslUninstallLocks()
 } // namespace anonymous
 
 
-void initOpenSsl() {
+void initOpenSsl()
+{
     // Loads all error strings (crypto and ssl)
     SSL_load_error_strings();
 
@@ -104,9 +106,8 @@ void initOpenSsl() {
     OPENSSL_config(NULL);
 
     // enable FIPS mode by default
-    if(0 == FIPS_mode_set(1)) {
+    if (0 == FIPS_mode_set(1))
         LogWarning("Failed to set FIPS mode. Key-manager will be operated in non FIPS mode.");
-    }
 
     /*
      * Initialize entropy
@@ -115,14 +116,14 @@ void initOpenSsl() {
     int ret = 0;
 
     std::ifstream ifile(DEV_HW_RANDOM_FILE);
-    if(ifile.is_open())
-        ret= RAND_load_file(DEV_HW_RANDOM_FILE, RANDOM_BUFFER_LEN);
+    if (ifile.is_open())
+        ret = RAND_load_file(DEV_HW_RANDOM_FILE, RANDOM_BUFFER_LEN);
 
-    if(ret != RANDOM_BUFFER_LEN ){
+    if (ret != RANDOM_BUFFER_LEN) {
         LogWarning("Error in HW_RAND file load");
         ret = RAND_load_file(DEV_URANDOM_FILE, RANDOM_BUFFER_LEN);
 
-        if(ret != RANDOM_BUFFER_LEN)
+        if (ret != RANDOM_BUFFER_LEN)
             LogError("Error in U_RAND_file_load");
     }
 
@@ -130,7 +131,8 @@ void initOpenSsl() {
     opensslInstallLocks();
 }
 
-void deinitOpenSsl() {
+void deinitOpenSsl()
+{
     opensslUninstallLocks();
     CONF_modules_unload(1);
     EVP_cleanup();
@@ -138,7 +140,8 @@ void deinitOpenSsl() {
     deinitOpenSslThread();
 }
 
-void deinitOpenSslThread() {
+void deinitOpenSslThread()
+{
     CRYPTO_cleanup_all_ex_data();
     ERR_remove_thread_state(NULL);
 }
@@ -151,19 +154,19 @@ void initOpenSslAndDetach();
 typedef void(*initFnPtr)();
 
 // has to be atomic as storing function pointer is not an atomic operation on armv7l
-std::atomic<initFnPtr> initFn (&initOpenSslAndDetach);
+std::atomic<initFnPtr> initFn(&initOpenSslAndDetach);
 
 void initEmpty() {}
 
-void initOpenSslAndDetach() {
+void initOpenSslAndDetach()
+{
     // DCLP
     std::lock_guard<std::mutex> lock(cryptoInitMutex);
     /*
      * We don't care about memory ordering here. Current thread will order it correctly and for
      * other threads only store matters. Also only one thread can be here at once because of lock.
      */
-    if(initFn.load(std::memory_order_relaxed) != &initEmpty)
-    {
+    if (initFn.load(std::memory_order_relaxed) != &initEmpty) {
         initOpenSsl();
 
         /*
@@ -177,7 +180,8 @@ void initOpenSslAndDetach() {
 
 } // namespace anonymous
 
-void initOpenSslOnce() {
+void initOpenSslOnce()
+{
     /*
      * Synchronizes with store. Everything that happened before store in another thread will be
      * visible in this thread after load.

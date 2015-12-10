@@ -34,8 +34,7 @@ Cynara::Cynara(GenericSocketManager *socketManager)
   : m_socketManager(socketManager)
   , m_cynara(nullptr)
 {
-    if (CYNARA_API_SUCCESS != cynara_async_initialize(&m_cynara, NULL, ChangeStatusCallback, this))
-    {
+    if (CYNARA_API_SUCCESS != cynara_async_initialize(&m_cynara, NULL, ChangeStatusCallback, this)) {
         LogError("Cynara initialization failed.");
         throw std::runtime_error("Cynara initialization failed.");
     }
@@ -55,7 +54,7 @@ void Cynara::Request(
       user.c_str(),
       privilege.c_str());
 
-    switch(ret) {
+    switch (ret) {
     default:
     case CYNARA_API_ACCESS_DENIED:
         callback(false);
@@ -73,17 +72,19 @@ void Cynara::Request(
     }
 }
 
-void Cynara::ProcessSocket() {
-    if (CYNARA_API_SUCCESS != cynara_async_process(m_cynara)) {
+void Cynara::ProcessSocket()
+{
+    if (CYNARA_API_SUCCESS != cynara_async_process(m_cynara))
         LogError("Function: cynara_async_process failed.");
-    }
 }
 
-Cynara::~Cynara(){
+Cynara::~Cynara()
+{
     cynara_async_finish(m_cynara);
 }
 
-void Cynara::ChangeStatus(int oldFd, int newFd, cynara_async_status status) {
+void Cynara::ChangeStatus(int oldFd, int newFd, cynara_async_status status)
+{
     m_socketManager->CynaraSocket(oldFd, newFd, status == CYNARA_STATUS_FOR_RW);
 }
 
@@ -147,7 +148,8 @@ void Cynara::ProcessResponseCallback(
     static_cast<Cynara*>(ptr)->ProcessResponse(checkId, cause, response);
 }
 
-bool Cynara::GetUserFromSocket(int socket, std::string &user) {
+bool Cynara::GetUserFromSocket(int socket, std::string &user)
+{
     char *ptr;
     if (CYNARA_API_SUCCESS != cynara_creds_socket_get_user(socket, USER_METHOD_DEFAULT, &ptr))
         return false;
@@ -156,9 +158,10 @@ bool Cynara::GetUserFromSocket(int socket, std::string &user) {
     return true;
 }
 
-bool Cynara::GetClientFromSocket(int socket, std::string &client) {
+bool Cynara::GetClientFromSocket(int socket, std::string &client)
+{
     char *ptr;
-    if (CYNARA_API_SUCCESS!=cynara_creds_socket_get_client(socket, CLIENT_METHOD_DEFAULT, &ptr))
+    if (CYNARA_API_SUCCESS != cynara_creds_socket_get_client(socket, CLIENT_METHOD_DEFAULT, &ptr))
         return false;
     client = ptr;
     free(ptr);

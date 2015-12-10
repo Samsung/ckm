@@ -38,7 +38,8 @@ template<typename T>
 class FstreamAccessors : T::__filebuf_type {
     typedef FstreamAccessors<T> MyType;
 public:
-    static int GetFd(T &strm) {
+    static int GetFd(T &strm)
+    {
         return static_cast<MyType *>(strm.rdbuf())->_M_file.fd();
     }
 };

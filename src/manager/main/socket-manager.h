@@ -50,7 +50,6 @@ public:
         DECLARE_EXCEPTION_TYPE(Base, InitFailed)
     };
 
-
     SocketManager();
     virtual ~SocketManager();
     virtual void MainLoop();
@@ -103,7 +102,9 @@ protected:
           : interfaceID(-1)
           , service(NULL)
           , m_flags(0)
-        {}
+        {
+        }
+
     private:
         static const char LISTEN  = 1 << 0;
         static const char OPEN    = 1 << 1;
@@ -119,7 +120,8 @@ protected:
     // support for generic event Queue
     typedef std::function<void(void)> EventFunction;
     template <typename E>
-    void AddEvent(E event) {
+    void AddEvent(E event)
+    {
         CreateEvent([this, event]() {this->Handle(event);});
     }
     void CreateEvent(EventFunction fun);
@@ -140,7 +142,8 @@ protected:
     struct Timeout {
         time_t time;
         int sock;
-        bool operator<(const Timeout &second) const {
+        bool operator<(const Timeout &second) const
+        {
             return time > second.time; // mininum first!
         }
     };

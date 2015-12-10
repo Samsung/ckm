@@ -55,7 +55,8 @@ namespace CKM {
 
 FileSystem::FileSystem(uid_t uid)
   : m_uid(uid)
-{}
+{
+}
 
 std::string FileSystem::getDBPath() const
 {
@@ -64,25 +65,29 @@ std::string FileSystem::getDBPath() const
     return ss.str();
 }
 
-std::string FileSystem::getDKEKPath() const {
+std::string FileSystem::getDKEKPath() const
+{
     std::stringstream ss;
     ss << CKM_DATA_PATH << CKM_KEY_PREFIX << m_uid;
     return ss.str();
 }
 
-std::string FileSystem::getDBDEKPath() const {
+std::string FileSystem::getDBDEKPath() const
+{
     std::stringstream ss;
     ss << CKM_DATA_PATH << CKM_DB_KEY_PREFIX << m_uid;
     return ss.str();
 }
 
-std::string FileSystem::getRemovedAppsPath() const {
+std::string FileSystem::getRemovedAppsPath() const
+{
     std::stringstream ss;
     ss << CKM_DATA_PATH << CKM_REMOVED_APP_PREFIX << m_uid;
     return ss.str();
 }
 
-RawBuffer FileSystem::loadFile(const std::string &path) const {
+RawBuffer FileSystem::loadFile(const std::string &path) const
+{
     std::ifstream is(path);
 
     if (is.fail() && ENOENT == errno)
@@ -94,8 +99,8 @@ RawBuffer FileSystem::loadFile(const std::string &path) const {
                  "Error opening file: ", path, " Reason: ", description);
     }
 
-    std::istreambuf_iterator<char> begin(is),end;
-    std::vector<char> buff(begin,end); // This trick does not work with boost vector
+    std::istreambuf_iterator<char> begin(is), end;
+    std::vector<char> buff(begin, end); // This trick does not work with boost vector
 
     RawBuffer buffer(buff.size());
     memcpy(buffer.data(), buff.data(), buff.size());
@@ -112,7 +117,8 @@ RawBuffer FileSystem::getDBDEK() const
     return loadFile(getDBDEKPath());
 }
 
-void FileSystem::saveFile(const std::string &path, const RawBuffer &buffer) const {
+void FileSystem::saveFile(const std::string &path, const RawBuffer &buffer) const
+{
     std::ofstream os(path, std::ios::out | std::ofstream::binary | std::ofstream::trunc);
     std::copy(buffer.begin(), buffer.end(), std::ostreambuf_iterator<char>(os));
 
@@ -125,11 +131,13 @@ void FileSystem::saveFile(const std::string &path, const RawBuffer &buffer) cons
         ThrowErr(Exc::FileSystemFailed, "Failed to save file: ", path);
 }
 
-void FileSystem::saveDKEK(const RawBuffer &buffer) const {
+void FileSystem::saveDKEK(const RawBuffer &buffer) const
+{
     saveFile(getDKEKPath(), buffer);
 }
 
-void FileSystem::saveDBDEK(const RawBuffer &buffer) const {
+void FileSystem::saveDBDEK(const RawBuffer &buffer) const
+{
     saveFile(getDBDEKPath(), buffer);
 }
 
@@ -153,9 +161,9 @@ AppLabelVector FileSystem::clearRemovedsApps() const
     std::string line;
     std::ifstream removedAppsFile(getRemovedAppsPath());
     if (removedAppsFile.is_open()) {
-        while (! removedAppsFile.eof() ) {
-            getline (removedAppsFile,line);
-            if(line.size() > 0)
+        while (!removedAppsFile.eof()) {
+            getline(removedAppsFile, line);
+            if (line.size() > 0)
                 removedApps.push_back(line);
         }
         removedAppsFile.close();
@@ -167,7 +175,8 @@ AppLabelVector FileSystem::clearRemovedsApps() const
     return removedApps;
 }
 
-int FileSystem::init() {
+int FileSystem::init()
+{
     errno = 0;
     if ((mkdir(CKM_DATA_PATH.c_str(), 0700)) && (errno != EEXIST)) {
         int err = errno;
@@ -177,7 +186,8 @@ int FileSystem::init() {
     return 0;
 }
 
-UidVector FileSystem::getUIDsFromDBFile() {
+UidVector FileSystem::getUIDsFromDBFile()
+{
     UidVector uids;
     std::unique_ptr<DIR, std::function<int(DIR*)>>
         dirp(::opendir(CKM_DATA_PATH.c_str()), ::closedir);
@@ -201,9 +211,8 @@ UidVector FileSystem::getUIDsFromDBFile() {
 
     while ( (!readdir_r(dirp.get(), pEntry.get(), &pDirEntry)) && pDirEntry ) {
         // Ignore files with diffrent prefix
-        if (strncmp(pDirEntry->d_name, CKM_KEY_PREFIX.c_str(), CKM_KEY_PREFIX.size())) {
+        if (strncmp(pDirEntry->d_name, CKM_KEY_PREFIX.c_str(), CKM_KEY_PREFIX.size()))
             continue;
-        }
 
         // We find database. Let's extract user id.
         try {
@@ -220,7 +229,8 @@ UidVector FileSystem::getUIDsFromDBFile() {
     return uids;
 }
 
-int FileSystem::removeUserData() const {
+int FileSystem::removeUserData() const
+{
     int err, retCode = 0;
 
     if (unlink(getDBPath().c_str())) {

@@ -61,7 +61,8 @@ void registerSocketService(CKM::SocketManager &manager, const std::string& servi
         delete service;
 }
 
-int main(void) {
+int main(void)
+{
     UNHANDLED_EXCEPTION_HANDLER_BEGIN
     {
         CKM::Singleton<CKM::Log::LogSystem>::Instance().SetTag("CKM");
@@ -103,9 +104,7 @@ int main(void) {
         CKM::KeyProvider::closeLibrary();
 
         CKM::deinitOpenSsl();
-    }
-    catch (const std::runtime_error& e)
-    {
+    } catch (const std::runtime_error& e) {
         LogError(e.what());
     }
     UNHANDLED_EXCEPTION_HANDLER_END

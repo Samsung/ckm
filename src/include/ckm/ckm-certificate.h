@@ -39,7 +39,6 @@ typedef std::shared_ptr<Certificate> CertificateShPtr;
 
 class KEY_MANAGER_API Certificate {
 public:
-
     virtual bool empty() const = 0;
 
     // This function  will return openssl struct X509*.
@@ -47,7 +46,7 @@ public:
     // Memory will be freed in ~Certificate.
     virtual X509 *getX509() const = 0;
     virtual RawBuffer getDER() const = 0;
-    virtual ~Certificate(){}
+    virtual ~Certificate() {}
 
     static CertificateShPtr create(const RawBuffer &rawBuffer, DataFormat format);
 };

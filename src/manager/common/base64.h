@@ -28,13 +28,11 @@ typedef bio_st BIO;
 
 namespace CKM {
 
-class COMMON_API Base64Encoder
-{
+class COMMON_API Base64Encoder {
   public:
     NONCOPYABLE(Base64Encoder)
 
-    class Exception
-    {
+    class Exception {
       public:
         DECLARE_EXCEPTION_TYPE(CKM::Exception, Base)
         DECLARE_EXCEPTION_TYPE(Base, InternalError)
@@ -54,13 +52,11 @@ class COMMON_API Base64Encoder
     bool m_finalized;
 };
 
-class COMMON_API Base64Decoder
-{
+class COMMON_API Base64Decoder {
   public:
     NONCOPYABLE(Base64Decoder)
 
-    class Exception
-    {
+    class Exception {
       public:
         DECLARE_EXCEPTION_TYPE(CKM::Exception, Base)
         DECLARE_EXCEPTION_TYPE(Base, InternalError)

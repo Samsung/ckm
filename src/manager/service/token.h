@@ -29,19 +29,22 @@
 namespace CKM {
 
 struct Token {
-    Token()
-      : backendId(CryptoBackend::None)
-    {}
-    Token(CryptoBackend pBackendId, DataType pDataType, const RawBuffer &pData)
-      : backendId(pBackendId)
-      , dataType(pDataType)
-      , data(pData)
-    {}
+    Token() :
+        backendId(CryptoBackend::None)
+    {
+    }
+
+    Token(CryptoBackend pBackendId, DataType pDataType, const RawBuffer &pData) :
+        backendId(pBackendId),
+        dataType(pDataType),
+        data(pData)
+    {
+    }
     CryptoBackend backendId;
     DataType dataType;
     RawBuffer data;
 };
 
-typedef std::pair<Token,Token> TokenPair;
+typedef std::pair<Token, Token> TokenPair;
 
 } // namespace CKM

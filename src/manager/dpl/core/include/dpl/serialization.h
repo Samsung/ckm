@@ -32,8 +32,7 @@
 
 namespace CKM {
 // Abstract data stream buffer
-class IStream
-{
+class IStream {
   public:
     virtual void Read(size_t num, void * bytes) = 0;
     virtual void Write(size_t num, const void * bytes) = 0;
@@ -41,8 +40,7 @@ class IStream
 };
 
 // Serializable interface
-class ISerializable
-{
+class ISerializable {
   public:
     /*    ISerializable(){};
      *    ISerializable(IStream&){}; */
@@ -137,7 +135,7 @@ struct Serialization {
 
     // std::string
     template <typename T, typename R, typename A>
-    static void Serialize(IStream& stream, const std::basic_string<T,R,A>& str)
+    static void Serialize(IStream& stream, const std::basic_string<T, R, A>& str)
     {
         int length = str.size();
         stream.Write(sizeof(length), &length);
@@ -145,7 +143,7 @@ struct Serialization {
     }
 
     template<typename T, typename R, typename A>
-    static void Serialize(IStream& stream, const std::basic_string<T,R,A>* const str)
+    static void Serialize(IStream& stream, const std::basic_string<T, R, A>* const str)
     {
         int length = str->size();
         stream.Write(sizeof(length), &length);
@@ -162,9 +160,7 @@ struct Serialization {
         stream.Write(sizeof(length), &length);
         for (typename std::list<T>::const_iterator list_iter = list.begin();
              list_iter != list.end(); list_iter++)
-        {
             Serialize(stream, *list_iter);
-        }
     }
     template <typename T>
     static void Serialize(IStream& stream, const std::list<T>* const list)
@@ -194,9 +190,7 @@ struct Serialization {
         int length = vec.size();
         stream.Write(sizeof(length), &length);
         for (const auto &i : vec)
-        {
             Serialize(stream, i);
-        }
     }
     template <typename T, typename A>
     static void Serialize(IStream& stream, const std::vector<T, A>* const vec)
@@ -241,7 +235,6 @@ struct Serialization {
     {
         Serialize(stream, *p);
     }
-
 }; // struct Serialization
 
 struct Deserialization {
@@ -339,23 +332,23 @@ struct Deserialization {
     }
 
     template <typename T, typename R, typename A>
-    static void Deserialize(IStream& stream, std::basic_string<T,R,A>& str)
+    static void Deserialize(IStream& stream, std::basic_string<T, R, A>& str)
     {
         int length;
         stream.Read(sizeof(length), &length);
         std::vector<T> buf(length);
         stream.Read(length*sizeof(T), buf.data());
-        str = std::basic_string<T,R,A>(buf.data(), buf.data()+length);
+        str = std::basic_string<T, R, A>(buf.data(), buf.data() + length);
     }
 
     template <typename T, typename R, typename A>
-    static void Deserialize(IStream& stream, std::basic_string<T,R,A>*& str)
+    static void Deserialize(IStream& stream, std::basic_string<T, R, A>*& str)
     {
         int length;
         stream.Read(sizeof(length), &length);
         std::vector<T> buf(length);
         stream.Read(length*sizeof(T), buf.data());
-        str = new std::basic_string<T,R,A>(buf.data(), buf.data()+length);
+        str = new std::basic_string<T, R, A>(buf.data(), buf.data() + length);
     }
 
     // STL templates
@@ -392,13 +385,13 @@ struct Deserialization {
     template <typename A>
     static void Deserialize(IStream& stream, std::vector<unsigned char, A>*& vec)
     {
-        vec = new std::vector<unsigned char,A>;
+        vec = new std::vector<unsigned char, A>;
         Deserialize(stream, *vec);
     }
 
     // std::vector
     template <typename T, typename A>
-    static void Deserialize(IStream& stream, std::vector<T,A>& vec)
+    static void Deserialize(IStream& stream, std::vector<T, A>& vec)
     {
         int length;
         stream.Read(sizeof(length), &length);
@@ -409,9 +402,9 @@ struct Deserialization {
         }
     }
     template <typename T, typename A>
-    static void Deserialize(IStream& stream, std::vector<T,A>*& vec)
+    static void Deserialize(IStream& stream, std::vector<T, A>*& vec)
     {
-        vec = new std::vector<T,A>;
+        vec = new std::vector<T, A>;
         Deserialize(stream, *vec);
     }
 
@@ -457,7 +450,8 @@ struct Serializer;
 
 template <typename First, typename... Args>
 struct Serializer<First, Args...> : public Serializer<Args...> {
-    static void Serialize(IStream& stream, const First& f, const Args&... args) {
+    static void Serialize(IStream& stream, const First& f, const Args&... args)
+    {
         Serialization::Serialize(stream, f);
         Serializer<Args...>::Serialize(stream, args...);
     }
@@ -466,7 +460,8 @@ struct Serializer<First, Args...> : public Serializer<Args...> {
 // end of recursion
 template <>
 struct Serializer<> {
-    static void Serialize(IStream&) {
+    static void Serialize(IStream&)
+    {
         return;
     }
 };
@@ -477,7 +472,8 @@ struct Deserializer;
 
 template <typename First, typename... Args>
 struct Deserializer<First, Args...> : public Deserializer<Args...> {
-    static void Deserialize(IStream& stream, First& f, Args&... args) {
+    static void Deserialize(IStream& stream, First& f, Args&... args)
+    {
         Deserialization::Deserialize(stream, f);
         Deserializer<Args...>::Deserialize(stream, args...);
     }
@@ -486,7 +482,8 @@ struct Deserializer<First, Args...> : public Deserializer<Args...> {
 // end of recursion
 template <>
 struct Deserializer<> {
-    static void Deserialize(IStream&) {
+    static void Deserialize(IStream&)
+    {
         return;
     }
 };
