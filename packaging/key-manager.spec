@@ -155,8 +155,6 @@ cp tests/XML_4_device_key.xsd %{buildroot}/usr/share/ckm-db-test/
 cp tests/encryption-scheme/db/db-7654 %{buildroot}/usr/share/ckm-db-test/db-7654
 cp tests/encryption-scheme/db/db-key-7654 %{buildroot}/usr/share/ckm-db-test/db-key-7654
 cp tests/encryption-scheme/db/key-7654 %{buildroot}/usr/share/ckm-db-test/key-7654
-mkdir -p %{buildroot}/etc/gumd/userdel.d/
-cp data/gumd/10_key-manager.post %{buildroot}/etc/gumd/userdel.d/
 
 %make_install
 %install_service multi-user.target.wants central-key-manager.service
