@@ -47,7 +47,7 @@ const std::string CKM_KEY_PREFIX = "key-";
 const std::string CKM_DB_KEY_PREFIX = "db-key-";
 const std::string CKM_DB_PREFIX = "db-";
 const std::string CKM_REMOVED_APP_PREFIX = "removed-app-";
-const std::string CKM_LOCK_FILE = "/var/run/key-manager.pid";
+const std::string CKM_LOCK_FILE = RUN_DIR "/" SERVICE_NAME "/key-manager.pid";
 
 } // namespace anonymous
 

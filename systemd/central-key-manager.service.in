@@ -3,6 +3,9 @@ Description=Start the Central Key Manager
 DefaultDependencies=no
 
 [Service]
+User=@USER_NAME@
+Group=@GROUP_NAME@
+SmackProcessLabel=@SMACK_DOMAIN_NAME@
 Type=notify
 ExecStart=/usr/bin/key-manager
 Sockets=central-key-manager-api-storage.socket
@@ -10,6 +13,7 @@ Sockets=central-key-manager-api-control.socket
 Sockets=central-key-manager-api-ocsp.socket
 Sockets=central-key-manager-api-encryption.socket
 EnvironmentFile=-@SYSTEMD_ENV_FILE@
+RuntimeDirectory=@SERVICE_NAME@
 
 [Install]
 WantedBy=multi-user.target

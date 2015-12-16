@@ -27,6 +27,8 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <string.h>
+#include <grp.h>
+#include <pwd.h>
 
 #include <fstream>
 #include <stdexcept>
@@ -56,8 +58,6 @@ RawBuffer TEST_DATA(TEST_DATA_STR.begin(), TEST_DATA_STR.end());
 const Password TEST_PASS = "custom user password";
 const size_t IV_LEN = 16;
 const size_t CHAIN_LEN = 3;
-const uid_t CKM_UID = 0;
-const gid_t CKM_GID = 0;
 
 enum {
     NO_PASS = 0,
@@ -253,7 +253,21 @@ struct FdCloser {
 
 typedef std::unique_ptr<int, FdCloser> FdPtr;
 
+uid_t getUid(const char *name) {
+    passwd *p = getpwnam(name);
+    BOOST_REQUIRE_MESSAGE(p, "getpwnam failed");
+    return p->pw_uid;
+}
+
+gid_t getGid(const char *name) {
+    group *g = getgrnam(name);
+    BOOST_REQUIRE_MESSAGE(g, "getgrnam failed");
+    return g->gr_gid;
+}
+
 void restoreFile(const string& filename) {
+    static uid_t CKM_UID = getUid(USER_NAME);
+    static gid_t CKM_GID = getGid(GROUP_NAME);
     string sourcePath = "/usr/share/ckm-db-test/" + filename;
     string targetPath = "/opt/data/ckm/" + filename;
 

@@ -9,7 +9,9 @@ Source1001: key-manager.manifest
 Source1002: key-manager-pam-plugin.manifest
 Source1003: key-manager-listener.manifest
 Source1004: libkey-manager-client.manifest
-Source1005: libkey-manager-common.manifest
+Source1005: libkey-manager-client-devel.manifest
+Source1006: libkey-manager-common.manifest
+Source1007: key-manager-tests.manifest
 BuildRequires: cmake
 BuildRequires: zip
 BuildRequires: pkgconfig(dlog)
@@ -24,8 +26,16 @@ BuildRequires: pkgconfig(security-manager)
 BuildRequires: pkgconfig(cynara-client-async)
 BuildRequires: pkgconfig(cynara-creds-socket)
 BuildRequires: boost-devel
+Requires(pre): pwdutils
+Requires(postun): pwdutils
 Requires: libkey-manager-common = %{version}-%{release}
 %{?systemd_requires}
+
+%global user_name key-manager
+%global group_name key-manager
+%global service_name key-manager
+%global _rundir /run
+%global smack_domain_name System
 
 %description
 Central Key Manager daemon could be used as secure storage
@@ -105,6 +115,8 @@ cp -a %{SOURCE1002} .
 cp -a %{SOURCE1003} .
 cp -a %{SOURCE1004} .
 cp -a %{SOURCE1005} .
+cp -a %{SOURCE1006} .
+cp -a %{SOURCE1007} .
 
 %build
 %if 0%{?sec_build_binary_debug_enable}
@@ -121,6 +133,11 @@ export LDFLAGS+="-Wl,--rpath=%{_libdir},-Bsymbolic-functions "
         -DCMAKE_VERBOSE_MAKEFILE=ON \
         -DSYSTEMD_UNIT_DIR=%{_unitdir} \
         -DSYSTEMD_ENV_FILE="/etc/sysconfig/central-key-manager" \
+        -DRUN_DIR:PATH=%{_rundir} \
+        -DSERVICE_NAME=%{service_name} \
+        -DUSER_NAME=%{user_name} \
+        -DGROUP_NAME=%{group_name} \
+        -DSMACK_DOMAIN_NAME=%{smack_domain_name} \
         -DMOCKUP_SM=%{?mockup_sm:%mockup_sm}%{!?mockup_sm:OFF}
 
 make %{?jobs:-j%jobs}
@@ -160,6 +177,19 @@ cp tests/encryption-scheme/db/key-7654 %{buildroot}/usr/share/ckm-db-test/key-76
 %install_service sockets.target.wants central-key-manager-api-storage.socket
 %install_service sockets.target.wants central-key-manager-api-ocsp.socket
 %install_service sockets.target.wants central-key-manager-api-encryption.socket
+
+%pre
+# User/group (key-manager/key-manager) should be already added in passwd package.
+# This is our backup plan if passwd package will not be configured correctly.
+id -g %{group_name} > /dev/null 2>&1
+if [ $? -eq 1 ]; then
+    groupadd %{group_name} -r > /dev/null 2>&1
+fi
+
+id -u %{user_name} > /dev/null 2>&1
+if [ $? -eq 1 ]; then
+    useradd -d /var/lib/empty -s /sbin/nologin -r -g %{group_name} %{user_name} > /dev/null 2>&1
+fi
 
 %clean
 rm -rf %{buildroot}
@@ -202,6 +232,10 @@ if [ $1 = 1 ]; then
 fi
 if [ $1 = 2 ]; then
     # update
+
+    # In ckm version <= 0.1.18 all files were owned by root.
+    find /opt/data/ckm -exec chsmack -a %{smack_domain_name} {} \;
+    chown %{user_name}:%{group_name} -R /opt/data/ckm
     systemctl restart central-key-manager-listener.service
 fi
 
@@ -234,12 +268,15 @@ fi
 %{_unitdir}/central-key-manager-api-ocsp.socket
 %{_unitdir}/sockets.target.wants/central-key-manager-api-encryption.socket
 %{_unitdir}/central-key-manager-api-encryption.socket
+%dir %{_datadir}/ckm
 %{_datadir}/ckm/initial_values.xsd
 %{_datadir}/ckm/sw_key.xsd
-/opt/data/ckm/initial_values/
-%attr(444, root, root) %{_datadir}/ckm/scripts/*.sql
+%attr(770, %{user_name}, %{group_name}) /opt/data/ckm/
+%attr(770, %{user_name}, %{group_name}) /opt/data/ckm/initial_values/
+%{_datadir}/ckm/scripts/*.sql
 /etc/opt/upgrade/230.key-manager-migrate-dkek.patch.sh
-%attr(550, root, root) /etc/gumd/userdel.d/10_key-manager.post
+/etc/opt/upgrade/231.key-manager-change-user.patch.sh
+/etc/gumd/userdel.d/10_key-manager.post
 %{_bindir}/ckm_tool
 
 %files -n key-manager-pam-plugin
@@ -263,6 +300,7 @@ fi
 %{_libdir}/libkey-manager-control-client.so.*
 
 %files -n libkey-manager-client-devel
+%manifest libkey-manager-client-devel.manifest
 %{_libdir}/libkey-manager-client.so
 %{_libdir}/libkey-manager-control-client.so
 %{_libdir}/libkey-manager-common.so
@@ -283,7 +321,9 @@ fi
 %{_libdir}/pkgconfig/*.pc
 
 %files -n key-manager-tests
+%manifest key-manager-tests.manifest
 %{_bindir}/ckm-tests-internal
+%dir %{_datadir}/ckm-db-test
 %{_datadir}/ckm-db-test/testme_ver1.db
 %{_datadir}/ckm-db-test/testme_ver2.db
 %{_datadir}/ckm-db-test/testme_ver3.db
@@ -303,3 +343,4 @@ fi
 %{_bindir}/ckm_so_loader
 %{_bindir}/ckm_db_tool
 %{_bindir}/ckm_generate_db
+

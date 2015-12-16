@@ -4,6 +4,9 @@ Requires=dbus.service
 After=central-key-manager.service
 
 [Service]
+User=@USER_NAME@
+Group=@GROUP_NAME@
+SmackProcessLabel=@SMACK_DOMAIN_NAME@
 Type=simple
 ExecStart=/usr/bin/key-manager-listener
 
