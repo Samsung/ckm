@@ -3,7 +3,7 @@ Summary:    Central Key Manager and utilities
 Version:    0.1.18
 Release:    1
 Group:      System/Security
-License:    Apache-2.0
+License:    Apache-2.0 and BSL-1.0
 Source0:    %{name}-%{version}.tar.gz
 Source1001: key-manager.manifest
 Source1002: key-manager-pam-plugin.manifest
@@ -127,9 +127,6 @@ make %{?jobs:-j%jobs}
 
 %install
 rm -rf %{buildroot}
-mkdir -p %{buildroot}/usr/share/license
-cp LICENSE %{buildroot}/usr/share/license/%{name}
-cp LICENSE %{buildroot}/usr/share/license/libkey-manager-client
 mkdir -p %{buildroot}/opt/data/ckm/initial_values
 mkdir -p %{buildroot}/etc/security/
 mkdir -p %{buildroot}/usr/share/ckm/scripts
@@ -223,6 +220,8 @@ fi
 
 %files -n key-manager
 %manifest key-manager.manifest
+%license LICENSE
+%license LICENSE.BSL-1.0
 %{_bindir}/key-manager
 %{_unitdir}/multi-user.target.wants/central-key-manager.service
 %{_unitdir}/central-key-manager.service
@@ -235,7 +234,6 @@ fi
 %{_unitdir}/central-key-manager-api-ocsp.socket
 %{_unitdir}/sockets.target.wants/central-key-manager-api-encryption.socket
 %{_unitdir}/central-key-manager-api-encryption.socket
-%{_datadir}/license/%{name}
 %{_datadir}/ckm/initial_values.xsd
 %{_datadir}/ckm/sw_key.xsd
 /opt/data/ckm/initial_values/
@@ -260,9 +258,9 @@ fi
 
 %files -n libkey-manager-client
 %manifest libkey-manager-client.manifest
+%license LICENSE
 %{_libdir}/libkey-manager-client.so.*
 %{_libdir}/libkey-manager-control-client.so.*
-%{_datadir}/license/libkey-manager-client
 
 %files -n libkey-manager-client-devel
 %{_libdir}/libkey-manager-client.so
