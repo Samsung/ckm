@@ -418,6 +418,11 @@ void CKMService::ProcessMessage(MsgKeyRequest msg)
     }
 }
 
+void CKMService::ProcessMessage(MsgRemoveAppData msg) {
+    LogDebug("Call removeApplicationData. pkgId: " << msg.pkgId);
+    m_logic->removeApplicationData(msg.pkgId);
+}
+
 void CKMService::CustomHandle(const ReadEvent &event)
 {
     LogDebug("Read event");

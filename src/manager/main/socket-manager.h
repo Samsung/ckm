@@ -160,6 +160,7 @@ protected:
     std::priority_queue<Timeout> m_timeoutQueue;
     CommMgr m_commMgr;
     std::unique_ptr<Cynara> m_cynara;
+    std::vector<GenericSocketService*> m_serviceVector;
 };
 
 } // namespace CKM

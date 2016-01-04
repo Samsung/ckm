@@ -19,9 +19,6 @@
  * @version     1.0
  * @brief       Implementation of SocketManager.
  */
-
-#include <set>
-
 #include <signal.h>
 #include <sys/select.h>
 #include <sys/signalfd.h>
@@ -185,6 +182,7 @@ SocketManager::SocketManager() :
 
     auto &desc = CreateDefaultReadSocketDescription(m_notifyMe[0], false);
     desc.service = new DummyService;
+    m_serviceVector.push_back(desc.service);
 
     // std::thread bases on pthread so this should work fine
     sigset_t set;
@@ -206,6 +204,9 @@ SocketManager::SocketManager() :
         LogInfo("SignalService mounted on " << filefd << " descriptor");
     }
 
+    if (signalService)
+        m_serviceVector.push_back(signalService);
+
     // We cannot create Cynara earlier because descriptors are not initialized!
     m_cynara.reset(new Cynara(this));
 }
@@ -213,16 +214,9 @@ SocketManager::SocketManager() :
 SocketManager::~SocketManager()
 {
     m_cynara.reset(nullptr);
-    std::set<GenericSocketService*> serviceMap;
-
-    // Find all services. Set is used to remove duplicates.
-    // In this implementation, services are not able to react in any way.
-    for (size_t i=0; i < m_socketDescriptionVector.size(); ++i)
-        if (m_socketDescriptionVector[i].isOpen())
-            serviceMap.insert(m_socketDescriptionVector[i].service);
 
     // Time to destroy all services.
-    for (auto service : serviceMap) {
+    for (auto service : m_serviceVector) {
         LogDebug("delete " << (void*)(service));
         if (service)
             service->Stop();
@@ -616,6 +610,7 @@ void SocketManager::RegisterSocketService(GenericSocketService *service)
     service->SetSocketManager(this);
     service->SetCommManager(&m_commMgr);
     auto serviceVector = service->GetServiceDescription();
+    m_serviceVector.push_back(service);
     Try {
         for (auto iter = serviceVector.begin(); iter != serviceVector.end(); ++iter)
             CreateDomainSocket(service, *iter);

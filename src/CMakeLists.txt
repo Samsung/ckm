@@ -1,6 +1,7 @@
 PKG_CHECK_MODULES(KEY_MANAGER_DEP
     REQUIRED
     dlog
+    glib-2.0
     openssl
     libsmack
     libcrypto
@@ -11,6 +12,7 @@ PKG_CHECK_MODULES(KEY_MANAGER_DEP
     security-manager
     cynara-client-async
     cynara-creds-socket
+    capi-appfw-package-manager
     )
 FIND_PACKAGE(Threads REQUIRED)
 
@@ -42,6 +44,8 @@ SET(KEY_MANAGER_SOURCES
     ${KEY_MANAGER_PATH}/service/access-control.cpp
     ${KEY_MANAGER_PATH}/service/ckm-service.cpp
     ${KEY_MANAGER_PATH}/service/ckm-logic.cpp
+    ${KEY_MANAGER_PATH}/service/glib-service.cpp
+    ${KEY_MANAGER_PATH}/service/glib-logic.cpp
     ${KEY_MANAGER_PATH}/service/key-provider.cpp
     ${KEY_MANAGER_PATH}/service/ocsp.cpp
     ${KEY_MANAGER_PATH}/service/crypto-logic.cpp

@@ -30,7 +30,7 @@ namespace CKM {
 
 class CKMLogic;
 
-class CKMService : public ThreadMessageService<MsgKeyRequest> {
+class CKMService : public ThreadMessageService<MsgKeyRequest, MsgRemoveAppData> {
 public:
     CKMService();
     CKMService(const CKMService &) = delete;
@@ -84,6 +84,7 @@ private:
         MessageBuffer &buffer);
 
     virtual void ProcessMessage(MsgKeyRequest msg);
+    virtual void ProcessMessage(MsgRemoveAppData msg);
 
     CKMLogic *m_logic;
 };
