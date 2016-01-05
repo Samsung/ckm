@@ -231,5 +231,4 @@ INSTALL(FILES
 ################################################################################
 
 ADD_SUBDIRECTORY(manager)
-ADD_SUBDIRECTORY(listener)
 ADD_SUBDIRECTORY(pam_plugin)
