@@ -30,7 +30,11 @@
 #include <ckm-service.h>
 #include <ocsp-service.h>
 #include <encryption-service.h>
+
+#ifdef BUILD_WITH_GLIB
 #include <glib-service.h>
+#endif
+
 #include <crypto-init.h>
 
 #include <key-provider.h>
@@ -97,7 +101,9 @@ int main(void)
             REGISTER_SOCKET_SERVICE(manager, CKM::CKMService);
             REGISTER_SOCKET_SERVICE(manager, CKM::OCSPService);
             REGISTER_SOCKET_SERVICE(manager, CKM::EncryptionService);
+#ifdef BUILD_WITH_GLIB
             REGISTER_SOCKET_SERVICE(manager, CKM::GLIBService);
+#endif
 
             manager.MainLoop();
         }

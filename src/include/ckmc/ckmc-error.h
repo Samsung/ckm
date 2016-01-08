@@ -20,7 +20,7 @@
 #ifndef __TIZEN_CORE_CKMC_ERROR_H_
 #define __TIZEN_CORE_CKMC_ERROR_H_
 
-#include <tizen.h>
+#include <ckmc/ckmc-platform-codes.h>
 
 #ifdef __cplusplus
 extern "C" {

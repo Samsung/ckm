@@ -29,7 +29,6 @@
 #include <stdexcept>
 #include <sys/time.h>
 #include <unistd.h>
-#include <dlog.h>
 
 namespace CKM {
 namespace Log {

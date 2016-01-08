@@ -1,0 +1,13 @@
+You may specifiy special dirctory for cynara and key manager:
+
+    export PREFIXDIR=/home/user/system
+
+Compile and install cynara in PREFIXDIR directory. Go to directory with cynara and run:
+    
+    make -DCMAKE_INSTALL_PREFIX:PATH=$PREFIXDIR . && make all install
+
+Compile and install key-manager in PREFIXDIR directory. Go to directory with key-manager and run:
+
+    PKG_CONFIG_PATH=$PREFIXDIR/lib/pkgconfig cmake -DCMAKE_INSTALL_PREFIX=$PREFIXDIR -DCMAKE_BUILD_TYPE=DEBUG . && make all install
+
+

@@ -29,8 +29,14 @@
 #include <dpl/log/log.h>
 #include <dpl/singleton_safe_impl.h>
 #include <dpl/log/old_style_log_provider.h>
+
+#ifdef BUILD_WITH_DLOG
 #include <dpl/log/dlog_log_provider.h>
+#endif
+
+#ifdef BUILD_WITH_SYSTEMD
 #include <dpl/log/journal_log_provider.h>
+#endif
 
 IMPLEMENT_SAFE_SINGLETON(CKM::Log::LogSystem);
 
@@ -58,8 +64,12 @@ LogSystem::LogSystem() :
 #ifdef BUILD_TYPE_DEBUG
             { CONSOLE,  []{ return static_cast<AbstractLogProvider*>(new OldStyleLogProvider()); } },
 #endif // BUILD_TYPE_DEBUG
+#ifdef BUILD_WITH_DLOG
             { DLOG,     []{ return static_cast<AbstractLogProvider*>(new DLOGLogProvider()); } },
+#endif // BUILD_WITH_DLOG
+#ifdef BUILD_WITH_SYSTEMD
             { JOURNALD, []{ return static_cast<AbstractLogProvider*>(new JournalLogProvider()); } }
+#endif //BUILD_WITH_SYSTEMD
     })
 {
     SetLogLevel(getenv(CKM_LOG_LEVEL));

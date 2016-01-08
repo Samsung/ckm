@@ -18,7 +18,10 @@
  * @author     Bartlomiej Grzelewski (b.grzelewski@samsung.com)
  * @version    1.0
  */
+#ifdef BUILD_WITH_SMACK
 #include <sys/smack.h>
+#endif
+
 #include <sys/types.h>
 #include <sys/socket.h>
 
@@ -46,6 +49,7 @@ int assignToString(std::vector<char> &vec, socklen_t len, std::string &res)
 
 } // namespace anonymous
 
+#ifdef BUILD_WITH_SMACK
 int Socket2Id::getCredentialsFromSocket(int sock, std::string &res)
 {
     std::vector<char> result(SMACK_LABEL_LEN+1);
@@ -68,6 +72,17 @@ int Socket2Id::getCredentialsFromSocket(int sock, std::string &res)
 
     return assignToString(result, length, res);
 }
+#else
+int Socket2Id::getCredentialsFromSocket(int sock, std::string &res) {
+    ucred uc;
+    socklen_t len = sizeof(struct ucred);
+    if (getsockopt(sock, SOL_SOCKET, SO_PEERCRED, &uc, &len) == -1) {
+        return -1;
+    }
+    res = std::to_string(uc.uid);
+    return 0;
+}
+#endif
 
 void Socket2Id::resetCache()
 {

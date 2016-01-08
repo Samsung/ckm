@@ -69,8 +69,10 @@ protected:
         const GenericSocketService::ServiceDescription &desc);
     int CreateDomainSocketHelp(
         const GenericSocketService::ServiceDescription &desc);
+#ifdef BUILD_WITH_SYSTEMD
     int GetSocketFromSystemD(
         const GenericSocketService::ServiceDescription &desc);
+#endif
 
     void ReadyForRead(int sock);
     void ReadyForWrite(int sock);

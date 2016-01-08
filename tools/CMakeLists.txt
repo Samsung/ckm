@@ -36,7 +36,7 @@ TARGET_LINK_LIBRARIES(${CKM_TOOL}
 
 #place for output file
 INSTALL(TARGETS ${CKM_TOOL}
-    DESTINATION /usr/bin
+    DESTINATION ${BIN_DIR}
     PERMISSIONS OWNER_READ
                 OWNER_WRITE
                 OWNER_EXECUTE

@@ -82,9 +82,13 @@ int Socket2Id::translate(int sock, std::string &result)
         return 0;
     }
 
+#ifdef BUILD_WITH_SMACK
     std::string pkgId;
     if (0 > getPkgIdFromSmack(smack, pkgId))
         return -1;
+#else
+    pkgId = smack;
+#endif
 
     result = pkgId;
     m_stringMap.emplace(std::move(smack), std::move(pkgId));

@@ -1,7 +1,10 @@
 #include <smack-check.h>
 
 #include <stdlib.h>
+
+#ifdef BUILD_WITH_SMACK
 #include <sys/smack.h>
+#endif
 
 #include <dpl/log/log.h>
 
@@ -9,6 +12,7 @@ namespace CKM {
 
 int smack_runtime_check(void)
 {
+#ifdef BUILD_WITH_SMACK
     static int smack_present = -1;
     if (-1 == smack_present) {
         if (NULL == smack_smackfs_path()) {
@@ -20,6 +24,9 @@ int smack_runtime_check(void)
         }
     }
     return smack_present;
+#else
+    return 0;
+#endif
 }
 
 int smack_check(void)

@@ -20,6 +20,7 @@ BuildRequires: pkgconfig(libsmack)
 BuildRequires: pkgconfig(libsystemd-daemon)
 BuildRequires: pkgconfig(libsystemd-journal)
 BuildRequires: pkgconfig(libxml-2.0)
+BuildRequires: pkgconfig(capi-base-common)
 BuildRequires: pkgconfig(capi-system-info)
 BuildRequires: pkgconfig(security-manager)
 BuildRequires: pkgconfig(cynara-client-async)
@@ -135,9 +136,10 @@ export LDFLAGS+="-Wl,--rpath=%{_libdir},-Bsymbolic-functions "
 %cmake . -DVERSION=%{version} \
         -DCMAKE_BUILD_TYPE=%{?build_type:%build_type}%{!?build_type:RELEASE} \
         -DCMAKE_VERBOSE_MAKEFILE=ON \
-        -DSYSTEMD_UNIT_DIR=%{_unitdir} \
+        -DSYSTEMD_UNIT_DIR:PATH=%{_unitdir} \
         -DSYSTEMD_ENV_FILE="/etc/sysconfig/central-key-manager" \
         -DRUN_DIR:PATH=%{_rundir} \
+        -DLIB_DIR:PATH=%{_libdir} \
         -DSERVICE_NAME=%{service_name} \
         -DUSER_NAME=%{user_name} \
         -DGROUP_NAME=%{group_name} \
@@ -338,6 +340,7 @@ fi
 %{_includedir}/ckm/ckmc/ckmc-control.h
 %{_includedir}/ckm/ckmc/ckmc-error.h
 %{_includedir}/ckm/ckmc/ckmc-type.h
+%{_includedir}/ckm/ckmc/ckmc-platform-codes.h
 %{_libdir}/pkgconfig/*.pc
 
 %files -n key-manager-tests

@@ -23,5 +23,5 @@ CONFIGURE_FILE(key-manager.pc.in key-manager.pc @ONLY)
 INSTALL(FILES
     ${CMAKE_BINARY_DIR}/build/key-manager.pc
     DESTINATION
-    ${LIB_INSTALL_DIR}/pkgconfig
+    ${LIB_DIR}/pkgconfig
     )

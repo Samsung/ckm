@@ -26,7 +26,6 @@
 
 #include <stddef.h>
 #include <sys/types.h>
-#include <tizen.h>
 #include <ckmc/ckmc-type.h>
 #include <ckmc/ckmc-error.h>
 

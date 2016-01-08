@@ -1,35 +1,47 @@
-PKG_CHECK_MODULES(KEY_MANAGER_DEP
-    REQUIRED
-    dlog
+######################### set up dependences ##################################
+
+SET(KM_DEP
     glib-2.0
     openssl
-    libsmack
     libcrypto
-    libsystemd-daemon
-    capi-base-common
-    capi-system-info
     libxml-2.0
-    security-manager
     cynara-client-async
-    cynara-creds-socket
-    capi-appfw-package-manager
-    )
+    cynara-creds-socket)
+
+IF(BUILD_WITH_SYSTEMD)
+    SET(KM_DEP ${KM_DEP} libsystemd-daemon)
+ENDIF(BUILD_WITH_SYSTEMD)
+
+IF(BUILD_WITH_SMACK)
+    SET(KM_DEP ${KM_DEP} libsmack)
+ENDIF(BUILD_WITH_SMACK)
+
+IF(BUILD_WITH_SECURITY_MANAGER)
+    SET(KM_DEP ${KM_DEP} security-manager)
+ENDIF(BUILD_WITH_SECURITY_MANAGER)
+
+IF(BUILD_WITH_CAPI_SYSTEM_INFO)
+    SET(KM_DEP ${KM_DEP} capi-system-info)
+ENDIF(BUILD_WITH_CAPI_SYSTEM_INFO)
+
+IF(BUILD_WITH_CAPI_BASE_COMMON)
+    SET(KM_DEP ${KM_DEP} capi-base-common)
+ENDIF(BUILD_WITH_CAPI_BASE_COMMON)
+
+IF(BUILD_WITH_GLIB)
+    SET(KM_DEP ${KM_DEP} glib-2.0 capi-appfw-package-manager)
+ENDIF(BUILD_WITH_GLIB)
+
+PKG_CHECK_MODULES(KEY_MANAGER_DEP REQUIRED ${KM_DEP})
+
+UNSET(KM_DEP)
+
 FIND_PACKAGE(Threads REQUIRED)
+
+####################### set up sources ########################################
 
 SET(KEY_MANAGER_SRC_PATH ${PROJECT_SOURCE_DIR}/src)
 SET(KEY_MANAGER_PATH ${PROJECT_SOURCE_DIR}/src/manager)
-
-IF (MOCKUP_SM MATCHES "ON")
-    IF (CMAKE_BUILD_TYPE MATCHES "RELEASE")
-        MESSAGE(FATAL_ERROR "You cannot compile release version with SECURITY MOCKUPS!")
-    ENDIF (CMAKE_BUILD_TYPE MATCHES "RELEASE")
-    MESSAGE("USING MOCKUPS INSTEAD SECURITY MODULES (SECURITY MANAGER AND CYNARA)")
-    SET(SECURITY_MANAGER_WRAPPER_PATH ${KEY_MANAGER_PATH}/main/socket-2-id-mockup.cpp)
-    SET(CYNARA_WRAPPER_PATH ${KEY_MANAGER_PATH}/main/cynara-mockup.cpp)
-ELSE (MOCKUP_SM MATCHES "ON")
-    SET(SECURITY_MANAGER_WRAPPER_PATH ${KEY_MANAGER_PATH}/main/socket-2-id-wrapper.cpp)
-    SET(CYNARA_WRAPPER_PATH ${KEY_MANAGER_PATH}/main/cynara.cpp)
-ENDIF (MOCKUP_SM MATCHES "ON")
 
 SET(KEY_MANAGER_SOURCES
     ${KEY_MANAGER_PATH}/main/generic-socket-manager.cpp
@@ -44,8 +56,6 @@ SET(KEY_MANAGER_SOURCES
     ${KEY_MANAGER_PATH}/service/access-control.cpp
     ${KEY_MANAGER_PATH}/service/ckm-service.cpp
     ${KEY_MANAGER_PATH}/service/ckm-logic.cpp
-    ${KEY_MANAGER_PATH}/service/glib-service.cpp
-    ${KEY_MANAGER_PATH}/service/glib-logic.cpp
     ${KEY_MANAGER_PATH}/service/key-provider.cpp
     ${KEY_MANAGER_PATH}/service/ocsp.cpp
     ${KEY_MANAGER_PATH}/service/crypto-logic.cpp
@@ -77,9 +87,32 @@ SET(KEY_MANAGER_SOURCES
     ${KEY_MANAGER_PATH}/crypto/platform/decider.cpp
     ${KEY_MANAGER_PATH}/crypto/tz-backend/obj.cpp
     ${KEY_MANAGER_PATH}/crypto/tz-backend/store.cpp
-    ${SECURITY_MANAGER_WRAPPER_PATH}
-    ${CYNARA_WRAPPER_PATH}
     )
+
+IF(BUILD_WITH_GLIB)
+    SET(KEY_MANAGER_SOURCES
+        ${KEY_MANAGER_SOURCES}
+        ${KEY_MANAGER_PATH}/service/glib-service.cpp
+        ${KEY_MANAGER_PATH}/service/glib-logic.cpp)
+ENDIF(BUILD_WITH_GLIB)
+
+IF(MOCKUP_SM OR NOT BUILD_WITH_SECURITY_MANAGER OR NOT BUILD_WITH_CYNARA)
+    IF (CMAKE_BUILD_TYPE MATCHES "RELEASE")
+        MESSAGE(FATAL_ERROR "You cannot compile release version with SECURITY MOCKUPS!")
+    ENDIF (CMAKE_BUILD_TYPE MATCHES "RELEASE")
+    MESSAGE("USING MOCKUPS INSTEAD SECURITY MODULES (SECURITY MANAGER AND CYNARA)")
+    SET(KEY_MANAGER_SOURCES
+        ${KEY_MANAGER_SOURCES}
+        ${KEY_MANAGER_PATH}/main/cynara-mockup.cpp
+        ${KEY_MANAGER_PATH}/main/socket-2-id-mockup.cpp)
+ELSE(MOCKUP_SM OR NOT BUILD_WITH_SECURITY_MANAGER OR NOT BUILD_WITH_CYNARA)
+    SET(KEY_MANAGER_SOURCES
+        ${KEY_MANAGER_SOURCES}
+        ${KEY_MANAGER_PATH}/main/socket-2-id-wrapper.cpp
+        ${KEY_MANAGER_PATH}/main/cynara.cpp)
+ENDIF(MOCKUP_SM OR NOT BUILD_WITH_SECURITY_MANAGER OR NOT BUILD_WITH_CYNARA)
+
+############################# let's compile ###################################
 
 # -fPIE and -pie flag is added for ASLR
 SET_SOURCE_FILES_PROPERTIES(
@@ -87,9 +120,13 @@ SET_SOURCE_FILES_PROPERTIES(
     PROPERTIES
         COMPILE_FLAGS "-D_GNU_SOURCE -fvisibility=hidden -fPIE")
 
-INCLUDE_DIRECTORIES(SYSTEM
-    ${KEY_MANAGER_DEP_INCLUDE_DIRS}
-    )
+INCLUDE_DIRECTORIES(SYSTEM ${KEY_MANAGER_DEP_INCLUDE_DIRS})
+
+IF(BUILD_WITH_CAPI_BASE_COMMON)
+    INCLUDE_DIRECTORIES(${KEY_MANAGER_SRC_PATH}/include-tizen)
+ELSE(BUILD_WITH_CAPI_BASE_COMMON)
+    INCLUDE_DIRECTORIES(${KEY_MANAGER_SRC_PATH}/include-ubuntu)
+ENDIF(BUILD_WITH_CAPI_BASE_COMMON)
 
 INCLUDE_DIRECTORIES(
     ${KEY_MANAGER_SRC_PATH}/include
@@ -103,6 +140,8 @@ INCLUDE_DIRECTORIES(
     ${KEY_MANAGER_PATH}/dpl/db/include
     ${KEY_MANAGER_PATH}/crypto
     )
+
+LINK_DIRECTORIES(${KEY_MANAGER_DEP_LIBRARY_DIRS})
 
 ADD_EXECUTABLE(${TARGET_KEY_MANAGER} ${KEY_MANAGER_SOURCES})
 
@@ -206,11 +245,10 @@ TARGET_LINK_LIBRARIES(${TARGET_KEY_MANAGER_CONTROL_CLIENT}
     )
 
 ################################################################################
-INSTALL(TARGETS ${TARGET_KEY_MANAGER_CLIENT} DESTINATION ${LIB_INSTALL_DIR})
-INSTALL(TARGETS ${TARGET_KEY_MANAGER_CONTROL_CLIENT} DESTINATION ${LIB_INSTALL_DIR})
+INSTALL(TARGETS ${TARGET_KEY_MANAGER_CLIENT} DESTINATION ${LIB_DIR})
+INSTALL(TARGETS ${TARGET_KEY_MANAGER_CONTROL_CLIENT} DESTINATION ${LIB_DIR})
 
-INSTALL(TARGETS ${TARGET_KEY_MANAGER} DESTINATION bin)
-
+INSTALL(TARGETS ${TARGET_KEY_MANAGER} DESTINATION ${BIN_DIR})
 
 INSTALL(FILES
     ${KEY_MANAGER_SRC_PATH}/include/ckm/ckm-manager.h
@@ -223,16 +261,23 @@ INSTALL(FILES
     ${KEY_MANAGER_SRC_PATH}/include/ckm/ckm-pkcs12.h
     ${KEY_MANAGER_SRC_PATH}/include/ckm/ckm-raw-buffer.h
     ${KEY_MANAGER_SRC_PATH}/include/ckm/ckm-type.h
-    DESTINATION /usr/include/ckm/ckm
-    )
+    DESTINATION ${INCLUDE_DIR}/ckm/ckm)
+
 INSTALL(FILES
     ${KEY_MANAGER_SRC_PATH}/include/ckmc/ckmc-manager.h
     ${KEY_MANAGER_SRC_PATH}/include/ckmc/ckmc-control.h
     ${KEY_MANAGER_SRC_PATH}/include/ckmc/ckmc-error.h
     ${KEY_MANAGER_SRC_PATH}/include/ckmc/ckmc-type.h
-    DESTINATION /usr/include/ckm/ckmc
-    )
+    DESTINATION ${INCLUDE_DIR}/ckm/ckmc)
+
+IF(BUILD_WITH_CAPI_BASE_COMMON)
+    INSTALL(FILES ${KEY_MANAGER_SRC_PATH}/include-tizen/ckmc/ckmc-platform-codes.h DESTINATION ${INCLUDE_DIR}/ckm/ckmc)
+ELSE(BUILD_WITH_CAPI_BASE_COMMON)
+    INSTALL(FILES ${KEY_MANAGER_SRC_PATH}/include-ubuntu/ckmc/ckmc-platform-codes.h DESTINATION ${INCLUDE_DIR}/ckm/ckmc)
+ENDIF(BUILD_WITH_CAPI_BASE_COMMON)
 ################################################################################
 
 ADD_SUBDIRECTORY(manager)
-ADD_SUBDIRECTORY(pam_plugin)
+IF(BUILD_ON_TIZEN)
+    ADD_SUBDIRECTORY(pam_plugin)
+ENDIF(BUILD_ON_TIZEN)

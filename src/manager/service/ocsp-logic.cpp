@@ -24,7 +24,9 @@
 #include <vector>
 #include <string>
 
+#ifdef BUILD_WITH_CAPI_SYSTEM_INFO
 #include <system_info.h>
+#endif
 
 #include <ckm/ckm-error.h>
 
@@ -55,6 +57,7 @@ OCSPLogic::OCSPLogic() : m_isNetAvailable(false)
 
 void OCSPLogic::setNetAvailable()
 {
+#ifdef BUILD_WITH_CAPI_SYSTEM_INFO
     bool value;
     int ret;
 
@@ -74,6 +77,9 @@ void OCSPLogic::setNetAvailable()
     }
 
     m_isNetAvailable = false;
+#else
+    m_isNetAvailable = true;
+#endif
 }
 
 RawBuffer OCSPLogic::ocspCheck(int commandId, const RawBufferVector &rawChain, bool allowed)
