@@ -3,6 +3,6 @@
 		<domain name="_" />
 	</request>
 	<assign>
-		<filesystem path="/opt/data/ckm" label="System" type="transmutable" />
+		<filesystem path="@RW_DATA_DIR@" label="System" type="transmutable" />
 	</assign>
 </manifest>

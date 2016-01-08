@@ -146,8 +146,8 @@ RawBuffer pack(const RawBuffer& data, const Password& pass)
 
 namespace
 {
-const char * const DEVICE_KEY_XSD       = "/usr/share/ckm/sw_key.xsd";
-const char * const DEVICE_KEY_SW_FILE   = "/opt/data/ckm/device_key.xml";
+const char * const DEVICE_KEY_XSD = RO_DATA_DIR "sw_key.xsd";
+const char * const DEVICE_KEY_SW_FILE = RW_DATA_DIR "device_key.xml";
 }
 
 Store::Store(CryptoBackend backendId)

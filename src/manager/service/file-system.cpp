@@ -42,7 +42,6 @@
 
 namespace {
 
-const std::string CKM_DATA_PATH = "/opt/data/ckm/";
 const std::string CKM_KEY_PREFIX = "key-";
 const std::string CKM_DB_KEY_PREFIX = "db-key-";
 const std::string CKM_DB_PREFIX = "db-";
@@ -61,28 +60,28 @@ FileSystem::FileSystem(uid_t uid)
 std::string FileSystem::getDBPath() const
 {
     std::stringstream ss;
-    ss << CKM_DATA_PATH << CKM_DB_PREFIX << m_uid;
+    ss << RW_DATA_DIR << CKM_DB_PREFIX << m_uid;
     return ss.str();
 }
 
 std::string FileSystem::getDKEKPath() const
 {
     std::stringstream ss;
-    ss << CKM_DATA_PATH << CKM_KEY_PREFIX << m_uid;
+    ss << RW_DATA_DIR << CKM_KEY_PREFIX << m_uid;
     return ss.str();
 }
 
 std::string FileSystem::getDBDEKPath() const
 {
     std::stringstream ss;
-    ss << CKM_DATA_PATH << CKM_DB_KEY_PREFIX << m_uid;
+    ss << RW_DATA_DIR << CKM_DB_KEY_PREFIX << m_uid;
     return ss.str();
 }
 
 std::string FileSystem::getRemovedAppsPath() const
 {
     std::stringstream ss;
-    ss << CKM_DATA_PATH << CKM_REMOVED_APP_PREFIX << m_uid;
+    ss << RW_DATA_DIR << CKM_REMOVED_APP_PREFIX << m_uid;
     return ss.str();
 }
 
@@ -178,9 +177,9 @@ AppLabelVector FileSystem::clearRemovedsApps() const
 int FileSystem::init()
 {
     errno = 0;
-    if ((mkdir(CKM_DATA_PATH.c_str(), 0700)) && (errno != EEXIST)) {
+    if ((mkdir(RW_DATA_DIR, 0700)) && (errno != EEXIST)) {
         int err = errno;
-        LogError("Error in mkdir " << CKM_DATA_PATH << ". Reason: " << GetErrnoString(err));
+        LogError("Error in mkdir " << RW_DATA_DIR << ". Reason: " << GetErrnoString(err));
         return -1; // TODO set up some error code
     }
     return 0;
@@ -190,7 +189,7 @@ UidVector FileSystem::getUIDsFromDBFile()
 {
     UidVector uids;
     std::unique_ptr<DIR, std::function<int(DIR*)>>
-        dirp(::opendir(CKM_DATA_PATH.c_str()), ::closedir);
+        dirp(::opendir(RW_DATA_DIR), ::closedir);
 
     if (!dirp.get()) {
         int err = errno;
@@ -198,7 +197,7 @@ UidVector FileSystem::getUIDsFromDBFile()
         return UidVector();
     }
 
-    size_t len = offsetof(struct dirent, d_name) + pathconf(CKM_DATA_PATH.c_str(), _PC_NAME_MAX) + 1;
+    size_t len = offsetof(struct dirent, d_name) + pathconf(RW_DATA_DIR, _PC_NAME_MAX) + 1;
     std::unique_ptr<struct dirent, std::function<void(void*)>>
         pEntry(static_cast<struct dirent*>(::malloc(len)), ::free);
 

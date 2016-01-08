@@ -1,0 +1,83 @@
+#!/bin/bash
+
+# Copyright (c) 2015-2016 Samsung Electronics Co., Ltd All Rights Reserved
+#
+#    Licensed under the Apache License, Version 2.0 (the "License");
+#    you may not use this file except in compliance with the License.
+#    You may obtain a copy of the License at
+#
+#        http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS,
+#    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#    See the License for the specific language governing permissions and
+#    limitations under the License.
+#
+# @file        231.key-manager-migrate-dkek.patch.sh.in
+# @author      Kyungwook Tak (k.tak@samsung.com)
+# @author      Krzysztof Jackiewicz (k.jackiewicz@samsung.com)
+# @brief       Changes ckm key files naming convention
+#
+
+VERSION_INFO_PATH=@RW_DATA_DIR@/version-info
+CURRENT_VERSION=1
+
+migrate_from_0_to_1()
+{
+    ARR_UID=()
+    ARR_IDX=()
+
+    # Extract uids from DKEK files
+    for uid in `ls @RW_DATA_DIR@ | grep "^key-[0-9]*-[0-9]*$" | awk 'BEGIN { FS = "-" }; { print $2 }' | awk '!x[$0]++'`
+    do
+        ARR_UID+=($uid)
+    done
+
+    for (( i = 0; i < ${#ARR_UID[@]}; i++ ))
+    do
+        idx_max=0
+        idx_submax=0
+
+        uid=${ARR_UID[$i]}
+        ARR_IDX=()
+        # Extract autoincremented index per uids
+        for file in `ls @RW_DATA_DIR@ | grep "^key-${uid}-[0-9]*$"`
+        do
+            idx=`echo $file | awk 'BEGIN { FS = "-" }; { print $3 }'`
+            ARR_IDX+=($idx)
+        done
+
+        # Find max index(for key-<uid>) and submax index(for key-backup-<uid>)
+        for idx in ${ARR_IDX[@]}
+        do
+            if [ $idx -gt $idx_max ]
+            then
+                idx_submax=$idx_max
+                idx_max=$idx
+            fi
+        done
+
+        # Rename file
+        # smack label setting isn't needed.
+        # (Because not remove/add new file, but just rename file)
+        mv "@RW_DATA_DIR@/key-${uid}-${idx_max}" "@RW_DATA_DIR@/key-${uid}"
+        if [ -f "@RW_DATA_DIR@/key-${uid}-${idx_submax}" ]
+        then
+            mv "@RW_DATA_DIR@/key-${uid}-${idx_submax}" "@RW_DATA_DIR@/key-backup-${uid}"
+        fi
+
+        # [Optional] Remove other key-<uid>-<numeric> files.
+        for file in `ls @RW_DATA_DIR@ | grep "^key-${uid}-[0-9]*$"`
+        do
+            rm @RW_DATA_DIR@/${file}
+        done
+    done
+}
+
+if [ ! -f ${VERSION_INFO_PATH} ]
+then
+    echo "CKM VERSION_INFO NOT EXIST."
+    echo "$CURRENT_VERSION" > $VERSION_INFO_PATH
+    migrate_from_0_to_1
+fi

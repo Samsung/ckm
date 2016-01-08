@@ -5,7 +5,6 @@ Release:    1
 Group:      System/Security
 License:    Apache-2.0 and BSL-1.0
 Source0:    %{name}-%{version}.tar.gz
-Source1001: key-manager.manifest
 Source1002: key-manager-pam-plugin.manifest
 Source1003: key-manager-listener.manifest
 Source1004: libkey-manager-client.manifest
@@ -25,8 +24,10 @@ BuildRequires: pkgconfig(capi-system-info)
 BuildRequires: pkgconfig(security-manager)
 BuildRequires: pkgconfig(cynara-client-async)
 BuildRequires: pkgconfig(cynara-creds-socket)
+BuildRequires: pkgconfig(libtzplatform-config)
 BuildRequires: boost-devel
 Requires(pre): pwdutils
+Requires(pre): tizen-platform-config-tools
 Requires(postun): pwdutils
 Requires: libkey-manager-common = %{version}-%{release}
 %{?systemd_requires}
@@ -36,6 +37,10 @@ Requires: libkey-manager-common = %{version}-%{release}
 %global service_name key-manager
 %global _rundir /run
 %global smack_domain_name System
+%global rw_data_dir %{?TZ_SYS_DATA:%TZ_SYS_DATA/ckm/}%{!?TZ_SYS_DATA:/opt/data/ckm/}
+%global ro_data_dir %{?TZ_SYS_SHARE:%TZ_SYS_SHARE/ckm/}%{!?TZ_SYS_SHARE:/usr/share/ckm/}
+%global db_test_dir %{?TZ_SYS_SHARE:%TZ_SYS_SHARE/ckm-db-test/}%{!?TZ_SYS_SHARE:/usr/share/ckm-db-test/}
+%global initial_values_dir %{rw_data_dir}initial_values/
 
 %description
 Central Key Manager daemon could be used as secure storage
@@ -110,7 +115,6 @@ and password change events from PAM
 
 %prep
 %setup -q
-cp -a %{SOURCE1001} .
 cp -a %{SOURCE1002} .
 cp -a %{SOURCE1003} .
 cp -a %{SOURCE1004} .
@@ -138,37 +142,41 @@ export LDFLAGS+="-Wl,--rpath=%{_libdir},-Bsymbolic-functions "
         -DUSER_NAME=%{user_name} \
         -DGROUP_NAME=%{group_name} \
         -DSMACK_DOMAIN_NAME=%{smack_domain_name} \
-        -DMOCKUP_SM=%{?mockup_sm:%mockup_sm}%{!?mockup_sm:OFF}
+        -DMOCKUP_SM=%{?mockup_sm:%mockup_sm}%{!?mockup_sm:OFF} \
+        -DRW_DATA_DIR=%{rw_data_dir} \
+        -DRO_DATA_DIR=%{ro_data_dir} \
+        -DINITIAL_VALUES_DIR=%{initial_values_dir} \
+        -DDB_TEST_DIR=%{db_test_dir}
 
 make %{?jobs:-j%jobs}
 
 %install
 rm -rf %{buildroot}
-mkdir -p %{buildroot}/opt/data/ckm/initial_values
+mkdir -p %{buildroot}%{initial_values_dir}
 mkdir -p %{buildroot}/etc/security/
-mkdir -p %{buildroot}/usr/share/ckm/scripts
+mkdir -p %{buildroot}%{ro_data_dir}/scripts
 mkdir -p %{buildroot}/etc/gumd/userdel.d/
-cp data/scripts/*.sql %{buildroot}/usr/share/ckm/scripts
-cp doc/initial_values.xsd %{buildroot}/usr/share/ckm
-cp doc/sw_key.xsd %{buildroot}/usr/share/ckm
+cp data/scripts/*.sql %{buildroot}%{ro_data_dir}/scripts
+cp doc/initial_values.xsd %{buildroot}%{ro_data_dir}
+cp doc/sw_key.xsd %{buildroot}%{ro_data_dir}
 cp data/gumd/10_key-manager.post %{buildroot}/etc/gumd/userdel.d/
 
-mkdir -p %{buildroot}/usr/share/ckm-db-test
-cp tests/testme_ver1.db %{buildroot}/usr/share/ckm-db-test/
-cp tests/testme_ver2.db %{buildroot}/usr/share/ckm-db-test/
-cp tests/testme_ver3.db %{buildroot}/usr/share/ckm-db-test/
-cp tests/XML_1_okay.xml %{buildroot}/usr/share/ckm-db-test/
-cp tests/XML_1_okay.xsd %{buildroot}/usr/share/ckm-db-test/
-cp tests/XML_1_wrong.xml %{buildroot}/usr/share/ckm-db-test/
-cp tests/XML_1_wrong.xsd %{buildroot}/usr/share/ckm-db-test/
-cp tests/XML_2_structure.xml %{buildroot}/usr/share/ckm-db-test/
-cp tests/XML_3_encrypted.xml %{buildroot}/usr/share/ckm-db-test/
-cp tests/XML_3_encrypted.xsd %{buildroot}/usr/share/ckm-db-test/
-cp tests/XML_4_device_key.xml %{buildroot}/usr/share/ckm-db-test/
-cp tests/XML_4_device_key.xsd %{buildroot}/usr/share/ckm-db-test/
-cp tests/encryption-scheme/db/db-7654 %{buildroot}/usr/share/ckm-db-test/db-7654
-cp tests/encryption-scheme/db/db-key-7654 %{buildroot}/usr/share/ckm-db-test/db-key-7654
-cp tests/encryption-scheme/db/key-7654 %{buildroot}/usr/share/ckm-db-test/key-7654
+mkdir -p %{buildroot}%{db_test_dir}
+cp tests/testme_ver1.db %{buildroot}%{db_test_dir}
+cp tests/testme_ver2.db %{buildroot}%{db_test_dir}
+cp tests/testme_ver3.db %{buildroot}%{db_test_dir}
+cp tests/XML_1_okay.xml %{buildroot}%{db_test_dir}
+cp tests/XML_1_okay.xsd %{buildroot}%{db_test_dir}
+cp tests/XML_1_wrong.xml %{buildroot}%{db_test_dir}
+cp tests/XML_1_wrong.xsd %{buildroot}%{db_test_dir}
+cp tests/XML_2_structure.xml %{buildroot}%{db_test_dir}
+cp tests/XML_3_encrypted.xml %{buildroot}%{db_test_dir}
+cp tests/XML_3_encrypted.xsd %{buildroot}%{db_test_dir}
+cp tests/XML_4_device_key.xml %{buildroot}%{db_test_dir}
+cp tests/XML_4_device_key.xsd %{buildroot}%{db_test_dir}
+cp tests/encryption-scheme/db/db-7654 %{buildroot}%{db_test_dir}/db-7654
+cp tests/encryption-scheme/db/db-key-7654 %{buildroot}%{db_test_dir}/db-key-7654
+cp tests/encryption-scheme/db/key-7654 %{buildroot}%{db_test_dir}/key-7654
 
 %make_install
 %install_service multi-user.target.wants central-key-manager.service
@@ -178,6 +186,18 @@ cp tests/encryption-scheme/db/key-7654 %{buildroot}/usr/share/ckm-db-test/key-76
 %install_service sockets.target.wants central-key-manager-api-encryption.socket
 
 %pre
+# fail if runtime dir variable is different than compilation time variable
+if [ `tzplatform-get TZ_SYS_DATA | cut -d'=' -f2` != %{TZ_SYS_DATA} ]
+then
+    echo "Runtime value of TZ_SYS_DATA is different than the compilation time value. Aborting"
+    exit 1
+fi
+if [ `tzplatform-get TZ_SYS_SHARE | cut -d'=' -f2` != %{TZ_SYS_SHARE} ]
+then
+    echo "Runtime value of TZ_SYS_SHARE is different than the compilation time value. Aborting"
+    exit 1
+fi
+
 # User/group (key-manager/key-manager) should be already added in passwd package.
 # This is our backup plan if passwd package will not be configured correctly.
 id -g %{group_name} > /dev/null 2>&1
@@ -194,6 +214,13 @@ fi
 rm -rf %{buildroot}
 
 %post
+# move data from old path to new one
+# we have to assume that in case of TZ_SYS_DATA change some upgrade script will move all the data
+if [ -d "/opt/data/ckm" ]
+then
+    cp -a /opt/data/ckm/. %{rw_data_dir} && rm -rf /opt/data/ckm
+fi
+
 systemctl daemon-reload
 if [ $1 = 1 ]; then
     # installation
@@ -204,8 +231,8 @@ if [ $1 = 2 ]; then
     # update
 
     # In ckm version <= 0.1.18 all files were owned by root.
-    find /opt/data/ckm -exec chsmack -a %{smack_domain_name} {} \;
-    chown %{user_name}:%{group_name} -R /opt/data/ckm
+    find %{rw_data_dir} -exec chsmack -a %{smack_domain_name} {} \;
+    chown %{user_name}:%{group_name} -R %{rw_data_dir}
     systemctl restart central-key-manager.service
 fi
 
@@ -266,11 +293,12 @@ fi
 %dir %{_datadir}/ckm
 %{_datadir}/ckm/initial_values.xsd
 %{_datadir}/ckm/sw_key.xsd
-%attr(770, %{user_name}, %{group_name}) /opt/data/ckm/
-%attr(770, %{user_name}, %{group_name}) /opt/data/ckm/initial_values/
+%attr(770, %{user_name}, %{group_name}) %{rw_data_dir}
+%attr(770, %{user_name}, %{group_name}) %{initial_values_dir}
 %{_datadir}/ckm/scripts/*.sql
-/etc/opt/upgrade/230.key-manager-migrate-dkek.patch.sh
-/etc/opt/upgrade/231.key-manager-change-user.patch.sh
+/etc/opt/upgrade/230.key-manager-change-data-dir.patch.sh
+/etc/opt/upgrade/231.key-manager-migrate-dkek.patch.sh
+/etc/opt/upgrade/232.key-manager-change-user.patch.sh
 /etc/gumd/userdel.d/10_key-manager.post
 %{_bindir}/ckm_tool
 

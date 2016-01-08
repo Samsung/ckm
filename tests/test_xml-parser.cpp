@@ -41,7 +41,7 @@ const char *XSD_4_device_key    = "XML_4_device_key.xsd";
 
 std::string format_test_path(const char *file)
 {
-    return std::string("/usr/share/ckm-db-test/") + std::string(file);
+    return std::string(DB_TEST_DIR) + std::string(file);
 }
 
 bool startCallbackFlag = false;

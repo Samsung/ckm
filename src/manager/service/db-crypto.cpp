@@ -34,7 +34,7 @@ namespace {
     const CKM::PermissionMask DEFAULT_PERMISSIONS =
                         static_cast<CKM::PermissionMask>(CKM::Permission::READ | CKM::Permission::REMOVE);
 
-    const char *SCRIPTS_PATH = "/usr/share/ckm/scripts/";
+    const char *SCRIPTS_PATH = RO_DATA_DIR "/scripts/";
 
     enum DBVersion : int {
         DB_VERSION_1                   = 1,

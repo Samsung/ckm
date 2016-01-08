@@ -289,19 +289,19 @@ void verifyDBisValid(DBFixture & fixture)
 
 struct DBVer1Migration : public DBFixture
 {
-    DBVer1Migration() : DBFixture("/usr/share/ckm-db-test/testme_ver1.db")
+    DBVer1Migration() : DBFixture(DB_TEST_DIR "/testme_ver1.db")
     {}
 };
 
 struct DBVer2Migration : public DBFixture
 {
-    DBVer2Migration() : DBFixture("/usr/share/ckm-db-test/testme_ver2.db")
+    DBVer2Migration() : DBFixture(DB_TEST_DIR "/testme_ver2.db")
     {}
 };
 
 struct DBVer3Migration : public DBFixture
 {
-    DBVer3Migration() : DBFixture("/usr/share/ckm-db-test/testme_ver3.db")
+    DBVer3Migration() : DBFixture(DB_TEST_DIR "/testme_ver3.db")
     {}
 };
 }

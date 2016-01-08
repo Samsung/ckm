@@ -1,0 +1,40 @@
+#!/bin/bash
+
+# Copyright (c) 2015-2016 Samsung Electronics Co., Ltd All Rights Reserved
+#
+#    Licensed under the Apache License, Version 2.0 (the "License");
+#    you may not use this file except in compliance with the License.
+#    You may obtain a copy of the License at
+#
+#        http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS,
+#    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#    See the License for the specific language governing permissions and
+#    limitations under the License.
+#
+# @file        232.key-manager-change-user.patch.sh.in
+# @author      Bartlomiej Grzelewski (b.grzelewski@samsung.com)
+# @author      Krzysztof Jackiewicz (k.jackiewicz@samsung.com)
+# @brief       Changes ckm data owner to key-manager:key-manager and smack label to "System"
+#
+
+USER_NAME=key-manager
+GROUP_NAME=key-manager
+SMACK_LABEL=System
+
+id -g $GROUP_NAME > /dev/null 2>&1
+if [ $? -eq 1 ]; then
+    groupadd $GROUP_NAME -r > /dev/null 2>&1
+fi
+
+id -u $USER_NAME > /dev/null 2>&1
+if [ $? -eq 1 ]; then
+    useradd -d /var/lib/empty -s /sbin/nologin -r -g $GROUP_NAME $USER_NAME > /dev/null 2>&1
+fi
+
+# In ckm version <= 0.1.18 all files were owned by root.
+find @RW_DATA_DIR@ -exec chsmack -a $SMACK_LABEL {} \;
+chown ${USER_NAME}:${GROUP_NAME} -R @RW_DATA_DIR@
+

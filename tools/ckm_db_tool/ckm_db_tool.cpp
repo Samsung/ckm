@@ -148,7 +148,7 @@ void usage() {
     cout << endl;
     cout << "Usage: ckm_db_tool uid [password] [sql_command]" << endl;
     cout << endl;
-    cout << "uid (mandatory)         User id as in /opt/data/ckm/db-<uid>" << endl;
+    cout << "uid (mandatory)         User id as in <TZ_SYS_DATA>/ckm/db-<uid>" << endl;
     cout << "password (optional)     Password used for database encryption. For system database (uid < 5000) no password should be used." << endl;
     cout << "sql_command (optional)  Sqlite3 command to execute on database. If empty the tool will enter interactive mode." << endl;
     cout << endl;
