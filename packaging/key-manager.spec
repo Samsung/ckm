@@ -203,6 +203,10 @@ fi
 
 if [ $1 = 2 ]; then
     # update
+
+    # In ckm version <= 0.1.18 all files were owned by root.
+    find /opt/data/ckm -exec chsmack -a %{smack_domain_name} {} \;
+    chown %{user_name}:%{group_name} -R /opt/data/ckm
     systemctl restart central-key-manager.service
 fi
 
@@ -232,10 +236,6 @@ if [ $1 = 1 ]; then
 fi
 if [ $1 = 2 ]; then
     # update
-
-    # In ckm version <= 0.1.18 all files were owned by root.
-    find /opt/data/ckm -exec chsmack -a %{smack_domain_name} {} \;
-    chown %{user_name}:%{group_name} -R /opt/data/ckm
     systemctl restart central-key-manager-listener.service
 fi
 
