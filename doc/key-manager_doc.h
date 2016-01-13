@@ -18,7 +18,7 @@
 /**
  * @ingroup CAPI_SECURITY_FRAMEWORK
  * @defgroup CAPI_KEY_MANAGER_MODULE Key Manager
- * @brief    The key manager provides a secure repository protected by a user’s passwords for keys, certificates, and sensitive data of users and/or their APPs. 
+ * @brief    The key manager provides a secure repository protected by Tizen platform for keys, certificates, and sensitive data of users and/or their APPs. 
  *           Additionally, the key manager provides secure cryptographic operations for non-exportable keys without revealing key values to clients.
  *
  * @section CAPI_KEY_MANAGER_MODULE_OVERVIEW Overview
@@ -34,7 +34,7 @@
  *   </tr>
  * </table>
  *
- * It provides a secure repository for keys, certificates, and sensitive data of users and/or their APPs which are protected by a user’s passwords.
+ * It provides a secure repository for keys, certificates, and sensitive data of users and/or their APPs which are protected by Tizen platform.
  * Additionally, it provides secure cryptographic operations for non-exportable keys without revealing key values to clients.
  *
  * @image html capi_key_manager_overview_diagram.png
@@ -47,23 +47,13 @@
  *   A client can specify simple access rules when storing a data in Key Manager.
  *   - Exportable/Non-Exportable:
  *     Only for data tagged as exportable, Key Manager returns the raw value of the data.
- *     If data is tagged as non-exportable, Key Manager does not return its raw value. 
+ *     If data is tagged as non-exportable, Key Manager does not return its raw value.
  *     In that case, Key Manager provides secure cryptographic operations for non-exportable keys without revealing key values to clients.
  *   - Per Key Password:
- *     All data in Key Manager is protected by a user’s password.
+ *     All data in Key Manager is protected by Tizen platform.
  *     Besides, a client can encrypt its data using its own password additionally.
- *     If a client provides a password when storing a data, the data will be encrypted with the password. 
+ *     If a client provides a password when storing a data, the data will be encrypted with the password.
  *     This password should be provided when get the data from Key Manager.
- *
- * User Login/Logout and Data Protection
- *   - When a user logs in, logs out or changes his/her password, Key Manager should know about it.
- *     Privileged APPs such as LockScreen APP or Setting APP can notify the key manager using these control APIs.
- *   - When a user logs in, the key manager decrypts the user's DKEK (with which a user's data file is encrypted) with a user password.
- *     So during the login period, any client can access its data which is protected by a user's password.
- *     "user key" in API means DKEK.
- *   - When a user logs out, the key manager removes the user's DKEK from memory.
- *     Therefore, clients cannot access any data.
- *   - When a user changes his/her password, the key manager re-encrypts the user's DKEK with the new password.
  *
  * Data Access Control
  *   - By default, only the owner of a data can access to the data.
