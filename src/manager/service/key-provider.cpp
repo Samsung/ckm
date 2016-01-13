@@ -343,7 +343,6 @@ RawBuffer KeyProvider::generateDEK(const std::string &smackLabel)
         ThrowErr(Exc::InternalError, "GenerateDEK Failed in KeyProvider::generateDEK");
 
     wkmcDEK.setKeyInfoKeyLength((unsigned int)wrappedKeyLength);
-    wkmcDEK.setKeyInfoSalt(m_kmcDKEK->getKeyAndInfo().key, MAX_SALT_SIZE);
     wkmcDEK.setKeyInfoLabel(resized_smackLabel);
 
     LogDebug("GenerateDEK Success");
